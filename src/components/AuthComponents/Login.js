@@ -1,18 +1,42 @@
-
-import React from "react";
+import React, { useState } from "react";
 import "./Login.scss";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import backgroundRegister from "../../assets/image/bg.jpg";
 import logoGreen from "../../assets/image/logo-non.png";
+import { login } from "../../services/authService";
 
 const Login = () => {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const res = await login(email, password);
+            if (res.requires2FA) {
+                alert("Vui lòng nhập mã xác thực 2 bước (gửi qua email).");
+                // Bạn có thể chuyển hướng sang màn hình nhập OTP
+            } else if (res.success && res.data?.token) {
+                localStorage.setItem("token", res.data.token);
+                alert("Đăng nhập thành công!");
+                // Chuyển hướng sang trang chính
+                window.location.href = "/";
+            }
+        } catch (err) {
+            alert(err.message || "Lỗi đăng nhập");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <div className="login-container flex-center-center h-screen">
             <div
                 className="Login-wapper Width items-center bg-cover max-w-full w-full h-full grid md:grid-cols-2"
                 style={{ backgroundImage: `url("${backgroundRegister}")` }}
             >
-                {/* Left Login Panel */}
                 <div className="Info-Sign-In bg-white rounded-2xl pt-12 pb-6 md:ml-8 w-11/12 lg:w-8/12 mx-auto relative">
                     <a href="/" className="absolute flex gap-1 items-center top-3 left-4 text-supply-primary cursor-pointer">
                         <svg width="16px" height="16px" viewBox="0 0 1024 1024">
@@ -21,28 +45,28 @@ const Login = () => {
                         <span>Trang chủ</span>
                     </a>
 
-                    <img
-                        src={logoGreen}
-                        alt="Logo Green"
-                        className="logo-img"
-                    />
-
-
+                    <img src={logoGreen} alt="Logo Green" className="logo-img" />
                     <p className="text-3xl font-bold text-supply-primary mb-4">Đăng nhập</p>
 
-                    <div className="content-form col-5 w-10/12">
+                    <form onSubmit={handleLogin} className="content-form col-5 w-10/12">
                         <div className="form-group">
                             <input
                                 type="email"
-                                placeholder="Email"
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                placeholder="Email hoặc tên đăng nhập"
                                 className="border-[1px] shadow border-supply-primary text-black w-full px-4 py-2 rounded"
+                                required
                             />
                         </div>
                         <div className="form-group mt-4">
                             <input
                                 type="password"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
                                 placeholder="Mật khẩu"
                                 className="border-[1px] shadow border-supply-primary text-black w-full px-4 py-2 rounded"
+                                required
                             />
                         </div>
 
@@ -51,11 +75,15 @@ const Login = () => {
                         </div>
 
                         <div className="text-center mt-6">
-                            <button className="bg-supply-primary text-white px-10 py-2 rounded-full">
-                                Đăng nhập
+                            <button
+                                type="submit"
+                                className="bg-supply-primary text-white px-10 py-2 rounded-full"
+                                disabled={loading}
+                            >
+                                {loading ? "Đang đăng nhập..." : "Đăng nhập"}
                             </button>
                         </div>
-                    </div>
+                    </form>
 
                     <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
                         <div className="login-container text-center mt-4">
@@ -75,11 +103,7 @@ const Login = () => {
 
                 {/* Right Info Panel */}
                 <div className="hidden md:flex flex-col items-center justify-center text-center">
-                    <img
-                        src={logoGreen}
-                        alt="Logo Green"
-                        className="logo-img"
-                    />
+                    <img src={logoGreen} alt="Logo Green" className="logo-img" />
                     <p className="text-white font-semibold text-3xl">
                         Sự tiện lợi của bạn <br /> là sứ mệnh của chúng tôi
                     </p>
