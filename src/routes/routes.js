@@ -9,15 +9,17 @@ import SellerProfile from "../pages/Guest/SellerProfile";
 import AboutPage from "../pages/Guest/AboutPage";
 import ContactPage from "../pages/Guest/ContactPage";
 import FAQPage from "../pages/Guest/FAQPage";
-import GuestLayout from "../layouts/GuestLayout";
+import App from "../App";
 
 const AppRoutes = () => {
     return (
         <Routes>
+    
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-
-            <Route element={<GuestLayout />}>
+            
+             <Route element={<App/>}>
+             <Route path="/" element={<HomePage />} />
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/seller/:sellerId" element={<SellerProfile />} />
