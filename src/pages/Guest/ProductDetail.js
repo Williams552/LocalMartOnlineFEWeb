@@ -1,29 +1,27 @@
+// src/pages/ProductDetail.js
+
 import React from "react";
 import { useParams } from "react-router-dom";
-import Header from "../components/Header/Header";
-import Footer from "../components/Footer/Footer";
-import logo from "../assets/image/logo.jpg";
+import Header from "../../components/Header/Header";
+import Footer from "../../components/Footer/Footer";
+import logo from "../../assets/image/logo.jpg";
 import { Link } from "react-router-dom";
 import { FaStar, FaRegStar } from "react-icons/fa";
-import HomeCarousel from "../components/Carousel/Carousel";
+import HomeCarousel from "../../components/Carousel/Carousel";
+import products from "../../data/products";
 
 const ProductDetail = () => {
     const { id } = useParams();
-
-    const product = {
-        name: "Rau muống sạch",
-        seller: "Nguyễn Văn B",
-        market: "Chợ An Hòa",
-        price: 12000,
-        description:
-            "Rau muống sạch được trồng theo quy trình hữu cơ, không sử dụng thuốc trừ sâu. Sản phẩm tươi ngon, thích hợp cho các món luộc, xào, lẩu...",
-        rating: 4,
-    };
+    const product = products.find((p) => p.id === parseInt(id));
 
     const comments = [
         { user: "Lê Thị A", content: "Rau rất tươi, giao nhanh, giá tốt!" },
         { user: "Ngô Văn C", content: "Chất lượng ổn, sẽ ủng hộ tiếp." },
     ];
+
+    if (!product) {
+        return <p className="text-center mt-10">Sản phẩm không tồn tại.</p>;
+    }
 
     return (
         <div>
@@ -55,7 +53,7 @@ const ProductDetail = () => {
 
                         <div className="flex items-center mt-4 gap-1">
                             {Array.from({ length: 5 }).map((_, index) =>
-                                index < product.rating ? (
+                                index < Math.floor(product.rating) ? (
                                     <FaStar key={index} className="text-yellow-400" />
                                 ) : (
                                     <FaRegStar key={index} className="text-gray-300" />

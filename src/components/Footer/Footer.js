@@ -4,17 +4,21 @@ import "./Footer.scss";
 
 const Footer = () => {
     return (
-        <footer className="footer-wrapper mt-10">
-            <div className="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8 text-white">
+        <footer className="footer-wrapper mt-10 bg-supply-primary text-white">
+            <div className="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Cột 1: Thông tin */}
                 <div>
                     <h3 className="text-xl font-bold mb-3">LocalMart</h3>
                     <p className="text-sm leading-relaxed">
                         Nền tảng kết nối nông sản sạch và người tiêu dùng. Mua bán dễ dàng, nhanh chóng và đáng tin cậy.
                     </p>
+                    <p className="mt-3 text-sm">
+                        📞 Hotline: 1800-123-456<br />
+                        ✉️ Email: support@localmart.vn
+                    </p>
                 </div>
 
-                {/* Cột 2: Liên kết */}
+                {/* Cột 2: Liên kết nhanh */}
                 <div>
                     <h4 className="text-lg font-semibold mb-2">Liên kết nhanh</h4>
                     <ul className="space-y-1 text-sm">
@@ -22,6 +26,9 @@ const Footer = () => {
                         <li><a href="/products" className="hover:underline">Sản phẩm</a></li>
                         <li><a href="/about" className="hover:underline">Giới thiệu</a></li>
                         <li><a href="/contact" className="hover:underline">Liên hệ</a></li>
+                        <li><a href="/faq" className="hover:underline">FAQ</a></li>
+                        <li><a href="/policy" className="hover:underline">Chính sách</a></li>
+                        <li><a href="/rules" className="hover:underline">Nội quy chợ</a></li>
                     </ul>
                 </div>
 
@@ -36,7 +43,7 @@ const Footer = () => {
                 </div>
             </div>
 
-            <div className="text-center text-sm py-4 border-t border-white/20 text-white bg-[#219150]">
+            <div className="text-center text-sm py-4 border-t border-white/20">
                 © 2025 LocalMart. Bản quyền thuộc về SEP490_22.
             </div>
         </footer>

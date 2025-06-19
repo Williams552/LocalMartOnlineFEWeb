@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import Header from "../components/Header/Header";
-import Footer from "../components/Footer/Footer";
-import ProductCard from "../components/ProductCard/ProductCard";
-import logo from "../assets/image/logo.jpg";
+import Header from "../../components/Header/Header";
+import Footer from "../../components/Footer/Footer";
+import ProductCard from "../../components/ProductCard/ProductCard";
+import logo from "../../assets/image/logo.jpg";
 import { FaStar, FaRegStar } from "react-icons/fa";
-import ChatBox from "../components/Chat/ChatBox";
+import ChatBox from "../../components/Chat/ChatBox";
 
 const SellerProfile = () => {
     const { sellerId } = useParams();

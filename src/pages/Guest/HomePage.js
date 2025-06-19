@@ -1,25 +1,32 @@
+// src/pages/HomePage.js
+
 import React, { useState } from "react";
-import Header from "../components/Header/Header";
-import Footer from "../components/Footer/Footer";
-import Carousel from "../components/Carousel/Carousel";
-import ProductCard from "../components/ProductCard/ProductCard";
+import Carousel from "../../components/Carousel/Carousel";
+import ProductCard from "../../components/ProductCard/ProductCard";
+import products from "../../data/products";
 
 const HomePage = () => {
     const [searchTerm, setSearchTerm] = useState("");
+    const [selectedMarket, setSelectedMarket] = useState("");
 
-    const products = [
-        { id: 1, name: "Rau muống sạch" },
-        { id: 2, name: "Cà rốt Đà Lạt" },
-        { id: 3, name: "Xoài Cát Chu" },
+    const markets = [
+        "Tất cả",
+        "Chợ Cái Khế",
+        "Chợ An Hòa",
+        "Chợ Xuân Khánh",
+        "Chợ Ninh Kiều",
+        "Chợ Hưng Lợi",
+        "Chợ Tân An",
     ];
 
-    const filteredProducts = products.filter((p) =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+    const filteredProducts = products.filter(
+        (p) =>
+            p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+            (selectedMarket === "" || selectedMarket === "Tất cả" || p.market === selectedMarket)
     );
 
     return (
         <div className="homepage">
-            <Header />
             <Carousel />
 
             <main className="mt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -32,7 +39,19 @@ const HomePage = () => {
                     </p>
                 </section>
 
-                <section className="mb-8 flex justify-center">
+                <section className="mb-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <select
+                        value={selectedMarket}
+                        onChange={(e) => setSelectedMarket(e.target.value)}
+                        className="w-full sm:w-64 border border-supply-primary rounded-full px-5 py-2 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-supply-primary"
+                    >
+                        {markets.map((market, idx) => (
+                            <option key={idx} value={market}>
+                                {market}
+                            </option>
+                        ))}
+                    </select>
+
                     <input
                         type="text"
                         placeholder="Tìm kiếm sản phẩm..."
@@ -47,7 +66,14 @@ const HomePage = () => {
                     {filteredProducts.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                             {filteredProducts.map((p) => (
-                                <ProductCard key={p.id} id={p.id} name={p.name} />
+                                <ProductCard
+                                    key={p.id}
+                                    id={p.id}
+                                    name={p.name}
+                                    seller={p.seller}
+                                    market={p.market}
+                                    price={p.price}
+                                />
                             ))}
                         </div>
                     ) : (
@@ -55,8 +81,6 @@ const HomePage = () => {
                     )}
                 </section>
             </main>
-
-            <Footer />
         </div>
     );
 };
