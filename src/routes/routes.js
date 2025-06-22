@@ -10,22 +10,33 @@ import AboutPage from "../pages/Guest/AboutPage";
 import ContactPage from "../pages/Guest/ContactPage";
 import FAQPage from "../pages/Guest/FAQPage";
 import App from "../App";
+import Admin from "../components/Admin/Admin";
+import FeatureUser from "../components/Admin/Content/FeatureComponent/FeatureUser";
+import ManageUser from "../components/Admin/Content/User/AdminUser";
+import ManageAccount from "../components/Admin/Content/User/AdminAccount";
 
 const AppRoutes = () => {
     return (
         <Routes>
-    
+
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            
-             <Route element={<App/>}>
-             <Route path="/" element={<HomePage />} />
+
+            <Route element={<App />}>
+
+                <Route path="/" element={<HomePage />} />
                 <Route path="/home" element={<HomePage />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/seller/:sellerId" element={<SellerProfile />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/faq" element={<FAQPage />} />
+            </Route>
+
+            <Route path="/system/admin" element={<Admin />}>
+                <Route path="feature_users" element={<FeatureUser />} />
+                <Route path="manage-users" element={<ManageUser />} />
+                <Route path="manage-accounts" element={<ManageAccount />} />
             </Route>
         </Routes>
     );
