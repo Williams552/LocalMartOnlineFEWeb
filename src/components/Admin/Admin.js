@@ -47,13 +47,13 @@ const Admin = (props) => {
         },
         {
             icon: <FaShoppingCart className="text-2xl" />,
-            text: "Q.lý đơn hàng",
+            text: "Quản lý Sạp",
             label: "management_orders",
-            href: "feature_request_suppplier",
+            href: "feature_stores",
         },
         {
             icon: <FaHockeyPuck className="text-2xl" />,
-            text: "Q.lý kho",
+            text: "Quản lý Kho",
             label: "management_warehouse",
             href: "feature_warehouse",
         },
