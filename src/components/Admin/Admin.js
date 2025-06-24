@@ -6,7 +6,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { CgBell } from "react-icons/cg";
 import { FaGear } from "react-icons/fa6";
 import { FaUserGear } from "react-icons/fa6";
-import { FaClipboard } from "react-icons/fa6";
+import { FaStore } from "react-icons/fa6";
 import { FaHockeyPuck } from "react-icons/fa";
 import { FaShoppingCart } from "react-icons/fa";
 import { SlArrowLeft } from "react-icons/sl";
@@ -40,14 +40,15 @@ const Admin = (props) => {
             href: "feature_users",
         },
         {
-            icon: <FaClipboard className="text-2xl" />,
-            text: "Đơn thu nguyên liệu",
-            label: "purchased_orders",
-            href: "feature_purchase_orders",
-        },
+            icon: <FaStore className="text-2xl" />,
+            text: "Chợ và Sạp",
+            label: "market_and_stores",
+            href: "feature_market_stores",
+        }
+        ,
         {
             icon: <FaShoppingCart className="text-2xl" />,
-            text: "Quản lý Sạp",
+            text: "Quản lý ",
             label: "management_orders",
             href: "feature_stores",
         },
