@@ -67,9 +67,9 @@ const Admin = (props) => {
 
         {
             icon: <FaGear className="text-2xl" />,
-            text: "Q.lý sản xuất",
+            text: "Q.lý nội dung",
             label: "management_processing",
-            href: "feature_production_process",
+            href: "feature_content_management",
         },
 
         {

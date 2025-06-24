@@ -1,13 +1,14 @@
-// src/pages/HomePage.js
-
 import React, { useState } from "react";
 import Carousel from "../../components/Carousel/Carousel";
 import ProductCard from "../../components/ProductCard/ProductCard";
+import CategorySidebar from "../../components/Sidebar/CategorySidebar";
 import products from "../../data/products";
+import ChatboxBot from "../../components/Chat/ChatBoxBot";
 
 const HomePage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedMarket, setSelectedMarket] = useState("");
+    const [selectedCategory, setSelectedCategory] = useState("Tất cả");
 
     const markets = [
         "Tất cả",
@@ -22,14 +23,17 @@ const HomePage = () => {
     const filteredProducts = products.filter(
         (p) =>
             p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            (selectedMarket === "" || selectedMarket === "Tất cả" || p.market === selectedMarket)
+            (selectedMarket === "" || selectedMarket === "Tất cả" || p.market === selectedMarket) &&
+            (selectedCategory === "Tất cả" || p.category === selectedCategory)
     );
 
     return (
-        <div className="homepage">
+        <div className="homepage bg-gray-50 min-h-screen pb-12">
+            {/* Carousel Banner */}
             <Carousel />
 
             <main className="mt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                {/* Title & Subtitle */}
                 <section className="text-center mb-10">
                     <h1 className="text-3xl font-bold text-supply-primary mb-3">
                         Chào mừng đến với LocalMart!
@@ -39,6 +43,7 @@ const HomePage = () => {
                     </p>
                 </section>
 
+                {/* Filter */}
                 <section className="mb-8 flex flex-col sm:flex-row justify-center items-center gap-4">
                     <select
                         value={selectedMarket}
@@ -61,26 +66,41 @@ const HomePage = () => {
                     />
                 </section>
 
-                <section className="mb-12">
-                    <h3 className="text-xl font-bold text-supply-primary mb-4 text-center">Sản phẩm nổi bật</h3>
-                    {filteredProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                            {filteredProducts.map((p) => (
-                                <ProductCard
-                                    key={p.id}
-                                    id={p.id}
-                                    name={p.name}
-                                    seller={p.seller}
-                                    market={p.market}
-                                    price={p.price}
-                                />
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-center text-gray-500">Không tìm thấy sản phẩm phù hợp.</p>
-                    )}
+                {/* Layout Grid */}
+                <section className="flex flex-col md:flex-row gap-8">
+                    {/* Left Sidebar */}
+                    <CategorySidebar
+                        onSelectCategory={setSelectedCategory}
+                        selectedCategory={selectedCategory}
+                    />
+
+                    {/* Product Listing */}
+                    <div className="flex-1">
+                        <h3 className="text-xl font-bold text-supply-primary mb-4 text-center">
+                            Sản phẩm nổi bật
+                        </h3>
+                        {filteredProducts.length > 0 ? (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                                {filteredProducts.map((p) => (
+                                    <ProductCard
+                                        key={p.id}
+                                        id={p.id}
+                                        name={p.name}
+                                        seller={p.seller}
+                                        market={p.market}
+                                        price={p.price}
+                                    />
+                                ))}
+                            </div>
+                        ) : (
+                            <p className="text-center text-gray-500">Không tìm thấy sản phẩm phù hợp.</p>
+                        )}
+                    </div>
                 </section>
             </main>
+
+            {/* Chatbox Bot */}
+            <ChatboxBot />
         </div>
     );
 };

@@ -1,11 +1,8 @@
-// src/pages/ProductDetail.js
-
-import React from "react";
-import { useParams } from "react-router-dom";
+import React, { useState } from "react";
+import { useParams, Link } from "react-router-dom";
 import Header from "../../components/Header/Header";
 import Footer from "../../components/Footer/Footer";
 import logo from "../../assets/image/logo.jpg";
-import { Link } from "react-router-dom";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import HomeCarousel from "../../components/Carousel/Carousel";
 import products from "../../data/products";
@@ -14,13 +11,20 @@ const ProductDetail = () => {
     const { id } = useParams();
     const product = products.find((p) => p.id === parseInt(id));
 
+    const [quantity, setQuantity] = useState(1);
+
     const comments = [
         { user: "Lê Thị A", content: "Rau rất tươi, giao nhanh, giá tốt!" },
         { user: "Ngô Văn C", content: "Chất lượng ổn, sẽ ủng hộ tiếp." },
     ];
 
+    const handleAddToCart = () => {
+        alert(`Đã thêm ${quantity} ${product.name} vào giỏ hàng!`);
+        // TODO: Gửi về Redux hoặc lưu vào localStorage/cart state
+    };
+
     if (!product) {
-        return <p className="text-center mt-10">Sản phẩm không tồn tại.</p>;
+        return <p className="text-center mt-10 text-red-600">Sản phẩm không tồn tại.</p>;
     }
 
     return (
@@ -40,7 +44,13 @@ const ProductDetail = () => {
                             {product.name}
                         </h1>
                         <p className="text-gray-700 text-sm mb-1">
-                            Người bán: <Link to={`/seller/1`} className="text-blue-600 hover:underline">{product.seller}</Link>
+                            Người bán:{" "}
+                            <Link
+                                to={`/seller/${encodeURIComponent(product.seller)}`}
+                                className="text-blue-600 hover:underline"
+                            >
+                                {product.seller}
+                            </Link>
                         </p>
                         <p className="text-gray-700 text-sm mb-1">
                             Vị trí: <strong>{product.market}</strong>
@@ -61,9 +71,27 @@ const ProductDetail = () => {
                             )}
                             <span className="ml-2 text-sm text-gray-600">({product.rating}/5)</span>
                         </div>
+
+                        {/* Thêm vào giỏ hàng */}
+                        <div className="mt-6 flex items-center gap-3">
+                            <input
+                                type="number"
+                                value={quantity}
+                                min={1}
+                                onChange={(e) => setQuantity(parseInt(e.target.value))}
+                                className="w-20 border px-2 py-1 rounded text-sm text-center"
+                            />
+                            <button
+                                onClick={handleAddToCart}
+                                className="px-6 py-2 bg-supply-primary text-white rounded-full hover:bg-green-600 transition text-sm"
+                            >
+                                Thêm vào giỏ hàng
+                            </button>
+                        </div>
                     </div>
                 </div>
 
+                {/* Bình luận */}
                 <div className="mb-12">
                     <h2 className="text-xl font-semibold text-supply-primary mb-4">Bình luận</h2>
                     <div className="space-y-4">
