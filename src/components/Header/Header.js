@@ -1,16 +1,23 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
-import { FiBell, FiMessageSquare } from "react-icons/fi";
+import { FiBell, FiMessageSquare, FiShoppingCart } from "react-icons/fi";
+import { FaUserCircle } from "react-icons/fa";
 
 const Header = () => {
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMessages, setShowMessages] = useState(false);
+    const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [language, setLanguage] = useState("vi");
-    const isLoggedIn = false; // giả định Guest
+
+    const isLoggedIn = true; // Giả định đã đăng nhập
+    const userRole = "buyer"; // Giả định là buyer
+    const isProxyShopper = false; // Giả định chưa là proxy shopper
+    const isSeller = false; // Giả định chưa là seller
 
     const notificationRef = useRef();
     const messageRef = useRef();
+    const profileRef = useRef();
 
     const notifications = [
         "Đơn hàng #1234 đã được xác nhận",
@@ -22,17 +29,19 @@ const Header = () => {
         { from: "Trần Thị B", text: "Cảm ơn bạn đã giao hàng nhanh!" },
     ];
 
+    const cartItems = [
+        { name: "Rau muống", quantity: 2 },
+        { name: "Cà rốt", quantity: 1 },
+    ];
+
     useEffect(() => {
         const handleClickOutside = (e) => {
-            if (
-                notificationRef.current &&
-                !notificationRef.current.contains(e.target)
-            ) setShowNotifications(false);
-
-            if (
-                messageRef.current &&
-                !messageRef.current.contains(e.target)
-            ) setShowMessages(false);
+            if (notificationRef.current && !notificationRef.current.contains(e.target))
+                setShowNotifications(false);
+            if (messageRef.current && !messageRef.current.contains(e.target))
+                setShowMessages(false);
+            if (profileRef.current && !profileRef.current.contains(e.target))
+                setShowProfileMenu(false);
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -47,7 +56,7 @@ const Header = () => {
                     <span className="text-xl font-bold text-supply-primary">LocalMart</span>
                 </Link>
 
-                {/* Nav */}
+                {/* Navigation */}
                 <nav className="flex items-center gap-4 text-sm font-medium text-gray-700">
                     <Link to="/products" className="hover:text-supply-primary transition">Sản phẩm</Link>
                     <Link to="/about" className="hover:text-supply-primary transition">Giới thiệu</Link>
@@ -58,7 +67,6 @@ const Header = () => {
 
                 {/* Right Actions */}
                 <div className="flex items-center gap-3 relative">
-                    {/* Language selector */}
                     <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
@@ -68,24 +76,9 @@ const Header = () => {
                         <option value="en">🇺🇸 EN</option>
                     </select>
 
-                    {/* Auth Buttons */}
-                    <Link
-                        to="/login"
-                        className="px-4 py-1 border border-supply-primary text-supply-primary rounded-full text-sm hover:bg-supply-primary hover:text-white transition"
-                    >
-                        Đăng nhập
-                    </Link>
-                    <Link
-                        to="/register"
-                        className="px-4 py-1 border border-supply-primary text-supply-primary rounded-full text-sm hover:bg-supply-primary hover:text-white transition"
-                    >
-                        Đăng ký
-                    </Link>
-
-                    {/* (Ẩn Notification/Message nếu chưa đăng nhập) */}
-                    {isLoggedIn && (
+                    {isLoggedIn ? (
                         <>
-                            {/* Notification */}
+                            {/* Notifications */}
                             <div className="relative" ref={notificationRef}>
                                 <button
                                     onClick={() => setShowNotifications((prev) => !prev)}
@@ -99,16 +92,14 @@ const Header = () => {
                                         <div className="p-3 border-b font-semibold text-sm">Thông báo</div>
                                         <ul className="text-sm max-h-56 overflow-y-auto">
                                             {notifications.map((note, idx) => (
-                                                <li key={idx} className="px-4 py-2 hover:bg-gray-100">
-                                                    {note}
-                                                </li>
+                                                <li key={idx} className="px-4 py-2 hover:bg-gray-100">{note}</li>
                                             ))}
                                         </ul>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Message */}
+                            {/* Messages */}
                             <div className="relative" ref={messageRef}>
                                 <button
                                     onClick={() => setShowMessages((prev) => !prev)}
@@ -131,6 +122,62 @@ const Header = () => {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Cart */}
+                            <div className="relative">
+                                <Link to="/cart" className="relative text-gray-700 hover:text-supply-primary">
+                                    <FiShoppingCart size={22} />
+                                    {cartItems.length > 0 && (
+                                        <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                                            {cartItems.length}
+                                        </span>
+                                    )}
+                                </Link>
+                            </div>
+
+                            {/* Avatar dropdown */}
+                            <div className="relative" ref={profileRef}>
+                                <button
+                                    onClick={() => setShowProfileMenu((prev) => !prev)}
+                                    className="text-gray-700 hover:text-supply-primary"
+                                >
+                                    <FaUserCircle size={24} />
+                                </button>
+                                {showProfileMenu && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-white border rounded shadow z-50">
+                                        <ul className="text-sm">
+                                            <li className="px-4 py-2 hover:bg-gray-100">
+                                                <Link to="/buyer/profile">Hồ sơ của tôi</Link>
+                                            </li>
+                                            <li className="px-4 py-2 hover:bg-gray-100">
+                                                <Link to="/buyer/settings">Cài đặt</Link>
+                                            </li>
+                                            {userRole === "buyer" && !isProxyShopper && (
+                                                <li className="px-4 py-2 hover:bg-gray-100">
+                                                    <Link to="/proxy-shopper/register">Đăng ký đi chợ dùm</Link>
+                                                </li>
+                                            )}
+                                            {userRole === "buyer" && !isSeller && (
+                                                <li className="px-4 py-2 hover:bg-gray-100">
+                                                    <Link to="/register-seller">Đăng ký người bán</Link>
+                                                </li>
+                                            )}
+                                            <li className="px-4 py-2 hover:bg-gray-100 text-red-500">
+                                                <button onClick={() => alert("Đăng xuất")}>Đăng xuất</button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <Link to="/login" className="px-4 py-1 border border-supply-primary text-supply-primary rounded-full text-sm hover:bg-supply-primary hover:text-white transition">
+                                Đăng nhập
+                            </Link>
+                            <Link to="/register" className="px-4 py-1 border border-supply-primary text-supply-primary rounded-full text-sm hover:bg-supply-primary hover:text-white transition">
+                                Đăng ký
+                            </Link>
                         </>
                     )}
                 </div>
