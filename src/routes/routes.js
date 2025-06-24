@@ -14,6 +14,11 @@ import Admin from "../components/Admin/Admin";
 import FeatureUser from "../components/Admin/Content/FeatureComponent/FeatureUser";
 import ManageUser from "../components/Admin/Content/User/AdminUser";
 import ManageAccount from "../components/Admin/Content/User/AdminAccount";
+import MarketAndStoreComponent from "../components/Admin/Content/FeatureComponent/FeatureMarketAndStores";
+import ManageMarket from "../components/Admin/Content/Market/AdminMarket";
+import ManageStore from "../components/Admin/Content/Store/AdminStore";
+import Dashboard from "../components/Admin/Content/DashBoard/Dashboard";
+
 
 const AppRoutes = () => {
     return (
@@ -34,9 +39,14 @@ const AppRoutes = () => {
             </Route>
 
             <Route path="/system/admin" element={<Admin />}>
+                <Route index element={<Dashboard />} />
                 <Route path="feature_users" element={<FeatureUser />} />
                 <Route path="manage-users" element={<ManageUser />} />
                 <Route path="manage-accounts" element={<ManageAccount />} />
+                <Route path="feature_market_stores" element={<MarketAndStoreComponent />} />
+                <Route path="manage-markets" element={<ManageMarket />} />
+                <Route path="manage-stores" element={<ManageStore />} />
+
             </Route>
         </Routes>
     );
