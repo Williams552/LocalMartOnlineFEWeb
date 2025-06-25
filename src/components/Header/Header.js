@@ -9,11 +9,11 @@ const Header = () => {
     const [showMessages, setShowMessages] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [language, setLanguage] = useState("vi");
+    const [isLoggedIn, setIsLoggedIn] = useState(true); // <-- CHUYỂN THÀNH STATE
 
-    const isLoggedIn = true; // Giả định đã đăng nhập
     const userRole = "buyer"; // Giả định là buyer
-    const isProxyShopper = false; // Giả định chưa là proxy shopper
-    const isSeller = false; // Giả định chưa là seller
+    const isProxyShopper = false;
+    const isSeller = false;
 
     const notificationRef = useRef();
     const messageRef = useRef();
@@ -163,7 +163,14 @@ const Header = () => {
                                                 </li>
                                             )}
                                             <li className="px-4 py-2 hover:bg-gray-100 text-red-500">
-                                                <button onClick={() => alert("Đăng xuất")}>Đăng xuất</button>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsLoggedIn(false);
+                                                        setShowProfileMenu(false);
+                                                    }}
+                                                >
+                                                    Đăng xuất
+                                                </button>
                                             </li>
                                         </ul>
                                     </div>
