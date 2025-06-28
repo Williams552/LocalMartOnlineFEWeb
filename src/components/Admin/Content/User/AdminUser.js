@@ -40,7 +40,7 @@ const mockUsers = [
     },
 ];
 
-// Tạo hàm getBase64 tại chỗ
+// Hàm chuyển file sang base64
 const getBase64Local = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -51,7 +51,6 @@ const getBase64Local = (file) => {
 };
 
 const UserComponent = () => {
-    const [rowSelected, setRowSelected] = useState("");
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [formUpdate] = Form.useForm();
     const navigate = useNavigate();
@@ -62,10 +61,9 @@ const UserComponent = () => {
     const [isLoadDetails, setIsLoadDetails] = useState(false);
     const [stateDetailsUser, setStateDetailsUser] = useState({});
 
-    const handleDetailsProduct = () => {
-        const selected = mockUsers.find((u) => u._id === rowSelected);
-        setStateDetailsUser(selected);
-        formUpdate.setFieldsValue(selected);
+    const handleDetailsProduct = (record) => {
+        setStateDetailsUser(record);
+        formUpdate.setFieldsValue(record);
         setIsDrawerOpen(true);
     };
 
@@ -176,10 +174,10 @@ const UserComponent = () => {
         {
             title: "Chức năng",
             dataIndex: "action",
-            render: () => (
+            render: (_, record) => (
                 <div
                     className="flex items-center justify-center gap-2 text-blue-500 cursor-pointer"
-                    onClick={handleDetailsProduct}
+                    onClick={() => handleDetailsProduct(record)}
                 >
                     <AiOutlineEdit />
                     <span>Chi tiết</span>
@@ -206,10 +204,6 @@ const UserComponent = () => {
                 <TableUser
                     columns={columns}
                     data={mockUsers}
-                    setRowSelected={(id) => setRowSelected(id)}
-                    onRow={(record) => ({
-                        onClick: () => setRowSelected(record._id),
-                    })}
                 />
             </div>
 

@@ -35,6 +35,8 @@ const Header = () => {
         setShowProfileMenu(false);
     };
 
+
+
     const notificationRef = useRef();
     const messageRef = useRef();
     const profileRef = useRef();
