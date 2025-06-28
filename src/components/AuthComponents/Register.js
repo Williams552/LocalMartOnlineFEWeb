@@ -1,10 +1,121 @@
-import React from "react";
+import React, { useState } from "react";
 import "./Login.scss";
 import backgroundRegister from "../../assets/image/bg.jpg";
 import { TbFaceIdError } from "react-icons/tb";
 import OtpInput from "react-otp-input";
+import authService from "../../services/authService";
 
 const Register = () => {
+    const [formData, setFormData] = useState({
+        fullName: "",
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        phoneNumber: "",
+        address: "",
+        role: "Buyer"
+    });
+    const [loading, setLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const validateForm = () => {
+        if (!formData.fullName.trim()) {
+            setErrorMessage("Vui lòng nhập họ và tên");
+            return false;
+        }
+        if (!formData.username.trim()) {
+            setErrorMessage("Vui lòng nhập tên đăng nhập");
+            return false;
+        }
+        if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+            setErrorMessage("Vui lòng nhập email hợp lệ");
+            return false;
+        }
+        if (!formData.password || formData.password.length < 6) {
+            setErrorMessage("Mật khẩu phải có ít nhất 6 ký tự");
+            return false;
+        }
+        if (formData.password !== formData.confirmPassword) {
+            setErrorMessage("Mật khẩu xác nhận không khớp");
+            return false;
+        }
+        return true;
+    };
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+
+        if (!validateForm()) {
+            return;
+        }
+
+        setLoading(true);
+        setErrorMessage("");
+        setSuccessMessage("");
+
+        try {
+            const registerData = {
+                username: formData.username,
+                email: formData.email,
+                password: formData.password,
+                fullName: formData.fullName,
+                phoneNumber: formData.phoneNumber || null,
+                address: formData.address || null,
+                role: formData.role
+            };
+
+            console.log('Attempting to register with data:', registerData);
+
+            const result = await authService.register(registerData);
+
+            console.log('Registration result:', result);
+
+            if (result.success) {
+                setSuccessMessage("Đăng ký thành công! Bạn có thể đăng nhập ngay bây giờ.");
+                // Reset form
+                setFormData({
+                    fullName: "",
+                    username: "",
+                    email: "",
+                    password: "",
+                    confirmPassword: "",
+                    phoneNumber: "",
+                    address: "",
+                    role: "Buyer"
+                });
+
+                // Redirect to login after 2 seconds
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Registration error caught:', error);
+
+            // Handle specific error types
+            let errorMsg = "Đăng ký thất bại. Vui lòng thử lại.";
+
+            if (error.message) {
+                errorMsg = error.message;
+            } else if (typeof error === 'string') {
+                errorMsg = error;
+            }
+
+            setErrorMessage(errorMsg);
+        } finally {
+            setLoading(false);
+        }
+    };
     return (
         <div className="login-container flex-center-center h-screen">
             <div
@@ -20,91 +131,122 @@ const Register = () => {
                         <span>Trang chủ</span>
                     </a>
 
-                    <div className="col-4 mx-auto font-bold text-3xl text-center text-supply-primary mb-6">Đăng Ký</div>
+                    <div className="col-4 mx-auto font-bold text-3xl text-center text-supply-primary mb-2">Đăng Ký</div>
+                    <p className="text-gray-600 text-sm mb-6 text-center">Tham gia cộng đồng mua bán nông sản LocalMart</p>
 
-                    <div className="content-form col-5 w-10/12 mx-auto space-y-4">
+                    {errorMessage && (
+                        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 text-center w-10/12 mx-auto">
+                            {errorMessage}
+                        </div>
+                    )}
+
+                    {successMessage && (
+                        <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-center w-10/12 mx-auto">
+                            {successMessage}
+                        </div>
+                    )}
+
+                    <form onSubmit={handleRegister} className="content-form col-5 w-10/12 mx-auto space-y-4">
                         <div className="form-group">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
                             <input
                                 type="text"
-                                placeholder="Tên của bạn"
-                                className="border-[1px] shadow border-supply-primary text-black w-full px-4 py-2 rounded"
+                                name="fullName"
+                                value={formData.fullName}
+                                onChange={handleInputChange}
+                                placeholder="Nhập họ và tên đầy đủ"
+                                className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
+                                required
                             />
                         </div>
                         <div className="form-group">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tên đăng nhập</label>
+                            <input
+                                type="text"
+                                name="username"
+                                value={formData.username}
+                                onChange={handleInputChange}
+                                placeholder="Nhập tên đăng nhập"
+                                className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
+                                required
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                             <input
                                 type="email"
-                                placeholder="Email"
-                                className="border-[1px] shadow border-supply-primary text-black w-full px-4 py-2 rounded"
+                                name="email"
+                                value={formData.email}
+                                onChange={handleInputChange}
+                                placeholder="Nhập địa chỉ email"
+                                className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
+                                required
                             />
                         </div>
                         <div className="form-group">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Mật khẩu</label>
                             <input
                                 type="password"
-                                placeholder="Mật khẩu"
-                                className="border-[1px] shadow border-supply-primary text-black w-full px-4 py-2 rounded"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleInputChange}
+                                placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)"
+                                className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
+                                required
                             />
                         </div>
                         <div className="form-group">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Xác nhận mật khẩu</label>
                             <input
                                 type="password"
-                                placeholder="Xác thực mật khẩu"
-                                className="border-[1px] shadow border-supply-primary text-black w-full px-4 py-2 rounded"
+                                name="confirmPassword"
+                                value={formData.confirmPassword}
+                                onChange={handleInputChange}
+                                placeholder="Nhập lại mật khẩu"
+                                className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
+                                required
                             />
                         </div>
                         <div className="form-group">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
                             <input
                                 type="text"
-                                placeholder="Số điện thoại"
-                                className="border-[1px] shadow border-supply-primary text-black w-full px-4 py-2 rounded"
+                                name="phoneNumber"
+                                value={formData.phoneNumber}
+                                onChange={handleInputChange}
+                                placeholder="Nhập số điện thoại (không bắt buộc)"
+                                className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
                             />
                         </div>
-
-                        <div>
-                            <p className="mb-1 text-sm font-medium">Giới tính:</p>
-                            <div className="flex justify-between text-sm">
-                                <label className="flex items-center">
-                                    <input type="radio" name="gender" />
-                                    <span className="ml-2">Nam</span>
-                                </label>
-                                <label className="flex items-center ml-4">
-                                    <input type="radio" name="gender" />
-                                    <span className="ml-2">Nữ</span>
-                                </label>
-                                <label className="flex items-center ml-4">
-                                    <input type="radio" name="gender" />
-                                    <span className="ml-2">Khác</span>
-                                </label>
-                            </div>
-                        </div>
-
                         <div className="form-group">
-                            <label className="block mb-1 text-sm font-medium">Ngày sinh</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Địa chỉ</label>
                             <input
-                                type="date"
-                                className="border-[1px] shadow border-supply-primary text-black w-full px-4 py-2 rounded"
+                                type="text"
+                                name="address"
+                                value={formData.address}
+                                onChange={handleInputChange}
+                                placeholder="Nhập địa chỉ (không bắt buộc)"
+                                className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
                             />
                         </div>
 
-                        <div className="flex items-center text-sm mt-2">
-                            <input type="checkbox" className="mr-2" />
-                            <label>Nhấn vào đây nếu bạn là người bán</label>
+                        <div className="flex items-start text-sm mt-4">
+                            <input type="checkbox" className="mr-2 mt-1 text-supply-primary focus:ring-supply-primary" required />
+                            <label className="text-gray-600">
+                                Tôi đồng ý với <a href="#" className="text-supply-primary hover:underline">Điều khoản sử dụng</a> và <a href="#" className="text-supply-primary hover:underline">Chính sách bảo mật</a> của LocalMart
+                            </label>
                         </div>
 
-                        <div className="errorShow register mt-2">
-                            <div className="errorShow flex items-center gap-2 text-red-600 bg-red-100 px-3 py-2 rounded">
-                                <TbFaceIdError className="text-xl" />
-                                <div className="errorBox">
-                                    <span className="error text-sm">Thông báo lỗi (demo)</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="text-center mt-4">
-                            <button className="text-center bg-supply-primary text-white px-10 py-2 rounded-full hover:bg-green-600 transition">
-                                Đăng ký
+                        <div className="text-center mt-6">
+                            <button
+                                type="submit"
+                                className="w-full bg-supply-primary hover:bg-green-600 text-white px-10 py-3 rounded-lg font-medium transition duration-200 shadow-md disabled:opacity-50"
+                                disabled={loading}
+                            >
+                                {loading ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
                             </button>
                         </div>
-                    </div>
+                    </form>
 
                     <div className="mt-6 text-center text-sm">
                         <p>
@@ -120,12 +262,40 @@ const Register = () => {
                 </div>
 
                 {/* Right Panel */}
-                <div className="hidden md:flex flex-col items-center justify-center text-center px-4">
-                    {/* <img src="image/logo-white.png" alt="Logo" className="w-36 mb-4" /> */}
-                    <p className="text-white font-semibold text-3xl">
-                        Sự tiện lợi của bạn <br /> là sứ mệnh của chúng tôi
-                    </p>
-                    <div className="flex items-center gap-4 justify-center mt-4">
+                <div className="hidden md:flex flex-col items-center justify-center text-center px-8">
+                    <div className="mb-6">
+                        <h2 className="text-white font-bold text-4xl mb-4">LocalMart</h2>
+                        <p className="text-white/90 font-medium text-xl leading-relaxed mb-8">
+                            Tham gia cộng đồng mua bán <br />
+                            nông sản lớn nhất Việt Nam
+                        </p>
+                    </div>
+
+                    <div className="space-y-6 text-white/90">
+                        <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                <span>🥕</span>
+                            </div>
+                            <span>Nông sản tươi sạch từ chợ địa phương</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                <span>🚚</span>
+                            </div>
+                            <span>Giao hàng nhanh chóng, an toàn</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                <span>💰</span>
+                            </div>
+                            <span>Giá cả minh bạch, hợp lý</span>
+                        </div>
+                        <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                                <span>🤝</span>
+                            </div>
+                            <span>Kết nối trực tiếp với người bán</span>
+                        </div>
                     </div>
                 </div>
 
