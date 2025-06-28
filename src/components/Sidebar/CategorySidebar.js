@@ -23,24 +23,24 @@ const categories = [
 
 const CategorySidebar = ({ onSelectCategory, selectedCategory }) => {
     return (
-        <aside className="w-full sm:w-64 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-            <h3 className="text-lg font-bold mb-4 text-supply-primary">Danh mục sản phẩm</h3>
-            <ul className="space-y-3">
+        <div className="w-full">
+            <h4 className="text-md font-semibold text-gray-700 mb-4 text-center">� Danh mục sản phẩm</h4>
+            <div className="flex flex-wrap justify-center gap-2">
                 {categories.map((cat, idx) => (
-                    <li
+                    <button
                         key={idx}
-                        className={`flex items-center space-x-3 cursor-pointer px-3 py-2 rounded-md transition-all 
+                        className={`flex items-center space-x-2 cursor-pointer px-4 py-2 rounded-full transition-all font-medium text-sm border
                             ${selectedCategory === cat.name
-                                ? "bg-supply-primary text-white"
-                                : "hover:bg-gray-100 text-gray-800"}`}
+                                ? "bg-supply-primary text-white border-supply-primary shadow-md"
+                                : "hover:bg-gray-50 text-gray-700 border-gray-200 hover:border-supply-primary"}`}
                         onClick={() => onSelectCategory(cat.name)}
                     >
-                        <span className="text-xl">{cat.icon}</span>
-                        <span className="text-sm font-medium">{cat.name}</span>
-                    </li>
+                        <span className="text-lg">{cat.icon}</span>
+                        <span>{cat.name}</span>
+                    </button>
                 ))}
-            </ul>
-        </aside>
+            </div>
+        </div>
     );
 };
 

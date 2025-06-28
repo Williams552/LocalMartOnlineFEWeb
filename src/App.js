@@ -24,62 +24,62 @@ const App = ({ loginActive }) => {
     const token = localStorage.getItem("access_token");
     console.log("Token khi load lại trang:", token); // Kiểm tra token sau khi reload
   }, []);
-  
+
 
   // Effect 1
 
-//   useEffect(() => {
-//     setIsLoading(true);
-//     // nhận token về
-//     const { storageData, decoded } = handleDecoded();
-//     // kiểm tra decoded có tồn tại hay không --> check token trên localStorage.
-//     if (decoded?.id) {
-//       // nếu có decoded (chuỗi token sau mã hóa) --> gọi hàm lấy thông tin người dùng.
-//       handleGetDetailsUser(decoded?.id, storageData);
-//     }
-//     setIsLoading(false);
-//   }, []);
+  //   useEffect(() => {
+  //     setIsLoading(true);
+  //     // nhận token về
+  //     const { storageData, decoded } = handleDecoded();
+  //     // kiểm tra decoded có tồn tại hay không --> check token trên localStorage.
+  //     if (decoded?.id) {
+  //       // nếu có decoded (chuỗi token sau mã hóa) --> gọi hàm lấy thông tin người dùng.
+  //       handleGetDetailsUser(decoded?.id, storageData);
+  //     }
+  //     setIsLoading(false);
+  //   }, []);
 
 
   // Function 8
 
-//   const handleDecoded = () => {
-//     // nhận token về [token này đã có khi người dùng login]
-//     let storageData = localStorage.getItem("access_token");
-//     let decoded = {};
-//     if (storageData && isJsonString(storageData)) {
-//       // parse dữ liệu thành đối tượng JavaScript , ở đây là chuỗi token.
-//       storageData = JSON.parse(storageData);
-//       // giải mã token - get data từ cái token - sinh ra ngay từ lúc user Login
-//       decoded = jwtDecode(storageData);
-//     }
-//     return { decoded, storageData };
-//   };
+  //   const handleDecoded = () => {
+  //     // nhận token về [token này đã có khi người dùng login]
+  //     let storageData = localStorage.getItem("access_token");
+  //     let decoded = {};
+  //     if (storageData && isJsonString(storageData)) {
+  //       // parse dữ liệu thành đối tượng JavaScript , ở đây là chuỗi token.
+  //       storageData = JSON.parse(storageData);
+  //       // giải mã token - get data từ cái token - sinh ra ngay từ lúc user Login
+  //       decoded = jwtDecode(storageData);
+  //     }
+  //     return { decoded, storageData };
+  //   };
 
   // USER INFOMATIONS // handleGetDetailsUser để lấy thông tin người dùng từ server.
 
-//   const handleGetDetailsUser = async (id, token) => {
-//     const res = await UserServices.getDetailsUser(id, token);
-//     // dispatch để gửi action updateUser đến Redux để cập nhật thông tin người dùng trong state.
-//     dispatch(updateUser({ ...res?.data, access_token: token }));
-//   };
+  //   const handleGetDetailsUser = async (id, token) => {
+  //     const res = await UserServices.getDetailsUser(id, token);
+  //     // dispatch để gửi action updateUser đến Redux để cập nhật thông tin người dùng trong state.
+  //     dispatch(updateUser({ ...res?.data, access_token: token }));
+  //   };
 
   // Function 7
 
-//   UserServices.axiosJWT.interceptors.request.use(
-//     async (config) => {
-//       const { decoded } = handleDecoded();
-//       const currentTime = new Date();
-//       if (decoded?.exp < currentTime.getTime() / 1000) {
-//         const data = await UserServices.refreshToken();
-//         config.headers["token"] = `Bearer ${data?.access_token}`;
-//       }
-//       return config;
-//     },
-//     (error) => {
-//       return Promise.reject(error);
-//     }
-//   );
+  //   UserServices.axiosJWT.interceptors.request.use(
+  //     async (config) => {
+  //       const { decoded } = handleDecoded();
+  //       const currentTime = new Date();
+  //       if (decoded?.exp < currentTime.getTime() / 1000) {
+  //         const data = await UserServices.refreshToken();
+  //         config.headers["token"] = `Bearer ${data?.access_token}`;
+  //       }
+  //       return config;
+  //     },
+  //     (error) => {
+  //       return Promise.reject(error);
+  //     }
+  //   );
 
 
   return (

@@ -4,15 +4,13 @@ import "./Login.scss";
 import backgroundRegister from "../../assets/image/bg.jpg";
 import { useAuth } from "../../hooks/useAuth";
 
-const ResetPassword = () => {
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [loading, setLoading] = useState(false);
+const EmailVerification = () => {
+    const [loading, setLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
     const [token, setToken] = useState("");
 
-    const { resetPassword } = useAuth();
+    const { verifyEmail } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
 
@@ -20,54 +18,32 @@ const ResetPassword = () => {
         const tokenFromUrl = searchParams.get('token');
         if (tokenFromUrl) {
             setToken(tokenFromUrl);
+            handleVerifyEmail(tokenFromUrl);
         } else {
-            setErrorMessage("Token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn. Vui lòng yêu cầu đặt lại mật khẩu mới từ trang đăng nhập.");
+            // Check if we're on the verify email page without token (manual access)
+            setLoading(false);
+            setErrorMessage("Token xác thực không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại đường link từ email hoặc yêu cầu email xác thực mới.");
         }
     }, [searchParams]);
 
-    const validateForm = () => {
-        if (!password || password.length < 6) {
-            setErrorMessage("Mật khẩu phải có ít nhất 6 ký tự");
-            return false;
-        }
-        if (password !== confirmPassword) {
-            setErrorMessage("Mật khẩu xác nhận không khớp");
-            return false;
-        }
-        return true;
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        if (!validateForm()) {
-            return;
-        }
-
-        if (!token) {
-            setErrorMessage("Token không hợp lệ");
-            return;
-        }
-
+    const handleVerifyEmail = async (verificationToken) => {
         setLoading(true);
         setErrorMessage("");
         setSuccessMessage("");
 
         try {
-            const result = await resetPassword(token, password);
+            const result = await verifyEmail(verificationToken);
 
             if (result.success) {
-                setSuccessMessage("Đặt lại mật khẩu thành công! Bạn sẽ được chuyển đến trang đăng nhập.");
-                setPassword("");
-                setConfirmPassword("");
+                setSuccessMessage("Xác thực email thành công! Tài khoản của bạn đã được kích hoạt. Bạn sẽ được chuyển đến trang đăng nhập.");
 
-                // Redirect to login after 2 seconds
+                // Redirect to login after 3 seconds
                 setTimeout(() => {
                     navigate("/login");
-                }, 2000);
+                }, 3000);
             }
         } catch (error) {
-            setErrorMessage(error.message || "Lỗi đặt lại mật khẩu");
+            setErrorMessage(error.message || "Lỗi xác thực email");
         } finally {
             setLoading(false);
         }
@@ -92,14 +68,26 @@ const ResetPassword = () => {
                     </a>
 
                     <div className="col-4 mx-auto font-bold text-3xl text-center text-supply-primary mb-2">
-                        Đặt lại mật khẩu
+                        Xác thực Email
                     </div>
                     <p className="text-gray-600 text-sm mb-6 text-center">
-                        Nhập mật khẩu mới cho tài khoản của bạn
+                        Đang xử lý xác thực email của bạn...
                     </p>
+
+                    {loading && (
+                        <div className="flex flex-col items-center justify-center py-8">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-supply-primary"></div>
+                            <p className="text-gray-600 mt-4">Đang xác thực email...</p>
+                        </div>
+                    )}
 
                     {successMessage && (
                         <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4 text-center w-10/12 mx-auto">
+                            <div className="flex items-center justify-center mb-2">
+                                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
                             {successMessage}
                         </div>
                     )}
@@ -115,71 +103,22 @@ const ResetPassword = () => {
                         </div>
                     )}
 
-                    {!token && !loading && (
+                    {!loading && (
                         <div className="text-center mt-6 space-y-4">
                             <a
-                                href="/forgot-password"
+                                href="/login"
                                 className="inline-block w-full bg-supply-primary text-white font-medium py-3 px-4 rounded-lg hover:bg-supply-primary/90 focus:outline-none focus:ring-2 focus:ring-supply-primary focus:ring-offset-2 transition-colors"
                             >
-                                Yêu cầu đặt lại mật khẩu mới
+                                Đi đến trang đăng nhập
                             </a>
+
                             <div className="text-center">
-                                <a href="/login" className="text-supply-primary hover:underline text-sm">
-                                    Quay về trang đăng nhập
+                                <span className="text-gray-600 text-sm">Chưa có tài khoản? </span>
+                                <a href="/register" className="text-supply-primary hover:underline text-sm">
+                                    Đăng ký ngay
                                 </a>
                             </div>
                         </div>
-                    )}
-
-                    {token && (
-                        <>
-                            <form onSubmit={handleSubmit} className="content-form col-5 w-10/12 mx-auto space-y-4">
-                                <div className="form-group">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Mật khẩu mới
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        placeholder="Nhập mật khẩu mới"
-                                        className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
-                                        required
-                                        minLength="6"
-                                    />
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                                        Xác nhận mật khẩu
-                                    </label>
-                                    <input
-                                        type="password"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
-                                        placeholder="Nhập lại mật khẩu mới"
-                                        className="border-[1px] shadow-sm border-gray-300 focus:border-supply-primary focus:ring-1 focus:ring-supply-primary text-black w-full px-4 py-3 rounded-lg transition"
-                                        required
-                                        minLength="6"
-                                    />
-                                </div>
-
-                                <button
-                                    type="submit"
-                                    disabled={loading || !token}
-                                    className="w-full bg-supply-primary text-white font-medium py-3 px-4 rounded-lg hover:bg-supply-primary/90 focus:outline-none focus:ring-2 focus:ring-supply-primary focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {loading ? "Đang xử lý..." : "Đặt lại mật khẩu"}
-                                </button>
-                            </form>
-
-                            <div className="text-center mt-4">
-                                <span className="text-gray-600 text-sm">Đã nhớ mật khẩu? </span>
-                                <a href="/login" className="text-supply-primary hover:underline text-sm">
-                                    Đăng nhập ngay
-                                </a>
-                            </div>
-                        </>
                     )}
                 </div>
 
@@ -215,4 +154,4 @@ const ResetPassword = () => {
     );
 };
 
-export default ResetPassword;
+export default EmailVerification;
