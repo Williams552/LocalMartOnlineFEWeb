@@ -37,6 +37,8 @@ import ProxyShopperList from "../pages/ProxyShopper/ProxyShopperList";
 import RegisterProxyShopper from "../pages/ProxyShopper/RegisterProxyShopper";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
 import RegisterSeller from "../pages/Buyer/RegisterSeller";
+import CategoryComponent from "../components/Admin/Content/FeatureComponent/FeatureCategory";
+
 
 // Seller pages
 import SellerDashboard from "../pages/Seller/SellerDashboard";
@@ -102,6 +104,11 @@ const AppRoutes = () => {
                 <Route path="feature_content_management" element={<AdminContentManagement />} />
                 <Route path="faq-management" element={<FAQManagement />} />
                 <Route path="policy-management" element={<PolicyManagement />} />
+
+                <Route path="feature_categories" element={<CategoryComponent />} />
+                {/* <Route path="manage-categories" element={<ManageCategory />} />
+                <Route path="manage-register-category" element={<ManageRegisterCategory/>} /> */}
+        
             </Route>
         </Routes>
     );

@@ -7,27 +7,29 @@ const TableUser = ({
     data = [],
     isLoading = false,
     selectionType = "radio",
-    setRowSelected,
+    setRowSelected, // mở lại prop nếu cần
     onRow,
 }) => {
-    const rowSelection = {
-        type: selectionType,
-        onChange: (selectedRowKeys, selectedRows) => {
-            if (setRowSelected && selectedRowKeys.length > 0) {
-                setRowSelected(selectedRowKeys[0]); // Chọn 1 dòng
-            }
-        },
-    };
+    const rowSelection = setRowSelected
+        ? {
+              type: selectionType,
+              onChange: (selectedRowKeys, selectedRows) => {
+                  if (selectedRowKeys.length > 0) {
+                      setRowSelected(selectedRowKeys[0]);
+                  }
+              },
+          }
+        : null;
 
     return (
         <Loading isPending={isLoading}>
             <Table
-                rowSelection={rowSelection}
+                {...(rowSelection ? { rowSelection } : {})}
                 columns={columns}
                 dataSource={data}
                 pagination={{ pageSize: 5 }}
                 onRow={onRow}
-                rowKey="_id" // Đảm bảo _id được sử dụng làm key
+                rowKey="_id"
                 bordered
             />
         </Loading>
@@ -35,3 +37,4 @@ const TableUser = ({
 };
 
 export default TableUser;
+

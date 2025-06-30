@@ -14,6 +14,12 @@ import { SlArrowRight } from "react-icons/sl";
 import { MdDashboardCustomize } from "react-icons/md";
 import { FaLemon } from "react-icons/fa6";
 import { FaFileInvoice } from "react-icons/fa6";
+import { FaListAlt } from 'react-icons/fa';
+import { FaQuestionCircle } from 'react-icons/fa';  
+import { FaRegFileAlt } from 'react-icons/fa'; 
+import { FaHandsHelping } from 'react-icons/fa';
+import { FaBell } from 'react-icons/fa6';
+
 
 
 
@@ -47,39 +53,37 @@ const Admin = (props) => {
         }
         ,
         {
-            icon: <FaShoppingCart className="text-2xl" />,
-            text: "Quản lý ",
-            label: "management_orders",
-            href: "feature_stores",
+            icon: <FaListAlt className="text-2xl" />, // Icon Danh mục
+            label: "categories",
+            text: "Danh mục",
+            href: "feature_categories",
         },
-        {
-            icon: <FaHockeyPuck className="text-2xl" />,
-            text: "Quản lý Kho",
-            label: "management_warehouse",
-            href: "feature_warehouse",
-        },
-        {
-            icon: <FaLemon className="text-2xl" />,
-            text: "Q.lý nguyên liệu",
-            label: "management_materials",
-            href: "feature_material_category",
-        },
+         {
+        icon: <FaQuestionCircle className="text-2xl" />,
+        label: "faq",
+        text: "Quản lý FAQ",
+        href: "feature_faq",
+    },
+    {
+        icon: <FaRegFileAlt className="text-2xl" />,
+        label: "policy",
+        text: "Quản lý Chính sách Nền tảng",
+        href: "feature_policy",
+    },
+    {
+        icon: <FaHandsHelping className="text-2xl" />,
+        label: "support",
+        text: "Quản lý Yêu cầu Hỗ trợ",
+        href: "feature_support",
+    },
+    {
+        icon: <FaBell className="text-2xl" />,
+        label: "notification",
+        text: "Quản lý Thông báo",
+        href: "feature_notification",
+    },
 
-        {
-            icon: <FaGear className="text-2xl" />,
-            text: "Q.lý nội dung",
-            label: "management_processing",
-            href: "feature_content_management",
-        },
-
-        {
-            icon: <FaFileInvoice className="text-2xl" />,
-            text: "Q.lý đơn đặt hàng",
-            label: "manaement_product_orders",
-            href: "feature_product_orders",
-        },
-
-        { icon: <CgBell className="text-2xl" />, text: "Thông báo" },
+    
     ];
 
     const renderNavigations = () => {
