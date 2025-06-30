@@ -266,7 +266,7 @@ const Header = () => {
                                         className="flex items-center space-x-2 text-gray-600 hover:text-supply-primary transition"
                                     >
                                         <FaUserCircle size={28} />
-                                        <span className="text-sm font-medium">Tài khoản</span>
+                                        <span className="text-sm font-medium">{user?.fullName || user?.username || "Tài khoản"}</span>
                                     </button>
                                     {showProfileMenu && (
                                         <div className="absolute right-0 mt-2 w-64 bg-white border rounded-lg shadow-lg z-50">

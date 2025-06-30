@@ -101,6 +101,14 @@ export const API_ENDPOINTS = {
         REPORTS: `${API_URL}/api/admin/reports`,
     },
 
+    // Seller Registration Endpoints
+    SELLER_REGISTRATION: {
+        REGISTER: `${API_URL}/api/sellerregistration`,
+        GET_MY: `${API_URL}/api/sellerregistration/my`,
+        GET_ALL: `${API_URL}/api/sellerregistration`,
+        APPROVE: `${API_URL}/api/sellerregistration/approve`,
+    },
+
     // Notification Endpoints
     NOTIFICATION: {
         GET_ALL: `${API_URL}/api/notification`,
