@@ -22,7 +22,7 @@ const UserComponent = () => {
 
                 {/* Card 1 */}
                 <Card
-                    link="/system/admin/manage-users"
+                    link="/admin/manage-users"
                     title="Quản lý người dùng"
                     description="Quản lý thông tin người dùng"
                     image={mng_user}
@@ -30,17 +30,33 @@ const UserComponent = () => {
 
                 {/* Card 3 */}
                 <Card
-                    link="/system/admin/manage-accounts"
-                    title="Quản lý người bán"
-                    description="Quản lý thông tin người bán"
+                    link="/admin/manage-accounts"
+                    title="Quản lý tài khoản"
+                    description="Quản lý thông tin tài khoản"
                     image={mng_account}
                 />
 
                 {/* Card 4 */}
                 <Card
-                    link="/system/admin/manage-blocked-users"
+                    link="/admin/manage-sales-requests"
                     title="Quản lý yêu cầu bán hàng"
                     description="Quản lý thông tin yêu cầu bán hàng"
+                    image={mng_account}
+                />
+
+                {/* Card 4 */}
+                <Card
+                    link="/admin/manage-proxy-shopper-requests"
+                    title="Quản lý yêu cầu đi chợ dùm"
+                    description="Quản lý thông tin yêu cầu đi chợ dùm"
+                    image={mng_account}
+                />
+
+                {/* Card 4 */}
+                <Card
+                    link="/admin/manage-seller-licenses"
+                    title="Quản lý giấy phép người bán hàng"
+                    description="Quản lý thông tin giấy phép người bán hàng"
                     image={mng_account}
                 />
             </div>

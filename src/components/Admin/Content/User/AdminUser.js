@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Form, Input, Select, Button, Space, Upload } from "antd";
 import { FaUser } from "react-icons/fa";
 import { AiOutlineEdit } from "react-icons/ai";
@@ -12,35 +12,8 @@ import TableUser from "./TableUser";
 import DrawerComponent from "../../../DrawerComponent/DrawerComponent";
 import ModalComponent from "../../../ModalComponent/ModalComponent";
 import Loading from "../../../LoadingComponent/Loading";
+import { getAllUsers } from "../../../../services/userService";
 
-const mockUsers = [
-    {
-        _id: "1",
-        full_name: "Nguyễn Văn A",
-        email: "a@example.com",
-        phone: "0901234567",
-        role: "Admin",
-        avatar: "https://via.placeholder.com/100",
-        address: "Hà Nội",
-        birth_day: "1995-01-01",
-        createdAt: "2023-01-01",
-        updatedAt: "2024-01-01",
-    },
-    {
-        _id: "2",
-        full_name: "Trần Thị B",
-        email: "b@example.com",
-        phone: "0909876543",
-        role: "User",
-        avatar: "https://via.placeholder.com/100",
-        address: "TP.HCM",
-        birth_day: "1998-06-10",
-        createdAt: "2023-03-10",
-        updatedAt: "2024-03-20",
-    },
-];
-
-// Hàm chuyển file sang base64
 const getBase64Local = (file) => {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -50,7 +23,7 @@ const getBase64Local = (file) => {
     });
 };
 
-const UserComponent = () => {
+const AdminUser = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
     const [formUpdate] = Form.useForm();
     const navigate = useNavigate();
@@ -60,6 +33,24 @@ const UserComponent = () => {
     const [isOpenDelete, setIsOpenDelete] = useState(false);
     const [isLoadDetails, setIsLoadDetails] = useState(false);
     const [stateDetailsUser, setStateDetailsUser] = useState({});
+    const [users, setUsers] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchUsers = async () => {
+            try {
+                setIsLoading(true);
+                const data = await getAllUsers();
+                setUsers(data);
+            } catch (error) {
+                toast.error("Lỗi khi tải danh sách người dùng");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchUsers();
+    }, []);
 
     const handleDetailsProduct = (record) => {
         setStateDetailsUser(record);
@@ -134,7 +125,7 @@ const UserComponent = () => {
         ),
         filterIcon: (filtered) => <SearchOutlined style={{ color: filtered ? "#1677ff" : undefined }} />,
         onFilter: (value, record) =>
-            record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+            record[dataIndex]?.toString().toLowerCase().includes(value.toLowerCase()),
         render: (text) =>
             searchedColumn === dataIndex ? (
                 <Highlighter
@@ -151,9 +142,9 @@ const UserComponent = () => {
     const columns = [
         {
             title: "Tên khách hàng",
-            dataIndex: "full_name",
-            key: "full_name",
-            ...getColumnSearchProps("full_name"),
+            dataIndex: "username",
+            key: "username",
+            ...getColumnSearchProps("username"),
         },
         {
             title: "Email",
@@ -168,8 +159,8 @@ const UserComponent = () => {
         },
         {
             title: "SĐT",
-            dataIndex: "phone",
-            key: "phone",
+            dataIndex: "phoneNumber",
+            key: "phoneNumber",
         },
         {
             title: "Chức năng",
@@ -203,7 +194,8 @@ const UserComponent = () => {
 
                 <TableUser
                     columns={columns}
-                    data={mockUsers}
+                    data={users}
+                    isLoading={isLoading}
                 />
             </div>
 
@@ -215,11 +207,11 @@ const UserComponent = () => {
             >
                 <Loading isPending={isLoadDetails}>
                     <Form form={formUpdate} layout="vertical">
-                        <Form.Item label="Tên khách hàng" name="full_name">
+                        <Form.Item label="Tên khách hàng" name="username">
                             <Input
                                 value={stateDetailsUser.full_name}
                                 onChange={(e) =>
-                                    handleOnChangeDetails(e.target.value, "full_name")
+                                    handleOnChangeDetails(e.target.value, "username")
                                 }
                             />
                         </Form.Item>
@@ -285,4 +277,7 @@ const UserComponent = () => {
     );
 };
 
-export default UserComponent;
+export default AdminUser;
+
+
+
