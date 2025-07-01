@@ -18,26 +18,21 @@ import AboutPage from "../pages/Guest/AboutPage";
 import ContactPage from "../pages/Guest/ContactPage";
 import FAQPage from "../pages/Guest/FAQPage";
 import App from "../App";
-import Admin from "../components/Admin/Admin";
-import FeatureUser from "../components/Admin/Content/FeatureComponent/FeatureUser";
-import ManageUser from "../components/Admin/Content/User/AdminUser";
-import ManageAccount from "../components/Admin/Content/User/AdminAccount";
-
-import MarketAndStoreComponent from "../components/Admin/Content/FeatureComponent/FeatureMarketAndStores";
-import ManageMarket from "../components/Admin/Content/Market/AdminMarket";
-import ManageStore from "../components/Admin/Content/Store/AdminStore";
-import Dashboard from "../components/Admin/Content/DashBoard/Dashboard";
-
-import AdminContentManagement from "../components/Admin/Content/ContentManagement/AdminContentManagement";
-import FAQManagement from "../components/Admin/Content/ContentManagement/FAQManagement";
-import PolicyManagement from "../components/Admin/Content/ContentManagement/PolicyManagement";
+// Admin pages
+import AdminLayout from "../pages/Admin/AdminLayout";
+import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
+import UserManagement from "../pages/Admin/User/UserManagement";
+import MarketManagement from "../pages/Admin/Market/MarketManagement";
+import OrderManagement from "../pages/Admin/OrderManagement";
+import ContentManagement from "../pages/Admin/ContentManagement";
+import Analytics from "../pages/Admin/Analytics";
+import SupportManagement from "../pages/Admin/SupportManagement";
 import BuyerProfile from "../pages/Buyer/BuyerProfile";
 import CartPage from "../pages/Buyer/CartPage";
 import ProxyShopperList from "../pages/ProxyShopper/ProxyShopperList";
 import RegisterProxyShopper from "../pages/ProxyShopper/RegisterProxyShopper";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
 import RegisterSeller from "../pages/Buyer/RegisterSeller";
-import CategoryComponent from "../components/Admin/Content/FeatureComponent/FeatureCategory";
 
 
 // Seller pages
@@ -91,24 +86,63 @@ const AppRoutes = () => {
             </Route>
 
             {/* Admin Routes - Protected with admin role */}
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={['Admin']}><Admin /></ProtectedRoute>}>
-                <Route index element={<Dashboard />} />
-                <Route path="feature_users" element={<FeatureUser />} />
-                <Route path="manage-users" element={<ManageUser />} />
-                <Route path="manage-accounts" element={<ManageAccount />} />
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['Admin']}><AdminLayout /></ProtectedRoute>}>
+                <Route index element={<AdminDashboard />} />
 
-                <Route path="feature_market_stores" element={<MarketAndStoreComponent />} />
-                <Route path="manage-markets" element={<ManageMarket />} />
-                <Route path="manage-stores" element={<ManageStore />} />
+                {/* User Management */}
+                <Route path="users" element={<UserManagement />} />
+                <Route path="users/create" element={<UserManagement />} />
+                <Route path="users/edit/:id" element={<UserManagement />} />
+                <Route path="users/:id" element={<UserManagement />} />
+                <Route path="seller-registrations" element={<UserManagement />} />
+                <Route path="proxy-registrations" element={<UserManagement />} />
 
-                <Route path="feature_content_management" element={<AdminContentManagement />} />
-                <Route path="faq-management" element={<FAQManagement />} />
-                <Route path="policy-management" element={<PolicyManagement />} />
+                {/* Market Management */}
+                <Route path="markets" element={<MarketManagement />} />
+                <Route path="markets/create" element={<MarketManagement />} />
+                <Route path="market-fees" element={<MarketManagement />} />
+                <Route path="market-rules" element={<MarketManagement />} />
 
-                <Route path="feature_categories" element={<CategoryComponent />} />
-                {/* <Route path="manage-categories" element={<ManageCategory />} />
-                <Route path="manage-register-category" element={<ManageRegisterCategory/>} /> */}
-        
+                {/* Store Management */}
+                <Route path="stores" element={<UserManagement />} />
+                <Route path="stores/pending" element={<UserManagement />} />
+
+                {/* Product Management */}
+                <Route path="products" element={<UserManagement />} />
+                <Route path="categories" element={<ContentManagement />} />
+                <Route path="category-registrations" element={<ContentManagement />} />
+                <Route path="product-units" element={<ContentManagement />} />
+
+                {/* Order Management */}
+                <Route path="orders" element={<OrderManagement />} />
+                <Route path="orders/disputes" element={<OrderManagement />} />
+                <Route path="fast-bargains" element={<OrderManagement />} />
+
+                {/* Payment Management */}
+                <Route path="payments" element={<OrderManagement />} />
+                <Route path="market-fee-payments" element={<OrderManagement />} />
+
+                {/* Content Management */}
+                <Route path="faqs" element={<ContentManagement />} />
+                <Route path="policies" element={<ContentManagement />} />
+                <Route path="notifications" element={<ContentManagement />} />
+
+                {/* Support */}
+                <Route path="support-requests" element={<SupportManagement />} />
+                <Route path="chat" element={<SupportManagement />} />
+                <Route path="reports" element={<SupportManagement />} />
+
+                {/* Analytics */}
+                <Route path="analytics/users" element={<Analytics />} />
+                <Route path="analytics/revenue" element={<Analytics />} />
+                <Route path="analytics/products" element={<Analytics />} />
+                <Route path="analytics/orders" element={<Analytics />} />
+
+                {/* System */}
+                <Route path="licenses" element={<ContentManagement />} />
+                <Route path="devices" element={<ContentManagement />} />
+                <Route path="system-settings" element={<ContentManagement />} />
+                <Route path="approvals" element={<UserManagement />} />
             </Route>
         </Routes>
     );

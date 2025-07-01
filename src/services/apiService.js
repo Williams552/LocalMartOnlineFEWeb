@@ -3,6 +3,9 @@ import axios from 'axios';
 // Base API URL từ backend
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5183';
 
+console.log('API Base URL:', API_BASE_URL);
+console.log('Environment:', process.env.NODE_ENV);
+
 // Create axios instance
 const apiClient = axios.create({
     baseURL: API_BASE_URL,
@@ -57,9 +60,13 @@ class ApiService {
     // Generic CRUD operations
     async get(endpoint) {
         try {
+            console.log('Making GET request to:', `${API_BASE_URL}${endpoint}`);
             const response = await apiClient.get(endpoint);
+            console.log('GET response:', response.data);
             return response.data;
         } catch (error) {
+            console.error('GET Error:', error);
+            console.error('Error details:', error.response?.data);
             throw new Error(error.response?.data?.message || `Lỗi khi gọi GET ${endpoint}`);
         }
     }
@@ -88,6 +95,15 @@ class ApiService {
             return response.data;
         } catch (error) {
             throw new Error(error.response?.data?.message || `Lỗi khi gọi DELETE ${endpoint}`);
+        }
+    }
+
+    async patch(endpoint, data) {
+        try {
+            const response = await apiClient.patch(endpoint, data);
+            return response.data;
+        } catch (error) {
+            throw new Error(error.response?.data?.message || `Lỗi khi gọi PATCH ${endpoint}`);
         }
     }
 }
