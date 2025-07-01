@@ -32,9 +32,9 @@ import {
     PlusOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import userService from '../../services/userService';
-import { formatUserData, getRoleColor, getStatusColor } from '../../utils/userValidation';
-import TestAPI from '../../components/TestAPI';
+import userService from '../../../services/userService';
+import { formatUserData, getRoleColor, getStatusColor } from '../../../utils/userValidation';
+import TestAPI from '../../../components/TestAPI';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;

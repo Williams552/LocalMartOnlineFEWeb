@@ -3,46 +3,27 @@ import apiService from './apiService';
 
 class UserService {
     // Get all users with pagination and filters (Admin only)
-    async getAllUsers(params = {}) {
+    
+    async getAllUsers() {
         try {
-            const {
-                pageNumber = 1,
-                pageSize = 10,
-                search = '',
-                role = '',
-                sortField = '',
-                sortOrder = 'asc'
-            } = params;
+            const response = await apiService.get('/api/User');
 
-            const queryParams = new URLSearchParams();
-            queryParams.append('pageNumber', pageNumber.toString());
-            queryParams.append('pageSize', pageSize.toString());
-            if (search) queryParams.append('search', search);
-            if (role) queryParams.append('role', role);
-            if (sortField) queryParams.append('sortField', sortField);
-            if (sortOrder) queryParams.append('sortOrder', sortOrder);
+            if (!response || typeof response !== 'object') {
+                throw new Error('Phản hồi từ API không hợp lệ');
+            }
 
-            console.log('UserService.getAllUsers called with params:', params);
-            console.log('Query string:', queryParams.toString());
-
-            const response = await apiService.get(`/api/User?${queryParams}`);
-            console.log('UserService.getAllUsers response:', response);
-            console.log('Response type:', typeof response);
-            console.log('Response structure check:');
-            console.log('  - response.success:', response?.success);
-            console.log('  - response.data:', response?.data);
-            console.log('  - response.data.Data:', response?.data?.Data);
-            console.log('  - response.data type:', typeof response?.data);
-            console.log('  - response.data.Data type:', typeof response?.data?.Data);
-            console.log('  - Is response.data.Data array?', Array.isArray(response?.data?.Data));
-            console.log('  - Is response.data array?', Array.isArray(response?.data));
+            // Nếu API không có trường data hoặc data không phải mảng hoặc object có Data
+            if (!response.data) {
+                return { success: false, data: [] };
+            }
 
             return response;
         } catch (error) {
-            console.error('Error fetching users:', error);
-            throw new Error(error.message || 'Lỗi khi lấy danh sách người dùng');
+            console.error('❌ Lỗi khi gọi API getAllUsers:', error);
+            throw new Error('Không thể tải danh sách người dùng');
         }
     }
+
 
     // Get user by ID
     async getUserById(id) {

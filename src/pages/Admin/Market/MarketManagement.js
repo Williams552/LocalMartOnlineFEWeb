@@ -33,7 +33,7 @@ import {
     ClockCircleOutlined,
     EnvironmentOutlined
 } from '@ant-design/icons';
-import { marketService } from '../../services/marketService';
+import { marketService } from '../../../services/marketService';
 import moment from 'moment';
 
 const { Search } = Input;

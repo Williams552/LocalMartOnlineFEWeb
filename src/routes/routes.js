@@ -20,9 +20,9 @@ import FAQPage from "../pages/Guest/FAQPage";
 import App from "../App";
 // Admin pages
 import AdminLayout from "../pages/Admin/AdminLayout";
-import AdminDashboard from "../pages/Admin/AdminDashboard";
-import UserManagement from "../pages/Admin/UserManagement";
-import MarketManagement from "../pages/Admin/MarketManagement";
+import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
+import UserManagement from "../pages/Admin/User/UserManagement";
+import MarketManagement from "../pages/Admin/Market/MarketManagement";
 import OrderManagement from "../pages/Admin/OrderManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
 import Analytics from "../pages/Admin/Analytics";
