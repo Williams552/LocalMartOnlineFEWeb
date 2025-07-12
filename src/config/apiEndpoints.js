@@ -37,6 +37,22 @@ export const API_ENDPOINTS = {
         BY_SELLER: (sellerId) => `${API_URL}/api/product/seller/${sellerId}`,
     },
 
+    // Product Unit Endpoints
+    PRODUCT_UNIT: {
+        GET_ACTIVE: `${API_URL}/api/productunit`, // Public - Active units
+        GET_ALL_ADMIN: `${API_URL}/api/productunit/admin`, // Admin - All units with pagination
+        GET_BY_ID: (id) => `${API_URL}/api/productunit/${id}`,
+        CREATE: `${API_URL}/api/productunit`,
+        UPDATE: (id) => `${API_URL}/api/productunit/${id}`,
+        DELETE: (id) => `${API_URL}/api/productunit/${id}`,
+        TOGGLE: (id) => `${API_URL}/api/productunit/${id}/toggle`,
+        SEARCH: `${API_URL}/api/productunit/search`,
+        SEARCH_ADMIN: `${API_URL}/api/productunit/admin/search`,
+        GET_BY_TYPE: (unitType) => `${API_URL}/api/productunit/type/${unitType}`,
+        REORDER: `${API_URL}/api/productunit/reorder`,
+        GET_UNIT_TYPES: `${API_URL}/api/productunit/types`,
+    },
+
     // Order Endpoints
     ORDER: {
         GET_ALL: `${API_URL}/api/order`,
@@ -52,29 +68,83 @@ export const API_ENDPOINTS = {
     // Category Endpoints
     CATEGORY: {
         GET_ALL: `${API_URL}/api/category`,
+        GET_ALL_ADMIN: `${API_URL}/api/category/admin`,
         GET_BY_ID: (id) => `${API_URL}/api/category/${id}`,
         CREATE: `${API_URL}/api/category`,
         UPDATE: (id) => `${API_URL}/api/category/${id}`,
         DELETE: (id) => `${API_URL}/api/category/${id}`,
+        TOGGLE: (id) => `${API_URL}/api/category/${id}/toggle`,
+        SEARCH: `${API_URL}/api/category/search`,
+        SEARCH_ADMIN: `${API_URL}/api/category/searchAdmin`,
+        FILTER: `${API_URL}/api/category/filter`,
+        FILTER_ADMIN: `${API_URL}/api/category/filterAdmin`,
     },
 
     // Market Endpoints
     MARKET: {
-        GET_ALL: `${API_URL}/api/market`,
+        GET_ALL: `${API_URL}/api/market/admin`, // Admin endpoint for all markets
+        GET_ACTIVE: `${API_URL}/api/market`, // Public endpoint for active markets only
         GET_BY_ID: (id) => `${API_URL}/api/market/${id}`,
         CREATE: `${API_URL}/api/market`,
         UPDATE: (id) => `${API_URL}/api/market/${id}`,
         DELETE: (id) => `${API_URL}/api/market/${id}`,
+        TOGGLE_STATUS: (id) => `${API_URL}/api/market/${id}/toggle`,
+        SEARCH: `${API_URL}/api/market/search`,
+        SEARCH_ADMIN: `${API_URL}/api/market/admin/search`,
+        FILTER: `${API_URL}/api/market/filter`,
+        FILTER_ADMIN: `${API_URL}/api/market/admin/filter`,
+        ADMIN_GET_ALL: `${API_URL}/api/market/admin`,
+        ADMIN_SEARCH: `${API_URL}/api/market/admin/search`,
+        ADMIN_FILTER: `${API_URL}/api/market/admin/filter`,
+    },
+
+    // Market Fee Endpoints
+    MARKET_FEE: {
+        GET_ALL: `${API_URL}/api/marketfee`,
+        GET_BY_ID: (id) => `${API_URL}/api/marketfee/${id}`,
+        CREATE: `${API_URL}/api/marketfee`,
+        UPDATE: (id) => `${API_URL}/api/marketfee/${id}`,
+        DELETE: (id) => `${API_URL}/api/marketfee/${id}`,
+        GET_BY_MARKET: (marketId) => `${API_URL}/api/marketfee/market/${marketId}`,
+        PAY: `${API_URL}/api/marketfee/pay`,
+        STATISTICS: `${API_URL}/api/marketfee/statistics`,
+        STATISTICS_BY_MARKET: (marketId) => `${API_URL}/api/marketfee/statistics/${marketId}`,
+    },
+
+    // Market Rule Endpoints
+    MARKET_RULE: {
+        GET_ALL: `${API_URL}/api/marketrule`,
+        GET_BY_ID: (id) => `${API_URL}/api/marketrule/${id}`,
+        CREATE: `${API_URL}/api/marketrule`,
+        UPDATE: (id) => `${API_URL}/api/marketrule/${id}`,
+        DELETE: (id) => `${API_URL}/api/marketrule/${id}`,
+        GET_BY_MARKET: (marketId) => `${API_URL}/api/marketrule/market/${marketId}`,
+        GET_PUBLIC: (marketId) => `${API_URL}/api/marketrule/public/${marketId}`,
+        TOGGLE_STATUS: (id) => `${API_URL}/api/marketrule/${id}/toggle`,
+        SEARCH: `${API_URL}/api/marketrule/search`,
+        STATISTICS: `${API_URL}/api/marketrule/statistics`,
+        STATISTICS_BY_MARKET: (marketId) => `${API_URL}/api/marketrule/statistics/${marketId}`,
     },
 
     // Store Endpoints
     STORE: {
-        GET_ALL: `${API_URL}/api/store`,
+        GET_ALL: `${API_URL}/api/store`, // Public - Active stores
+        GET_ALL_ADMIN: `${API_URL}/api/store/admin`, // Admin - All stores
         GET_BY_ID: (id) => `${API_URL}/api/store/${id}`,
         CREATE: `${API_URL}/api/store`,
         UPDATE: (id) => `${API_URL}/api/store/${id}`,
         DELETE: (id) => `${API_URL}/api/store/${id}`,
-        GET_BY_SELLER: `${API_URL}/api/store/seller`,
+        TOGGLE_STATUS: (id) => `${API_URL}/api/store/${id}/toggle`,
+        SUSPEND: (id) => `${API_URL}/api/store/${id}/suspend`,
+        REACTIVATE: (id) => `${API_URL}/api/store/${id}/reactivate`,
+        SEARCH: `${API_URL}/api/store/search`,
+        SEARCH_ADMIN: `${API_URL}/api/store/admin/search`,
+        NEARBY: `${API_URL}/api/store/nearby`,
+        BY_MARKET: (marketId) => `${API_URL}/api/store/market/${marketId}`,
+        MY_STORES: `${API_URL}/api/store/my-stores`,
+        FOLLOW: (id) => `${API_URL}/api/store/${id}/follow`,
+        UNFOLLOW: (id) => `${API_URL}/api/store/${id}/unfollow`,
+        FOLLOWING: `${API_URL}/api/store/following`,
     },
 
     // Cart Endpoints
