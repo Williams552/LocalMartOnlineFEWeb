@@ -29,12 +29,13 @@ import {
     EyeOutlined,
     EditOutlined,
     DeleteOutlined,
-    PlusOutlined
+    PlusOutlined,
+    AppstoreOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import userService from '../../../services/userService';
 import { formatUserData, getRoleColor, getStatusColor } from '../../../utils/userValidation';
-import TestAPI from '../../../components/TestAPI';
+
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -138,6 +139,13 @@ const AdminDashboard = () => {
             onClick: () => navigate('/admin/markets')
         },
         {
+            title: 'Quản lý đơn vị sản phẩm',
+            description: 'Quản lý đơn vị đo lường',
+            icon: <AppstoreOutlined />,
+            color: '#722ed1',
+            onClick: () => navigate('/admin/product-units')
+        },
+        {
             title: 'Quản lý đơn hàng',
             description: 'Theo dõi và xử lý đơn hàng',
             icon: <ShoppingCartOutlined />,
@@ -148,7 +156,7 @@ const AdminDashboard = () => {
             title: 'Báo cáo',
             description: 'Xem báo cáo và thống kê',
             icon: <RiseOutlined />,
-            color: '#722ed1',
+            color: '#13c2c2',
             onClick: () => navigate('/admin/reports')
         }
     ];
@@ -216,7 +224,7 @@ const AdminDashboard = () => {
             </div>
 
             {/* Debug Component - Temporarily added */}
-            <TestAPI />
+            
 
             {/* Statistics Cards */}
             <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
@@ -240,7 +248,7 @@ const AdminDashboard = () => {
             <Card title="Thao tác nhanh" style={{ marginBottom: '24px' }}>
                 <Row gutter={[16, 16]}>
                     {quickActions.map((action, index) => (
-                        <Col xs={24} sm={12} lg={6} key={index}>
+                        <Col xs={24} sm={12} md={8} lg={6} xl={4.8} key={index}>
                             <Card
                                 hoverable
                                 onClick={action.onClick}

@@ -1,174 +1,139 @@
-// src/services/userService.js
+// ✅ Updated userService.js with improved query support
 import apiService from './apiService';
 
 class UserService {
     // Get all users with pagination and filters (Admin only)
-    
-    async getAllUsers() {
+    async getAllUsers(params = {}) {
         try {
-            const response = await apiService.get('/api/User');
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Chưa đăng nhập hoặc phiên làm việc đã hết hạn');
+            }
+
+            const queryParams = {
+                pageNumber: 1,
+                pageSize: 10,
+                sortOrder: 'asc',
+                ...params
+            };
+
+            if (params.loadAll) {
+                queryParams.pageNumber = 1;
+                queryParams.pageSize = 1000;
+            }
+
+            console.log('🔄 Gọi API để lấy users với params:', queryParams);
+            const response = await apiService.get('/api/User', { params: queryParams });
 
             if (!response || typeof response !== 'object') {
                 throw new Error('Phản hồi từ API không hợp lệ');
             }
 
-            // Nếu API không có trường data hoặc data không phải mảng hoặc object có Data
-            if (!response.data) {
-                return { success: false, data: [] };
-            }
+            const users = response.data?.data || [];
+            const pagination = {
+                total: response.data.total || users.length,
+                pageNumber: response.data.pageNumber || queryParams.pageNumber,
+                pageSize: response.data.pageSize || queryParams.pageSize,
+                sortOrder: queryParams.sortOrder
+            };
 
-            return response;
+            return {
+                success: true,
+                data: users,
+                pagination,
+                message: response.message || 'Lấy danh sách thành công'
+            };
         } catch (error) {
             console.error('❌ Lỗi khi gọi API getAllUsers:', error);
-            throw new Error('Không thể tải danh sách người dùng');
+
+            if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/login';
+            }
+
+            throw new Error('Không thể tải danh sách người dùng: ' + error.message);
         }
     }
 
-
-    // Get user by ID
     async getUserById(id) {
-        try {
-            const response = await apiService.get(`/api/User/${id}`);
-            return response;
-        } catch (error) {
-            console.error('Error fetching user by ID:', error);
-            throw new Error(error.message || 'Lỗi khi lấy thông tin người dùng');
-        }
+        const response = await apiService.get(`/api/User/${id}`);
+        return response;
     }
 
-    // Create new user
     async createUser(userData) {
-        try {
-            // Map userData to RegisterDTO format
-            const registerDto = {
-                username: userData.username,
-                password: userData.password,
-                email: userData.email,
-                fullName: userData.fullName,
-                phoneNumber: userData.phoneNumber || '',
-                address: userData.address || '',
-                userToken: userData.userToken || null
-            };
-
-            const response = await apiService.post('/api/User', registerDto);
-            return response;
-        } catch (error) {
-            console.error('Error creating user:', error);
-            throw new Error(error.message || 'Lỗi khi tạo người dùng mới');
-        }
+        const registerDto = {
+            username: userData.username,
+            password: userData.password,
+            email: userData.email,
+            fullName: userData.fullName,
+            phoneNumber: userData.phoneNumber || '',
+            address: userData.address || '',
+            userToken: userData.userToken || null
+        };
+        const response = await apiService.post('/api/User', registerDto);
+        return response;
     }
 
-    // Update user (Admin or self only)
     async updateUser(id, userData) {
-        try {
-            // Map userData to RegisterDTO format
-            const updateDto = {
-                username: userData.username,
-                password: userData.password || '', // Password có thể để trống khi update
-                email: userData.email,
-                fullName: userData.fullName,
-                phoneNumber: userData.phoneNumber || '',
-                address: userData.address || '',
-                userToken: userData.userToken || null
-            };
-
-            const response = await apiService.put(`/api/User/${id}`, updateDto);
-            return response;
-        } catch (error) {
-            console.error('Error updating user:', error);
-            throw new Error(error.message || 'Lỗi khi cập nhật người dùng');
-        }
+        const updateDto = {
+            username: userData.username,
+            password: userData.password || '',
+            email: userData.email,
+            fullName: userData.fullName,
+            phoneNumber: userData.phoneNumber || '',
+            address: userData.address || '',
+            userToken: userData.userToken || null
+        };
+        const response = await apiService.put(`/api/User/${id}`, updateDto);
+        return response;
     }
 
-    // Delete user
     async deleteUser(id) {
-        try {
-            const response = await apiService.delete(`/api/User/${id}`);
-            return response;
-        } catch (error) {
-            console.error('Error deleting user:', error);
-            throw new Error(error.message || 'Lỗi khi xóa người dùng');
-        }
+        const response = await apiService.delete(`/api/User/${id}`);
+        return response;
     }
 
-    // Toggle user account status (Admin only)
     async toggleUserAccount(id) {
-        try {
-            const response = await apiService.patch(`/api/User/${id}/toggle`, {});
-            return response;
-        } catch (error) {
-            console.error('Error toggling user account:', error);
-            throw new Error(error.message || 'Lỗi khi chuyển đổi trạng thái tài khoản');
-        }
+        const response = await apiService.patch(`/api/User/${id}/toggle`, {});
+        return response;
     }
 
-    // Update user language
     async updateUserLanguage(id, language) {
-        try {
-            const response = await apiService.put(`/api/User/${id}/language`, {
-                preferredLanguage: language
-            });
-            return response;
-        } catch (error) {
-            console.error('Error updating user language:', error);
-            throw new Error(error.message || 'Lỗi khi cập nhật ngôn ngữ');
-        }
+        const response = await apiService.put(`/api/User/${id}/language`, {
+            preferredLanguage: language
+        });
+        return response;
     }
 
-    // Get user language
     async getUserLanguage(id) {
-        try {
-            const response = await apiService.get(`/api/User/${id}/language`);
-            return response;
-        } catch (error) {
-            console.error('Error getting user language:', error);
-            throw new Error(error.message || 'Lỗi khi lấy ngôn ngữ người dùng');
-        }
+        const response = await apiService.get(`/api/User/${id}/language`);
+        return response;
     }
 
-    // Update user theme
     async updateUserTheme(id, theme) {
-        try {
-            const response = await apiService.put(`/api/User/${id}/theme`, {
-                preferredTheme: theme
-            });
-            return response;
-        } catch (error) {
-            console.error('Error updating user theme:', error);
-            throw new Error(error.message || 'Lỗi khi cập nhật giao diện');
-        }
+        const response = await apiService.put(`/api/User/${id}/theme`, {
+            preferredTheme: theme
+        });
+        return response;
     }
 
-    // Get user theme
     async getUserTheme(id) {
-        try {
-            const response = await apiService.get(`/api/User/${id}/theme`);
-            return response;
-        } catch (error) {
-            console.error('Error getting user theme:', error);
-            throw new Error(error.message || 'Lỗi khi lấy giao diện người dùng');
-        }
+        const response = await apiService.get(`/api/User/${id}/theme`);
+        return response;
     }
 
-    // Disable own account
     async disableOwnAccount() {
-        try {
-            const response = await apiService.patch('/api/User/disable-own', {});
-            return response;
-        } catch (error) {
-            console.error('Error disabling own account:', error);
-            throw new Error(error.message || 'Lỗi khi vô hiệu hóa tài khoản');
-        }
+        const response = await apiService.patch('/api/User/disable-own', {});
+        return response;
     }
 
-    // Get user statistics
     async getUserStatistics() {
         try {
-            // Get all users to calculate statistics
             const response = await this.getAllUsers({ pageSize: 1000 });
 
             if (response.success && response.data) {
-                const users = response.data.Data || [];
+                const users = response.data;
 
                 const stats = {
                     totalUsers: users.length,
@@ -177,7 +142,7 @@ class UserService {
                     totalSellers: users.filter(u => u.role === 'Seller').length,
                     totalProxyShoppers: users.filter(u => u.role === 'ProxyShopper').length,
                     activeUsers: users.filter(u => u.status === 'Active').length,
-                    blockedUsers: users.filter(u => u.status === 'Disabled').length
+                    blockedUsers: users.filter(u => u.status !== 'Active').length
                 };
 
                 return { success: true, data: stats };
@@ -191,11 +156,9 @@ class UserService {
     }
 }
 
-// Export singleton instance
 const userService = new UserService();
 export default userService;
 
-// Export individual functions for backward compatibility
 export const getAllUsers = (params) => userService.getAllUsers(params);
 export const getUserById = (id) => userService.getUserById(id);
 export const createUser = (userData) => userService.createUser(userData);
@@ -208,4 +171,3 @@ export const updateUserTheme = (id, theme) => userService.updateUserTheme(id, th
 export const getUserTheme = (id) => userService.getUserTheme(id);
 export const disableOwnAccount = () => userService.disableOwnAccount();
 export const getUserStatistics = () => userService.getUserStatistics();
-
