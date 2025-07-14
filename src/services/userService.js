@@ -4,7 +4,7 @@ import apiService from './apiService';
 class UserService {
     // Get all users with pagination and filters (Admin only)
 
-    async getAllUsers() {
+    async getAllUsers(params = {}) {
 
         try {
             const token = localStorage.getItem('token');

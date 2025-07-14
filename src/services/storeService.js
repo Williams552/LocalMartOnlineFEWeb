@@ -294,4 +294,5 @@ class StoreService {
 
 const storeService = new StoreService();
 
+export { storeService };
 export default storeService;

@@ -20,7 +20,7 @@ import {
     EnvironmentOutlined,
     BarChartOutlined
 } from '@ant-design/icons';
-import { storeService } from '../../../services/storeService';
+import storeService from '../../../services/storeService';
 import { marketService } from '../../../services/marketService';
 import StoreNavigation from './StoreNavigation';
 import { Line, Pie, Column, Area } from '@ant-design/plots';
@@ -52,17 +52,17 @@ const StoreAnalytics = () => {
         try {
             const params = {};
             if (selectedMarket) params.marketId = selectedMarket;
-            
+
             const response = await storeService.getAllStores(params);
-            const storesData = Array.isArray(response) ? response : 
-                              response?.data ? response.data : [];
-            
+            const storesData = Array.isArray(response) ? response :
+                response?.data ? response.data : [];
+
             setStores(storesData);
-            
+
             // Calculate analytics
             const analytics = calculateAnalytics(storesData);
             setAnalytics(analytics);
-            
+
         } catch (error) {
             console.error('Error loading analytics:', error);
         } finally {
@@ -73,8 +73,8 @@ const StoreAnalytics = () => {
     const loadMarkets = async () => {
         try {
             const response = await marketService.getActiveMarkets();
-            const marketsData = Array.isArray(response) ? response : 
-                              response?.data ? response.data : [];
+            const marketsData = Array.isArray(response) ? response :
+                response?.data ? response.data : [];
             setMarkets(marketsData);
         } catch (error) {
             console.error('Error loading markets:', error);
@@ -87,12 +87,12 @@ const StoreAnalytics = () => {
             const createdDate = new Date(store.createdAt);
             const currentMonth = new Date();
             return createdDate.getMonth() === currentMonth.getMonth() &&
-                   createdDate.getFullYear() === currentMonth.getFullYear();
+                createdDate.getFullYear() === currentMonth.getFullYear();
         }).length;
-        
-        const avgRating = total > 0 ? 
+
+        const avgRating = total > 0 ?
             storesData.reduce((sum, store) => sum + (store.rating || 0), 0) / total : 0;
-        
+
         const topPerformers = storesData
             .sort((a, b) => (b.rating || 0) - (a.rating || 0))
             .slice(0, 10);
@@ -286,7 +286,7 @@ const StoreAnalytics = () => {
                                 </Option>
                             ))}
                         </Select>
-                        <RangePicker 
+                        <RangePicker
                             onChange={setDateRange}
                             format="DD/MM/YYYY"
                         />

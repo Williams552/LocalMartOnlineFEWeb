@@ -29,7 +29,7 @@ import {
     StopOutlined,
     PlayCircleOutlined
 } from '@ant-design/icons';
-import { storeService } from '../../../services/storeService';
+import storeService from '../../../services/storeService';
 import { marketService } from '../../../services/marketService';
 import StoreNavigation from './StoreNavigation';
 
@@ -85,11 +85,11 @@ const StoreManagement = () => {
             console.log('🔍 StoreManagement - Loading initial stores with params:', params);
             const response = await storeService.getAllStores(params);
             console.log('🔍 StoreManagement - API response:', response);
-            
+
             // Handle backend response structure: { success, message, data }
             let storesData = [];
             let total = 0;
-            
+
             if (response && response.success && response.data) {
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
@@ -103,7 +103,7 @@ const StoreManagement = () => {
                 storesData = response;
                 total = response.length;
             }
-            
+
             setStores(storesData);
             setPagination(prev => ({
                 ...prev,
@@ -128,7 +128,7 @@ const StoreManagement = () => {
                 marketId: ''
             };
             setFilters(newFilters);
-            
+
             const params = {
                 page: 1,
                 limit: pagination.pageSize
@@ -136,11 +136,11 @@ const StoreManagement = () => {
 
             console.log('� StoreManagement - Refreshing all stores');
             const response = await storeService.getAllStores(params);
-            
+
             // Handle backend response structure: { success, message, data }
             let storesData = [];
             let total = 0;
-            
+
             if (response && response.success && response.data) {
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
@@ -153,7 +153,7 @@ const StoreManagement = () => {
                 storesData = response;
                 total = response.length;
             }
-            
+
             setStores(storesData);
             setPagination(prev => ({
                 ...prev,
@@ -173,8 +173,8 @@ const StoreManagement = () => {
     const loadMarkets = async () => {
         try {
             const response = await marketService.getActiveMarkets();
-            const marketsData = Array.isArray(response) ? response : 
-                              response?.data ? response.data : [];
+            const marketsData = Array.isArray(response) ? response :
+                response?.data ? response.data : [];
             setMarkets(marketsData);
         } catch (error) {
             console.error('Error loading markets:', error);
@@ -201,7 +201,7 @@ const StoreManagement = () => {
         setLoading(true);
         try {
             console.log('🔍 Searching stores with keyword:', value);
-            
+
             // Use searchStores API for actual search
             const searchParams = {
                 keyword: value.trim(),
@@ -217,7 +217,7 @@ const StoreManagement = () => {
             // Handle search response
             let storesData = [];
             let total = 0;
-            
+
             if (response && response.success && response.data) {
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
@@ -249,49 +249,49 @@ const StoreManagement = () => {
     };
 
     const handleFilterChange = async (key, value) => {
-    const updatedFilters = { ...filters, [key]: value };
-    setFilters(updatedFilters);
-    setPagination(prev => ({ ...prev, current: 1 }));
+        const updatedFilters = { ...filters, [key]: value };
+        setFilters(updatedFilters);
+        setPagination(prev => ({ ...prev, current: 1 }));
 
-    setLoading(true);
-    try {
-        const searchParams = {
-            keyword: updatedFilters.search || undefined,
-            page: 1,
-            pageSize: pagination.pageSize,
-            status: updatedFilters.status || undefined,
-            marketId: updatedFilters.marketId || undefined
-        };
+        setLoading(true);
+        try {
+            const searchParams = {
+                keyword: updatedFilters.search || undefined,
+                page: 1,
+                pageSize: pagination.pageSize,
+                status: updatedFilters.status || undefined,
+                marketId: updatedFilters.marketId || undefined
+            };
 
-        const response = await storeService.searchStores(searchParams);
-        console.log('🔎 Filter response:', response);
+            const response = await storeService.searchStores(searchParams);
+            console.log('🔎 Filter response:', response);
 
-        let storesData = [];
-        let total = 0;
+            let storesData = [];
+            let total = 0;
 
-        if (response?.success && response.data) {
-            if (Array.isArray(response.data)) {
-                storesData = response.data;
-                total = response.total || response.data.length;
-            } else if (Array.isArray(response.data.items)) {
-                storesData = response.data.items;
-                total = response.data.totalCount || response.data.total || response.data.items.length;
+            if (response?.success && response.data) {
+                if (Array.isArray(response.data)) {
+                    storesData = response.data;
+                    total = response.total || response.data.length;
+                } else if (Array.isArray(response.data.items)) {
+                    storesData = response.data.items;
+                    total = response.data.totalCount || response.data.total || response.data.items.length;
+                }
             }
-        }
 
-        setStores(storesData);
-        setPagination(prev => ({
-            ...prev,
-            total,
-            current: 1
-        }));
-    } catch (error) {
-        console.error('❌ Error filtering stores:', error);
-        message.error('Lỗi khi lọc cửa hàng');
-    } finally {
-        setLoading(false);
-    }
-};
+            setStores(storesData);
+            setPagination(prev => ({
+                ...prev,
+                total,
+                current: 1
+            }));
+        } catch (error) {
+            console.error('❌ Error filtering stores:', error);
+            message.error('Lỗi khi lọc cửa hàng');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleViewStore = (store) => {
         setSelectedStore(store);
@@ -304,8 +304,8 @@ const StoreManagement = () => {
             content: (
                 <div>
                     <p>Bạn có chắc chắn muốn tạm ngưng cửa hàng này?</p>
-                    <Input.TextArea 
-                        placeholder="Nhập lý do tạm ngưng..." 
+                    <Input.TextArea
+                        placeholder="Nhập lý do tạm ngưng..."
                         id="suspend-reason"
                         rows={3}
                     />
@@ -359,10 +359,10 @@ const StoreManagement = () => {
 
             // Find nearby stores within 10km
             const response = await storeService.findNearbyStores(
-                latitude, 
-                longitude, 
+                latitude,
+                longitude,
                 10, // 10km radius
-                1, 
+                1,
                 pagination.pageSize
             );
 
@@ -371,7 +371,7 @@ const StoreManagement = () => {
             // Handle response
             let storesData = [];
             let total = 0;
-            
+
             if (response && response.success && response.data) {
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
@@ -433,15 +433,15 @@ const StoreManagement = () => {
             ellipsis: true,
             render: (text, record) => (
                 <Space>
-                    <Avatar 
+                    <Avatar
                         size={32}
-                        src={record.storeImageUrl} 
+                        src={record.storeImageUrl}
                         icon={<ShopOutlined />}
                         style={{ backgroundColor: '#f56a00' }}
                     />
                     <div style={{ minWidth: 0, flex: 1 }}>
                         <Tooltip title={text}>
-                            <div style={{ 
+                            <div style={{
                                 fontWeight: 'bold',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -501,10 +501,10 @@ const StoreManagement = () => {
             align: 'center',
             render: (rating) => (
                 <div style={{ textAlign: 'center' }}>
-                    <Rate 
-                        disabled 
-                        allowHalf 
-                        value={rating || 0} 
+                    <Rate
+                        disabled
+                        allowHalf
+                        value={rating || 0}
                         style={{ fontSize: '12px' }}
                     />
                     <div style={{ fontSize: '12px', color: '#666' }}>
@@ -673,7 +673,7 @@ const StoreManagement = () => {
                             <Button onClick={loadStores}>Làm mới</Button>
                         </Col>
                         <Col span={6}>
-                            <Button 
+                            <Button
                                 type="dashed"
                                 onClick={handleFindNearbyStores}
                                 loading={loading}
@@ -717,9 +717,9 @@ const StoreManagement = () => {
                     {selectedStore && (
                         <div>
                             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-                                <Avatar 
+                                <Avatar
                                     size={80}
-                                    src={selectedStore.storeImageUrl} 
+                                    src={selectedStore.storeImageUrl}
                                     icon={<ShopOutlined />}
                                     style={{ backgroundColor: '#f56a00' }}
                                 />
@@ -749,24 +749,24 @@ const StoreManagement = () => {
                                     {selectedStore.contactNumber || 'Chưa cập nhật'}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Đánh giá">
-                                    <Rate 
-                                        disabled 
-                                        allowHalf 
-                                        value={selectedStore.rating || 0} 
+                                    <Rate
+                                        disabled
+                                        allowHalf
+                                        value={selectedStore.rating || 0}
                                     />
                                     <span style={{ marginLeft: 8 }}>
                                         {(selectedStore.rating || 0).toFixed(1)} / 5.0
                                     </span>
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Ngày tạo">
-                                    {selectedStore.createdAt ? 
-                                        new Date(selectedStore.createdAt).toLocaleString('vi-VN') : 
+                                    {selectedStore.createdAt ?
+                                        new Date(selectedStore.createdAt).toLocaleString('vi-VN') :
                                         'Chưa có thông tin'
                                     }
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Cập nhật lần cuối">
-                                    {selectedStore.updatedAt ? 
-                                        new Date(selectedStore.updatedAt).toLocaleString('vi-VN') : 
+                                    {selectedStore.updatedAt ?
+                                        new Date(selectedStore.updatedAt).toLocaleString('vi-VN') :
                                         'Chưa có thông tin'
                                     }
                                 </Descriptions.Item>

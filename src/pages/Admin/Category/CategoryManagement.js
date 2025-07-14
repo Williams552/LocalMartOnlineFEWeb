@@ -28,7 +28,7 @@ import {
     CheckCircleOutlined,
     StopOutlined,
 } from '@ant-design/icons';
-import { categoryService } from '../../../services/categoryService';
+import categoryService from '../../../services/categoryService';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -68,10 +68,10 @@ const CategoryManagement = () => {
         setLoading(true);
         try {
             console.log('🔍 CategoryManagement - Loading categories with filters:', filters);
-            
+
             let response;
             let usedFallback = false;
-            
+
             try {
                 if (filters.search && filters.search.trim()) {
                     // Search by name
@@ -91,7 +91,7 @@ const CategoryManagement = () => {
                 response = await categoryService.getAllCategories(pagination.current, pagination.pageSize);
                 usedFallback = true;
             }
-            
+
             console.log('🔍 CategoryManagement - API response:', response);
 
             // Handle different response structures
@@ -128,14 +128,14 @@ const CategoryManagement = () => {
             console.log('🔍 CategoryManagement - Processed categories data:', categoriesData);
 
             setCategories(categoriesData);
-            
+
             if (!response?.items) {
                 setPagination(prev => ({
                     ...prev,
                     total: categoriesData.length
                 }));
             }
-            
+
             // Show appropriate messages
             if ((filters.search || filters.alphabet) && categoriesData.length === 0 && !usedFallback) {
                 message.info('Không tìm thấy danh mục nào phù hợp với điều kiện tìm kiếm');
@@ -260,9 +260,9 @@ const CategoryManagement = () => {
                         alignItems: 'center',
                         justifyContent: 'center'
                     }}>
-                        <AppstoreOutlined style={{ 
-                            fontSize: '18px', 
-                            color: record.isActive ? '#1890ff' : '#999' 
+                        <AppstoreOutlined style={{
+                            fontSize: '18px',
+                            color: record.isActive ? '#1890ff' : '#999'
                         }} />
                     </div>
                     <div>
@@ -399,8 +399,8 @@ const CategoryManagement = () => {
                             value={categories.filter(c => {
                                 const createdDate = new Date(c.createdAt);
                                 const now = new Date();
-                                return createdDate.getMonth() === now.getMonth() && 
-                                       createdDate.getFullYear() === now.getFullYear();
+                                return createdDate.getMonth() === now.getMonth() &&
+                                    createdDate.getFullYear() === now.getFullYear();
                             }).length}
                             valueStyle={{ color: '#1890ff' }}
                         />
@@ -455,7 +455,7 @@ const CategoryManagement = () => {
                         </Select>
                     </Col>
                     <Col span={4}>
-                        <Button 
+                        <Button
                             onClick={() => {
                                 setFilters({ search: '', status: '', alphabet: '' });
                                 setPagination(prev => ({ ...prev, current: 1 }));
@@ -521,8 +521,8 @@ const CategoryManagement = () => {
                             { max: 500, message: 'Mô tả không được quá 500 ký tự!' }
                         ]}
                     >
-                        <TextArea 
-                            rows={4} 
+                        <TextArea
+                            rows={4}
                             placeholder="Nhập mô tả cho danh mục..."
                             showCount
                             maxLength={500}
@@ -563,7 +563,7 @@ const CategoryManagement = () => {
                                 justifyContent: 'center',
                                 margin: '0 auto 16px'
                             }}>
-                                <AppstoreOutlined style={{ 
+                                <AppstoreOutlined style={{
                                     fontSize: '32px',
                                     color: selectedCategory.isActive ? '#1890ff' : '#999'
                                 }} />

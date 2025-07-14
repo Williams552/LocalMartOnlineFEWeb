@@ -28,7 +28,7 @@ import {
     UserOutlined,
     ClockCircleOutlined
 } from '@ant-design/icons';
-import { storeService } from '../../../services/storeService';
+import storeService from '../../../services/storeService';
 import { marketService } from '../../../services/marketService';
 import StoreNavigation from './StoreNavigation';
 import { Pie, Column, Line } from '@ant-design/plots';
@@ -57,38 +57,38 @@ const StoreDashboard = () => {
         setLoading(true);
         try {
             console.log('🔍 StoreDashboard - Loading dashboard data...');
-            
+
             // Load stores data
             const stores = await storeService.getAllStores();
             console.log('🔍 StoreDashboard - API response:', stores);
-            
+
             // Handle different response structures
             let storesData = [];
-            
+
             if (Array.isArray(stores)) {
                 storesData = stores;
             } else if (stores?.data && Array.isArray(stores.data)) {
                 storesData = stores.data;
             } else if (stores && typeof stores === 'object') {
-                storesData = Object.values(stores).filter(item => 
+                storesData = Object.values(stores).filter(item =>
                     item && typeof item === 'object' && item.id
                 );
             }
-            
+
             if (storesData.length > 0) {
                 const stats = calculateStats(storesData);
                 setStoreStats(stats);
-                
+
                 // Get top rated stores
                 const topRated = storesData
                     .sort((a, b) => (b.rating || 0) - (a.rating || 0))
                     .slice(0, 5);
                 setTopStores(topRated);
-                
+
                 // Generate chart data
                 const statusChart = generateStatusChartData(storesData);
                 setChartData(statusChart);
-                
+
                 // Generate market distribution
                 const marketDist = await generateMarketDistribution(storesData);
                 setMarketDistribution(marketDist);
@@ -139,7 +139,7 @@ const StoreDashboard = () => {
         const activeStores = stores.filter(s => s.status === 'Open').length;
         const closedStores = stores.filter(s => s.status === 'Closed').length;
         const suspendedStores = stores.filter(s => s.status === 'Suspended').length;
-        const avgRating = stores.length > 0 ? 
+        const avgRating = stores.length > 0 ?
             stores.reduce((sum, s) => sum + (s.rating || 0), 0) / stores.length : 0;
 
         return {
@@ -167,9 +167,9 @@ const StoreDashboard = () => {
     const generateMarketDistribution = async (stores) => {
         try {
             const markets = await marketService.getActiveMarkets();
-            const marketsData = Array.isArray(markets) ? markets : 
-                              markets?.data ? markets.data : [];
-            
+            const marketsData = Array.isArray(markets) ? markets :
+                markets?.data ? markets.data : [];
+
             const marketCount = stores.reduce((acc, store) => {
                 const marketId = store.marketId;
                 acc[marketId] = (acc[marketId] || 0) + 1;
@@ -202,8 +202,8 @@ const StoreDashboard = () => {
             key: 'name',
             render: (text, record) => (
                 <Space>
-                    <Avatar 
-                        src={record.storeImageUrl} 
+                    <Avatar
+                        src={record.storeImageUrl}
                         icon={<ShopOutlined />}
                         size={32}
                     />
@@ -336,16 +336,16 @@ const StoreDashboard = () => {
                 {/* Charts */}
                 <Row gutter={[16, 16]}>
                     <Col xs={24} lg={12}>
-                        <Card 
-                            title="Phân bố trạng thái cửa hàng" 
+                        <Card
+                            title="Phân bố trạng thái cửa hàng"
                             extra={<Button size="small">Chi tiết</Button>}
                         >
                             <Pie {...pieConfig} />
                         </Card>
                     </Col>
                     <Col xs={24} lg={12}>
-                        <Card 
-                            title="Phân bố theo chợ" 
+                        <Card
+                            title="Phân bố theo chợ"
                             extra={<Button size="small">Xem tất cả</Button>}
                         >
                             <Column {...marketChartConfig} />
@@ -355,8 +355,8 @@ const StoreDashboard = () => {
 
                 <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
                     <Col xs={24} lg={16}>
-                        <Card 
-                            title="Top cửa hàng đánh giá cao" 
+                        <Card
+                            title="Top cửa hàng đánh giá cao"
                             extra={
                                 <Button type="primary" href="/admin/stores">
                                     Quản lý cửa hàng
