@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
 
@@ -292,4 +293,5 @@ class StoreService {
 }
 
 const storeService = new StoreService();
+
 export default storeService;

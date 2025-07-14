@@ -22,7 +22,17 @@ import SellerApp from "../SellerApp"; // New seller app without header/footer
 import AdminLayout from "../pages/Admin/AdminLayout";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
 import UserManagement from "../pages/Admin/User/UserManagement";
+import CreateUser from "../pages/Admin/User/CreateUser";
+import UserAnalytics from "../pages/Admin/Analytics/UserAnalytics";
+import CategoryManagement from "../pages/Admin/Category/CategoryManagement";
 import MarketManagement from "../pages/Admin/Market/MarketManagement";
+import MarketDashboard from "../pages/Admin/Market/MarketDashboard";
+import MarketFeeManagement from "../pages/Admin/Market/MarketFeeManagement";
+import MarketRuleManagement from "../pages/Admin/Market/MarketRuleManagement";
+import StoreManagement from "../pages/Admin/Store/StoreManagement";
+import StoreDashboard from "../pages/Admin/Store/StoreDashboard";
+import StoreAnalytics from "../pages/Admin/Store/StoreAnalytics";
+import ProductUnitManagement from "../pages/Admin/ProductUnit/ProductUnitManagement";
 import OrderManagement from "../pages/Admin/OrderManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
 import Analytics from "../pages/Admin/Analytics";
@@ -123,27 +133,36 @@ const AppRoutes = () => {
 
                 {/* User Management */}
                 <Route path="users" element={<UserManagement />} />
-                <Route path="users/create" element={<UserManagement />} />
+                <Route path="users/create" element={<CreateUser />} />
                 <Route path="users/edit/:id" element={<UserManagement />} />
                 <Route path="users/:id" element={<UserManagement />} />
                 <Route path="seller-registrations" element={<UserManagement />} />
                 <Route path="proxy-registrations" element={<UserManagement />} />
 
+                {/* Category Management */}
+                <Route path="categories" element={<CategoryManagement />} />
+
                 {/* Market Management */}
                 <Route path="markets" element={<MarketManagement />} />
                 <Route path="markets/create" element={<MarketManagement />} />
-                <Route path="market-fees" element={<MarketManagement />} />
-                <Route path="market-rules" element={<MarketManagement />} />
+                <Route path="markets/dashboard" element={<MarketDashboard />} />
+                <Route path="market-fees" element={<MarketFeeManagement />} />
+                <Route path="market-rules" element={<MarketRuleManagement />} />
+                
 
                 {/* Store Management */}
-                <Route path="stores" element={<UserManagement />} />
-                <Route path="stores/pending" element={<UserManagement />} />
+                <Route path="stores" element={<StoreManagement />} />
+                <Route path="stores/dashboard" element={<StoreDashboard />} />
+                <Route path="stores/create" element={<StoreManagement />} />
+                <Route path="stores/analytics" element={<StoreAnalytics />} />
+                <Route path="stores/sellers" element={<StoreManagement />} />
+                <Route path="stores/reviews" element={<StoreManagement />} />
 
                 {/* Product Management */}
                 <Route path="products" element={<UserManagement />} />
                 <Route path="categories" element={<ContentManagement />} />
                 <Route path="category-registrations" element={<ContentManagement />} />
-                <Route path="product-units" element={<ContentManagement />} />
+                <Route path="product-units" element={<ProductUnitManagement />} />
 
                 {/* Order Management */}
                 <Route path="orders" element={<OrderManagement />} />
@@ -165,7 +184,7 @@ const AppRoutes = () => {
                 <Route path="reports" element={<SupportManagement />} />
 
                 {/* Analytics */}
-                <Route path="analytics/users" element={<Analytics />} />
+                <Route path="analytics/users" element={<UserAnalytics />} />
                 <Route path="analytics/revenue" element={<Analytics />} />
                 <Route path="analytics/products" element={<Analytics />} />
                 <Route path="analytics/orders" element={<Analytics />} />

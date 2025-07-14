@@ -25,7 +25,9 @@ import {
     BankOutlined,
     CustomerServiceOutlined,
     BarChartOutlined,
-    DollarOutlined
+    DollarOutlined,
+    TagsOutlined,
+    BoxPlotOutlined
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -66,12 +68,17 @@ const AdminLayout = () => {
                 { key: '/admin/stores/pending', label: 'Chờ duyệt' },
             ]
         },
+      
         {
-            key: 'products', icon: <AppstoreOutlined />, label: 'Quản lý sản phẩm', children: [
-                { key: '/admin/products', label: 'Danh sách sản phẩm' },
+            key: 'product-units', icon: <TagsOutlined />, label: 'Quản lý đơn vị sản phẩm', children: [
+                { key: '/admin/product-units', label: 'Danh sách đơn vị' },
+                { key: '/admin/product-units/demo', label: 'Demo Selector' },
+            ]
+        },
+        {
+            key: 'categories', icon: <AppstoreOutlined />, label: 'Quản lý danh mục', children: [
                 { key: '/admin/categories', label: 'Danh mục' },
                 { key: '/admin/category-registrations', label: 'Đăng ký danh mục' },
-                { key: '/admin/product-units', label: 'Đơn vị sản phẩm' },
             ]
         },
         {
@@ -81,12 +88,8 @@ const AdminLayout = () => {
                 { key: '/admin/fast-bargains', label: 'Mua nhanh' },
             ]
         },
-        {
-            key: 'payments', icon: <DollarOutlined />, label: 'Quản lý thanh toán', children: [
-                { key: '/admin/payments', label: 'Giao dịch' },
-                { key: '/admin/market-fee-payments', label: 'Thanh toán phí chợ' },
-            ]
-        },
+      
+        
         {
             key: 'content', icon: <FileTextOutlined />, label: 'Quản lý nội dung', children: [
                 { key: '/admin/faqs', label: 'FAQ' },
@@ -109,13 +112,7 @@ const AdminLayout = () => {
                 { key: '/admin/analytics/orders', label: 'Đơn hàng' },
             ]
         },
-        {
-            key: 'system', icon: <SettingOutlined />, label: 'Hệ thống', children: [
-                { key: '/admin/licenses', label: 'Giấy phép' },
-                { key: '/admin/devices', label: 'Thiết bị' },
-                { key: '/admin/system-settings', label: 'Cài đặt hệ thống' },
-            ]
-        }
+        
     ];
 
     const handleMenuClick = ({ key }) => navigate(key);
@@ -130,9 +127,26 @@ const AdminLayout = () => {
     const getBreadcrumbItems = () => {
         const pathSegments = location.pathname.split('/').filter(Boolean);
         const items = [{ title: 'Trang chủ', href: '/admin' }];
+        
+        // Mapping để chuyển đổi path thành tiếng Việt
+        const breadcrumbMap = {
+            'users': 'Quản lý người dùng',
+            'products': 'Quản lý sản phẩm',
+            'product-units': 'Quản lý đơn vị sản phẩm',
+            'categories': 'Quản lý danh mục',
+            'markets': 'Quản lý chợ',
+            'stores': 'Quản lý cửa hàng',
+            'orders': 'Quản lý đơn hàng',
+            'content': 'Quản lý nội dung',
+            'support': 'Hỗ trợ khách hàng',
+            'analytics': 'Báo cáo & Thống kê',
+            'demo': 'Demo Selector'
+        };
+        
         pathSegments.slice(1).forEach((segment, index) => {
+            const title = breadcrumbMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
             items.push({
-                title: segment.charAt(0).toUpperCase() + segment.slice(1),
+                title,
                 href: '/' + pathSegments.slice(0, index + 2).join('/'),
             });
         });
