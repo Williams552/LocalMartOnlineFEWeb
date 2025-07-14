@@ -86,10 +86,13 @@ class CategoryService {
     // Get only active categories for frontend
     async getActiveCategories() {
         try {
+            console.log('🏷️ Fetching active categories...');
             const result = await this.getAllCategories({ isActive: true });
-            return result.items.filter(category => category.isActive);
+            const activeCategories = result.items.filter(category => category.isActive);
+            console.log('🏷️ Active categories found:', activeCategories);
+            return activeCategories;
         } catch (error) {
-            console.error('Error fetching active categories:', error);
+            console.error('❌ Error fetching active categories:', error);
             throw error;
         }
     }

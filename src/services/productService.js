@@ -370,12 +370,12 @@ class ProductService {
             const filterBody = {
                 page: filterParams.page || 1,
                 pageSize: filterParams.pageSize || 20,
-                keyword: filterParams.search || undefined,
+                keyword: filterParams.search || filterParams.keyword || undefined,
                 categoryId: filterParams.categoryId || undefined,
                 storeId: filterParams.storeId || undefined,
                 minPrice: filterParams.minPrice || undefined,
                 maxPrice: filterParams.maxPrice || undefined,
-                status: 'Active', // Only get active products for public view
+                status: filterParams.status || 'Active', // Only get active products for public view
                 sortBy: filterParams.sortBy || 'created',
                 ascending: filterParams.ascending !== false
             };
@@ -385,7 +385,9 @@ class ProductService {
                 filterBody[key] === undefined && delete filterBody[key]
             );
 
+            console.log('🔍 Calling filter API with body:', filterBody);
             const response = await apiClient.post(API_ENDPOINTS.PRODUCT.FILTER, filterBody);
+            console.log('📦 Filter API response:', response.data);
 
             if (response.data && response.data.success && response.data.data) {
                 return {
@@ -403,7 +405,51 @@ class ProductService {
                 pageSize: 20
             };
         } catch (error) {
-            console.error('Error filtering products:', error);
+            console.error('❌ Error filtering products:', error);
+            throw error;
+        }
+    }
+
+    // Search products using backend search API (GET /api/product/search)
+    async searchProductsAPI(searchParams = {}) {
+        try {
+            const queryParams = new URLSearchParams();
+
+            // Backend search API expects 'keyword' not 'search'
+            if (searchParams.search || searchParams.keyword) {
+                queryParams.append('keyword', searchParams.search || searchParams.keyword);
+            }
+            if (searchParams.categoryId) queryParams.append('categoryId', searchParams.categoryId);
+            if (searchParams.latitude) queryParams.append('latitude', searchParams.latitude);
+            if (searchParams.longitude) queryParams.append('longitude', searchParams.longitude);
+            if (searchParams.page) queryParams.append('page', searchParams.page);
+            if (searchParams.pageSize) queryParams.append('pageSize', searchParams.pageSize);
+
+            const url = queryParams.toString()
+                ? `${API_ENDPOINTS.PRODUCT.SEARCH}?${queryParams}`
+                : API_ENDPOINTS.PRODUCT.SEARCH;
+
+            console.log('🔍 Calling search API:', url);
+            const response = await apiClient.get(url);
+            console.log('📦 Search API response:', response.data);
+
+            if (response.data && response.data.success && response.data.data) {
+                return {
+                    items: (response.data.data.items || []).map(item => this.formatProductForFrontend(item)),
+                    totalCount: response.data.data.totalCount || 0,
+                    page: response.data.data.page || 1,
+                    pageSize: response.data.data.pageSize || 20
+                };
+            }
+
+            return {
+                items: [],
+                totalCount: 0,
+                page: 1,
+                pageSize: 20
+            };
+        } catch (error) {
+            console.error('❌ Error searching products via API:', error);
             throw error;
         }
     }

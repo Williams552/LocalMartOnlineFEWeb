@@ -70,46 +70,73 @@ const HomePage = () => {
     // Search products when search term or category changes
     useEffect(() => {
         const searchProducts = async () => {
-            if (!debouncedSearchTerm && selectedCategory === "Tất cả") {
-                return; // Don't search if no criteria
-            }
-
             try {
                 setSearchLoading(true);
 
-                const filterParams = {
+                // Build search parameters
+                const searchParams = {
                     pageSize: 100,
-                    status: 'Active'
                 };
 
+                // Add search keyword if provided
                 if (debouncedSearchTerm) {
-                    filterParams.search = debouncedSearchTerm;
+                    searchParams.keyword = debouncedSearchTerm;
                 }
 
+                // Add category filter if not "Tất cả"
                 if (selectedCategory !== "Tất cả") {
-                    // Find category ID by name
                     const category = categories.find(cat => cat.name === selectedCategory);
                     if (category) {
-                        filterParams.categoryId = category.id;
+                        searchParams.categoryId = category.id;
                     }
                 }
 
-                const searchResult = await productService.getProductsWithDetails(filterParams);
+                console.log('🔍 Searching with params:', searchParams);
 
-                // Products should already be formatted with seller and store info
+                let searchResult;
+
+                // If we have search criteria, use search/filter APIs
+                if (debouncedSearchTerm || selectedCategory !== "Tất cả") {
+                    try {
+                        // Try filter API first (more comprehensive)
+                        searchResult = await productService.getProductsWithFilter(searchParams);
+                        console.log('✅ Filter API success:', searchResult);
+                    } catch (filterError) {
+                        console.warn('❌ Filter API failed, trying search API:', filterError);
+                        try {
+                            // Fallback to search API
+                            searchResult = await productService.searchProductsAPI(searchParams);
+                            console.log('✅ Search API success:', searchResult);
+                        } catch (searchError) {
+                            console.warn('❌ Search API failed, using basic API:', searchError);
+                            // Final fallback to basic API
+                            searchResult = await productService.getProductsWithDetails(searchParams);
+                            console.log('✅ Basic API success:', searchResult);
+                        }
+                    }
+                } else {
+                    // No search criteria, load all products
+                    searchResult = await productService.getProductsWithDetails({
+                        pageSize: 100,
+                        status: 'Active'
+                    });
+                }
+
                 const searchResults = searchResult.items || [];
+                console.log(`📦 Found ${searchResults.length} products`);
                 setProducts(searchResults);
 
             } catch (err) {
-                console.error('Error searching products:', err);
-                // Keep existing products on search error
+                console.error('❌ Error searching products:', err);
+                setError('Không thể tìm kiếm sản phẩm. Vui lòng thử lại.');
                 setProducts([]);
             } finally {
                 setSearchLoading(false);
             }
         };
 
-        if (categories.length > 0) { // Only search after categories are loaded
+        // Always search when categories are loaded
+        if (categories.length > 0) {
             searchProducts();
         }
     }, [debouncedSearchTerm, selectedCategory, categories]);
