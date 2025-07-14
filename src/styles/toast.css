@@ -1,0 +1,176 @@
+/* Custom Toast Styles - Compact and Elegant */
+
+/* Override default Toastify container */
+.Toastify__toast-container {
+    width: 320px !important;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
+}
+
+/* Base toast styles */
+.Toastify__toast {
+    border-radius: 8px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+    border: none !important;
+    padding: 10px 14px !important;
+    min-height: 44px !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+/* Success toast */
+.Toastify__toast--success {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+    color: white !important;
+}
+
+/* Error toast */
+.Toastify__toast--error {
+    background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
+    color: white !important;
+}
+
+/* Warning toast */
+.Toastify__toast--warning {
+    background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+    color: white !important;
+}
+
+/* Info toast */
+.Toastify__toast--info {
+    background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important;
+    color: white !important;
+}
+
+/* Progress bar */
+.Toastify__progress-bar {
+    height: 2px !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+}
+
+.Toastify__progress-bar--success {
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.Toastify__progress-bar--error {
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.Toastify__progress-bar--warning {
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.Toastify__progress-bar--info {
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Close button */
+.Toastify__close-button {
+    color: rgba(255, 255, 255, 0.8) !important;
+    opacity: 1 !important;
+    font-size: 16px !important;
+    font-weight: normal !important;
+    align-self: flex-start !important;
+    margin-top: 2px !important;
+    padding: 0 !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+}
+
+.Toastify__close-button:hover {
+    color: rgba(255, 255, 255, 1) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 50% !important;
+}
+
+/* Toast body */
+.Toastify__toast-body {
+    margin: 0 !important;
+    padding: 0 !important;
+    line-height: 1.4 !important;
+}
+
+/* Custom icon styles */
+.toast-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+/* Compact toast variant */
+.toast-compact {
+    min-height: 38px !important;
+    padding: 8px 12px !important;
+    font-size: 12px !important;
+}
+
+.toast-compact .toast-icon {
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    margin-right: 6px;
+}
+
+/* Quick toast variant */
+.toast-quick {
+    min-height: 32px !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+}
+
+/* Animation tweaks */
+.Toastify__slide-enter--top-right {
+    animation-duration: 0.4s !important;
+}
+
+.Toastify__slide-exit--top-right {
+    animation-duration: 0.3s !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .Toastify__toast-container {
+        width: calc(100vw - 32px) !important;
+        left: 16px !important;
+        right: 16px !important;
+        margin: 0 !important;
+    }
+
+    .Toastify__toast {
+        margin-bottom: 8px !important;
+        border-radius: 6px !important;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .Toastify__toast {
+        backdrop-filter: blur(20px) !important;
+    }
+}
+
+/* Accessibility improvements */
+.Toastify__toast:focus {
+    outline: 2px solid rgba(255, 255, 255, 0.5) !important;
+    outline-offset: 2px !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .Toastify__toast {
+        border: 2px solid currentColor !important;
+    }
+}

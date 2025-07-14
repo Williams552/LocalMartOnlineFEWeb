@@ -1,7 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaTruck } from "react-icons/fa";
-import { FiShoppingBag, FiClock, FiCheck } from "react-icons/fi";
+import { FiShoppingBag, FiClock, FiCheck, FiLoader } from "react-icons/fi";
+import { toast } from "react-toastify";
+import toastService from "../../services/toastService";
 import logo from "../../assets/image/logo.jpg";
+import cartService from "../../services/cartService";
+import { getCurrentUser, isAuthenticated } from "../../services/authService";
 
 const sellerInfoMap = {
     "Cô Lan": {
@@ -40,35 +45,160 @@ const proxyShoppers = [
 ];
 
 const CartPage = () => {
-    const [cartItems, setCartItems] = useState([
-        { id: 1, name: "Rau muống Cần Thơ", quantity: 2, price: 12000, seller: "Cô Lan", image: logo, unit: "kg" },
-        { id: 2, name: "Cà rốt Đà Lạt", quantity: 1, price: 25000, seller: "Cô Lan", image: logo, unit: "kg" },
-        { id: 3, name: "Ớt hiểm", quantity: 0.5, price: 40000, seller: "Anh Minh", image: logo, unit: "kg" },
-        { id: 4, name: "Thịt heo sạch", quantity: 1, price: 120000, seller: "Anh Minh", image: logo, unit: "kg" },
-    ]);
+    const navigate = useNavigate();
 
+    const [cartItems, setCartItems] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState({});
     const [selectedSeller, setSelectedSeller] = useState(null);
     const [showProxyListFor, setShowProxyListFor] = useState(null);
     const [deliveryMethod, setDeliveryMethod] = useState("delivery"); // delivery, pickup, proxy
+    const [selectedItems, setSelectedItems] = useState(new Set());
+    const [selectAll, setSelectAll] = useState(false);
 
-    const handleRemove = (id) => {
-        const updated = cartItems.filter(item => item.id !== id);
-        setCartItems(updated);
-    };
-
-    const updateQuantity = (id, newQuantity) => {
-        if (newQuantity <= 0) {
-            handleRemove(id);
+    // Check authentication on component mount
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            console.log('❌ User not authenticated, redirecting to login');
+            toastService.error('Vui lòng đăng nhập để xem giỏ hàng');
+            navigate('/login');
             return;
         }
-        setCartItems(items =>
-            items.map(item =>
-                item.id === id ? { ...item, quantity: newQuantity } : item
-            )
-        );
+
+        const user = getCurrentUser();
+        console.log('✅ User authenticated:', user);
+
+        fetchCartData();
+    }, [navigate]);
+
+    // Fetch cart data on component mount
+    // useEffect(() => {
+    //     fetchCartData();
+    // }, []);
+
+    const fetchCartData = async () => {
+        try {
+            console.log('🛒 CartPage: Starting fetchCartData...');
+            setLoading(true);
+
+            // Fetch cart items with details from backend
+            console.log('🔄 CartPage: Calling cartService.getCartItems()...');
+            const cartResult = await cartService.getCartItems();
+            console.log('📡 CartPage: cartService response:', cartResult);
+
+            if (!cartResult.success) {
+                console.error('❌ CartPage: Cart service failed:', cartResult.message);
+                toastService.error(cartResult.message);
+                return;
+            }
+
+            // If cart is empty, set empty state
+            if (!cartResult.data || cartResult.data.length === 0) {
+                console.log('📭 CartPage: Cart is empty, setting empty state');
+                setCartItems([]);
+                return;
+            }
+
+            // The backend now returns cart items with product details
+            console.log('📦 CartPage: Processing cart items:', cartResult.data);
+            const cartItemsWithDetails = cartResult.data;
+            setCartItems(cartItemsWithDetails);
+
+        } catch (error) {
+            console.error('❌ CartPage: Error fetching cart data:', error);
+            toastService.error('Có lỗi khi tải giỏ hàng. Vui lòng thử lại.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const groupedBySeller = cartItems.reduce((acc, item) => {
+    const handleRemove = async (cartItemId) => {
+        try {
+            console.log('🗑️ CartPage: Removing item:', cartItemId);
+            setUpdating(prev => ({ ...prev, [cartItemId]: true }));
+
+            const result = await cartService.removeFromCart(cartItemId);
+            if (result.success) {
+                toastService.success('Đã xóa sản phẩm khỏi giỏ hàng');
+                // Remove from local state
+                setCartItems(items => items.filter(item => item.id !== cartItemId));
+            } else {
+                toastService.error(result.message || 'Không thể xóa sản phẩm');
+            }
+        } catch (error) {
+            console.error('❌ CartPage: Error removing item:', error);
+            toastService.error('Có lỗi khi xóa sản phẩm');
+        } finally {
+            setUpdating(prev => ({ ...prev, [cartItemId]: false }));
+        }
+    };
+
+    const updateQuantity = async (cartItemId, productId, newQuantity) => {
+        try {
+            // Check minimum quantity
+            const item = cartItems.find(item => item.id === cartItemId);
+            if (!item) return;
+
+            if (newQuantity <= 0) {
+                handleRemove(cartItemId);
+                return;
+            }
+
+            // Check minimum quantity requirement
+            if (item.product && item.product.minimumQuantity && newQuantity < item.product.minimumQuantity) {
+                toastService.error(`Số lượng tối thiểu cho ${item.product.name} là ${item.product.minimumQuantity}`);
+                return;
+            }
+
+            // Check stock availability
+            if (item.product && item.product.stockQuantity > 0 && newQuantity > item.product.stockQuantity) {
+                toastService.error(`Chỉ còn ${item.product.stockQuantity} ${item.product.unit} trong kho`);
+                return;
+            }
+
+            console.log('📝 CartPage: Updating quantity:', { cartItemId, productId, newQuantity });
+            setUpdating(prev => ({ ...prev, [cartItemId]: true }));
+
+            const result = await cartService.updateCartItem(productId, newQuantity);
+            if (result.success) {
+                // Update local state
+                setCartItems(items =>
+                    items.map(item =>
+                        item.id === cartItemId
+                            ? { ...item, quantity: newQuantity, subTotal: newQuantity * item.product.price }
+                            : item
+                    )
+                );
+                toastService.success('Đã cập nhật số lượng');
+            } else {
+                toastService.error(result.message || 'Không thể cập nhật số lượng');
+            }
+        } catch (error) {
+            console.error('❌ CartPage: Error updating quantity:', error);
+            toastService.error('Có lỗi khi cập nhật số lượng');
+        } finally {
+            setUpdating(prev => ({ ...prev, [cartItemId]: false }));
+        }
+    };
+
+    // Format cart items for display
+    const formattedCartItems = cartItems.map(item => ({
+        id: item.id,
+        productId: item.productId,
+        name: item.product?.name || 'Unknown Product',
+        quantity: item.quantity,
+        price: item.product?.price || 0,
+        seller: item.product?.sellerName || 'Unknown Seller',
+        storeName: item.product?.storeName || 'Unknown Store',
+        image: item.product?.images ? item.product.images.split(',')[0] : logo,
+        unit: item.product?.unit || 'item',
+        subTotal: item.subTotal || 0,
+        isAvailable: item.product?.isAvailable || false,
+        stockQuantity: item.product?.stockQuantity || 0,
+        minimumQuantity: item.product?.minimumQuantity || 0
+    }));
+
+    const groupedBySeller = formattedCartItems.reduce((acc, item) => {
         if (!acc[item.seller]) acc[item.seller] = [];
         acc[item.seller].push(item);
         return acc;
@@ -88,11 +218,16 @@ const CartPage = () => {
                         Giỏ hàng của bạn
                     </h1>
                     <p className="text-gray-600 mt-2">
-                        {cartItems.length} sản phẩm từ {Object.keys(groupedBySeller).length} gian hàng
+                        {loading ? 'Đang tải...' : `${formattedCartItems.length} sản phẩm từ ${Object.keys(groupedBySeller).length} gian hàng`}
                     </p>
                 </div>
 
-                {cartItems.length === 0 ? (
+                {loading ? (
+                    <div className="text-center py-16">
+                        <FiLoader className="animate-spin text-4xl text-supply-primary mx-auto mb-4" />
+                        <p className="text-gray-500">Đang tải giỏ hàng...</p>
+                    </div>
+                ) : formattedCartItems.length === 0 ? (
                     <div className="text-center py-16">
                         <FaShoppingCart className="w-24 h-24 text-gray-300 mx-auto mb-4" />
                         <h2 className="text-2xl font-semibold text-gray-500 mb-2">Giỏ hàng trống</h2>
@@ -135,37 +270,64 @@ const CartPage = () => {
                                         <div className="space-y-4 mt-4">
                                             {items.map(item => (
                                                 <div key={item.id} className="flex items-center space-x-4">
-                                                    <img src={item.image} alt={item.name} className="w-16 h-16 rounded-lg object-cover" />
+                                                    <img
+                                                        src={item.image}
+                                                        alt={item.name}
+                                                        className="w-16 h-16 rounded-lg object-cover"
+                                                        onError={(e) => { e.target.src = logo; }}
+                                                    />
                                                     <div className="flex-1">
                                                         <h3 className="font-medium text-gray-800">{item.name}</h3>
                                                         <p className="text-supply-primary font-semibold">
                                                             {item.price.toLocaleString()}đ/{item.unit}
                                                         </p>
+                                                        {!item.isAvailable && (
+                                                            <p className="text-red-500 text-xs">Hết hàng</p>
+                                                        )}
+                                                        {item.stockQuantity > 0 && (
+                                                            <p className="text-gray-500 text-xs">Còn: {item.stockQuantity} {item.unit}</p>
+                                                        )}
+                                                        {item.minimumQuantity > 0 && (
+                                                            <p className="text-gray-500 text-xs">Tối thiểu: {item.minimumQuantity} {item.unit}</p>
+                                                        )}
                                                     </div>
                                                     <div className="flex items-center space-x-2">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 0.5)}
-                                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                                            onClick={() => updateQuantity(item.id, item.productId, item.quantity - 0.5)}
+                                                            disabled={updating[item.id] || item.quantity <= item.minimumQuantity}
+                                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
                                                             <FaMinus className="w-3 h-3" />
                                                         </button>
-                                                        <span className="w-16 text-center font-medium">{item.quantity} {item.unit}</span>
+                                                        <div className="w-16 text-center">
+                                                            {updating[item.id] ? (
+                                                                <FiLoader className="animate-spin mx-auto" />
+                                                            ) : (
+                                                                <span className="font-medium">{item.quantity} {item.unit}</span>
+                                                            )}
+                                                        </div>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 0.5)}
-                                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50"
+                                                            onClick={() => updateQuantity(item.id, item.productId, item.quantity + 0.5)}
+                                                            disabled={updating[item.id] || !item.isAvailable || (item.stockQuantity > 0 && item.quantity >= item.stockQuantity)}
+                                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
                                                             <FaPlus className="w-3 h-3" />
                                                         </button>
                                                     </div>
                                                     <div className="text-right w-24">
                                                         <p className="font-semibold text-gray-800">
-                                                            {(item.quantity * item.price).toLocaleString()}đ
+                                                            {item.subTotal.toLocaleString()}đ
                                                         </p>
                                                         <button
                                                             onClick={() => handleRemove(item.id)}
-                                                            className="text-red-500 hover:text-red-700 mt-1"
+                                                            disabled={updating[item.id]}
+                                                            className="text-red-500 hover:text-red-700 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
                                                         >
-                                                            <FaTrash className="w-3 h-3" />
+                                                            {updating[item.id] ? (
+                                                                <FiLoader className="animate-spin w-3 h-3" />
+                                                            ) : (
+                                                                <FaTrash className="w-3 h-3" />
+                                                            )}
                                                         </button>
                                                     </div>
                                                 </div>

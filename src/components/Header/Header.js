@@ -1,38 +1,149 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
-import { FiBell, FiMessageSquare, FiShoppingCart, FiSearch, FiMapPin, FiUser, FiHeart, FiBox } from "react-icons/fi";
-import { FaUserCircle, FaStore } from "react-icons/fa";
+import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox } from "react-icons/fi";
+import { FaUserCircle, FaStore, FaHandshake } from "react-icons/fa";
+// import { useAuth } from "../../hooks/useAuth";
+// import { useCart } from "../../contexts/CartContext";
+// import { useFavorites } from "../../contexts/FavoriteContext";
+// import CartIcon from "../Common/CartIcon";
 import authService from "../../services/authService";
+import "../../styles/logout-modal.css";
 
 const Header = () => {
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMessages, setShowMessages] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
-    const [showCart, setShowCart] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
-
-    // Authentication state
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [user, setUser] = useState(null);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+    // Use authentication context
+    // const { user, isAuthenticated, logout } = useAuth();
+    // const { favoriteCount } = useFavorites();
+    const navigate = useNavigate();
+    const favoriteCount = 0; // Temporary
 
     useEffect(() => {
-        checkAuthStatus();
+        // Check authentication status
+        const checkAuth = async () => {
+            try {
+                const currentUser = authService.getCurrentUser();
+                if (currentUser) {
+                    setUser(currentUser);
+                    setIsAuthenticated(true);
+                }
+            } catch (error) {
+                console.error('Auth check error:', error);
+            }
+        };
+        checkAuth();
     }, []);
 
-    const checkAuthStatus = () => {
-        const authenticated = authService.isAuthenticated();
-        const currentUser = authService.getCurrentUser();
+    // Debug authentication state
+    useEffect(() => {
+        console.log('Header - Authentication state changed:', { isAuthenticated, user });
+    }, [isAuthenticated, user]);
 
-        setIsLoggedIn(authenticated);
-        setUser(currentUser);
+    const handleLogout = async (clearAllDevices = false) => {
+        console.log('Header - Logout initiated', { clearAllDevices });
+
+        try {
+            setIsLoggingOut(true);
+
+            // Clear authentication service data
+            authService.logout(clearAllDevices);
+
+            // Clear all local state
+            setUser(null);
+            setIsAuthenticated(false);
+            setShowProfileMenu(false);
+            setShowLogoutConfirm(false);
+
+            // Clear additional localStorage items that might contain user data
+            const itemsToRemove = [
+                'cartItems', 'favorites', 'recentSearches',
+                'userPreferences', 'tempData', 'sessionData'
+            ];
+            itemsToRemove.forEach(item => {
+                try {
+                    localStorage.removeItem(item);
+                } catch (e) {
+                    console.warn(`Failed to remove ${item}:`, e);
+                }
+            });
+
+            // Clear sessionStorage completely
+            try {
+                sessionStorage.clear();
+            } catch (e) {
+                console.warn('Failed to clear sessionStorage:', e);
+            }
+
+            // Clear any cached data
+            if (window.caches) {
+                try {
+                    const cacheNames = await window.caches.keys();
+                    await Promise.all(
+                        cacheNames.map(cacheName => {
+                            if (cacheName.includes('user') || cacheName.includes('auth') || cacheName.includes('api')) {
+                                return window.caches.delete(cacheName);
+                            }
+                        })
+                    );
+                } catch (cacheError) {
+                    console.warn('Failed to clear cache:', cacheError);
+                }
+            }
+
+            // Add a small delay for better UX
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // Navigate to login page
+            navigate('/login', { replace: true });
+
+            // Force reload after navigation to ensure clean state
+            setTimeout(() => {
+                window.location.reload();
+            }, 100);
+
+        } catch (error) {
+            console.error('Logout error:', error);
+
+            // Fallback: Force logout even if there are errors
+            try {
+                authService.logout();
+                localStorage.clear();
+                sessionStorage.clear();
+            } catch (fallbackError) {
+                console.error('Fallback logout error:', fallbackError);
+            }
+
+            // Reset state regardless
+            setUser(null);
+            setIsAuthenticated(false);
+            setShowProfileMenu(false);
+            setShowLogoutConfirm(false);
+
+            // Navigate to login
+            navigate('/login', { replace: true });
+        } finally {
+            setIsLoggingOut(false);
+        }
     };
 
-    const handleLogout = () => {
-        authService.logout();
-        setIsLoggedIn(false);
-        setUser(null);
+    const handleLogoutClick = () => {
+        setShowLogoutConfirm(true);
         setShowProfileMenu(false);
+    };
+
+    const handleConfirmLogout = () => {
+        handleLogout(false);
+    };
+
+    const handleCancelLogout = () => {
+        setShowLogoutConfirm(false);
     };
 
 
@@ -40,7 +151,6 @@ const Header = () => {
     const notificationRef = useRef();
     const messageRef = useRef();
     const profileRef = useRef();
-    const cartRef = useRef();
 
     const notifications = [
         { id: 1, message: "Đơn hàng #1234 đã được xác nhận", time: "5 phút trước", unread: true },
@@ -53,14 +163,6 @@ const Header = () => {
         { id: 2, from: "Anh Minh (Chợ An Hòa)", text: "Cà chua hôm nay rất tươi nhé!", time: "30 phút trước", avatar: "👨‍🌾" },
     ];
 
-    const cartItems = [
-        { id: 1, name: "Rau muống Cần Thơ", quantity: 2, price: 15000, seller: "Cô Lan", image: logo },
-        { id: 2, name: "Cà rốt Đà Lạt", quantity: 1, price: 25000, seller: "Anh Minh", image: logo },
-        { id: 3, name: "Thịt heo sạch", quantity: 0.5, price: 120000, seller: "Chú Tám", image: logo },
-    ];
-
-    const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (notificationRef.current && !notificationRef.current.contains(e.target))
@@ -69,12 +171,21 @@ const Header = () => {
                 setShowMessages(false);
             if (profileRef.current && !profileRef.current.contains(e.target))
                 setShowProfileMenu(false);
-            if (cartRef.current && !cartRef.current.contains(e.target))
-                setShowCart(false);
         };
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    // Close logout confirmation when clicking outside
+    useEffect(() => {
+        const handleEscape = (e) => {
+            if (e.key === 'Escape' && showLogoutConfirm) {
+                setShowLogoutConfirm(false);
+            }
+        };
+        document.addEventListener('keydown', handleEscape);
+        return () => document.removeEventListener('keydown', handleEscape);
+    }, [showLogoutConfirm]);
 
     return (
         <header className="bg-white shadow-md sticky top-0 z-50 border-b border-gray-100">
@@ -110,30 +221,18 @@ const Header = () => {
                         </div>
                     </Link>
 
-                    {/* Search Bar */}
-                    <div className="flex-1 max-w-2xl mx-8">
-                        <div className="relative">
-                            <input
-                                type="text"
-                                placeholder="Tìm kiếm rau củ, trái cây, thịt cá tươi sạch..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-4 pr-12 py-3 border-2 border-gray-200 rounded-full focus:border-supply-primary focus:outline-none text-sm"
-                            />
-                            <button className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-supply-primary text-white p-2 rounded-full hover:bg-green-600 transition">
-                                <FiSearch size={16} />
-                            </button>
-                        </div>
-                    </div>
-
                     {/* Right Actions */}
                     <div className="flex items-center space-x-4">
-                        {isLoggedIn ? (
+                        {isAuthenticated ? (
                             <>
-                                {/* Wishlist */}
-                                <Link to="/wishlist" className="relative text-gray-600 hover:text-supply-primary transition">
-                                    <FiHeart size={24} />
-                                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">3</span>
+                                {/* Favorites/Wishlist */}
+                                <Link to="/buyer/favorites" className="relative text-gray-600 hover:text-red-500 transition group">
+                                    <FiHeart size={24} className="group-hover:text-red-500" />
+                                    {favoriteCount > 0 && (
+                                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                                            {favoriteCount > 99 ? '99+' : favoriteCount}
+                                        </span>
+                                    )}
                                 </Link>
 
                                 {/* Notifications */}
@@ -211,53 +310,12 @@ const Header = () => {
                                 </div>
 
                                 {/* Cart */}
-                                <div className="relative" ref={cartRef}>
-                                    <button
-                                        onClick={() => setShowCart((prev) => !prev)}
-                                        className="relative text-gray-600 hover:text-supply-primary transition"
-                                    >
-                                        <FiShoppingCart size={24} />
-                                        {cartItems.length > 0 && (
-                                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                                {cartItems.length}
-                                            </span>
-                                        )}
-                                    </button>
-                                    {showCart && (
-                                        <div className="absolute right-0 mt-2 w-96 bg-white border rounded-lg shadow-lg z-50">
-                                            <div className="p-4 border-b bg-gray-50 rounded-t-lg">
-                                                <h3 className="font-semibold text-gray-800">Giỏ hàng của bạn</h3>
-                                            </div>
-                                            <div className="max-h-80 overflow-y-auto">
-                                                {cartItems.map((item) => (
-                                                    <div key={item.id} className="p-4 border-b flex items-center space-x-3">
-                                                        <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
-                                                        <div className="flex-1">
-                                                            <p className="font-medium text-sm text-gray-800">{item.name}</p>
-                                                            <p className="text-xs text-gray-500">Bán bởi: {item.seller}</p>
-                                                            <div className="flex items-center justify-between mt-1">
-                                                                <span className="text-sm text-gray-600">SL: {item.quantity}kg</span>
-                                                                <span className="font-medium text-supply-primary">{item.price.toLocaleString()}đ</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="p-4 border-t">
-                                                <div className="flex items-center justify-between mb-3">
-                                                    <span className="font-semibold">Tổng cộng:</span>
-                                                    <span className="font-bold text-supply-primary text-lg">{totalAmount.toLocaleString()}đ</span>
-                                                </div>
-                                                <Link
-                                                    to="/cart"
-                                                    className="w-full bg-supply-primary text-white py-2 px-4 rounded-lg hover:bg-green-600 transition text-center block"
-                                                >
-                                                    Xem giỏ hàng
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                <Link to="/buyer/cart" className="relative text-gray-600 hover:text-supply-primary transition">
+                                    <FiShoppingCart size={24} />
+                                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                                        0
+                                    </span>
+                                </Link>
 
                                 {/* User Profile */}
                                 <div className="relative" ref={profileRef}>
@@ -279,17 +337,25 @@ const Header = () => {
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
                                             <div className="py-2">
-                                                <Link to="/buyer/profile" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                <Link to="/profile" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FiUser size={16} />
                                                     <span>Hồ sơ của tôi</span>
-                                                </Link>
-                                                <Link to="/buyer/orders" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                </Link>                                <Link to="/buyer/orders" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FiBox size={16} />
                                                     <span>Đơn hàng của tôi</span>
                                                 </Link>
-                                                <Link to="/wishlist" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                <Link to="/buyer/favorites" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FiHeart size={16} />
                                                     <span>Sản phẩm yêu thích</span>
+                                                    {favoriteCount > 0 && (
+                                                        <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                                            {favoriteCount}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                                <Link to="/fast-bargain" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                    <FaHandshake size={16} />
+                                                    <span>Thương lượng của tôi</span>
                                                 </Link>
 
                                                 {/* Seller Navigation */}
@@ -349,10 +415,23 @@ const Header = () => {
                                             </div>
                                             <div className="border-t py-2">
                                                 <button
-                                                    onClick={handleLogout}
-                                                    className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600"
+                                                    onClick={handleLogoutClick}
+                                                    className="w-full text-left px-4 py-2 hover:bg-red-50 text-sm text-red-600 flex items-center space-x-2 transition-colors"
+                                                    disabled={isLoggingOut}
                                                 >
-                                                    Đăng xuất
+                                                    {isLoggingOut ? (
+                                                        <>
+                                                            <div className="w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                                            <span>Đang đăng xuất...</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                                            </svg>
+                                                            <span>Đăng xuất</span>
+                                                        </>
+                                                    )}
                                                 </button>
                                             </div>
                                         </div>
@@ -364,6 +443,11 @@ const Header = () => {
                                 <Link
                                     to="/login"
                                     className="px-4 py-2 border border-supply-primary text-supply-primary rounded-lg text-sm hover:bg-supply-primary hover:text-white transition"
+                                    onClick={() => {
+                                        console.log('Login link clicked');
+                                        // Force navigation to login
+                                        navigate('/login');
+                                    }}
                                 >
                                     Đăng nhập
                                 </Link>
@@ -414,6 +498,57 @@ const Header = () => {
                     </nav>
                 </div>
             </div>
+
+            {/* Logout Confirmation Modal */}
+            {showLogoutConfirm && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 modal-backdrop flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-sm w-full mx-4 overflow-hidden animate-in fade-in duration-300">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+                            <div className="flex items-center justify-center space-x-3">
+                                <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold text-white">Đăng xuất</h3>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 text-center">
+                            <p className="text-gray-700 text-lg mb-6">
+                                Bạn có muốn đăng xuất không?
+                            </p>
+
+                            {/* Action buttons */}
+                            <div className="flex space-x-4">
+                                <button
+                                    onClick={handleCancelLogout}
+                                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+                                    disabled={isLoggingOut}
+                                >
+                                    Không
+                                </button>
+                                <button
+                                    onClick={handleConfirmLogout}
+                                    className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 flex items-center justify-center space-x-2"
+                                    disabled={isLoggingOut}
+                                >
+                                    {isLoggingOut ? (
+                                        <>
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                            <span>Đang xử lý...</span>
+                                        </>
+                                    ) : (
+                                        <span>Có</span>
+                                    )}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </header>
     );
 };

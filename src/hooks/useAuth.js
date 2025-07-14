@@ -22,10 +22,12 @@ export const AuthProvider = ({ children }) => {
         checkAuthStatus();
     }, []);
 
-    const checkAuthStatus = () => {
+    const checkAuthStatus = async () => {
         try {
-            const authenticated = authService.isAuthenticated();
+            const authenticated = await authService.isAuthenticated();
             const currentUser = authService.getCurrentUser();
+
+            console.log('useAuth - checkAuthStatus:', { authenticated, currentUser });
 
             setIsAuthenticated(authenticated);
             setUser(currentUser);
@@ -128,11 +130,36 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
-        authService.logout();
+    const logout = async (logoutFromAllDevices = false) => {
+        console.log('useAuth - Logout function called');
+        await authService.logout(logoutFromAllDevices);
+
+        // Force immediate state update
         setUser(null);
         setIsAuthenticated(false);
-        navigate('/login');
+
+        // Double-check auth status to ensure consistency
+        setTimeout(() => {
+            checkAuthStatus();
+        }, 50);
+
+        console.log('useAuth - Logout completed, state cleared');
+        // Let individual components handle navigation
+    };
+
+    const updateUser = (userData) => {
+        try {
+            const updated = authService.updateCurrentUser(userData);
+            if (updated) {
+                const currentUser = authService.getCurrentUser();
+                setUser(currentUser);
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Error updating user in context:', error);
+            return false;
+        }
     };
 
     const redirectToDashboard = () => {
@@ -166,6 +193,7 @@ export const AuthProvider = ({ children }) => {
         changePassword,
         verifyEmail,
         logout,
+        updateUser,
         checkAuthStatus,
         redirectToDashboard,
         hasRole,

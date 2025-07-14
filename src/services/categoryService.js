@@ -1,269 +1,144 @@
+
+import axios from 'axios';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
-import authService from './authService';
+
+// Create axios instance
+const createApiClient = () => {
+    const client = axios.create({
+        timeout: 10000,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    // Add request interceptor for auth token
+    client.interceptors.request.use(
+        (config) => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+        },
+        (error) => {
+            return Promise.reject(error);
+        }
+    );
+
+    // Add response interceptor for error handling
+    client.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                // Don't auto redirect for public API calls
+            }
+            return Promise.reject(error);
+        }
+    );
+
+    return client;
+};
+
+const apiClient = createApiClient();
 
 class CategoryService {
-    // Get all categories with pagination (Admin)
-    async getAllCategories(page = 1, pageSize = 20) {
+    // Get all categories
+    async getAllCategories(params = {}) {
         try {
-            const token = authService.getToken();
-            console.log('🔍 getAllCategories - Token:', token ? 'Present' : 'Missing');
-            
-            const url = `${API_ENDPOINTS.CATEGORY.GET_ALL_ADMIN}?page=${page}&pageSize=${pageSize}`;
-            console.log('🔍 getAllCategories - URL:', url);
+            const queryParams = new URLSearchParams();
 
-            const headers = {
-                'Content-Type': 'application/json',
+            // Add pagination parameters if provided
+            if (params.page) queryParams.append('page', params.page);
+            if (params.pageSize) queryParams.append('pageSize', params.pageSize);
+            if (params.search) queryParams.append('search', params.search);
+            if (params.isActive !== undefined) queryParams.append('isActive', params.isActive);
+
+            const url = queryParams.toString()
+                ? `${API_ENDPOINTS.CATEGORY.GET_ALL}?${queryParams}`
+                : API_ENDPOINTS.CATEGORY.GET_ALL;
+
+            const response = await apiClient.get(url);
+
+            // Return the items from the API response
+            if (response.data && response.data.success && response.data.data) {
+                return {
+                    items: response.data.data.items || [],
+                    totalCount: response.data.data.totalCount || 0,
+                    page: response.data.data.page || 1,
+                    pageSize: response.data.data.pageSize || 20
+                };
+            }
+
+            return {
+                items: [],
+                totalCount: 0,
+                page: 1,
+                pageSize: 20
             };
-
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-
-            const response = await fetch(url, { 
-                headers,
-                credentials: 'include'
-            });
-
-            console.log('🔍 getAllCategories - Response status:', response.status);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🔍 getAllCategories - Error response:', errorText);
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tải danh sách danh mục'}`);
-            }
-
-            const result = await response.json();
-            console.log('🔍 getAllCategories - Success result:', result);
-            
-            return result.data || result;
         } catch (error) {
-            console.error('❌ getAllCategories - Error:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            console.error('Error fetching categories:', error);
+            throw error;
+        }
+    }
+
+    // Get only active categories for frontend
+    async getActiveCategories() {
+        try {
+            const result = await this.getAllCategories({ isActive: true });
+            return result.items.filter(category => category.isActive);
+        } catch (error) {
+            console.error('Error fetching active categories:', error);
+            throw error;
         }
     }
 
     // Get category by ID
     async getCategoryById(id) {
         try {
-            const response = await fetch(API_ENDPOINTS.CATEGORY.GET_BY_ID(id));
+            const response = await apiClient.get(API_ENDPOINTS.CATEGORY.GET_BY_ID(id));
 
-            if (!response.ok) {
-                throw new Error('Không thể tải thông tin danh mục');
+            if (response.data && response.data.success) {
+                return response.data.data;
             }
 
-            const result = await response.json();
-            return result.data || result;
+            return null;
         } catch (error) {
-            console.error('Error fetching category:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            console.error(`Error fetching category ${id}:`, error);
+            throw error;
         }
     }
 
-    // Create new category
-    async createCategory(categoryData) {
-        try {
-            const token = authService.getToken();
-            
-            const response = await fetch(API_ENDPOINTS.CATEGORY.CREATE, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                credentials: 'include',
-                body: JSON.stringify(categoryData)
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tạo danh mục'}`);
-            }
-
-            const result = await response.json();
-            return result.data || result;
-        } catch (error) {
-            console.error('Error creating category:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
-        }
+    // Format category data for frontend use
+    formatCategoryForFrontend(category) {
+        return {
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            isActive: category.isActive,
+            createdAt: category.createdAt,
+            updatedAt: category.updatedAt,
+            // Add compatibility fields
+            categoryName: category.name,
+        };
     }
 
-    // Update category
-    async updateCategory(id, categoryData) {
+    // Get formatted categories for frontend
+    async getFormattedCategories(params = {}) {
         try {
-            const token = authService.getToken();
-            
-            const response = await fetch(API_ENDPOINTS.CATEGORY.UPDATE(id), {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                credentials: 'include',
-                body: JSON.stringify(categoryData)
-            });
+            const result = await this.getAllCategories(params);
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể cập nhật danh mục'}`);
-            }
-
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error('Error updating category:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
-        }
-    }
-
-    // Delete category
-    async deleteCategory(id) {
-        try {
-            const token = authService.getToken();
-            
-            const response = await fetch(API_ENDPOINTS.CATEGORY.DELETE(id), {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể xóa danh mục'}`);
-            }
-
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error('Error deleting category:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
-        }
-    }
-
-    // Toggle category status (Active/Inactive)
-    async toggleCategoryStatus(id) {
-        try {
-            const token = authService.getToken();
-            
-            const response = await fetch(API_ENDPOINTS.CATEGORY.TOGGLE(id), {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể thay đổi trạng thái danh mục'}`);
-            }
-
-            const result = await response.json();
-            return result;
-        } catch (error) {
-            console.error('Error toggling category status:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
-        }
-    }
-
-    // Search categories (Admin)
-    async searchCategories(name) {
-        try {
-            const token = authService.getToken();
-            
-            if (!name || name.trim() === '') {
-                console.log('🔍 searchCategories - No name provided, returning all categories');
-                return this.getAllCategories();
-            }
-            
-            const queryParams = new URLSearchParams();
-            queryParams.append('name', name.trim());
-            
-            const url = `${API_ENDPOINTS.CATEGORY.SEARCH_ADMIN}?${queryParams}`;
-            console.log('🔍 searchCategories - URL:', url);
-            
-            const headers = {
-                'Content-Type': 'application/json',
+            return {
+                ...result,
+                items: result.items.map(category => this.formatCategoryForFrontend(category))
             };
-            
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-            
-            const response = await fetch(url, { 
-                method: 'GET',
-                headers,
-                credentials: 'include'
-            });
-            
-            console.log('🔍 searchCategories - Response status:', response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🔍 searchCategories - Error response:', errorText);
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tìm kiếm danh mục'}`);
-            }
-            
-            const result = await response.json();
-            console.log('🔍 searchCategories - Success result:', result);
-            
-            return result.data || result;
         } catch (error) {
-            console.error('❌ searchCategories - Error:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
-        }
-    }
-
-    // Filter categories by alphabet (Admin)
-    async filterCategories(alphabet) {
-        try {
-            const token = authService.getToken();
-            
-            if (!alphabet) {
-                console.log('🔍 filterCategories - No alphabet provided, returning all categories');
-                return this.getAllCategories();
-            }
-            
-            const queryParams = new URLSearchParams();
-            queryParams.append('alphabet', alphabet);
-            
-            const url = `${API_ENDPOINTS.CATEGORY.FILTER_ADMIN}?${queryParams}`;
-            console.log('🔍 filterCategories - URL:', url);
-            
-            const headers = {
-                'Content-Type': 'application/json',
-            };
-            
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
-            
-            const response = await fetch(url, { 
-                method: 'GET',
-                headers,
-                credentials: 'include'
-            });
-            
-            console.log('🔍 filterCategories - Response status:', response.status);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🔍 filterCategories - Error response:', errorText);
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể lọc danh mục'}`);
-            }
-            
-            const result = await response.json();
-            console.log('🔍 filterCategories - Success result:', result);
-            
-            return result.data || result;
-        } catch (error) {
-            console.error('❌ filterCategories - Error:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            console.error('Error getting formatted categories:', error);
+            throw error;
         }
     }
 }
 
-const categoryService = new CategoryService();
-export { categoryService };
-export default categoryService;
+export default new CategoryService();
+

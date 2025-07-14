@@ -19,6 +19,66 @@
     }
 }
 
+// Email Verification specific styles
+.verification-container {
+    .verification-card {
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .verification-success {
+        animation: slideInUp 0.5s ease-out;
+    }
+
+    .verification-error {
+        animation: shake 0.5s ease-in-out;
+    }
+
+    .countdown-circle {
+        animation: pulse 1s ease-in-out infinite;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
 // Main Content
 .login-container {
     .Login-wapper {
@@ -189,10 +249,10 @@
         .Goto-Sign-Up {
             position: relative;
             background-image: url("../../assets/image/bg.jpg"); // giữ nguyên như bạn yêu cầu
-            width: 340px;
-            height: 470px;
+            height: 100vh;
             background-size: cover;
             background-repeat: no-repeat;
+            background-position: center;
 
             .Goto-Sign-Up__btn {
                 .btn-signup {

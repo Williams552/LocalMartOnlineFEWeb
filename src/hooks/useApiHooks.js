@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import apiService from '../services/apiService';
 import { toast } from 'react-toastify';
+import toastService from '../services/toastService';
 
 // Custom hook for API calls
 export const useApi = (endpoint, options = {}) => {
@@ -24,7 +25,7 @@ export const useApi = (endpoint, options = {}) => {
             setData(result);
 
             if (onSuccess) onSuccess(result);
-            if (showToast) toast.success('Tải dữ liệu thành công');
+            if (showToast) toastService.compact('success', 'Tải dữ liệu thành công');
 
             return result;
         } catch (err) {
@@ -47,7 +48,7 @@ export const useApi = (endpoint, options = {}) => {
             const result = await apiService.post(customEndpoint || endpoint, postData);
 
             if (onSuccess) onSuccess(result);
-            if (showToast) toast.success('Tạo dữ liệu thành công');
+            if (showToast) toastService.compact('success', 'Tạo dữ liệu thành công');
 
             return result;
         } catch (err) {
@@ -70,7 +71,7 @@ export const useApi = (endpoint, options = {}) => {
             const result = await apiService.put(customEndpoint || endpoint, putData);
 
             if (onSuccess) onSuccess(result);
-            if (showToast) toast.success('Cập nhật dữ liệu thành công');
+            if (showToast) toastService.compact('success', 'Cập nhật dữ liệu thành công');
 
             return result;
         } catch (err) {
@@ -93,7 +94,7 @@ export const useApi = (endpoint, options = {}) => {
             const result = await apiService.delete(customEndpoint || endpoint);
 
             if (onSuccess) onSuccess(result);
-            if (showToast) toast.success('Xóa dữ liệu thành công');
+            if (showToast) toastService.compact('success', 'Xóa dữ liệu thành công');
 
             return result;
         } catch (err) {

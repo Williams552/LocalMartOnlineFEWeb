@@ -1,31 +1,158 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Carousel from "../../components/Carousel/Carousel";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import CategorySidebar from "../../components/Sidebar/CategorySidebar";
-import products from "../../data/products";
 import ChatboxBot from "../../components/Chat/ChatBoxBot";
+import productService from "../../services/productService";
+import categoryService from "../../services/categoryService";
 
 const HomePage = () => {
     const [searchTerm, setSearchTerm] = useState("");
-    const [selectedMarket, setSelectedMarket] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("Tất cả");
+    const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [searchLoading, setSearchLoading] = useState(false);
 
-    const markets = [
-        "Tất cả",
-        "Chợ Cái Khế",
-        "Chợ An Hòa",
-        "Chợ Xuân Khánh",
-        "Chợ Ninh Kiều",
-        "Chợ Hưng Lợi",
-        "Chợ Tân An",
-    ];
+    // Debounce search to avoid too many API calls
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
 
-    const filteredProducts = products.filter(
-        (p) =>
-            p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-            (selectedMarket === "" || selectedMarket === "Tất cả" || p.market === selectedMarket) &&
-            (selectedCategory === "Tất cả" || p.category === selectedCategory)
-    );
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearchTerm(searchTerm);
+        }, 300);
+
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Fetch data from API on component mount
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Fetch products and categories in parallel - use getProductsWithDetails for full info
+                const [productsResult, categoriesResult] = await Promise.all([
+                    productService.getProductsWithDetails({
+                        pageSize: 100,
+                        status: 'Active' // Only get active products
+                    }),
+                    categoryService.getActiveCategories()
+                ]);
+
+                console.log('Products from API:', productsResult);
+                console.log('Categories from API:', categoriesResult);
+
+                // Use API products data (already enhanced with store/seller info)
+                const apiProducts = productsResult.items || [];
+
+                // Products should already be formatted with seller and store info from getProductsWithDetails
+                setProducts(apiProducts);
+
+                // Set categories 
+                setCategories(categoriesResult || []);
+
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                setError('Không thể tải dữ liệu từ máy chủ. Vui lòng thử lại sau.');
+                setProducts([]);
+                setCategories([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, []);
+
+    // Search products when search term or category changes
+    useEffect(() => {
+        const searchProducts = async () => {
+            if (!debouncedSearchTerm && selectedCategory === "Tất cả") {
+                return; // Don't search if no criteria
+            }
+
+            try {
+                setSearchLoading(true);
+
+                const filterParams = {
+                    pageSize: 100,
+                    status: 'Active'
+                };
+
+                if (debouncedSearchTerm) {
+                    filterParams.search = debouncedSearchTerm;
+                }
+
+                if (selectedCategory !== "Tất cả") {
+                    // Find category ID by name
+                    const category = categories.find(cat => cat.name === selectedCategory);
+                    if (category) {
+                        filterParams.categoryId = category.id;
+                    }
+                }
+
+                const searchResult = await productService.getProductsWithDetails(filterParams);
+
+                // Products should already be formatted with seller and store info
+                const searchResults = searchResult.items || [];
+                setProducts(searchResults);
+
+            } catch (err) {
+                console.error('Error searching products:', err);
+                // Keep existing products on search error
+                setProducts([]);
+            } finally {
+                setSearchLoading(false);
+            }
+        };
+
+        if (categories.length > 0) { // Only search after categories are loaded
+            searchProducts();
+        }
+    }, [debouncedSearchTerm, selectedCategory, categories]);
+
+    // Show filtered products count
+    const displayProducts = products;
+    const showingSearchResults = debouncedSearchTerm || selectedCategory !== "Tất cả";
+
+    // Show loading state
+    if (loading) {
+        return (
+            <div className="homepage bg-gray-50 min-h-screen pb-12">
+                <Carousel />
+                <main className="mt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                    <div className="text-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-supply-primary mx-auto mb-4"></div>
+                        <p className="text-gray-600">Đang tải dữ liệu sản phẩm...</p>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    // Show error state
+    if (error) {
+        return (
+            <div className="homepage bg-gray-50 min-h-screen pb-12">
+                <Carousel />
+                <main className="mt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                    <div className="text-center py-12">
+                        <div className="text-6xl mb-4">⚠️</div>
+                        <p className="text-red-600 text-lg mb-4">{error}</p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="bg-supply-primary text-white px-4 py-2 rounded-lg hover:bg-supply-primary-dark transition-colors"
+                        >
+                            Thử lại
+                        </button>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="homepage bg-gray-50 min-h-screen pb-12">
@@ -95,27 +222,11 @@ const HomePage = () => {
                 {/* Filter & Category Section */}
                 <section className="mb-8">
                     <div className="bg-white rounded-xl shadow-sm border p-6">
-                        <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center">🔍 Tìm kiếm & Lọc sản phẩm</h3>
+                        <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center">🔍 Tìm kiếm sản phẩm</h3>
 
-                        {/* Search Filters */}
-                        <div className="flex flex-col lg:flex-row justify-center items-center gap-4 mb-6">
-                            <div className="w-full lg:w-64">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Chọn chợ</label>
-                                <select
-                                    value={selectedMarket}
-                                    onChange={(e) => setSelectedMarket(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent"
-                                >
-                                    {markets.map((market, idx) => (
-                                        <option key={idx} value={market}>
-                                            {market}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="w-full lg:w-96">
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Tìm kiếm sản phẩm</label>
+                        {/* Search Input */}
+                        <div className="flex justify-center mb-6">
+                            <div className="w-full max-w-md">
                                 <div className="relative">
                                     <input
                                         type="text"
@@ -138,6 +249,7 @@ const HomePage = () => {
                             <CategorySidebar
                                 onSelectCategory={setSelectedCategory}
                                 selectedCategory={selectedCategory}
+                                categories={categories}
                             />
                         </div>
                     </div>
@@ -152,27 +264,47 @@ const HomePage = () => {
                                 🌟 Sản phẩm nổi bật
                             </h3>
                             <div className="text-sm text-gray-600">
-                                Tìm thấy {filteredProducts.length} sản phẩm
+                                {showingSearchResults
+                                    ? `Tìm thấy ${displayProducts.length} sản phẩm${debouncedSearchTerm ? ` cho "${debouncedSearchTerm}"` : ''}`
+                                    : `Hiển thị ${displayProducts.length} sản phẩm`
+                                }
+                                {searchLoading && <span className="ml-2 text-supply-primary">Đang tìm kiếm...</span>}
                             </div>
                         </div>
-                        {filteredProducts.length > 0 ? (
+                        {displayProducts.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                                {filteredProducts.map((p) => (
+                                {displayProducts.map((p) => (
                                     <ProductCard
                                         key={p.id}
                                         id={p.id}
                                         name={p.name}
                                         seller={p.seller}
+                                        sellerId={p.sellerId}
                                         market={p.market}
+                                        storeId={p.storeId}
+                                        storeName={p.storeName}
                                         price={p.price}
+                                        image={p.image}
+                                        description={p.description}
+                                        status={p.statusDisplay}
                                     />
                                 ))}
                             </div>
                         ) : (
                             <div className="text-center py-12">
                                 <div className="text-6xl mb-4">🔍</div>
-                                <p className="text-gray-500 text-lg">Không tìm thấy sản phẩm phù hợp.</p>
-                                <p className="text-gray-400 text-sm mt-2">Hãy thử tìm kiếm với từ khóa khác hoặc chọn chợ khác.</p>
+                                <p className="text-gray-500 text-lg">
+                                    {showingSearchResults
+                                        ? 'Không tìm thấy sản phẩm phù hợp.'
+                                        : 'Chưa có sản phẩm nào.'
+                                    }
+                                </p>
+                                <p className="text-gray-400 text-sm mt-2">
+                                    {showingSearchResults
+                                        ? 'Hãy thử tìm kiếm với từ khóa khác hoặc chọn danh mục khác.'
+                                        : 'Hệ thống đang cập nhật sản phẩm.'
+                                    }
+                                </p>
                             </div>
                         )}
                     </div>

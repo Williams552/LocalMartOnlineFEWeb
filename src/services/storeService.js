@@ -1,211 +1,297 @@
-// src/services/storeService.js
+
 import axios from 'axios';
-import authService from './authService';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
 
-// Configure axios base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5183";
-const API_BASE = `${API_BASE_URL}/api/store`;
+// Create axios instance
+const createApiClient = () => {
+    const client = axios.create({
+        timeout: 10000,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
 
-export const storeService = {
-    // Admin APIs - Quản lý tất cả cửa hàng
-    getAllStores: async (params = {}) => {
-        try {
-            const token = authService.getToken();
-            const config = {
-                headers: {}
-            };
-            
+    // Add request interceptor for auth token
+    client.interceptors.request.use(
+        (config) => {
+            const token = localStorage.getItem('token');
             if (token) {
                 config.headers.Authorization = `Bearer ${token}`;
             }
-            
-            console.log('🏪 StoreService - Getting all stores with params:', params);
-            console.log('🏪 StoreService - Token present:', !!token);
-            
-            // Try admin API first, fallback to public API
-            try {
-                const response = await axios.get(API_ENDPOINTS.STORE.GET_ALL_ADMIN, { 
-                    ...config,
-                    params 
-                });
-                console.log('🏪 StoreService - Admin API response:', response.data);
-                return response.data;
-            } catch (adminError) {
-                if (adminError.response?.status === 401 || adminError.response?.status === 403) {
-                    console.log('🏪 StoreService - Admin API failed, trying public API');
-                    return await storeService.getActiveStores(params);
-                }
-                throw adminError;
+            return config;
+        },
+        (error) => {
+            return Promise.reject(error);
+        }
+    );
+
+    // Add response interceptor for error handling
+    client.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                // Don't auto redirect for public API calls
             }
-        } catch (error) {
-            console.error('❌ StoreService - Error getting all stores:', error);
-            throw error;
+            return Promise.reject(error);
         }
-    },
+    );
 
-    // Public API - Lấy cửa hàng đang hoạt động
-    getActiveStores: async (params = {}) => {
+    return client;
+};
+
+const apiClient = createApiClient();
+
+class StoreService {
+    // Get all stores
+    async getAllStores(params = {}) {
         try {
-            console.log('🏪 StoreService - Getting active stores with params:', params);
-            const response = await axios.get(API_ENDPOINTS.STORE.GET_ALL, { params });
-            console.log('🏪 StoreService - Active stores response:', response.data);
-            return response.data;
-        } catch (error) {
-            console.error('❌ StoreService - Error getting active stores:', error);
-            throw error;
-        }
-    },
+            const queryParams = new URLSearchParams();
 
-    // Lấy thông tin chi tiết cửa hàng
-    getStoreById: async (id) => {
-        try {
-            console.log('🏪 StoreService - Getting store by ID:', id);
-            const response = await axios.get(API_ENDPOINTS.STORE.GET_BY_ID(id));
-            console.log('🏪 StoreService - Store details:', response.data);
-            return response.data;
-        } catch (error) {
-            console.error('❌ StoreService - Error getting store by ID:', error);
-            throw error;
-        }
-    },
+            // Add pagination parameters if provided
+            if (params.page) queryParams.append('page', params.page);
+            if (params.pageSize) queryParams.append('pageSize', params.pageSize);
+            if (params.search) queryParams.append('search', params.search);
+            if (params.marketId) queryParams.append('marketId', params.marketId);
+            if (params.status) queryParams.append('status', params.status);
 
-    // === REMOVED FUNCTIONS ===
-    // createStore - Removed as requested
-    // updateStore - Removed as requested  
-    // toggleStoreStatus - Removed as requested
-    // These functions have been removed from the service
+            const url = queryParams.toString()
+                ? `${API_ENDPOINTS.STORE.GET_ALL}?${queryParams}`
+                : API_ENDPOINTS.STORE.GET_ALL;
 
-    // Tạm ngưng cửa hàng (Admin only)
-    suspendStore: async (id, reason) => {
-        try {
-            const token = authService.getToken();
-            if (!token) {
-                throw new Error('Bạn cần đăng nhập để tạm ngưng cửa hàng');
-            }
+            const response = await apiClient.get(url);
 
-            console.log('🏪 StoreService - Suspending store:', id, reason);
-            const response = await axios.patch(API_ENDPOINTS.STORE.SUSPEND(id), 
-                { Reason: reason }, // Backend expects { Reason: string }
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                }
-            );
-            console.log('✅ StoreService - Store suspended:', response.data);
-            return response.data;
-        } catch (error) {
-            console.error('❌ StoreService - Error suspending store:', error);
-            throw error;
-        }
-    },
-
-    // Kích hoạt lại cửa hàng (Admin only)
-    reactivateStore: async (id) => {
-        try {
-            const token = authService.getToken();
-            if (!token) {
-                throw new Error('Bạn cần đăng nhập để kích hoạt lại cửa hàng');
-            }
-
-            console.log('🏪 StoreService - Reactivating store:', id);
-            const response = await axios.patch(API_ENDPOINTS.STORE.REACTIVATE(id), {}, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
-            console.log('✅ StoreService - Store reactivated:', response.data);
-            return response.data;
-        } catch (error) {
-            console.error('❌ StoreService - Error reactivating store:', error);
-            throw error;
-        }
-    },
-
-    // Tìm kiếm cửa hàng
-    searchStores: async (searchParams) => {
-        try {
-            console.log('🏪 StoreService - Searching stores:', searchParams);
-            
-            const token = authService.getToken();
-            let endpoint = API_ENDPOINTS.STORE.SEARCH; // Default to public search
-            const config = {};
-            
-            // If token exists and we're filtering by status, use admin search
-            if (token && searchParams.status) {
-                endpoint = API_ENDPOINTS.STORE.SEARCH_ADMIN;
-                config.headers = {
-                    Authorization: `Bearer ${token}`
+            // Return the items from the API response
+            if (response.data && response.data.success && response.data.data) {
+                return {
+                    items: response.data.data.items || [],
+                    totalCount: response.data.data.totalCount || 0,
+                    page: response.data.data.page || 1,
+                    pageSize: response.data.data.pageSize || 20
                 };
-                console.log('🏪 StoreService - Using admin search for status filter');
-            } else if (token) {
-                // If token exists but no status filter, try admin search first
-                try {
-                    console.log('🏪 StoreService - Trying admin search first');
-                    const response = await axios.post(API_ENDPOINTS.STORE.SEARCH_ADMIN, searchParams, {
-                        headers: {
-                            Authorization: `Bearer ${token}`
-                        }
-                    });
-                    console.log('🏪 StoreService - Admin search results:', response.data);
-                    return response.data;
-                } catch (adminError) {
-                    if (adminError.response?.status === 401 || adminError.response?.status === 403) {
-                        console.log('🏪 StoreService - Admin search failed, falling back to public search');
-                        // Fall back to public search
-                    } else {
-                        throw adminError;
-                    }
-                }
             }
-            
-            const response = await axios.post(endpoint, searchParams, config);
-            console.log('🏪 StoreService - Search results:', response.data);
-            return response.data;
-        } catch (error) {
-            console.error('❌ StoreService - Error searching stores:', error);
-            throw error;
-        }
-    },
 
-    // Tìm cửa hàng gần đây
-    findNearbyStores: async (latitude, longitude, maxDistance = 5, page = 1, pageSize = 20) => {
-        try {
-            console.log('🏪 StoreService - Finding nearby stores:', { latitude, longitude, maxDistance });
-            // No token needed for nearby search as it's AllowAnonymous
-            const response = await axios.get(API_ENDPOINTS.STORE.NEARBY, { 
-                params: { 
-                    latitude, 
-                    longitude, 
-                    maxDistance, 
-                    page, 
-                    pageSize 
-                } 
-            });
-            console.log('🏪 StoreService - Nearby stores:', response.data);
-            return response.data;
+            return {
+                items: [],
+                totalCount: 0,
+                page: 1,
+                pageSize: 20
+            };
         } catch (error) {
-            console.error('❌ StoreService - Error finding nearby stores:', error);
-            throw error;
-        }
-    },
-
-    // Lấy cửa hàng theo Market ID
-    getStoresByMarket: async (marketId, params = {}) => {
-        try {
-            console.log('🏪 StoreService - Getting stores by market:', marketId, params);
-            // No token needed as it's AllowAnonymous
-            const response = await axios.get(API_ENDPOINTS.STORE.BY_MARKET(marketId), { 
-                params 
-            });
-            console.log('🏪 StoreService - Market stores:', response.data);
-            return response.data;
-        } catch (error) {
-            console.error('❌ StoreService - Error getting stores by market:', error);
+            console.error('Error fetching stores:', error);
             throw error;
         }
     }
-};  
+
+    // Get store by ID
+    async getStoreById(storeId) {
+        try {
+            const response = await apiClient.get(API_ENDPOINTS.STORE.GET_BY_ID(storeId));
+
+            if (response.data && response.data.success && response.data.data) {
+                return {
+                    success: true,
+                    data: this.formatStoreForFrontend(response.data.data)
+                };
+            }
+
+            return {
+                success: false,
+                message: 'Store not found'
+            };
+        } catch (error) {
+            console.error(`Error fetching store ${storeId}:`, error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Không thể tải thông tin gian hàng'
+            };
+        }
+    }    // Get stores by seller
+    async getStoresBySeller(sellerId, params = {}) {
+        try {
+            console.log('Fetching stores for seller:', sellerId);
+
+            // Check if token exists
+            const token = localStorage.getItem('token');
+            console.log('Auth token exists:', !!token);
+            if (token) {
+                console.log('Token preview:', token.substring(0, 20) + '...');
+            }
+
+            // The API endpoint /api/store/seller automatically gets sellerId from JWT token
+            // No need to pass sellerId as query parameter
+            const queryParams = new URLSearchParams(params);
+            const url = queryParams.toString() ?
+                `${API_ENDPOINTS.STORE.GET_BY_SELLER}?${queryParams}` :
+                API_ENDPOINTS.STORE.GET_BY_SELLER;
+
+            console.log('Making request to:', url);
+            console.log('API Base URL:', API_ENDPOINTS.API_BASE);
+
+            const response = await apiClient.get(url);
+
+            console.log('Store API response status:', response.status);
+            console.log('Store API response:', response.data);
+
+            if (response.data && response.data.success) {
+                const stores = Array.isArray(response.data.data) ? response.data.data : [];
+                console.log('Stores from API:', stores);
+                const formattedStores = stores.map(store => this.formatStoreForFrontend(store));
+                console.log('Formatted stores:', formattedStores);
+                return formattedStores;
+            }
+
+            console.log('No stores found or API response unsuccessful');
+            return [];
+        } catch (error) {
+            console.error(`Error fetching stores by seller ${sellerId}:`, error);
+            console.error('Error details:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            console.error('Error config:', error.config);
+            // Return empty array instead of throwing to prevent app crash
+            return [];
+        }
+    }
+
+    // Get active stores for public display
+    async getActiveStores(params = {}) {
+        try {
+            const storeParams = {
+                ...params,
+                status: 'Open'
+            };
+
+            return await this.getAllStores(storeParams);
+        } catch (error) {
+            console.error('Error fetching active stores:', error);
+            throw error;
+        }
+    }
+
+    // Format store data for frontend use
+    formatStoreForFrontend(store) {
+        return {
+            id: store.id,
+            name: store.name,
+            address: store.address,
+            contactNumber: store.contactNumber,
+            status: store.status,
+            rating: store.rating || 0,
+            storeImageUrl: store.storeImageUrl,
+            latitude: store.latitude,
+            longitude: store.longitude,
+            sellerId: store.sellerId,
+            marketId: store.marketId,
+            createdAt: store.createdAt,
+            updatedAt: store.updatedAt,
+            // Add compatibility fields
+            storeName: store.name,
+            storeAddress: store.address,
+        };
+    }
+
+    // Get formatted stores for frontend
+    async getFormattedStores(params = {}) {
+        try {
+            const result = await this.getAllStores(params);
+
+            return {
+                ...result,
+                items: result.items.map(store => this.formatStoreForFrontend(store))
+            };
+        } catch (error) {
+            console.error('Error getting formatted stores:', error);
+            throw error;
+        }
+    }
+
+    // Create new store (for sellers)
+    async createStore(storeData) {
+        try {
+            const response = await apiClient.post(API_ENDPOINTS.STORE.CREATE, storeData);
+
+            if (response.data && response.data.success) {
+                return response.data.data;
+            }
+
+            return null;
+        } catch (error) {
+            console.error('Error creating store:', error);
+            throw error;
+        }
+    }
+
+    // Update store (for sellers)
+    async updateStore(id, storeData) {
+        try {
+            const response = await apiClient.put(API_ENDPOINTS.STORE.UPDATE(id), storeData);
+
+            if (response.data && response.data.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                    message: response.data.message || 'Cập nhật gian hàng thành công'
+                };
+            }
+
+            return {
+                success: false,
+                message: response.data?.message || 'Cập nhật gian hàng thất bại'
+            };
+        } catch (error) {
+            console.error(`Error updating store ${id}:`, error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật gian hàng'
+            };
+        }
+    }
+
+    // Delete store (for sellers)
+    async deleteStore(id) {
+        try {
+            const response = await apiClient.delete(API_ENDPOINTS.STORE.DELETE(id));
+
+            if (response.data && response.data.success) {
+                return response.data.data;
+            }
+
+            return null;
+        } catch (error) {
+            console.error(`Error deleting store ${id}:`, error);
+            throw error;
+        }
+    }
+
+    // Get store statistics
+    async getStoreStatistics(storeId) {
+        try {
+            const response = await apiClient.get(API_ENDPOINTS.STORE.GET_STATISTICS(storeId));
+
+            if (response.data && response.data.success && response.data.data) {
+                return {
+                    success: true,
+                    data: response.data.data
+                };
+            }
+
+            return {
+                success: false,
+                message: 'Store statistics not found',
+                data: null
+            };
+        } catch (error) {
+            console.error(`Error fetching store statistics for ${storeId}:`, error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Error fetching store statistics',
+                data: null
+            };
+        }
+    }
+}
+
+const storeService = new StoreService();
 
 export default storeService;
