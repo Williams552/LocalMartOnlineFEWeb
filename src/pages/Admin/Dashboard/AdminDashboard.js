@@ -34,7 +34,6 @@ import {
 import { useNavigate } from 'react-router-dom';
 import userService from '../../../services/userService';
 import { formatUserData, getRoleColor, getStatusColor } from '../../../utils/userValidation';
-import TestAPI from '../../../components/TestAPI';
 
 const { Content } = Layout;
 const { Title, Text } = Typography;
@@ -214,9 +213,6 @@ const AdminDashboard = () => {
                 <Title level={2}>Dashboard Quản trị</Title>
                 <Text type="secondary">Tổng quan hệ thống LocalMart</Text>
             </div>
-
-            {/* Debug Component - Temporarily added */}
-            <TestAPI />
 
             {/* Statistics Cards */}
             <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>

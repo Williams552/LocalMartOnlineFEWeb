@@ -105,15 +105,18 @@ const Login = () => {
                 // Login successful with toast notification
                 toast.success("Đăng nhập thành công!");
 
-                // Redirect based on user role using proper navigation
-                const user = authService.getCurrentUser();
-                if (user?.role === 'Admin') {
-                    navigate("/admin");
-                } else if (user?.role === 'Seller') {
-                    navigate("/seller/dashboard");
-                } else {
-                    navigate("/");
-                }
+                // Delay navigation to allow toast to show
+                setTimeout(() => {
+                    // Redirect based on user role using proper navigation
+                    const user = authService.getCurrentUser();
+                    if (user?.role === 'Admin') {
+                        navigate("/admin");
+                    } else if (user?.role === 'Seller') {
+                        navigate("/seller/dashboard");
+                    } else {
+                        navigate("/");
+                    }
+                }, 1500); // Delay 1.5 seconds to show the toast
             } else {
                 setErrorMessage(result.message || "Đăng nhập thất bại");
             }
@@ -149,15 +152,18 @@ const Login = () => {
             if (result.success && result.data?.token) {
                 toast.success("Xác thực thành công!");
 
-                // Redirect based on user role using proper navigation
-                const user = authService.getCurrentUser();
-                if (user?.role === 'Admin') {
-                    navigate("/admin");
-                } else if (user?.role === 'Seller') {
-                    navigate("/seller/dashboard");
-                } else {
-                    navigate("/");
-                }
+                // Delay navigation to allow toast to show
+                setTimeout(() => {
+                    // Redirect based on user role using proper navigation
+                    const user = authService.getCurrentUser();
+                    if (user?.role === 'Admin') {
+                        navigate("/admin");
+                    } else if (user?.role === 'Seller') {
+                        navigate("/seller/dashboard");
+                    } else {
+                        navigate("/");
+                    }
+                }, 1500); // Delay 1.5 seconds to show the toast
             } else {
                 setErrorMessage(result.message || "Xác thực thất bại");
             }

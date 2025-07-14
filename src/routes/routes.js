@@ -1,4 +1,3 @@
-// src/routes/AppRoutes.js (cập nhật)
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
@@ -13,11 +12,12 @@ import Unauthorized from "../components/Unauthorized";
 import ApiRedirectHandler from "../components/ApiRedirectHandler";
 import HomePage from "../pages/Guest/HomePage";
 import ProductDetail from "../pages/Guest/ProductDetail";
-import SellerProfile from "../pages/Guest/SellerProfile";
+import StorePage from "../pages/Guest/StorePage";
 import AboutPage from "../pages/Guest/AboutPage";
 import ContactPage from "../pages/Guest/ContactPage";
 import FAQPage from "../pages/Guest/FAQPage";
 import App from "../App";
+import SellerApp from "../SellerApp"; // New seller app without header/footer
 // Admin pages
 import AdminLayout from "../pages/Admin/AdminLayout";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
@@ -27,19 +27,31 @@ import OrderManagement from "../pages/Admin/OrderManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
 import Analytics from "../pages/Admin/Analytics";
 import SupportManagement from "../pages/Admin/SupportManagement";
-import BuyerProfile from "../pages/Buyer/BuyerProfile";
 import CartPage from "../pages/Buyer/CartPage";
+import FavoritesPage from "../pages/Buyer/FavoritesPage";
+import FollowingStoresPage from "../pages/Buyer/FollowingStores";
+import TestFavorites from "../pages/TestFavorites";
 import ProxyShopperList from "../pages/ProxyShopper/ProxyShopperList";
 import RegisterProxyShopper from "../pages/ProxyShopper/RegisterProxyShopper";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
 import RegisterSeller from "../pages/Buyer/RegisterSeller";
-
+import UserProfile from "../pages/User/UserProfile";
+import ChatListPage from "../pages/Buyer/ChatListPage";
+import ChatPage from "../pages/Buyer/ChatPage";
+import FastBargainPage from "../pages/FastBargain/FastBargainPage";
+import BargainDetail from "../pages/FastBargain/BargainDetail";
 
 // Seller pages
-import SellerDashboard from "../pages/Seller/SellerDashboard";
-import SellerProducts from "../pages/Seller/SellerProducts";
-import SellerOrders from "../pages/Seller/SellerOrders";
-import SellerProfileEdit from "../pages/Seller/SellerProfile";
+import SellerDashboard from "../pages/Sellers/SellerDashboard";
+import SellerProducts from "../pages/Sellers/SellerProducts";
+import SellerOrdersPage from "../pages/Sellers/SellerOrdersPage";
+import StoreProfile from "../pages/Sellers/StoreProfile";
+import CustomerManagement from "../pages/Sellers/CustomerManagement";
+import PersonalShopping from "../pages/Sellers/PersonalShopping";
+import QuickActionsPage from "../pages/Sellers/QuickActionsPage";
+import ChartsAnalyticsPage from "../pages/Sellers/ChartsAnalyticsPage";
+import NotificationsPage from "../pages/Sellers/NotificationsPage";
+import PriorityActionsPage from "../pages/Sellers/PriorityActionsPage";
 
 const AppRoutes = () => {
     return (
@@ -68,21 +80,41 @@ const AppRoutes = () => {
                 <Route path="/register-seller" element={<ProtectedRoute><RegisterSeller /></ProtectedRoute>} />
                 <Route path="/proxy-shopper/register" element={<ProtectedRoute><RegisterProxyShopper /></ProtectedRoute>} />
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
-                <Route path="/buyer/profile" element={<ProtectedRoute><BuyerProfile /></ProtectedRoute>} />
+                <Route path="/buyer/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+                <Route path="/buyer/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
+                <Route path="/buyer/following" element={<ProtectedRoute><FollowingStoresPage /></ProtectedRoute>} />
                 <Route path="/buyer/orders" element={<ProtectedRoute><BuyerOrders /></ProtectedRoute>} />
+                <Route path="/buyer/chat" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
+                <Route path="/buyer/chat/:sellerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
+                <Route path="/test-favorites" element={<TestFavorites />} />
+                <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
+                <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
+                <Route path="/buyer/bargains" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/seller/:sellerId" element={<SellerProfile />} />
+                <Route path="/store/:storeId" element={<StorePage />} />
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/faq" element={<FAQPage />} />
+            </Route>
 
-                {/* Seller Routes - Protected routes cho seller dashboard */}
+            {/* Seller Routes - Separate layout without Header/Footer */}
+            <Route element={<SellerApp />}>
                 <Route path="/seller/dashboard" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
                 <Route path="/seller/products" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
                 <Route path="/seller/products/add" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
-                <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['Seller']}><SellerOrders /></ProtectedRoute>} />
-                <Route path="/seller/profile" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProfileEdit /></ProtectedRoute>} />
+                <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['Seller']}><SellerOrdersPage /></ProtectedRoute>} />
+                <Route path="/seller/profile" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
                 <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
+                <Route path="/seller/customers" element={<ProtectedRoute allowedRoles={['Seller']}><CustomerManagement /></ProtectedRoute>} />
+                <Route path="/seller/personal-shopping" element={<ProtectedRoute allowedRoles={['Seller']}><PersonalShopping /></ProtectedRoute>} />
+                <Route path="/seller/quick-actions" element={<ProtectedRoute allowedRoles={['Seller']}><QuickActionsPage /></ProtectedRoute>} />
+                <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><ChartsAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/seller/notifications" element={<ProtectedRoute allowedRoles={['Seller']}><NotificationsPage /></ProtectedRoute>} />
+                <Route path="/seller/priority-actions" element={<ProtectedRoute allowedRoles={['Seller']}><PriorityActionsPage /></ProtectedRoute>} />
+                <Route path="/seller/payments" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
+                <Route path="/seller/licenses" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
+                <Route path="/seller/store" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
             </Route>
 
             {/* Admin Routes - Protected with admin role */}

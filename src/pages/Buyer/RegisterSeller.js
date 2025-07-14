@@ -44,12 +44,19 @@ const RegisterSeller = () => {
 
     const checkExistingRegistration = async () => {
         try {
+            // Check if user is authenticated first
+            if (!authService.isAuthenticated()) {
+                console.log('User not authenticated, skipping registration check');
+                return;
+            }
+
             const registration = await sellerRegistrationService.getMyRegistration();
             if (registration) {
                 setExistingRegistration(registration);
             }
         } catch (error) {
             console.error('Error checking registration:', error);
+            // Don't show error for this as it's a background check
         }
     };
 
@@ -116,6 +123,10 @@ const RegisterSeller = () => {
                     description: "",
                     contractFile: null,
                 });
+                // Refresh registration status after successful registration
+                setTimeout(() => {
+                    checkExistingRegistration();
+                }, 1000);
             } else {
                 setError(result.message || "Đăng ký thất bại. Vui lòng thử lại.");
             }
@@ -172,6 +183,20 @@ const RegisterSeller = () => {
                         {existingRegistration.status === 'Pending' && (
                             <div className="text-yellow-600 font-medium">
                                 ⏳ Đăng ký của bạn đang được xem xét. Chúng tôi sẽ liên hệ sớm nhất có thể.
+                            </div>
+                        )}
+
+                        {existingRegistration.status === 'Rejected' && (
+                            <div className="space-y-4">
+                                <div className="text-red-600 font-medium">
+                                    ❌ Đăng ký của bạn đã bị từ chối.
+                                </div>
+                                <button
+                                    onClick={() => setExistingRegistration(null)}
+                                    className="px-4 py-2 bg-supply-primary text-white rounded-full hover:bg-green-600"
+                                >
+                                    Đăng ký lại
+                                </button>
                             </div>
                         )}
                     </div>

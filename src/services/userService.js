@@ -3,7 +3,7 @@ import apiService from './apiService';
 
 class UserService {
     // Get all users with pagination and filters (Admin only)
-    
+
     async getAllUsers() {
         try {
             const response = await apiService.get('/api/User');
@@ -189,6 +189,69 @@ class UserService {
             throw new Error(error.message || 'Lỗi khi lấy thống kê người dùng');
         }
     }
+
+    // Get seller profile by ID
+    async getSellerById(sellerId) {
+        try {
+            const response = await apiService.get(`/api/User/${sellerId}`);
+
+            if (!response || typeof response !== 'object') {
+                throw new Error('Phản hồi từ API không hợp lệ');
+            }
+
+            if (!response.data) {
+                return { success: false, data: null };
+            }
+
+            return response;
+        } catch (error) {
+            console.error('❌ Lỗi khi gọi API getSellerById:', error);
+            throw new Error('Không thể tải thông tin người bán');
+        }
+    }
+
+    // Get seller profile by username or email
+    async getSellerByIdentifier(identifier) {
+        try {
+            // First try to get all users and find by username or email
+            const response = await this.getAllUsers();
+
+            if (response.success && response.data) {
+                const seller = response.data.find(user =>
+                    user.username === identifier ||
+                    user.email === identifier ||
+                    user.fullName === identifier
+                );
+
+                return { success: true, data: seller || null };
+            }
+
+            return { success: false, data: null };
+        } catch (error) {
+            console.error('❌ Lỗi khi gọi API getSellerByIdentifier:', error);
+            throw new Error('Không thể tìm thông tin người bán');
+        }
+    }
+
+    // Format user data for seller profile display
+    formatSellerForProfile(user) {
+        return {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            fullName: user.fullName,
+            phoneNumber: user.phoneNumber,
+            address: user.address,
+            avatar: user.avatar,
+            role: user.role,
+            isActive: user.isActive,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            // Add display fields
+            displayName: user.fullName || user.username,
+            contactInfo: user.phoneNumber || user.email,
+        };
+    }
 }
 
 // Export singleton instance
@@ -208,4 +271,7 @@ export const updateUserTheme = (id, theme) => userService.updateUserTheme(id, th
 export const getUserTheme = (id) => userService.getUserTheme(id);
 export const disableOwnAccount = () => userService.disableOwnAccount();
 export const getUserStatistics = () => userService.getUserStatistics();
+export const getSellerById = (sellerId) => userService.getSellerById(sellerId);
+export const getSellerByIdentifier = (identifier) => userService.getSellerByIdentifier(identifier);
+export const formatSellerForProfile = (user) => userService.formatSellerForProfile(user);
 

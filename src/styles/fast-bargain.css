@@ -1,0 +1,104 @@
+/* Fast Bargain specific styles */
+.bargain-card {
+    transition: all 0.3s ease;
+}
+
+.bargain-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.bargain-timeline {
+    position: relative;
+}
+
+.bargain-timeline::before {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #10b981, #6b7280);
+}
+
+.bargain-timeline-item {
+    position: relative;
+    padding-left: 3rem;
+    margin-bottom: 1.5rem;
+}
+
+.bargain-timeline-item::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0.5rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    background: #10b981;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 2px #10b981;
+}
+
+.bargain-proposal-mine::before {
+    background: #3b82f6;
+    box-shadow: 0 0 0 2px #3b82f6;
+}
+
+.bargain-proposal-theirs::before {
+    background: #6b7280;
+    box-shadow: 0 0 0 2px #6b7280;
+}
+
+/* Pulse animation for pending proposals */
+.bargain-pending {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* Price highlight */
+.price-highlight {
+    background: linear-gradient(45deg, #10b981, #059669);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: bold;
+}
+
+/* Bargain button styles */
+.bargain-button {
+    background: linear-gradient(45deg, #f97316, #ea580c);
+    transition: all 0.3s ease;
+}
+
+.bargain-button:hover {
+    background: linear-gradient(45deg, #ea580c, #dc2626);
+    transform: scale(1.05);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .bargain-timeline-item {
+        padding-left: 2rem;
+    }
+
+    .bargain-timeline::before {
+        left: 0.5rem;
+    }
+
+    .bargain-timeline-item::before {
+        left: 0.25rem;
+    }
+}

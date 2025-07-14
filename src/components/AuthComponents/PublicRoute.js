@@ -5,6 +5,9 @@ import { useAuth } from '../../hooks/useAuth';
 const PublicRoute = ({ children }) => {
     const { isAuthenticated, user, loading } = useAuth();
 
+    // Debug authentication state
+    console.log('PublicRoute - Auth state:', { isAuthenticated, user: user?.username, loading });
+
     // Show loading spinner while checking authentication
     if (loading) {
         return (
@@ -16,6 +19,7 @@ const PublicRoute = ({ children }) => {
 
     // If authenticated, redirect to appropriate dashboard
     if (isAuthenticated && user) {
+        console.log('PublicRoute - User is authenticated, redirecting to dashboard');
         if (user.role === 'Admin') {
             return <Navigate to="/admin" replace />;
         } else if (user.role === 'Seller') {
@@ -26,6 +30,7 @@ const PublicRoute = ({ children }) => {
     }
 
     // If not authenticated, render the public component (login, register, etc.)
+    console.log('PublicRoute - User not authenticated, showing login form');
     return children;
 };
 
