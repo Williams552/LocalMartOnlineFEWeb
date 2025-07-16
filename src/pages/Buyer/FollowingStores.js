@@ -4,7 +4,6 @@ import {
     FaStore, FaHeart, FaMapMarkerAlt, FaStar, FaUsers,
     FaEye, FaBox, FaSearch, FaFilter, FaSpinner
 } from 'react-icons/fa';
-import BuyerLayout from '../../layouts/BuyerLayout';
 import followStoreService from '../../services/followStoreService';
 import FollowStoreButton from '../../components/FollowStoreButton';
 import toastService from '../../services/toastService';
@@ -65,137 +64,135 @@ const FollowingStoresPage = () => {
         });
 
     return (
-        <BuyerLayout>
-            <div className="max-w-7xl mx-auto px-4 py-8">
-                {/* Header */}
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-4">
-                        <FaHeart className="text-red-500 text-2xl" />
-                        <h1 className="text-3xl font-bold text-gray-800">Cửa hàng theo dõi</h1>
-                    </div>
-                    <p className="text-gray-600">
-                        Quản lý danh sách các cửa hàng bạn đang theo dõi để cập nhật sản phẩm mới nhất
-                    </p>
+        <div className="max-w-7xl mx-auto px-4 py-8">
+            {/* Header */}
+            <div className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                    <FaHeart className="text-red-500 text-2xl" />
+                    <h1 className="text-3xl font-bold text-gray-800">Cửa hàng theo dõi</h1>
                 </div>
-
-                {/* Search and Filter */}
-                <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        {/* Search */}
-                        <div className="flex-1 relative">
-                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Tìm kiếm cửa hàng..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent"
-                            />
-                        </div>
-
-                        {/* Sort */}
-                        <div className="flex items-center gap-2">
-                            <FaFilter className="text-gray-500" />
-                            <select
-                                value={sortBy}
-                                onChange={(e) => setSortBy(e.target.value)}
-                                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-supply-primary"
-                            >
-                                <option value="newest">Theo dõi gần nhất</option>
-                                <option value="oldest">Theo dõi cũ nhất</option>
-                                <option value="name">Tên A-Z</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm text-gray-600">
-                        <span>Tổng cộng: <strong>{stores.length}</strong> cửa hàng</span>
-                        {searchTerm && (
-                            <span>Kết quả tìm kiếm: <strong>{filteredStores.length}</strong> cửa hàng</span>
-                        )}
-                    </div>
-                </div>
-
-                {/* Store Grid */}
-                {loading ? (
-                    <div className="flex justify-center items-center py-16">
-                        <div className="text-center">
-                            <FaSpinner className="animate-spin text-4xl text-supply-primary mx-auto mb-4" />
-                            <p className="text-gray-600">Đang tải danh sách cửa hàng...</p>
-                        </div>
-                    </div>
-                ) : filteredStores.length > 0 ? (
-                    <>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredStores.map((store) => (
-                                <StoreCard
-                                    key={store.id}
-                                    store={store}
-                                    onUnfollow={handleUnfollow}
-                                />
-                            ))}
-                        </div>
-
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex justify-center items-center gap-2 mt-8">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Trước
-                                </button>
-
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                    <button
-                                        key={page}
-                                        onClick={() => setCurrentPage(page)}
-                                        className={`px-4 py-2 text-sm font-medium rounded-lg ${currentPage === page
-                                                ? 'bg-supply-primary text-white'
-                                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        {page}
-                                    </button>
-                                ))}
-
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                    className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    Sau
-                                </button>
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    <div className="text-center py-16">
-                        <FaStore className="text-6xl text-gray-300 mx-auto mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">
-                            {searchTerm ? 'Không tìm thấy cửa hàng nào' : 'Chưa theo dõi cửa hàng nào'}
-                        </h3>
-                        <p className="text-gray-500 mb-6">
-                            {searchTerm
-                                ? 'Thử tìm kiếm với từ khóa khác'
-                                : 'Hãy khám phá và theo dõi các cửa hàng yêu thích của bạn'
-                            }
-                        </p>
-                        {!searchTerm && (
-                            <Link
-                                to="/"
-                                className="inline-flex items-center gap-2 px-6 py-3 bg-supply-primary text-white rounded-lg hover:bg-green-600 transition"
-                            >
-                                <FaSearch />
-                                Khám phá cửa hàng
-                            </Link>
-                        )}
-                    </div>
-                )}
+                <p className="text-gray-600">
+                    Quản lý danh sách các cửa hàng bạn đang theo dõi để cập nhật sản phẩm mới nhất
+                </p>
             </div>
-        </BuyerLayout>
+
+            {/* Search and Filter */}
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                    {/* Search */}
+                    <div className="flex-1 relative">
+                        <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm cửa hàng..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent"
+                        />
+                    </div>
+
+                    {/* Sort */}
+                    <div className="flex items-center gap-2">
+                        <FaFilter className="text-gray-500" />
+                        <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value)}
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-supply-primary"
+                        >
+                            <option value="newest">Theo dõi gần nhất</option>
+                            <option value="oldest">Theo dõi cũ nhất</option>
+                            <option value="name">Tên A-Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                {/* Stats */}
+                <div className="mt-4 pt-4 border-t flex items-center justify-between text-sm text-gray-600">
+                    <span>Tổng cộng: <strong>{stores.length}</strong> cửa hàng</span>
+                    {searchTerm && (
+                        <span>Kết quả tìm kiếm: <strong>{filteredStores.length}</strong> cửa hàng</span>
+                    )}
+                </div>
+            </div>
+
+            {/* Store Grid */}
+            {loading ? (
+                <div className="flex justify-center items-center py-16">
+                    <div className="text-center">
+                        <FaSpinner className="animate-spin text-4xl text-supply-primary mx-auto mb-4" />
+                        <p className="text-gray-600">Đang tải danh sách cửa hàng...</p>
+                    </div>
+                </div>
+            ) : filteredStores.length > 0 ? (
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {filteredStores.map((store) => (
+                            <StoreCard
+                                key={store.id}
+                                store={store}
+                                onUnfollow={handleUnfollow}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                        <div className="flex justify-center items-center gap-2 mt-8">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Trước
+                            </button>
+
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`px-4 py-2 text-sm font-medium rounded-lg ${currentPage === page
+                                        ? 'bg-supply-primary text-white'
+                                        : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Sau
+                            </button>
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div className="text-center py-16">
+                    <FaStore className="text-6xl text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-700 mb-2">
+                        {searchTerm ? 'Không tìm thấy cửa hàng nào' : 'Chưa theo dõi cửa hàng nào'}
+                    </h3>
+                    <p className="text-gray-500 mb-6">
+                        {searchTerm
+                            ? 'Thử tìm kiếm với từ khóa khác'
+                            : 'Hãy khám phá và theo dõi các cửa hàng yêu thích của bạn'
+                        }
+                    </p>
+                    {!searchTerm && (
+                        <Link
+                            to="/"
+                            className="inline-flex items-center gap-2 px-6 py-3 bg-supply-primary text-white rounded-lg hover:bg-green-600 transition"
+                        >
+                            <FaSearch />
+                            Khám phá cửa hàng
+                        </Link>
+                    )}
+                </div>
+            )}
+        </div>
     );
 };
 

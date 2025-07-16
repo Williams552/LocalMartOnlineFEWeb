@@ -42,7 +42,6 @@ import SupportManagement from "../pages/Admin/SupportManagement";
 import CartPage from "../pages/Buyer/CartPage";
 import FavoritesPage from "../pages/Buyer/FavoritesPage";
 import FollowingStoresPage from "../pages/Buyer/FollowingStores";
-import TestFavorites from "../pages/TestFavorites";
 import ProxyShopperList from "../pages/ProxyShopper/ProxyShopperList";
 import RegisterProxyShopper from "../pages/ProxyShopper/RegisterProxyShopper";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
@@ -98,7 +97,6 @@ const AppRoutes = () => {
                 <Route path="/buyer/orders" element={<ProtectedRoute><BuyerOrders /></ProtectedRoute>} />
                 <Route path="/buyer/chat" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                 <Route path="/buyer/chat/:sellerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-                <Route path="/test-favorites" element={<TestFavorites />} />
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
                 <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
@@ -150,7 +148,7 @@ const AppRoutes = () => {
                 <Route path="markets/dashboard" element={<MarketDashboard />} />
                 <Route path="market-fees" element={<MarketFeeManagement />} />
                 <Route path="market-rules" element={<MarketRuleManagement />} />
-                
+
 
                 {/* Store Management */}
                 <Route path="stores" element={<StoreManagement />} />
