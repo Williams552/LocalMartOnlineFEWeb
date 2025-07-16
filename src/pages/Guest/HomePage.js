@@ -5,12 +5,15 @@ import CategorySidebar from "../../components/Sidebar/CategorySidebar";
 import ChatboxBot from "../../components/Chat/ChatBoxBot";
 import productService from "../../services/productService";
 import categoryService from "../../services/categoryService";
+import marketService from "../../services/marketService";
 
 const HomePage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("Tất cả");
+    const [selectedMarket, setSelectedMarket] = useState("Tất cả");
     const [products, setProducts] = useState([]);
     const [categories, setCategories] = useState([]);
+    const [markets, setMarkets] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchLoading, setSearchLoading] = useState(false);
@@ -33,17 +36,19 @@ const HomePage = () => {
                 setLoading(true);
                 setError(null);
 
-                // Fetch products and categories in parallel - use getProductsWithDetails for full info
-                const [productsResult, categoriesResult] = await Promise.all([
+                // Fetch products, categories and markets in parallel - use getProductsWithDetails for full info
+                const [productsResult, categoriesResult, marketsResult] = await Promise.all([
                     productService.getProductsWithDetails({
                         pageSize: 100,
                         status: 'Active' // Only get active products
                     }),
-                    categoryService.getActiveCategories()
+                    categoryService.getActiveCategories(),
+                    marketService.getActiveMarkets()
                 ]);
 
                 console.log('Products from API:', productsResult);
                 console.log('Categories from API:', categoriesResult);
+                console.log('Markets from API:', marketsResult);
 
                 // Use API products data (already enhanced with store/seller info)
                 const apiProducts = productsResult.items || [];
@@ -54,11 +59,15 @@ const HomePage = () => {
                 // Set categories 
                 setCategories(categoriesResult || []);
 
+                // Set markets
+                setMarkets(marketsResult || []);
+
             } catch (err) {
                 console.error('Error fetching data:', err);
                 setError('Không thể tải dữ liệu từ máy chủ. Vui lòng thử lại sau.');
                 setProducts([]);
                 setCategories([]);
+                setMarkets([]);
             } finally {
                 setLoading(false);
             }
@@ -67,7 +76,7 @@ const HomePage = () => {
         fetchData();
     }, []);
 
-    // Search products when search term or category changes
+    // Search products when search term, category or market changes
     useEffect(() => {
         const searchProducts = async () => {
             try {
@@ -91,12 +100,20 @@ const HomePage = () => {
                     }
                 }
 
+                // Add market filter if not "Tất cả"
+                if (selectedMarket !== "Tất cả") {
+                    const market = markets.find(m => m.name === selectedMarket);
+                    if (market) {
+                        searchParams.marketId = market.id;
+                    }
+                }
+
                 console.log('🔍 Searching with params:', searchParams);
 
                 let searchResult;
 
                 // If we have search criteria, use search/filter APIs
-                if (debouncedSearchTerm || selectedCategory !== "Tất cả") {
+                if (debouncedSearchTerm || selectedCategory !== "Tất cả" || selectedMarket !== "Tất cả") {
                     try {
                         // Try filter API first (more comprehensive)
                         searchResult = await productService.getProductsWithFilter(searchParams);
@@ -135,15 +152,15 @@ const HomePage = () => {
             }
         };
 
-        // Always search when categories are loaded
-        if (categories.length > 0) {
+        // Always search when categories and markets are loaded
+        if (categories.length > 0 && markets.length > 0) {
             searchProducts();
         }
-    }, [debouncedSearchTerm, selectedCategory, categories]);
+    }, [debouncedSearchTerm, selectedCategory, selectedMarket, categories, markets]);
 
     // Show filtered products count
     const displayProducts = products;
-    const showingSearchResults = debouncedSearchTerm || selectedCategory !== "Tất cả";
+    const showingSearchResults = debouncedSearchTerm || selectedCategory !== "Tất cả" || selectedMarket !== "Tất cả";
 
     // Show loading state
     if (loading) {
@@ -251,9 +268,19 @@ const HomePage = () => {
                     <div className="bg-white rounded-xl shadow-sm border p-6">
                         <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center">🔍 Tìm kiếm sản phẩm</h3>
 
-                        {/* Search Input */}
-                        <div className="flex justify-center mb-6">
-                            <div className="w-full max-w-md">
+                        {/* Category Bar */}
+                        <div className="mb-6">
+                            <CategorySidebar
+                                onSelectCategory={setSelectedCategory}
+                                selectedCategory={selectedCategory}
+                                categories={categories}
+                            />
+                        </div>
+
+                        {/* Search Input and Market Filter */}
+                        <div className="flex flex-col lg:flex-row gap-4 justify-center">
+                            {/* Search Input */}
+                            <div className="flex-1 max-w-md">
                                 <div className="relative">
                                     <input
                                         type="text"
@@ -269,15 +296,24 @@ const HomePage = () => {
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Category Bar */}
-                        <div className="border-t pt-4">
-                            <CategorySidebar
-                                onSelectCategory={setSelectedCategory}
-                                selectedCategory={selectedCategory}
-                                categories={categories}
-                            />
+                            {/* Market Filter */}
+                            <div className="flex-shrink-0 max-w-xs">
+                                <div className="relative">
+                                    <select
+                                        value={selectedMarket}
+                                        onChange={(e) => setSelectedMarket(e.target.value)}
+                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent text-sm bg-white"
+                                    >
+                                        <option value="Tất cả">🏪 Tất cả chợ</option>
+                                        {markets.map((market) => (
+                                            <option key={market.id} value={market.name}>
+                                                🏪 {market.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -292,7 +328,7 @@ const HomePage = () => {
                             </h3>
                             <div className="text-sm text-gray-600">
                                 {showingSearchResults
-                                    ? `Tìm thấy ${displayProducts.length} sản phẩm${debouncedSearchTerm ? ` cho "${debouncedSearchTerm}"` : ''}`
+                                    ? `Tìm thấy ${displayProducts.length} sản phẩm${debouncedSearchTerm ? ` cho "${debouncedSearchTerm}"` : ''}${selectedCategory !== "Tất cả" ? ` trong "${selectedCategory}"` : ''}${selectedMarket !== "Tất cả" ? ` tại "${selectedMarket}"` : ''}`
                                     : `Hiển thị ${displayProducts.length} sản phẩm`
                                 }
                                 {searchLoading && <span className="ml-2 text-supply-primary">Đang tìm kiếm...</span>}
