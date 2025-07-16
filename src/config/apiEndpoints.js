@@ -161,6 +161,11 @@ export const API_ENDPOINTS = {
         CREATE: `${API_URL}/api/store`,
         UPDATE: (id) => `${API_URL}/api/store/${id}`,
         DELETE: (id) => `${API_URL}/api/store/${id}`,
+        SUSPEND: (id) => `${API_URL}/api/store/${id}/suspend`,
+        REACTIVATE: (id) => `${API_URL}/api/store/${id}/reactivate`,
+        SEARCH: `${API_URL}/api/store/search`,
+        SEARCH_ADMIN: `${API_URL}/api/store/admin/search`,
+        NEARBY: `${API_URL}/api/store/nearby`,
         GET_BY_SELLER: `${API_URL}/api/store/seller`,
         GET_STATISTICS: (id) => `${API_URL}/api/store/${id}/statistics`,
 

@@ -17,23 +17,12 @@ const StoreNavigation = () => {
 
     const menuItems = [
         {
-            key: '/admin/stores/dashboard',
-            icon: <DashboardOutlined />,
-            label: 'Tổng quan',
-            onClick: () => navigate('/admin/stores/dashboard')
-        },
-        {
             key: '/admin/stores',
             icon: <ShopOutlined />,
             label: 'Quản lý cửa hàng',
             onClick: () => navigate('/admin/stores')
         },
-        {
-            key: '/admin/stores/analytics',
-            icon: <BarChartOutlined />,
-            label: 'Thống kê',
-            onClick: () => navigate('/admin/stores/analytics')
-        },
+      
         {
             key: '/admin/stores/sellers',
             icon: <TeamOutlined />,

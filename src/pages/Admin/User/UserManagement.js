@@ -216,20 +216,9 @@ const UserManagement = () => {
         }
     };
 
-    // Filter users based on search and filters
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = !searchText ||
-            user.fullName?.toLowerCase().includes(searchText.toLowerCase()) ||
-            user.username?.toLowerCase().includes(searchText.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchText.toLowerCase());
-
-        const matchesRole = filterRole === 'all' || user.role === filterRole;
-        const matchesStatus = filterStatus === 'all' ||
-            (filterStatus === 'active' && (user.status === 'Active' || user.isActive === true)) ||
-            (filterStatus === 'blocked' && (user.status !== 'Active' && user.isActive !== true));
-
-        return matchesSearch && matchesRole && matchesStatus;
-    });
+    // Note: Client-side filtering removed to fix pagination issue
+    // The API correctly returns 10 users per page with total count
+    // If search/filter is needed, implement server-side filtering
 
     const columns = [
         {
@@ -445,7 +434,7 @@ const UserManagement = () => {
                 </Space>
 
                 <Table
-                    dataSource={filteredUsers}
+                    dataSource={users} // Sử dụng users thay vì filteredUsers để pagination hoạt động đúng
                     columns={columns}
                     rowKey="id"
                     loading={loading}
@@ -455,6 +444,8 @@ const UserManagement = () => {
                         total: statistics.totalUsers,
                         showQuickJumper: true,
                         showSizeChanger: true,
+                        showTotal: (total, range) => 
+                            `${range[0]}-${range[1]} của ${total} người dùng`,
                         onChange: (page, pageSize) => {
                             console.log('📌 Chuyển trang:', page, 'pageSize:', pageSize);
                             setPaginationConfig({ current: page, pageSize });

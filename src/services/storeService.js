@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
 
@@ -44,7 +43,7 @@ const createApiClient = () => {
 const apiClient = createApiClient();
 
 class StoreService {
-    // Get all stores
+    // Get all stores (Admin only - shows all stores including inactive)
     async getAllStores(params = {}) {
         try {
             const queryParams = new URLSearchParams();
@@ -56,22 +55,28 @@ class StoreService {
             if (params.marketId) queryParams.append('marketId', params.marketId);
             if (params.status) queryParams.append('status', params.status);
 
+            // Use admin endpoint to get all stores
             const url = queryParams.toString()
-                ? `${API_ENDPOINTS.STORE.GET_ALL}?${queryParams}`
-                : API_ENDPOINTS.STORE.GET_ALL;
+                ? `${API_ENDPOINTS.STORE.GET_ALL_ADMIN}?${queryParams}`
+                : API_ENDPOINTS.STORE.GET_ALL_ADMIN;
 
+            console.log('🔍 StoreService - Calling API:', url);
             const response = await apiClient.get(url);
+            console.log('🔍 StoreService - Raw response:', response);
 
             // Return the items from the API response
             if (response.data && response.data.success && response.data.data) {
-                return {
+                const result = {
                     items: response.data.data.items || [],
                     totalCount: response.data.data.totalCount || 0,
                     page: response.data.data.page || 1,
                     pageSize: response.data.data.pageSize || 20
                 };
+                console.log('🔍 StoreService - Processed result:', result);
+                return result;
             }
 
+            console.log('🔍 StoreService - No data found, returning empty result');
             return {
                 items: [],
                 totalCount: 0,
@@ -79,7 +84,7 @@ class StoreService {
                 pageSize: 20
             };
         } catch (error) {
-            console.error('Error fetching stores:', error);
+            console.error('❌ StoreService - Error fetching stores:', error);
             throw error;
         }
     }
@@ -288,6 +293,145 @@ class StoreService {
                 message: error.response?.data?.message || 'Error fetching store statistics',
                 data: null
             };
+        }
+    }
+
+    // Search stores (Admin function)
+    async searchStores(params = {}) {
+        try {
+            console.log('🔍 StoreService - Searching stores with params:', params);
+            
+            // Prepare search filter body for Backend (đúng theo StoreSearchFilterDto)
+            const searchFilter = {
+                keyword: params.keyword || '',
+                status: params.status || null,
+                marketId: params.marketId || null,
+                page: params.page || 1,
+                pageSize: params.pageSize || 20
+            };
+
+            console.log('🔍 StoreService - Search filter:', searchFilter);
+            
+            // Use admin search endpoint
+            const response = await apiClient.post(API_ENDPOINTS.STORE.SEARCH_ADMIN, searchFilter);
+            console.log('🔍 StoreService - Search response:', response);
+
+            // Handle response structure
+            if (response.data && response.data.success && response.data.data) {
+                const result = {
+                    items: response.data.data.items || response.data.data || [],
+                    totalCount: response.data.data.totalCount || response.data.total || 0,
+                    page: response.data.data.page || searchFilter.page,
+                    pageSize: response.data.data.pageSize || searchFilter.pageSize
+                };
+                console.log('🔍 StoreService - Search result:', result);
+                return result;
+            }
+
+            // Fallback for different response structure
+            if (response.data && Array.isArray(response.data)) {
+                return {
+                    items: response.data,
+                    totalCount: response.data.length,
+                    page: searchFilter.page,
+                    pageSize: searchFilter.pageSize
+                };
+            }
+
+            console.log('🔍 StoreService - No search results found');
+            return {
+                items: [],
+                totalCount: 0,
+                page: searchFilter.page,
+                pageSize: searchFilter.pageSize
+            };
+        } catch (error) {
+            console.error('❌ StoreService - Error searching stores:', error);
+            throw new Error(`Không thể tìm kiếm cửa hàng: ${error.response?.data?.message || error.message}`);
+        }
+    }
+
+    // Suspend store (Admin only)
+    async suspendStore(storeId, reason) {
+        try {
+            console.log('🚫 StoreService - Suspending store:', storeId, 'Reason:', reason);
+            
+            const response = await apiClient.patch(API_ENDPOINTS.STORE.SUSPEND(storeId), {
+                reason: reason || 'Admin suspension'
+            });
+
+            console.log('🚫 StoreService - Suspend response:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ StoreService - Error suspending store:', error);
+            throw new Error(`Không thể tạm ngưng cửa hàng: ${error.response?.data?.message || error.message}`);
+        }
+    }
+
+    // Reactivate store (Admin only)
+    async reactivateStore(storeId) {
+        try {
+            console.log('✅ StoreService - Reactivating store:', storeId);
+            
+            const response = await apiClient.patch(API_ENDPOINTS.STORE.REACTIVATE(storeId));
+
+            console.log('✅ StoreService - Reactivate response:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ StoreService - Error reactivating store:', error);
+            throw new Error(`Không thể kích hoạt lại cửa hàng: ${error.response?.data?.message || error.message}`);
+        }
+    }
+
+    // Find nearby stores
+    async findNearbyStores(latitude, longitude, radius = 10, page = 1, pageSize = 20) {
+        try {
+            console.log('🌍 StoreService - Finding nearby stores:', { latitude, longitude, radius });
+            
+            const queryParams = new URLSearchParams({
+                latitude: latitude.toString(),
+                longitude: longitude.toString(),
+                radius: radius.toString(),
+                page: page.toString(),
+                pageSize: pageSize.toString()
+            });
+
+            const url = `${API_ENDPOINTS.STORE.NEARBY}?${queryParams}`;
+            console.log('🌍 StoreService - Nearby URL:', url);
+            
+            const response = await apiClient.get(url);
+            console.log('🌍 StoreService - Nearby response:', response);
+
+            if (response.data && response.data.success && response.data.data) {
+                const result = {
+                    items: response.data.data.items || response.data.data || [],
+                    totalCount: response.data.data.totalCount || response.data.total || 0,
+                    page: response.data.data.page || page,
+                    pageSize: response.data.data.pageSize || pageSize
+                };
+                console.log('🌍 StoreService - Nearby stores result:', result);
+                return result;
+            }
+
+            // Fallback for different response structure
+            if (response.data && Array.isArray(response.data)) {
+                return {
+                    items: response.data,
+                    totalCount: response.data.length,
+                    page: page,
+                    pageSize: pageSize
+                };
+            }
+
+            return {
+                items: [],
+                totalCount: 0,
+                page: page,
+                pageSize: pageSize
+            };
+        } catch (error) {
+            console.error('❌ StoreService - Error finding nearby stores:', error);
+            throw new Error(`Không thể tìm cửa hàng gần đây: ${error.response?.data?.message || error.message}`);
         }
     }
 }

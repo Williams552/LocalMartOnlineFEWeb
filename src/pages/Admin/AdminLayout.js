@@ -50,8 +50,8 @@ const AdminLayout = () => {
             key: 'users', icon: <UserOutlined />, label: 'Quản lý người dùng', children: [
                 { key: '/admin/users', label: 'Danh sách người dùng' },
                 { key: '/admin/users/create', label: 'Thêm người dùng' },
-                { key: '/admin/seller-register', label: 'Đăng ký bán hàng' },
-                { key: '/admin/proxy-register', label: 'Đăng ký người mua hộ' },
+                { key: '/admin/seller-register', label: 'danh sách đăng ký bán hàng' },
+                { key: '/admin/proxy-register', label: 'danh sách đăng ký người mua hộ' },
             ]
         },
         {
@@ -65,7 +65,7 @@ const AdminLayout = () => {
         {
             key: 'stores', icon: <ShopOutlined />, label: 'Quản lý cửa hàng', children: [
                 { key: '/admin/stores', label: 'Danh sách cửa hàng' },
-                { key: '/admin/stores/pending', label: 'Chờ duyệt' },
+                
             ]
         },
       
@@ -81,13 +81,7 @@ const AdminLayout = () => {
                 { key: '/admin/category-registrations', label: 'Đăng ký danh mục' },
             ]
         },
-        {
-            key: 'orders', icon: <ShoppingCartOutlined />, label: 'Quản lý đơn hàng', children: [
-                { key: '/admin/orders', label: 'Danh sách đơn hàng' },
-                { key: '/admin/orders/disputes', label: 'Tranh chấp' },
-                { key: '/admin/fast-bargains', label: 'Mua nhanh' },
-            ]
-        },
+        
       
         
         {
