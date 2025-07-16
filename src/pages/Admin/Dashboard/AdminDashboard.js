@@ -16,7 +16,9 @@ import {
     Typography,
     Divider,
     Progress,
-    List
+    List,
+    Alert,
+    Spin
 } from 'antd';
 import {
     UserOutlined,
@@ -30,10 +32,12 @@ import {
     EditOutlined,
     DeleteOutlined,
     PlusOutlined,
-    AppstoreOutlined
+    AppstoreOutlined,
+    ReloadOutlined,
+    BankOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import userService from '../../../services/userService';
+import dashboardService from '../../../services/dashboardService';
 import { formatUserData, getRoleColor, getStatusColor } from '../../../utils/userValidation';
 
 const { Content } = Layout;
@@ -41,12 +45,16 @@ const { Title, Text } = Typography;
 
 const AdminDashboard = () => {
     const navigate = useNavigate();
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [dashboardStats, setDashboardStats] = useState({
         totalUsers: 0,
         totalMarkets: 0,
+        totalStores: 0,
         totalOrders: 0,
         totalRevenue: 0,
+        totalCategories: 0,
+        totalProductUnits: 0,
         activeUsers: 0,
         pendingApprovals: 0
     });
@@ -59,36 +67,35 @@ const AdminDashboard = () => {
 
     const loadDashboardData = async () => {
         setLoading(true);
+        setError(null);
         try {
-            // Load recent users
-            const usersResponse = await userService.getAllUsers({ page: 1, limit: 5 });
-            if (usersResponse?.data) {
-                setRecentUsers(usersResponse.data.map(formatUserData));
-            }
+            console.log('🔄 AdminDashboard - Loading dashboard data...');
+            
+            // Load dashboard statistics từ API
+            const stats = await dashboardService.getDashboardStats();
+            console.log('📊 AdminDashboard - Dashboard stats received:', stats);
+            setDashboardStats(stats);
 
-            // Mock statistics - thay thế bằng API calls thực tế
-            setDashboardStats({
-                totalUsers: 1247,
-                totalMarkets: 89,
-                totalOrders: 3421,
-                totalRevenue: 2847391,
-                activeUsers: 1098,
-                pendingApprovals: 23
-            });
+            // Load recent users từ API
+            const users = await dashboardService.getRecentUsers();
+            console.log('👥 AdminDashboard - Recent users received:', users);
+            setRecentUsers(users.map(formatUserData));
 
-            // Mock recent activities
-            setRecentActivities([
-                { id: 1, action: 'Đăng ký người dùng mới', user: 'Nguyễn Văn A', time: '5 phút trước', type: 'user' },
-                { id: 2, action: 'Tạo cửa hàng mới', user: 'Trần Thị B', time: '10 phút trước', type: 'store' },
-                { id: 3, action: 'Đặt hàng mới', user: 'Lê Văn C', time: '15 phút trước', type: 'order' },
-                { id: 4, action: 'Yêu cầu hỗ trợ', user: 'Phạm Thị D', time: '20 phút trước', type: 'support' },
-                { id: 5, action: 'Báo cáo vi phạm', user: 'Hoàng Văn E', time: '25 phút trước', type: 'report' }
-            ]);
+            // Load recent activities
+            const activities = await dashboardService.getRecentActivities();
+            console.log('📝 AdminDashboard - Recent activities received:', activities);
+            setRecentActivities(activities);
+
         } catch (error) {
-            console.error('Error loading dashboard data:', error);
+            console.error('❌ AdminDashboard - Error loading dashboard data:', error);
+            setError('Không thể tải dữ liệu dashboard. Vui lòng thử lại.');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleRefresh = () => {
+        loadDashboardData();
     };
 
     const statsCards = [
@@ -102,23 +109,30 @@ const AdminDashboard = () => {
         {
             title: 'Tổng số chợ',
             value: dashboardStats.totalMarkets,
-            icon: <ShopOutlined />,
+            icon: <BankOutlined />,
             color: '#52c41a',
             suffix: 'chợ'
         },
         {
-            title: 'Tổng số đơn hàng',
-            value: dashboardStats.totalOrders,
-            icon: <ShoppingCartOutlined />,
-            color: '#faad14',
-            suffix: 'đơn hàng'
+            title: 'Tổng số cửa hàng',
+            value: dashboardStats.totalStores,
+            icon: <ShopOutlined />,
+            color: '#13c2c2',
+            suffix: 'cửa hàng'
         },
         {
-            title: 'Doanh thu tổng',
-            value: dashboardStats.totalRevenue,
-            icon: <DollarCircleOutlined />,
-            color: '#f5222d',
-            formatter: (value) => `${value?.toLocaleString('vi-VN')} VNĐ`
+            title: 'Tổng danh mục',
+            value: dashboardStats.totalCategories,
+            icon: <AppstoreOutlined />,
+            color: '#722ed1',
+            suffix: 'danh mục'
+        },
+        {
+            title: 'Đơn vị sản phẩm',
+            value: dashboardStats.totalProductUnits,
+            icon: <AppstoreOutlined />,
+            color: '#fa8c16',
+            suffix: 'đơn vị'
         }
     ];
 
@@ -145,11 +159,11 @@ const AdminDashboard = () => {
             onClick: () => navigate('/admin/product-units')
         },
         {
-            title: 'Quản lý đơn hàng',
-            description: 'Theo dõi và xử lý đơn hàng',
-            icon: <ShoppingCartOutlined />,
+            title: 'Quản lý cửa hàng',
+            description: 'Quản lý các cửa hàng trong hệ thống',
+            icon: <ShopOutlined />,
             color: '#faad14',
-            onClick: () => navigate('/admin/orders')
+            onClick: () => navigate('/admin/stores')
         },
         {
             title: 'Báo cáo',
@@ -217,28 +231,59 @@ const AdminDashboard = () => {
 
     return (
         <div style={{ padding: '24px' }}>
-            <div style={{ marginBottom: '24px' }}>
-                <Title level={2}>Dashboard Quản trị</Title>
-                <Text type="secondary">Tổng quan hệ thống LocalMart</Text>
+            <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                    <Title level={2}>Dashboard Quản trị</Title>
+                    <Text type="secondary">Tổng quan hệ thống LocalMart</Text>
+                </div>
+                <Button 
+                    type="primary" 
+                    icon={<ReloadOutlined />} 
+                    onClick={handleRefresh}
+                    loading={loading}
+                >
+                    Làm mới
+                </Button>
             </div>
 
-            {/* Statistics Cards */}
-            <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-                {statsCards.map((stat, index) => (
-                    <Col xs={24} sm={12} lg={6} key={index}>
-                        <Card>
-                            <Statistic
-                                title={stat.title}
-                                value={stat.value}
-                                prefix={<span style={{ color: stat.color }}>{stat.icon}</span>}
-                                suffix={stat.suffix}
-                                formatter={stat.formatter}
-                                valueStyle={{ color: stat.color }}
-                            />
-                        </Card>
-                    </Col>
-                ))}
-            </Row>
+            {error && (
+                <Alert
+                    message="Lỗi tải dữ liệu"
+                    description={error}
+                    type="error"
+                    showIcon
+                    closable
+                    onClose={() => setError(null)}
+                    style={{ marginBottom: '24px' }}
+                />
+            )}
+
+            {loading ? (
+                <div style={{ textAlign: 'center', padding: '50px' }}>
+                    <Spin size="large" />
+                    <div style={{ marginTop: '16px' }}>
+                        <Text>Đang tải dữ liệu dashboard...</Text>
+                    </div>
+                </div>
+            ) : (
+                <>
+                    {/* Statistics Cards */}
+                    <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
+                        {statsCards.map((stat, index) => (
+                            <Col xs={24} sm={12} lg={8} xl={4.8} key={index}>
+                                <Card>
+                                    <Statistic
+                                        title={stat.title}
+                                        value={stat.value}
+                                        prefix={<span style={{ color: stat.color }}>{stat.icon}</span>}
+                                        suffix={stat.suffix}
+                                        formatter={stat.formatter}
+                                        valueStyle={{ color: stat.color }}
+                                    />
+                                </Card>
+                            </Col>
+                        ))}
+                    </Row>
 
             {/* Quick Actions */}
             <Card title="Thao tác nhanh" style={{ marginBottom: '24px' }}>
@@ -336,10 +381,18 @@ const AdminDashboard = () => {
                         <div style={{ marginBottom: '16px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                 <Text>Người dùng hoạt động</Text>
-                                <Text strong>{((dashboardStats.activeUsers / dashboardStats.totalUsers) * 100).toFixed(1)}%</Text>
+                                <Text strong>
+                                    {dashboardStats.totalUsers > 0 
+                                        ? `${((dashboardStats.activeUsers / dashboardStats.totalUsers) * 100).toFixed(1)}%`
+                                        : '0%'
+                                    }
+                                </Text>
                             </div>
                             <Progress
-                                percent={(dashboardStats.activeUsers / dashboardStats.totalUsers) * 100}
+                                percent={dashboardStats.totalUsers > 0 
+                                    ? (dashboardStats.activeUsers / dashboardStats.totalUsers) * 100
+                                    : 0
+                                }
                                 strokeColor="#52c41a"
                                 showInfo={false}
                             />
@@ -361,6 +414,8 @@ const AdminDashboard = () => {
                     </Card>
                 </Col>
             </Row>
+                </>
+            )}
         </div>
     );
 };

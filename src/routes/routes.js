@@ -32,6 +32,8 @@ import MarketRuleManagement from "../pages/Admin/Market/MarketRuleManagement";
 import StoreManagement from "../pages/Admin/Store/StoreManagement";
 import StoreDashboard from "../pages/Admin/Store/StoreDashboard";
 import StoreAnalytics from "../pages/Admin/Store/StoreAnalytics";
+import StoreSellers from "../pages/Admin/Store/StoreSellers";
+import StoreReviews from "../pages/Admin/Store/StoreReviews";
 import ProductUnitManagement from "../pages/Admin/ProductUnit/ProductUnitManagement";
 import OrderManagement from "../pages/Admin/OrderManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
@@ -155,8 +157,8 @@ const AppRoutes = () => {
                 <Route path="stores/dashboard" element={<StoreDashboard />} />
                 <Route path="stores/create" element={<StoreManagement />} />
                 <Route path="stores/analytics" element={<StoreAnalytics />} />
-                <Route path="stores/sellers" element={<StoreManagement />} />
-                <Route path="stores/reviews" element={<StoreManagement />} />
+                <Route path="stores/sellers" element={<StoreSellers />} />
+                <Route path="stores/reviews" element={<StoreReviews />} />
 
                 {/* Product Management */}
                 <Route path="products" element={<UserManagement />} />

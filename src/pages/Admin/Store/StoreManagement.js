@@ -30,7 +30,7 @@ import {
     PlayCircleOutlined
 } from '@ant-design/icons';
 import storeService from '../../../services/storeService';
-import { marketService } from '../../../services/marketService';
+import marketService from '../../../services/marketService';
 import StoreNavigation from './StoreNavigation';
 
 const { Search } = Input;
@@ -79,31 +79,37 @@ const StoreManagement = () => {
         try {
             const params = {
                 page: pagination.current,
-                limit: pagination.pageSize
+                pageSize: pagination.pageSize
             };
 
             console.log('🔍 StoreManagement - Loading initial stores with params:', params);
             const response = await storeService.getAllStores(params);
             console.log('🔍 StoreManagement - API response:', response);
 
-            // Handle backend response structure: { success, message, data }
+            // Handle response structure from storeService.getAllStores()
             let storesData = [];
             let total = 0;
 
-            if (response && response.success && response.data) {
+            if (response && response.items) {
+                // Response from storeService returns { items, totalCount, page, pageSize }
+                storesData = response.items;
+                total = response.totalCount || 0;
+            } else if (response && response.success && response.data) {
+                // Fallback for different response structure
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
                     total = response.total || response.data.length;
                 } else if (response.data.items && Array.isArray(response.data.items)) {
-                    // Paginated response
                     storesData = response.data.items;
                     total = response.data.totalCount || response.data.total || response.data.items.length;
                 }
             } else if (Array.isArray(response)) {
+                // Direct array response
                 storesData = response;
                 total = response.length;
             }
 
+            console.log('🔍 Processed stores data:', { storesData, total });
             setStores(storesData);
             setPagination(prev => ({
                 ...prev,
@@ -131,17 +137,22 @@ const StoreManagement = () => {
 
             const params = {
                 page: 1,
-                limit: pagination.pageSize
+                pageSize: pagination.pageSize
             };
 
-            console.log('� StoreManagement - Refreshing all stores');
+            console.log('🔄 StoreManagement - Refreshing all stores');
             const response = await storeService.getAllStores(params);
 
-            // Handle backend response structure: { success, message, data }
+            // Handle response structure from storeService.getAllStores()
             let storesData = [];
             let total = 0;
 
-            if (response && response.success && response.data) {
+            if (response && response.items) {
+                // Response from storeService returns { items, totalCount, page, pageSize }
+                storesData = response.items;
+                total = response.totalCount || 0;
+            } else if (response && response.success && response.data) {
+                // Fallback for different response structure
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
                     total = response.total || response.data.length;
@@ -150,10 +161,12 @@ const StoreManagement = () => {
                     total = response.data.totalCount || response.data.total || response.data.items.length;
                 }
             } else if (Array.isArray(response)) {
+                // Direct array response
                 storesData = response;
                 total = response.length;
             }
 
+            console.log('🔄 Processed refresh stores data:', { storesData, total });
             setStores(storesData);
             setPagination(prev => ({
                 ...prev,
@@ -214,11 +227,15 @@ const StoreManagement = () => {
             const response = await storeService.searchStores(searchParams);
             console.log('🔍 Search response:', response);
 
-            // Handle search response
+            // Handle search response - storeService returns { items, totalCount, page, pageSize }
             let storesData = [];
             let total = 0;
 
-            if (response && response.success && response.data) {
+            if (response && response.items) {
+                storesData = response.items;
+                total = response.totalCount || 0;
+            } else if (response && response.success && response.data) {
+                // Fallback for different response structure
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
                     total = response.total || response.data.length;
@@ -231,6 +248,7 @@ const StoreManagement = () => {
                 total = response.length;
             }
 
+            console.log('🔍 Processed search data:', { storesData, total });
             setStores(storesData);
             setPagination(prev => ({
                 ...prev,
@@ -266,10 +284,14 @@ const StoreManagement = () => {
             const response = await storeService.searchStores(searchParams);
             console.log('🔎 Filter response:', response);
 
+            // Handle filter response - storeService returns { items, totalCount, page, pageSize }
             let storesData = [];
             let total = 0;
 
-            if (response?.success && response.data) {
+            if (response && response.items) {
+                storesData = response.items;
+                total = response.totalCount || 0;
+            } else if (response?.success && response.data) {
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
                     total = response.total || response.data.length;
@@ -279,6 +301,7 @@ const StoreManagement = () => {
                 }
             }
 
+            console.log('🔎 Processed filter data:', { storesData, total });
             setStores(storesData);
             setPagination(prev => ({
                 ...prev,
@@ -299,6 +322,8 @@ const StoreManagement = () => {
     };
 
     const handleSuspendStore = async (storeId) => {
+        let suspendReason = '';
+        
         Modal.confirm({
             title: 'Tạm ngưng cửa hàng',
             content: (
@@ -306,34 +331,47 @@ const StoreManagement = () => {
                     <p>Bạn có chắc chắn muốn tạm ngưng cửa hàng này?</p>
                     <Input.TextArea
                         placeholder="Nhập lý do tạm ngưng..."
-                        id="suspend-reason"
                         rows={3}
+                        onChange={(e) => { suspendReason = e.target.value; }}
                     />
                 </div>
             ),
             onOk: async () => {
                 try {
-                    const reason = document.getElementById('suspend-reason').value;
-                    await storeService.suspendStore(storeId, reason);
+                    console.log('🚫 Suspending store:', storeId, 'with reason:', suspendReason);
+                    await storeService.suspendStore(storeId, suspendReason);
                     message.success('Tạm ngưng cửa hàng thành công');
                     loadStores();
                 } catch (error) {
-                    console.error('Error suspending store:', error);
-                    message.error('Lỗi khi tạm ngưng cửa hàng');
+                    console.error('❌ Error suspending store:', error);
+                    message.error(`Lỗi khi tạm ngưng cửa hàng: ${error.message}`);
                 }
-            }
+            },
+            okText: 'Tạm ngưng',
+            cancelText: 'Hủy',
+            okType: 'danger'
         });
     };
 
     const handleReactivateStore = async (storeId) => {
-        try {
-            await storeService.reactivateStore(storeId);
-            message.success('Kích hoạt lại cửa hàng thành công');
-            loadStores();
-        } catch (error) {
-            console.error('Error reactivating store:', error);
-            message.error('Lỗi khi kích hoạt lại cửa hàng');
-        }
+        Modal.confirm({
+            title: 'Kích hoạt lại cửa hàng',
+            content: 'Bạn có chắc chắn muốn kích hoạt lại cửa hàng này?',
+            onOk: async () => {
+                try {
+                    console.log('✅ Reactivating store:', storeId);
+                    await storeService.reactivateStore(storeId);
+                    message.success('Kích hoạt lại cửa hàng thành công');
+                    loadStores();
+                } catch (error) {
+                    console.error('❌ Error reactivating store:', error);
+                    message.error(`Lỗi khi kích hoạt lại cửa hàng: ${error.message}`);
+                }
+            },
+            okText: 'Kích hoạt',
+            cancelText: 'Hủy',
+            okType: 'primary'
+        });
     };
 
     const handleFindNearbyStores = async () => {
@@ -368,11 +406,14 @@ const StoreManagement = () => {
 
             console.log('🌍 Nearby stores response:', response);
 
-            // Handle response
+            // Handle response - storeService returns { items, totalCount, page, pageSize }
             let storesData = [];
             let total = 0;
 
-            if (response && response.success && response.data) {
+            if (response && response.items) {
+                storesData = response.items;
+                total = response.totalCount || 0;
+            } else if (response && response.success && response.data) {
                 if (Array.isArray(response.data)) {
                     storesData = response.data;
                     total = response.total || response.data.length;
@@ -385,6 +426,7 @@ const StoreManagement = () => {
                 total = response.length;
             }
 
+            console.log('🌍 Processed nearby stores data:', { storesData, total });
             setStores(storesData);
             setPagination(prev => ({
                 ...prev,
