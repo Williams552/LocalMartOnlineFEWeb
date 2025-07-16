@@ -45,11 +45,12 @@ const RecentOrders = ({ limit = 10 }) => {
             const result = await orderService.getRecentOrders(currentUser.id, limit);
 
             if (result.success) {
-                setOrders(result.data);
-                console.log('✅ Recent orders loaded:', result.data.length, 'orders');
+                // result.data.items is the array of orders per new API
+                setOrders(Array.isArray(result.data?.items) ? result.data.items : []);
+                console.log('✅ Recent orders loaded:', Array.isArray(result.data?.items) ? result.data.items.length : 0, 'orders');
             } else {
-                setOrders(result.data || []);
-                if (result.message.includes('mẫu')) {
+                setOrders(Array.isArray(result.data?.items) ? result.data.items : []);
+                if (result.message && result.message.includes('mẫu')) {
                     toast.info(result.message);
                 } else {
                     setError(result.message);

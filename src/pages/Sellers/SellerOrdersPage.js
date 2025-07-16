@@ -61,11 +61,12 @@ const SellerOrdersPage = () => {
             const result = await orderService.getSellerOrders(currentUser.id, params);
 
             if (result.success) {
-                setOrders(result.data);
-                console.log('✅ Orders loaded:', result.data.length, 'orders');
+                // result.data.items is the array of orders per new API
+                setOrders(Array.isArray(result.data?.items) ? result.data.items : []);
+                console.log('✅ Orders loaded:', Array.isArray(result.data?.items) ? result.data.items.length : 0, 'orders');
             } else {
-                setOrders(result.data || []);
-                if (result.message.includes('mẫu')) {
+                setOrders(Array.isArray(result.data?.items) ? result.data.items : []);
+                if (result.message && result.message.includes('mẫu')) {
                     toast.info(result.message);
                 } else {
                     setError(result.message);

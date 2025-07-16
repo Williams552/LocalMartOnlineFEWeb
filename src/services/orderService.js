@@ -1,23 +1,27 @@
 import apiService from './apiService';
 
 class OrderService {
-    // Get orders for seller
-    async getSellerOrders(sellerId, params = {}) {
+    // Get orders for seller (new endpoint)
+    async getSellerOrders(params = {}) {
         try {
             const queryParams = new URLSearchParams();
-
             if (params.status) queryParams.append('status', params.status);
-            if (params.limit) queryParams.append('limit', params.limit);
             if (params.page) queryParams.append('page', params.page);
+            if (params.pageSize) queryParams.append('pageSize', params.pageSize);
             if (params.fromDate) queryParams.append('fromDate', params.fromDate);
             if (params.toDate) queryParams.append('toDate', params.toDate);
 
-            const url = `/api/orders/seller/${sellerId}${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+            const url = `/api/Order/seller/my${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
             const response = await apiService.get(url);
 
+            // Always return data.items as array for FE compatibility
+            const apiData = response.data || {};
             return {
                 success: true,
-                data: response.data,
+                data: {
+                    ...apiData,
+                    items: Array.isArray(apiData.items) ? apiData.items : []
+                },
                 message: 'Lấy danh sách đơn hàng thành công'
             };
         } catch (error) {
