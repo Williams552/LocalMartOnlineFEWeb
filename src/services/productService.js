@@ -373,6 +373,7 @@ class ProductService {
                 keyword: filterParams.search || filterParams.keyword || undefined,
                 categoryId: filterParams.categoryId || undefined,
                 storeId: filterParams.storeId || undefined,
+                marketId: filterParams.marketId || undefined,
                 minPrice: filterParams.minPrice || undefined,
                 maxPrice: filterParams.maxPrice || undefined,
                 status: filterParams.status || 'Active', // Only get active products for public view
@@ -420,6 +421,7 @@ class ProductService {
                 queryParams.append('keyword', searchParams.search || searchParams.keyword);
             }
             if (searchParams.categoryId) queryParams.append('categoryId', searchParams.categoryId);
+            if (searchParams.marketId) queryParams.append('marketId', searchParams.marketId);
             if (searchParams.latitude) queryParams.append('latitude', searchParams.latitude);
             if (searchParams.longitude) queryParams.append('longitude', searchParams.longitude);
             if (searchParams.page) queryParams.append('page', searchParams.page);
