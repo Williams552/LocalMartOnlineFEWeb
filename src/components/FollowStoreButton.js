@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaHeart, FaRegHeart, FaSpinner } from 'react-icons/fa';
-import followStoreService from '../services/followStoreService';
+import { useFollowStore } from '../contexts/FollowStoreContext';
 import toastService from '../services/toastService';
-import { isAuthenticated } from '../services/authService';
+import { useAuth } from '../hooks/useAuth';
 
 const FollowStoreButton = ({
     storeId,
@@ -12,35 +12,36 @@ const FollowStoreButton = ({
     variant = 'default', // 'default', 'outline', 'white', 'icon-only'
     size = 'md' // 'sm', 'md', 'lg'
 }) => {
-    const [isFollowing, setIsFollowing] = useState(initialFollowing);
     const [isLoading, setIsLoading] = useState(false);
     const [isCheckingStatus, setIsCheckingStatus] = useState(true);
 
+    const { isAuthenticated } = useAuth();
+    const { isFollowing, toggleFollow, checkFollowStatus } = useFollowStore();
+
+    const currentlyFollowing = isFollowing(storeId);
+
     // Check follow status on mount
     useEffect(() => {
-        checkFollowStatus();
-    }, [storeId]);
-
-    const checkFollowStatus = async () => {
-        if (!isAuthenticated() || !storeId) {
-            setIsCheckingStatus(false);
-            return;
-        }
-
-        try {
-            const result = await followStoreService.checkFollowing(storeId);
-            if (result.success) {
-                setIsFollowing(result.isFollowing);
+        const checkStatus = async () => {
+            if (!isAuthenticated || !storeId) {
+                setIsCheckingStatus(false);
+                return;
             }
-        } catch (error) {
-            console.error('Error checking follow status:', error);
-        } finally {
-            setIsCheckingStatus(false);
-        }
-    };
+
+            try {
+                await checkFollowStatus(storeId);
+            } catch (error) {
+                console.error('Error checking follow status:', error);
+            } finally {
+                setIsCheckingStatus(false);
+            }
+        };
+
+        checkStatus();
+    }, [storeId, isAuthenticated, checkFollowStatus]);
 
     const handleFollowToggle = async () => {
-        if (!isAuthenticated()) {
+        if (!isAuthenticated) {
             toastService.info('Vui lòng đăng nhập để theo dõi gian hàng');
             return;
         }
@@ -49,15 +50,12 @@ const FollowStoreButton = ({
 
         setIsLoading(true);
         try {
-            const result = await followStoreService.toggleFollow(storeId, isFollowing);
+            const result = await toggleFollow(storeId);
 
             if (result.success) {
-                const newFollowStatus = !isFollowing;
-                setIsFollowing(newFollowStatus);
-
                 // Call callback if provided
                 if (onFollowChange) {
-                    onFollowChange(newFollowStatus);
+                    onFollowChange(!currentlyFollowing);
                 }
 
                 // Show success message
@@ -102,7 +100,14 @@ const FollowStoreButton = ({
             )}
 
             {variant !== 'icon-only' && (
-                <span>{isFollowing ? 'Đã theo dõi' : 'Theo dõi'}</span>
+                <span>
+                    {isLoading
+                        ? 'Đang xử lý...'
+                        : currentlyFollowing
+                            ? 'Đã theo dõi'
+                            : 'Theo dõi'
+                    }
+                </span>
             )}
         </button>
     );

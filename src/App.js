@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // Contexts
 import { CartProvider } from './contexts/CartContext';
 import { FavoriteProvider } from './contexts/FavoriteContext';
+import { FollowStoreProvider } from './contexts/FollowStoreContext';
 
 // Components
 import Header from './components/Header/Header';
@@ -36,23 +37,24 @@ const App = () => {
       <UserIdFixer />
 
       {/* Session Timeout Warning - cảnh báo session sắp hết hạn */}
-      <SessionTimeoutWarning />
-
-      {/* Cart Provider - quản lý global cart state */}
+      <SessionTimeoutWarning />        {/* Cart Provider - quản lý global cart state */}
       <CartProvider>
         {/* Favorite Provider - quản lý global favorite state */}
         <FavoriteProvider>
-          <div className="app-layout">
-            {/* Header - Navigation và user menu */}
-            <Header />
+          {/* Follow Store Provider - quản lý global follow store state */}
+          <FollowStoreProvider>
+            <div className="app-layout">
+              {/* Header - Navigation và user menu */}
+              <Header />
 
-            {/* Main Content Area */}
-            <main className="main-content">
-              <Outlet />
-            </main>
+              {/* Main Content Area */}
+              <main className="main-content">
+                <Outlet />
+              </main>
 
-            {/* Footer */}
-            <Footer />          </div>
+              {/* Footer */}
+              <Footer />          </div>
+          </FollowStoreProvider>
         </FavoriteProvider>
       </CartProvider>
 

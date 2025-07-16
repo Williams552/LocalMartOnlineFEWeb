@@ -456,8 +456,14 @@ const CartPage = () => {
 
             {/* Modal liên hệ người bán */}
             {selectedSeller && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-xl w-[90%] max-w-md shadow-2xl">
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+                    onClick={() => setSelectedSeller(null)}
+                >
+                    <div
+                        className="bg-white p-8 rounded-xl w-[90%] max-w-md shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <button
                             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
                             onClick={() => setSelectedSeller(null)}
@@ -514,10 +520,17 @@ const CartPage = () => {
                 </div>
             )}
 
+
             {/* Modal người đi chợ giùm */}
             {showProxyListFor && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-xl w-[90%] max-w-lg shadow-2xl">
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+                    onClick={() => setShowProxyListFor(null)}
+                >
+                    <div
+                        className="bg-white p-8 rounded-xl w-[90%] max-w-lg shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <button
                             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
                             onClick={() => setShowProxyListFor(null)}
@@ -591,6 +604,7 @@ const CartPage = () => {
                     </div>
                 </div>
             )}
+
         </div>
     );
 };

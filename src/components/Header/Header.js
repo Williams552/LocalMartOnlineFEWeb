@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
 import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox } from "react-icons/fi";
 import { FaUserCircle, FaStore, FaHandshake } from "react-icons/fa";
-// import { useAuth } from "../../hooks/useAuth";
-// import { useCart } from "../../contexts/CartContext";
-// import { useFavorites } from "../../contexts/FavoriteContext";
-// import CartIcon from "../Common/CartIcon";
+import { useCart } from "../../contexts/CartContext";
+import { useFavorites } from "../../contexts/FavoriteContext";
+import { useFollowStore } from "../../contexts/FollowStoreContext";
+import { useAuth } from "../../hooks/useAuth";
 import authService from "../../services/authService";
 import "../../styles/logout-modal.css";
 
@@ -15,31 +15,30 @@ const Header = () => {
     const [showMessages, setShowMessages] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-    const [user, setUser] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-    // Use authentication context
-    // const { user, isAuthenticated, logout } = useAuth();
-    // const { favoriteCount } = useFavorites();
+    // Use contexts with fallback values
+    const { user, isAuthenticated, logout } = useAuth();
+    const { cartCount = 0 } = useCart();
+    const { favoriteCount = 0 } = useFavorites();
+    const { followingCount = 0 } = useFollowStore();
     const navigate = useNavigate();
-    const favoriteCount = 0; // Temporary
 
-    useEffect(() => {
-        // Check authentication status
-        const checkAuth = async () => {
-            try {
-                const currentUser = authService.getCurrentUser();
-                if (currentUser) {
-                    setUser(currentUser);
-                    setIsAuthenticated(true);
-                }
-            } catch (error) {
-                console.error('Auth check error:', error);
-            }
-        };
-        checkAuth();
-    }, []);
+    // Remove the local auth check effect since useAuth handles it
+    // useEffect(() => {
+    //     const checkAuth = async () => {
+    //         try {
+    //             const currentUser = authService.getCurrentUser();
+    //             if (currentUser) {
+    //                 setUser(currentUser);
+    //                 setIsAuthenticated(true);
+    //             }
+    //         } catch (error) {
+    //             console.error('Auth check error:', error);
+    //         }
+    //     };
+    //     checkAuth();
+    // }, []);
 
     // Debug authentication state
     useEffect(() => {
@@ -52,65 +51,18 @@ const Header = () => {
         try {
             setIsLoggingOut(true);
 
-            // Clear authentication service data
-            authService.logout(clearAllDevices);
+            // Use the context logout function
+            await logout(clearAllDevices);
 
-            // Clear all local state
-            setUser(null);
-            setIsAuthenticated(false);
+            // Clear UI state
             setShowProfileMenu(false);
             setShowLogoutConfirm(false);
-
-            // Clear additional localStorage items that might contain user data
-            const itemsToRemove = [
-                'cartItems', 'favorites', 'recentSearches',
-                'userPreferences', 'tempData', 'sessionData'
-            ];
-            itemsToRemove.forEach(item => {
-                try {
-                    localStorage.removeItem(item);
-                } catch (e) {
-                    console.warn(`Failed to remove ${item}:`, e);
-                }
-            });
-
-            // Clear sessionStorage completely
-            try {
-                sessionStorage.clear();
-            } catch (e) {
-                console.warn('Failed to clear sessionStorage:', e);
-            }
-
-            // Clear any cached data
-            if (window.caches) {
-                try {
-                    const cacheNames = await window.caches.keys();
-                    await Promise.all(
-                        cacheNames.map(cacheName => {
-                            if (cacheName.includes('user') || cacheName.includes('auth') || cacheName.includes('api')) {
-                                return window.caches.delete(cacheName);
-                            }
-                        })
-                    );
-                } catch (cacheError) {
-                    console.warn('Failed to clear cache:', cacheError);
-                }
-            }
-
-            // Add a small delay for better UX
-            await new Promise(resolve => setTimeout(resolve, 800));
 
             // Navigate to login page
             navigate('/login', { replace: true });
 
-            // Force reload after navigation to ensure clean state
-            setTimeout(() => {
-                window.location.reload();
-            }, 100);
-
         } catch (error) {
             console.error('Logout error:', error);
-
             // Fallback: Force logout even if there are errors
             try {
                 authService.logout();
@@ -119,14 +71,6 @@ const Header = () => {
             } catch (fallbackError) {
                 console.error('Fallback logout error:', fallbackError);
             }
-
-            // Reset state regardless
-            setUser(null);
-            setIsAuthenticated(false);
-            setShowProfileMenu(false);
-            setShowLogoutConfirm(false);
-
-            // Navigate to login
             navigate('/login', { replace: true });
         } finally {
             setIsLoggingOut(false);
@@ -226,11 +170,29 @@ const Header = () => {
                         {isAuthenticated ? (
                             <>
                                 {/* Favorites/Wishlist */}
-                                <Link to="/buyer/favorites" className="relative text-gray-600 hover:text-red-500 transition group">
+                                <Link
+                                    to="/buyer/favorites"
+                                    className="relative text-gray-600 hover:text-red-500 transition group"
+                                    title="Sản phẩm yêu thích"
+                                >
                                     <FiHeart size={24} className="group-hover:text-red-500" />
                                     {favoriteCount > 0 && (
                                         <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
                                             {favoriteCount > 99 ? '99+' : favoriteCount}
+                                        </span>
+                                    )}
+                                </Link>
+
+                                {/* Following Stores */}
+                                <Link
+                                    to="/buyer/following"
+                                    className="relative text-gray-600 hover:text-blue-500 transition group"
+                                    title="Gian hàng theo dõi"
+                                >
+                                    <FaStore size={24} className="group-hover:text-blue-500" />
+                                    {followingCount > 0 && (
+                                        <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                                            {followingCount > 99 ? '99+' : followingCount}
                                         </span>
                                     )}
                                 </Link>
@@ -310,11 +272,17 @@ const Header = () => {
                                 </div>
 
                                 {/* Cart */}
-                                <Link to="/buyer/cart" className="relative text-gray-600 hover:text-supply-primary transition">
+                                <Link
+                                    to="/buyer/cart"
+                                    className="relative text-gray-600 hover:text-supply-primary transition"
+                                    title="Giỏ hàng"
+                                >
                                     <FiShoppingCart size={24} />
-                                    <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                        0
-                                    </span>
+                                    {cartCount > 0 && (
+                                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                                            {cartCount > 99 ? '99+' : cartCount}
+                                        </span>
+                                    )}
                                 </Link>
 
                                 {/* User Profile */}
@@ -350,6 +318,15 @@ const Header = () => {
                                                     {favoriteCount > 0 && (
                                                         <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
                                                             {favoriteCount}
+                                                        </span>
+                                                    )}
+                                                </Link>
+                                                <Link to="/buyer/following" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                    <FaStore size={16} />
+                                                    <span>Gian hàng theo dõi</span>
+                                                    {followingCount > 0 && (
+                                                        <span className="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                                            {followingCount}
                                                         </span>
                                                     )}
                                                 </Link>
