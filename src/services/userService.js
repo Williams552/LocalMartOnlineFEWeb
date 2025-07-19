@@ -69,9 +69,10 @@ class UserService {
             password: userData.password,
             email: userData.email,
             fullName: userData.fullName,
-            phoneNumber: userData.phoneNumber || '',
-            address: userData.address || '',
-            userToken: userData.userToken || null
+            phoneNumber: userData.phoneNumber,
+            address: userData.address,
+            role: userData.role,
+            userToken: userData.userToken
         };
         const response = await apiService.post('/api/User', registerDto);
         return response;
@@ -80,12 +81,14 @@ class UserService {
     async updateUser(id, userData) {
         const updateDto = {
             username: userData.username,
-            password: userData.password || '',
+            passwords: userData.passwords,
             email: userData.email,
             fullName: userData.fullName,
-            phoneNumber: userData.phoneNumber || '',
-            address: userData.address || '',
-            userToken: userData.userToken || null
+            phoneNumber: userData.phoneNumber,
+            address: userData.address,
+            role: userData.role,
+            status: userData.status,
+            twoFactorEnabled: userData.twoFactorEnabled
         };
         const response = await apiService.put(`/api/User/${id}`, updateDto);
         return response;
