@@ -1,68 +1,69 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
     FaSearch, FaEye, FaStar, FaHeart, FaShoppingCart, FaMapMarkerAlt,
     FaClock, FaUser, FaPhone, FaCheckCircle, FaTimes, FaTruck, FaBox
 } from "react-icons/fa";
+import orderService from "../../services/orderService";
+import ReviewModal from "../../components/ReviewModal";
+import { toast } from "react-toastify";
 
 const BuyerOrders = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showOrderDetail, setShowOrderDetail] = useState(false);
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [selectedOrderForReview, setSelectedOrderForReview] = useState(null);
 
-    const orders = [
-        {
-            id: "DH001",
-            sellerName: "Gian hàng Cô Lan",
-            sellerAvatar: "https://i.pravatar.cc/50?img=1",
-            orderDate: "2024-01-15T08:30:00",
-            status: "delivered",
-            paymentMethod: "cod",
-            items: [
-                { id: 1, name: "Rau muống", quantity: 2, unit: "kg", price: 15000, total: 30000 },
-                { id: 2, name: "Cà chua", quantity: 1.5, unit: "kg", price: 25000, total: 37500 }
-            ],
-            totalAmount: 82500,
-            deliveryAddress: "123 Đường ABC, Quận Ninh Kiều, Cần Thơ",
-            notes: "Giao hàng sớm nhé shop",
-            canReview: true,
-            reviewed: false
-        },
-        {
-            id: "DH002",
-            sellerName: "Cửa hàng Anh Minh",
-            sellerAvatar: "https://i.pravatar.cc/50?img=2",
-            orderDate: "2024-01-16T14:20:00",
-            status: "shipping",
-            paymentMethod: "transfer",
-            items: [
-                { id: 3, name: "Xà lách", quantity: 1, unit: "kg", price: 20000, total: 20000 }
-            ],
-            totalAmount: 35000,
-            deliveryAddress: "456 Đường XYZ, Quận Cái Răng, Cần Thơ",
-            notes: "",
-            canReview: false,
-            reviewed: false
-        },
-        {
-            id: "DH003",
-            sellerName: "Gian hàng Chú Tám",
-            sellerAvatar: "https://i.pravatar.cc/50?img=3",
-            orderDate: "2024-01-17T09:15:00",
-            status: "confirmed",
-            paymentMethod: "cod",
-            items: [
-                { id: 4, name: "Bắp cải", quantity: 2, unit: "kg", price: 12000, total: 24000 },
-                { id: 5, name: "Cải thảo", quantity: 1, unit: "kg", price: 18000, total: 18000 }
-            ],
-            totalAmount: 57000,
-            deliveryAddress: "789 Đường DEF, Quận Ô Môn, Cần Thơ",
-            notes: "Gọi trước khi giao",
-            canReview: false,
-            reviewed: false
+    // Fetch orders from API
+    useEffect(() => {
+        fetchOrders();
+    }, [currentPage, filterStatus]);
+
+    const fetchOrders = async () => {
+        setLoading(true);
+        try {
+            // Get current user from localStorage
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const buyerId = user.id || user._id;
+
+            if (!buyerId) {
+                throw new Error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+            }
+
+            let result;
+            if (filterStatus === "all") {
+                result = await orderService.getBuyerOrders(buyerId, currentPage, 20);
+            } else {
+                result = await orderService.filterBuyerOrders({
+                    buyerId,
+                    status: filterStatus,
+                    page: currentPage,
+                    pageSize: 20
+                });
+            }
+
+            if (result.success && result.data) {
+                const ordersData = result.data.items || result.data || [];
+                setOrders(ordersData);
+                setTotalPages(result.data.totalPages || 1);
+            } else {
+                setOrders([]);
+                toast.error(result.message || "Không thể tải danh sách đơn hàng");
+            }
+        } catch (error) {
+            console.error('Error fetching orders:', error);
+            toast.error(error.message || "Lỗi khi tải danh sách đơn hàng");
+            setOrders([]);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
 
     const statusOptions = {
         all: "Tất cả",
@@ -100,7 +101,7 @@ const BuyerOrders = () => {
 
     const filteredOrders = orders.filter(order => {
         const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            order.sellerName.toLowerCase().includes(searchTerm.toLowerCase());
+            (order.sellerName && order.sellerName.toLowerCase().includes(searchTerm.toLowerCase()));
         const matchesStatus = filterStatus === "all" || order.status === filterStatus;
         return matchesSearch && matchesStatus;
     });
@@ -110,15 +111,55 @@ const BuyerOrders = () => {
         setShowOrderDetail(true);
     };
 
-    const handleReorder = (orderId) => {
-        console.log("Reorder:", orderId);
-        // Logic đặt lại đơn hàng
+    const handleReorder = async (orderId) => {
+        try {
+            const result = await orderService.reorderOrder(orderId);
+            if (result.success) {
+                toast.success("Đặt lại đơn hàng thành công!");
+                fetchOrders(); // Refresh orders list
+            }
+        } catch (error) {
+            toast.error(error.message || "Lỗi khi đặt lại đơn hàng");
+        }
     };
 
-    const handleCancelOrder = (orderId) => {
+    const handleCancelOrder = async (orderId) => {
         if (window.confirm("Bạn có chắc muốn hủy đơn hàng này?")) {
-            console.log("Cancel order:", orderId);
-            // Logic hủy đơn hàng
+            try {
+                const result = await orderService.cancelOrder(orderId);
+                if (result.success) {
+                    toast.success("Hủy đơn hàng thành công!");
+                    fetchOrders(); // Refresh orders list
+                }
+            } catch (error) {
+                toast.error(error.message || "Lỗi khi hủy đơn hàng");
+            }
+        }
+    };
+
+    const handleFilterStatusChange = (status) => {
+        setFilterStatus(status);
+        setCurrentPage(1); // Reset to first page when filter changes
+    };
+
+    const handleReviewOrder = (order) => {
+        setSelectedOrderForReview(order);
+        setShowReviewModal(true);
+    };
+
+    const handleSubmitReview = async (reviewData) => {
+        try {
+            const result = await orderService.reviewOrder(reviewData.orderId, {
+                rating: reviewData.rating,
+                comment: reviewData.comment
+            });
+
+            if (result.success) {
+                toast.success('Đánh giá thành công!');
+                fetchOrders(); // Refresh orders to update review status
+            }
+        } catch (error) {
+            toast.error(error.message || 'Lỗi khi gửi đánh giá');
         }
     };
 
@@ -163,10 +204,10 @@ const BuyerOrders = () => {
                             {Object.entries(statusOptions).map(([value, label]) => (
                                 <button
                                     key={value}
-                                    onClick={() => setFilterStatus(value)}
+                                    onClick={() => handleFilterStatusChange(value)}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === value
-                                            ? 'bg-supply-primary text-white'
-                                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                        ? 'bg-supply-primary text-white'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                         }`}
                                 >
                                     {label}
@@ -178,118 +219,179 @@ const BuyerOrders = () => {
 
                 {/* Orders List */}
                 <div className="space-y-4">
-                    {filteredOrders.map((order) => (
-                        <div key={order.id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
-                            <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center space-x-4">
-                                    <img
-                                        src={order.sellerAvatar}
-                                        alt={order.sellerName}
-                                        className="w-12 h-12 rounded-full border-2 border-gray-200"
-                                    />
-                                    <div>
-                                        <h3 className="text-lg font-bold text-gray-800">#{order.id}</h3>
-                                        <p className="text-sm text-gray-600">{order.sellerName}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center space-x-3">
-                                    <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(order.status)}`}>
-                                        {getStatusIcon(order.status)}
-                                        <span>{statusOptions[order.status]}</span>
-                                    </span>
-                                    <span className="text-sm text-gray-500">
-                                        {formatDate(order.orderDate)}
-                                    </span>
-                                </div>
-                            </div>
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <div>
-                                    <h4 className="font-medium text-gray-800 mb-2">Sản phẩm:</h4>
-                                    <div className="space-y-2">
-                                        {order.items.map((item) => (
-                                            <div key={item.id} className="flex justify-between items-center">
-                                                <span className="text-gray-700">
-                                                    {item.name} x {item.quantity}{item.unit}
-                                                </span>
-                                                <span className="font-medium text-gray-800">
-                                                    {formatCurrency(item.total)}
-                                                </span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-                                        <FaMapMarkerAlt />
-                                        <span>Giao đến: {order.deliveryAddress}</span>
-                                    </div>
-                                    {order.notes && (
-                                        <div className="text-sm text-gray-600 mb-2">
-                                            <span className="font-medium">Ghi chú:</span> {order.notes}
-                                        </div>
-                                    )}
-                                    <div className="text-right">
-                                        <div className="text-xl font-bold text-supply-primary">
-                                            Tổng: {formatCurrency(order.totalAmount)}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
-                                <button
-                                    onClick={() => handleViewOrderDetail(order)}
-                                    className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
-                                >
-                                    <FaEye />
-                                    <span>Xem chi tiết</span>
-                                </button>
-
-                                {order.status === "delivered" && order.canReview && !order.reviewed && (
-                                    <button className="flex items-center space-x-2 px-4 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition">
-                                        <FaStar />
-                                        <span>Đánh giá</span>
-                                    </button>
-                                )}
-
-                                {order.status === "delivered" && (
-                                    <button
-                                        onClick={() => handleReorder(order.id)}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
-                                    >
-                                        <FaShoppingCart />
-                                        <span>Mua lại</span>
-                                    </button>
-                                )}
-
-                                {(order.status === "pending" || order.status === "confirmed") && (
-                                    <button
-                                        onClick={() => handleCancelOrder(order.id)}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
-                                    >
-                                        <FaTimes />
-                                        <span>Hủy đơn</span>
-                                    </button>
-                                )}
-                            </div>
+                    {loading ? (
+                        <div className="text-center py-12">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-supply-primary mx-auto mb-4"></div>
+                            <p className="text-gray-600">Đang tải danh sách đơn hàng...</p>
                         </div>
-                    ))}
+                    ) : filteredOrders.length > 0 ? (
+                        filteredOrders.map((order) => (
+                            <div key={order.id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
+                                <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center space-x-4">
+                                        <img
+                                            src={order.sellerAvatar || "https://i.pravatar.cc/50?img=1"}
+                                            alt={order.sellerName || "Seller"}
+                                            className="w-12 h-12 rounded-full border-2 border-gray-200"
+                                        />
+                                        <div>
+                                            <h3 className="text-lg font-bold text-gray-800">#{order.id}</h3>
+                                            <p className="text-sm text-gray-600">{order.sellerName || "Cửa hàng"}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-3">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(order.status)}`}>
+                                            {getStatusIcon(order.status)}
+                                            <span>{statusOptions[order.status] || order.status}</span>
+                                        </span>
+                                        <span className="text-sm text-gray-500">
+                                            {formatDate(order.createdAt || order.orderDate)}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h4 className="font-medium text-gray-800 mb-2">Sản phẩm:</h4>
+                                        <div className="space-y-2">
+                                            {order.items && order.items.length > 0 ? (
+                                                order.items.map((item, index) => (
+                                                    <div key={item.productId || index} className="flex justify-between items-center">
+                                                        <span className="text-gray-700">
+                                                            {item.name || `Sản phẩm ${item.productId}`} x {item.quantity}{item.unit || ""}
+                                                        </span>
+                                                        <span className="font-medium text-gray-800">
+                                                            {formatCurrency(item.total || (item.quantity * item.priceAtPurchase))}
+                                                        </span>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <p className="text-gray-500 text-sm">Không có thông tin sản phẩm</p>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
+                                            <FaMapMarkerAlt />
+                                            <span>Giao đến: {order.deliveryAddress}</span>
+                                        </div>
+                                        {order.notes && (
+                                            <div className="text-sm text-gray-600 mb-2">
+                                                <span className="font-medium">Ghi chú:</span> {order.notes}
+                                            </div>
+                                        )}
+                                        <div className="text-right">
+                                            <div className="text-xl font-bold text-supply-primary">
+                                                Tổng: {formatCurrency(order.totalAmount)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                                    <button
+                                        onClick={() => handleViewOrderDetail(order)}
+                                        className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                                    >
+                                        <FaEye />
+                                        <span>Xem chi tiết</span>
+                                    </button>
+
+                                    {order.status === "delivered" && order.canReview && !order.reviewed && (
+                                        <button
+                                            onClick={() => handleReviewOrder(order)}
+                                            className="flex items-center space-x-2 px-4 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition"
+                                        >
+                                            <FaStar />
+                                            <span>Đánh giá</span>
+                                        </button>
+                                    )}
+
+                                    {order.status === "delivered" && (
+                                        <button
+                                            onClick={() => handleReorder(order.id)}
+                                            className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
+                                        >
+                                            <FaShoppingCart />
+                                            <span>Mua lại</span>
+                                        </button>
+                                    )}
+
+                                    {(order.status === "pending" || order.status === "confirmed") && (
+                                        <button
+                                            onClick={() => handleCancelOrder(order.id)}
+                                            className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                                        >
+                                            <FaTimes />
+                                            <span>Hủy đơn</span>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="text-center py-12">
+                            <div className="text-6xl mb-4">🛍️</div>
+                            <h3 className="text-xl font-semibold text-gray-700 mb-2">Chưa có đơn hàng nào</h3>
+                            <p className="text-gray-500 mb-4">Hãy khám phá và đặt hàng những sản phẩm tươi ngon</p>
+                            <Link
+                                to="/"
+                                className="inline-flex items-center space-x-2 bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition"
+                            >
+                                <FaShoppingCart />
+                                <span>Bắt đầu mua sắm</span>
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
-                {filteredOrders.length === 0 && (
-                    <div className="text-center py-12">
-                        <div className="text-6xl mb-4">🛍️</div>
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">Chưa có đơn hàng nào</h3>
-                        <p className="text-gray-500 mb-4">Hãy khám phá và đặt hàng những sản phẩm tươi ngon</p>
-                        <Link
-                            to="/"
-                            className="inline-flex items-center space-x-2 bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition"
+                {/* Pagination */}
+                {!loading && filteredOrders.length > 0 && totalPages > 1 && (
+                    <div className="flex justify-center items-center space-x-2 mt-8">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-3 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
                         >
-                            <FaShoppingCart />
-                            <span>Bắt đầu mua sắm</span>
-                        </Link>
+                            Trước
+                        </button>
+
+                        <div className="flex space-x-1">
+                            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                let pageNum;
+                                if (totalPages <= 5) {
+                                    pageNum = i + 1;
+                                } else if (currentPage <= 3) {
+                                    pageNum = i + 1;
+                                } else if (currentPage >= totalPages - 2) {
+                                    pageNum = totalPages - 4 + i;
+                                } else {
+                                    pageNum = currentPage - 2 + i;
+                                }
+
+                                return (
+                                    <button
+                                        key={pageNum}
+                                        onClick={() => setCurrentPage(pageNum)}
+                                        className={`px-3 py-2 border rounded-lg ${currentPage === pageNum
+                                            ? 'bg-supply-primary text-white border-supply-primary'
+                                            : 'hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {pageNum}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                            Sau
+                        </button>
                     </div>
                 )}
             </div>
@@ -316,14 +418,14 @@ const BuyerOrders = () => {
                                     <h3 className="font-bold text-gray-800 mb-3">Thông tin cửa hàng</h3>
                                     <div className="flex items-center space-x-3 mb-4">
                                         <img
-                                            src={selectedOrder.sellerAvatar}
-                                            alt={selectedOrder.sellerName}
+                                            src={selectedOrder.sellerAvatar || "https://i.pravatar.cc/50?img=1"}
+                                            alt={selectedOrder.sellerName || "Seller"}
                                             className="w-12 h-12 rounded-full"
                                         />
                                         <div>
-                                            <p className="font-medium">{selectedOrder.sellerName}</p>
+                                            <p className="font-medium">{selectedOrder.sellerName || "Cửa hàng"}</p>
                                             <Link
-                                                to={`/seller/${encodeURIComponent(selectedOrder.sellerName)}`}
+                                                to={`/seller/${encodeURIComponent(selectedOrder.sellerName || selectedOrder.sellerId)}`}
                                                 className="text-supply-primary hover:underline text-sm"
                                             >
                                                 Xem cửa hàng
@@ -337,12 +439,21 @@ const BuyerOrders = () => {
                                     <div className="space-y-2">
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Ngày đặt:</span>
-                                            <span>{formatDate(selectedOrder.orderDate)}</span>
+                                            <span>{formatDate(selectedOrder.createdAt || selectedOrder.orderDate)}</span>
                                         </div>
                                         <div className="flex justify-between">
                                             <span className="text-gray-600">Trạng thái:</span>
                                             <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedOrder.status)}`}>
-                                                {statusOptions[selectedOrder.status]}
+                                                {statusOptions[selectedOrder.status] || selectedOrder.status}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Thanh toán:</span>
+                                            <span className={`px-2 py-1 rounded text-xs ${selectedOrder.paymentStatus === 'paid'
+                                                ? 'bg-green-100 text-green-800'
+                                                : 'bg-yellow-100 text-yellow-800'
+                                                }`}>
+                                                {selectedOrder.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
                                             </span>
                                         </div>
                                     </div>
@@ -352,19 +463,27 @@ const BuyerOrders = () => {
                             <div className="mt-6">
                                 <h3 className="font-bold text-gray-800 mb-4">Sản phẩm đã đặt</h3>
                                 <div className="space-y-3">
-                                    {selectedOrder.items.map((item) => (
-                                        <div key={item.id} className="flex justify-between items-center py-3 border-b">
-                                            <div>
-                                                <p className="font-medium text-gray-800">{item.name}</p>
-                                                <p className="text-sm text-gray-600">
-                                                    {item.quantity} {item.unit} × {formatCurrency(item.price)}
-                                                </p>
+                                    {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                                        selectedOrder.items.map((item, index) => (
+                                            <div key={item.productId || index} className="flex justify-between items-center py-3 border-b">
+                                                <div>
+                                                    <p className="font-medium text-gray-800">
+                                                        {item.name || `Sản phẩm ${item.productId}`}
+                                                    </p>
+                                                    <p className="text-sm text-gray-600">
+                                                        {item.quantity} {item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
+                                                    </p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <p className="font-medium text-gray-800">
+                                                        {formatCurrency(item.total || (item.quantity * item.priceAtPurchase))}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="font-medium text-gray-800">{formatCurrency(item.total)}</p>
-                                            </div>
-                                        </div>
-                                    ))}
+                                        ))
+                                    ) : (
+                                        <p className="text-gray-500 text-center py-4">Không có thông tin sản phẩm</p>
+                                    )}
                                 </div>
                                 <div className="mt-4 pt-4 border-t">
                                     <div className="flex justify-between text-lg font-bold">
@@ -381,6 +500,16 @@ const BuyerOrders = () => {
                                         <FaMapMarkerAlt className="text-gray-400 mt-1" />
                                         <span>{selectedOrder.deliveryAddress}</span>
                                     </div>
+                                    {selectedOrder.expectedDeliveryTime && (
+                                        <div className="mt-3 pt-3 border-t">
+                                            <div className="flex items-center space-x-2">
+                                                <FaClock className="text-gray-400" />
+                                                <span className="text-sm text-gray-600">
+                                                    Dự kiến giao: {formatDate(selectedOrder.expectedDeliveryTime)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
                                     {selectedOrder.notes && (
                                         <div className="mt-3 pt-3 border-t">
                                             <p className="text-sm text-gray-600">
@@ -394,6 +523,17 @@ const BuyerOrders = () => {
                     </div>
                 </div>
             )}
+
+            {/* Review Modal */}
+            <ReviewModal
+                order={selectedOrderForReview}
+                isOpen={showReviewModal}
+                onClose={() => {
+                    setShowReviewModal(false);
+                    setSelectedOrderForReview(null);
+                }}
+                onSubmit={handleSubmitReview}
+            />
         </div>
     );
 };
