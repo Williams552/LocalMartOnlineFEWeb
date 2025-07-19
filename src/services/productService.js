@@ -520,6 +520,286 @@ class ProductService {
             return [];
         }
     }
+
+    // ========== SELLER METHODS ==========
+
+    // Get all products for seller (including inactive)
+    async getSellerProducts(storeId, page = 1, pageSize = 20) {
+        try {
+            console.log('🛍️ ProductService: Getting seller products...', { storeId, page, pageSize });
+
+            const response = await apiClient.get(`${API_ENDPOINTS.PRODUCTS}/seller/store/${storeId}`, {
+                params: { page, pageSize }
+            });
+
+            if (response.data?.success) {
+                console.log('✅ ProductService: Seller products fetched successfully');
+
+                // Transform the data to match frontend expectations
+                const transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+
+                return {
+                    success: true,
+                    data: {
+                        items: transformedProducts,
+                        totalItems: response.data.data.totalItems || 0,
+                        currentPage: response.data.data.currentPage || page,
+                        totalPages: response.data.data.totalPages || 1,
+                        hasNextPage: response.data.data.hasNextPage || false,
+                        hasPreviousPage: response.data.data.hasPreviousPage || false
+                    },
+                    message: response.data.message || 'Lấy danh sách sản phẩm thành công'
+                };
+            } else {
+                throw new Error(response.data?.message || 'Failed to fetch seller products');
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error fetching seller products:', error);
+
+            if (error.response?.status === 401) {
+                throw new Error('Unauthorized - Please login again');
+            }
+
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                'Có lỗi xảy ra khi tải danh sách sản phẩm'
+            );
+        }
+    }
+
+    // Search products for seller
+    async searchSellerProducts(storeId, keyword, page = 1, pageSize = 20) {
+        try {
+            console.log('🔍 ProductService: Searching seller products...', { storeId, keyword, page, pageSize });
+
+            const response = await apiClient.get(`${API_ENDPOINTS.PRODUCTS}/seller/store/${storeId}/search`, {
+                params: { keyword, page, pageSize }
+            });
+
+            if (response.data?.success) {
+                console.log('✅ ProductService: Seller products search successful');
+
+                const transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+
+                return {
+                    success: true,
+                    data: {
+                        items: transformedProducts,
+                        totalItems: response.data.data.totalItems || 0,
+                        currentPage: response.data.data.currentPage || page,
+                        totalPages: response.data.data.totalPages || 1,
+                        hasNextPage: response.data.data.hasNextPage || false,
+                        hasPreviousPage: response.data.data.hasPreviousPage || false
+                    },
+                    message: response.data.message || 'Tìm kiếm sản phẩm thành công'
+                };
+            } else {
+                throw new Error(response.data?.message || 'Failed to search seller products');
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error searching seller products:', error);
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                'Có lỗi xảy ra khi tìm kiếm sản phẩm'
+            );
+        }
+    }
+
+    // Filter products for seller
+    async filterSellerProducts(filterData) {
+        try {
+            console.log('🎯 ProductService: Filtering seller products...', filterData);
+
+            const response = await apiClient.post(`${API_ENDPOINTS.PRODUCTS}/seller/filter`, filterData);
+
+            if (response.data?.success) {
+                console.log('✅ ProductService: Seller products filter successful');
+
+                const transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+
+                return {
+                    success: true,
+                    data: {
+                        items: transformedProducts,
+                        totalItems: response.data.data.totalItems || 0,
+                        currentPage: response.data.data.currentPage || 1,
+                        totalPages: response.data.data.totalPages || 1,
+                        hasNextPage: response.data.data.hasNextPage || false,
+                        hasPreviousPage: response.data.data.hasPreviousPage || false
+                    },
+                    message: response.data.message || 'Lọc sản phẩm thành công'
+                };
+            } else {
+                throw new Error(response.data?.message || 'Failed to filter seller products');
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error filtering seller products:', error);
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                'Có lỗi xảy ra khi lọc sản phẩm'
+            );
+        }
+    }
+
+    // Delete product
+    async deleteProduct(productId) {
+        try {
+            console.log('🗑️ ProductService: Deleting product...', productId);
+
+            const response = await apiClient.delete(`${API_ENDPOINTS.PRODUCTS}/${productId}`);
+
+            if (response.data?.success) {
+                console.log('✅ ProductService: Product deleted successfully');
+                return {
+                    success: true,
+                    message: response.data.message || 'Xóa sản phẩm thành công'
+                };
+            } else {
+                throw new Error(response.data?.message || 'Failed to delete product');
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error deleting product:', error);
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                'Có lỗi xảy ra khi xóa sản phẩm'
+            );
+        }
+    }
+
+    // Toggle product status
+    async toggleProductStatus(productId, isActive) {
+        try {
+            console.log('🔄 ProductService: Toggling product status...', { productId, isActive });
+
+            // This would need to be implemented in the backend
+            // For now, we'll use the edit product endpoint with just the status change
+            const response = await apiClient.put(`${API_ENDPOINTS.PRODUCTS}/${productId}`, {
+                isAvailable: isActive
+            });
+
+            if (response.data?.success) {
+                console.log('✅ ProductService: Product status toggled successfully');
+                return {
+                    success: true,
+                    message: response.data.message || `${isActive ? 'Kích hoạt' : 'Tạm ngưng'} sản phẩm thành công`
+                };
+            } else {
+                throw new Error(response.data?.message || 'Failed to toggle product status');
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error toggling product status:', error);
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                'Có lỗi xảy ra khi thay đổi trạng thái sản phẩm'
+            );
+        }
+    }
+
+    // Get product details (helper method for duplicate)
+    async getProductDetails(productId) {
+        try {
+            console.log('🔍 ProductService: Getting product details...', productId);
+
+            const response = await apiClient.get(`${API_ENDPOINTS.PRODUCTS}/${productId}`);
+
+            if (response.data?.success) {
+                console.log('✅ ProductService: Product details fetched successfully');
+                return {
+                    success: true,
+                    data: this.transformProduct(response.data.data),
+                    message: response.data.message || 'Lấy thông tin sản phẩm thành công'
+                };
+            } else {
+                throw new Error(response.data?.message || 'Failed to get product details');
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error getting product details:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message ||
+                    error.message ||
+                    'Có lỗi xảy ra khi lấy thông tin sản phẩm'
+            };
+        }
+    }
+
+    // Transform product data to frontend format
+    transformProduct(product) {
+        return {
+            id: product.id,
+            name: product.name || 'Unnamed Product',
+            description: product.description || '',
+            price: product.price || 0,
+            category: product.categoryName || product.category || 'Chưa phân loại',
+            categoryId: product.categoryId,
+            storeId: product.storeId,
+            storeName: product.storeName,
+            images: product.imageUrls || product.images || [],
+            unit: product.unit || 'kg',
+            minimumQuantity: product.minimumQuantity || 1,
+            stockQuantity: product.stockQuantity || 0,
+            soldQuantity: product.soldQuantity || 0,
+            viewCount: product.viewCount || 0,
+            likeCount: product.likeCount || 0,
+            isAvailable: product.isAvailable !== false,
+            status: product.status || (product.isAvailable !== false ? 'Còn hàng' : 'Hết hàng'),
+            createdAt: product.createdAt,
+            updatedAt: product.updatedAt
+        };
+    }
+
+    // Duplicate product
+    async duplicateProduct(productId) {
+        try {
+            console.log('📋 ProductService: Duplicating product...', productId);
+
+            // First get the product details
+            const productDetails = await this.getProductDetails(productId);
+            if (!productDetails.success) {
+                throw new Error('Không thể lấy thông tin sản phẩm để sao chép');
+            }
+
+            // Create a new product with similar data
+            const originalProduct = productDetails.data;
+            const duplicateData = {
+                name: `${originalProduct.name} (Bản sao)`,
+                description: originalProduct.description,
+                price: originalProduct.price,
+                categoryId: originalProduct.categoryId,
+                storeId: originalProduct.storeId,
+                images: originalProduct.images,
+                unit: originalProduct.unit,
+                minimumQuantity: originalProduct.minimumQuantity,
+                stockQuantity: originalProduct.stockQuantity,
+                isAvailable: false // Start as inactive for review
+            };
+
+            const response = await apiClient.post(API_ENDPOINTS.PRODUCTS, duplicateData);
+
+            if (response.data?.success) {
+                console.log('✅ ProductService: Product duplicated successfully');
+                return {
+                    success: true,
+                    data: this.transformProduct(response.data.data),
+                    message: response.data.message || 'Sao chép sản phẩm thành công'
+                };
+            } else {
+                throw new Error(response.data?.message || 'Failed to duplicate product');
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error duplicating product:', error);
+            throw new Error(
+                error.response?.data?.message ||
+                error.message ||
+                'Có lỗi xảy ra khi sao chép sản phẩm'
+            );
+        }
+    }
 }
 
 export default new ProductService();

@@ -155,8 +155,8 @@ export const API_ENDPOINTS = {
 
     // Store Endpoints
     STORE: {
-        GET_ALL: `${API_URL}/api/store`, // Public - Active stores
-        GET_ALL_ADMIN: `${API_URL}/api/store/admin`, // Admin - All stores
+        GET_ALL: `${API_URL}/api/store`,
+        GET_ALL_ADMIN: `${API_URL}/api/store/admin`,
         GET_BY_ID: (id) => `${API_URL}/api/store/${id}`,
         CREATE: `${API_URL}/api/store`,
         UPDATE: (id) => `${API_URL}/api/store/${id}`,
@@ -167,6 +167,7 @@ export const API_ENDPOINTS = {
         SEARCH_ADMIN: `${API_URL}/api/store/admin/search`,
         NEARBY: `${API_URL}/api/store/nearby`,
         GET_BY_SELLER: `${API_URL}/api/store/seller`,
+        GET_BY_SELLER_ID: (sellerId) => `${API_URL}/api/store/seller/${sellerId}`,
         GET_STATISTICS: (id) => `${API_URL}/api/store/${id}/statistics`,
 
         // Follow endpoints
