@@ -56,7 +56,6 @@ const AdminLayout = () => {
         {
             key: 'markets', icon: <BankOutlined />, label: 'Quản lý chợ', children: [
                 { key: '/admin/markets', label: 'Danh sách chợ' },
-                { key: '/admin/markets/create', label: 'Thêm chợ mới' },
                 { key: '/admin/market-fees', label: 'Phí chợ' },
                 { key: '/admin/market-rules', label: 'Quy định chợ' },
             ]
@@ -64,10 +63,10 @@ const AdminLayout = () => {
         {
             key: 'stores', icon: <ShopOutlined />, label: 'Quản lý cửa hàng', children: [
                 { key: '/admin/stores', label: 'Danh sách cửa hàng' },
-                
+
             ]
         },
-      
+
         {
             key: 'product-units', icon: <TagsOutlined />, label: 'Quản lý đơn vị sản phẩm', children: [
                 { key: '/admin/product-units', label: 'Danh sách đơn vị' },
@@ -77,12 +76,11 @@ const AdminLayout = () => {
         {
             key: 'categories', icon: <AppstoreOutlined />, label: 'Quản lý danh mục', children: [
                 { key: '/admin/categories', label: 'Danh mục' },
-                { key: '/admin/category-registrations', label: 'Đăng ký danh mục' },
             ]
         },
-        
-      
-        
+
+
+
         {
             key: 'content', icon: <FileTextOutlined />, label: 'Quản lý nội dung', children: [
                 { key: '/admin/faqs', label: 'FAQ' },
@@ -105,7 +103,7 @@ const AdminLayout = () => {
                 { key: '/admin/analytics/orders', label: 'Đơn hàng' },
             ]
         },
-        
+
     ];
 
     const handleMenuClick = ({ key }) => navigate(key);
@@ -120,7 +118,7 @@ const AdminLayout = () => {
     const getBreadcrumbItems = () => {
         const pathSegments = location.pathname.split('/').filter(Boolean);
         const items = [{ title: 'Trang chủ', href: '/admin' }];
-        
+
         // Mapping để chuyển đổi path thành tiếng Việt
         const breadcrumbMap = {
             'users': 'Quản lý người dùng',
@@ -135,7 +133,7 @@ const AdminLayout = () => {
             'analytics': 'Báo cáo & Thống kê',
             'demo': 'Demo Selector'
         };
-        
+
         pathSegments.slice(1).forEach((segment, index) => {
             const title = breadcrumbMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
             items.push({
@@ -172,7 +170,7 @@ const AdminLayout = () => {
                 </div>
                 <Menu
                     theme="dark"
-                    mode="inline"   
+                    mode="inline"
                     selectedKeys={[location.pathname]}
                     items={menuItems}
                     onClick={handleMenuClick}

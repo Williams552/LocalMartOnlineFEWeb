@@ -78,13 +78,6 @@ const SellerLayout = ({ children }) => {
             description: 'Quản lý khách hàng'
         },
         {
-            path: '/seller/personal-shopping',
-            icon: FaShoppingBag,
-            label: 'Mua sắm cá nhân',
-            color: 'text-pink-600',
-            description: 'Hoạt động mua sắm'
-        },
-        {
             path: '/seller/analytics',
             icon: FaChartLine,
             label: 'Thống kê',
