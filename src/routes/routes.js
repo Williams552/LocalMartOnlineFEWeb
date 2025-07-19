@@ -22,7 +22,6 @@ import SellerApp from "../SellerApp"; // New seller app without header/footer
 import AdminLayout from "../pages/Admin/AdminLayout";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
 import UserManagement from "../pages/Admin/User/UserManagement";
-import CreateUser from "../pages/Admin/User/CreateUser";
 import UserAnalytics from "../pages/Admin/Analytics/UserAnalytics";
 import CategoryManagement from "../pages/Admin/Category/CategoryManagement";
 import MarketManagement from "../pages/Admin/Market/MarketManagement";
@@ -133,7 +132,6 @@ const AppRoutes = () => {
 
                 {/* User Management */}
                 <Route path="users" element={<UserManagement />} />
-                <Route path="users/create" element={<CreateUser />} />
                 <Route path="users/edit/:id" element={<UserManagement />} />
                 <Route path="users/:id" element={<UserManagement />} />
                 <Route path="seller-registrations" element={<UserManagement />} />

@@ -469,7 +469,7 @@ const UserManagement = () => {
                     form={form}
                     layout="vertical"
                     onFinish={handleCreateNewUser}
-                    initialValues={{ role: 'Buyer' }}
+                    initialValues={{ role: 'Buyer', status: 'Active', twoFactorEnabled: false }}
                 >
                     <Row gutter={16}>
                         <Col span={12}>
@@ -544,12 +544,50 @@ const UserManagement = () => {
                             </Form.Item>
                         </Col>
                     </Row>
-                    <Form.Item
-                        name="address"
-                        label="Địa chỉ"
-                    >
-                        <Input.TextArea rows={2} placeholder="Nhập địa chỉ" />
-                    </Form.Item>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="userToken"
+                                label="User Token"
+                            >
+                                <Input placeholder="Nhập user token (nếu có)" />
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="status"
+                                label="Trạng thái"
+                                rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
+                            >
+                                <Select>
+                                    <Option value="Active">Hoạt động</Option>
+                                    <Option value="Blocked">Bị khóa</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="twoFactorEnabled"
+                                label="Bật xác thực 2 lớp"
+                                valuePropName="checked"
+                            >
+                                <Select>
+                                    <Option value={true}>Bật</Option>
+                                    <Option value={false}>Tắt</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="address"
+                                label="Địa chỉ"
+                            >
+                                <Input.TextArea rows={2} placeholder="Nhập địa chỉ" />
+                            </Form.Item>
+                        </Col>
+                    </Row>
                 </Form>
             </Modal>
 
@@ -631,6 +669,32 @@ const UserManagement = () => {
                                 label="Địa chỉ"
                             >
                                 <Input.TextArea rows={2} />
+                            </Form.Item>
+                        </Col>
+                    </Row>
+                    <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="status"
+                                label="Trạng thái"
+                                rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
+                            >
+                                <Select>
+                                    <Option value="Active">Hoạt động</Option>
+                                    <Option value="Blocked">Bị khóa</Option>
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="twoFactorEnabled"
+                                label="Bật xác thực 2 lớp"
+                                valuePropName="checked"
+                            >
+                                <Select>
+                                    <Option value={true}>Bật</Option>
+                                    <Option value={false}>Tắt</Option>
+                                </Select>
                             </Form.Item>
                         </Col>
                     </Row>
