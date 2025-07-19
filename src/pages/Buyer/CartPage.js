@@ -349,9 +349,22 @@ const CartPage = () => {
         }
     };
 
-    const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shippingFee = totalAmount >= 200000 ? 0 : 15000;
-    const finalTotal = totalAmount + shippingFee;
+    const totalAmount = cartItems.reduce((sum, item) => {
+        const price = item.product?.price || 0;
+        const quantity = item.quantity || 0;
+        return sum + (price * quantity);
+    }, 0);
+
+    // Calculate fees based on delivery method
+    let additionalFee = 0;
+    if (deliveryMethod === "delivery") {
+        additionalFee = totalAmount >= 200000 ? 0 : 15000; // Shipping fee
+    } else if (deliveryMethod === "proxy") {
+        additionalFee = 20000 + (totalAmount * 0.05); // Proxy service fee
+    }
+    // No additional fee for pickup
+
+    const finalTotal = totalAmount + additionalFee;
 
     // Update selectAll state when selectedItems changes
     useEffect(() => {
@@ -425,7 +438,8 @@ const CartPage = () => {
 
                             {Object.entries(groupedBySeller).map(([seller, items], idx) => {
                                 const sellerInfo = sellerInfoMap[seller];
-                                const sellerTotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+                                const sellerTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                                const sellerItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
                                 return (
                                     <div key={idx} className="bg-white rounded-xl shadow-sm border p-6">
@@ -438,6 +452,9 @@ const CartPage = () => {
                                                     <p className="text-sm text-gray-500 flex items-center">
                                                         <FaMapMarkerAlt className="w-3 h-3 mr-1" />
                                                         {sellerInfo?.market}
+                                                    </p>
+                                                    <p className="text-sm text-supply-primary font-medium">
+                                                        {sellerItemCount} sản phẩm • {sellerTotal.toLocaleString()}đ
                                                     </p>
                                                 </div>
                                             </div>
@@ -572,18 +589,6 @@ const CartPage = () => {
                                             <input
                                                 type="radio"
                                                 name="delivery"
-                                                value="delivery"
-                                                checked={deliveryMethod === "delivery"}
-                                                onChange={(e) => setDeliveryMethod(e.target.value)}
-                                                className="text-supply-primary"
-                                            />
-                                            <FaTruck className="text-supply-primary" />
-                                            <span className="text-sm">Giao hàng tận nơi</span>
-                                        </label>
-                                        <label className="flex items-center space-x-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="delivery"
                                                 value="pickup"
                                                 checked={deliveryMethod === "pickup"}
                                                 onChange={(e) => setDeliveryMethod(e.target.value)}
@@ -609,24 +614,46 @@ const CartPage = () => {
 
                                 {/* Price Breakdown */}
                                 <div className="space-y-3 pb-4 border-b">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Số lượng sản phẩm</span>
+                                        <span className="font-medium">{formattedCartItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                                    </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Tạm tính</span>
                                         <span className="font-medium">{totalAmount.toLocaleString()}đ</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Phí giao hàng</span>
-                                        <span className="font-medium">
-                                            {shippingFee === 0 ? (
-                                                <span className="text-green-600">Miễn phí</span>
-                                            ) : (
-                                                `${shippingFee.toLocaleString()}đ`
+                                    {deliveryMethod === "delivery" && (
+                                        <>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Phí giao hàng</span>
+                                                <span className="font-medium">
+                                                    {additionalFee === 0 ? (
+                                                        <span className="text-green-600">Miễn phí</span>
+                                                    ) : (
+                                                        `${additionalFee.toLocaleString()}đ`
+                                                    )}
+                                                </span>
+                                            </div>
+                                            {totalAmount < 200000 && (
+                                                <p className="text-xs text-gray-500">
+                                                    Mua thêm {(200000 - totalAmount).toLocaleString()}đ để được miễn phí giao hàng
+                                                </p>
                                             )}
-                                        </span>
-                                    </div>
-                                    {totalAmount < 200000 && (
-                                        <p className="text-xs text-gray-500">
-                                            Mua thêm {(200000 - totalAmount).toLocaleString()}đ để được miễn phí giao hàng
-                                        </p>
+                                        </>
+                                    )}
+                                    {deliveryMethod === "proxy" && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Phí dịch vụ đi chợ</span>
+                                            <span className="font-medium text-blue-600">
+                                                {additionalFee.toLocaleString()}đ
+                                            </span>
+                                        </div>
+                                    )}
+                                    {deliveryMethod === "pickup" && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Phí giao hàng</span>
+                                            <span className="font-medium text-green-600">Miễn phí</span>
+                                        </div>
                                     )}
                                 </div>
 
