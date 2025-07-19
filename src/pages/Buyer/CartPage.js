@@ -357,12 +357,9 @@ const CartPage = () => {
 
     // Calculate fees based on delivery method
     let additionalFee = 0;
-    if (deliveryMethod === "delivery") {
-        additionalFee = totalAmount >= 200000 ? 0 : 15000; // Shipping fee
-    } else if (deliveryMethod === "proxy") {
+    if (deliveryMethod === "proxy") {
         additionalFee = 20000 + (totalAmount * 0.05); // Proxy service fee
     }
-    // No additional fee for pickup
 
     const finalTotal = totalAmount + additionalFee;
 
