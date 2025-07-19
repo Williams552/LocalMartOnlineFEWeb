@@ -173,6 +173,35 @@ class StoreService {
             throw error;
         }
     }
+    async getStoresBySellerId(sellerId) {
+        try {
+            const url = API_ENDPOINTS.STORE.GET_BY_SELLER_ID(sellerId);
+            console.log('📦 Fetching stores by sellerId:', url);
+
+            const response = await apiClient.get(url);
+
+            if (response.data && response.data.success) {
+                const stores = Array.isArray(response.data.data) ? response.data.data : [];
+                const formatted = stores.map(store => this.formatStoreForFrontend(store));
+
+                return {
+                    success: true,
+                    data: formatted
+                };
+            }
+
+            return {
+                success: false,
+                message: 'Không tìm thấy gian hàng'
+            };
+        } catch (error) {
+            console.error(`❌ Error in getStoresBySellerId(${sellerId}):`, error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Lỗi khi lấy danh sách gian hàng theo sellerId'
+            };
+        }
+    }
 
     // Format store data for frontend use
     formatStoreForFrontend(store) {
@@ -300,7 +329,7 @@ class StoreService {
     async searchStores(params = {}) {
         try {
             console.log('🔍 StoreService - Searching stores with params:', params);
-            
+
             // Prepare search filter body for Backend (đúng theo StoreSearchFilterDto)
             const searchFilter = {
                 keyword: params.keyword || '',
@@ -311,7 +340,7 @@ class StoreService {
             };
 
             console.log('🔍 StoreService - Search filter:', searchFilter);
-            
+
             // Use admin search endpoint
             const response = await apiClient.post(API_ENDPOINTS.STORE.SEARCH_ADMIN, searchFilter);
             console.log('🔍 StoreService - Search response:', response);
@@ -355,7 +384,7 @@ class StoreService {
     async suspendStore(storeId, reason) {
         try {
             console.log('🚫 StoreService - Suspending store:', storeId, 'Reason:', reason);
-            
+
             const response = await apiClient.patch(API_ENDPOINTS.STORE.SUSPEND(storeId), {
                 reason: reason || 'Admin suspension'
             });
@@ -372,7 +401,7 @@ class StoreService {
     async reactivateStore(storeId) {
         try {
             console.log('✅ StoreService - Reactivating store:', storeId);
-            
+
             const response = await apiClient.patch(API_ENDPOINTS.STORE.REACTIVATE(storeId));
 
             console.log('✅ StoreService - Reactivate response:', response.data);
@@ -387,7 +416,7 @@ class StoreService {
     async findNearbyStores(latitude, longitude, radius = 10, page = 1, pageSize = 20) {
         try {
             console.log('🌍 StoreService - Finding nearby stores:', { latitude, longitude, radius });
-            
+
             const queryParams = new URLSearchParams({
                 latitude: latitude.toString(),
                 longitude: longitude.toString(),
@@ -398,7 +427,7 @@ class StoreService {
 
             const url = `${API_ENDPOINTS.STORE.NEARBY}?${queryParams}`;
             console.log('🌍 StoreService - Nearby URL:', url);
-            
+
             const response = await apiClient.get(url);
             console.log('🌍 StoreService - Nearby response:', response);
 
