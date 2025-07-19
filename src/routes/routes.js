@@ -50,6 +50,7 @@ import ChatListPage from "../pages/Buyer/ChatListPage";
 import ChatPage from "../pages/Buyer/ChatPage";
 import FastBargainPage from "../pages/FastBargain/FastBargainPage";
 import BargainDetail from "../pages/FastBargain/BargainDetail";
+import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
 
 // Seller pages
 import SellerDashboard from "../pages/Sellers/SellerDashboard";
@@ -134,6 +135,7 @@ const AppRoutes = () => {
                 <Route path="users" element={<UserManagement />} />
                 <Route path="users/edit/:id" element={<UserManagement />} />
                 <Route path="users/:id" element={<UserManagement />} />
+                <Route path="seller-register" element={<SellerRegisterList />} />
                 <Route path="seller-registrations" element={<UserManagement />} />
                 <Route path="proxy-registrations" element={<UserManagement />} />
 

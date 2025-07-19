@@ -206,10 +206,10 @@ export const API_ENDPOINTS = {
 
     // Seller Registration Endpoints
     SELLER_REGISTRATION: {
-        REGISTER: `${API_URL}/api/sellerregistration`,
-        GET_MY: `${API_URL}/api/sellerregistration/my`,
-        GET_ALL: `${API_URL}/api/sellerregistration`,
-        APPROVE: `${API_URL}/api/sellerregistration/approve`,
+        REGISTER: `${API_URL}/api/SellerRegistration`,
+        GET_MY: `${API_URL}/api/SellerRegistration/my`,
+        GET_ALL: `${API_URL}/api/SellerRegistration`,
+        APPROVE: `${API_URL}/api/SellerRegistration/approve`,
     },
 
     // Proxy Shopper Registration Endpoints
