@@ -40,7 +40,7 @@ class ProductUnitService {
 
             const response = await fetch(`${API_ENDPOINTS.PRODUCT_UNIT.GET_ALL_ADMIN}?${queryParams}`, {
                 headers,
-                credentials: 'include'
+                
             });
 
             if (!response.ok) {
@@ -89,7 +89,7 @@ class ProductUnitService {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(unitData),
-                credentials: 'include'
+                
             });
 
             if (!response.ok) {
@@ -122,7 +122,7 @@ class ProductUnitService {
                 method: 'PUT',
                 headers,
                 body: JSON.stringify(unitData),
-                credentials: 'include'
+                
             });
 
             if (!response.ok) {
@@ -154,7 +154,7 @@ class ProductUnitService {
             const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.DELETE(id), {
                 method: 'DELETE',
                 headers,
-                credentials: 'include'
+                
             });
 
             if (!response.ok) {
@@ -186,7 +186,7 @@ class ProductUnitService {
             const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.TOGGLE(id), {
                 method: 'PATCH',
                 headers,
-                credentials: 'include'
+                
             });
 
             if (!response.ok) {
@@ -270,7 +270,7 @@ class ProductUnitService {
                 method: 'POST',
                 headers,
                 body: JSON.stringify(reorderList),
-                credentials: 'include'
+                
             });
 
             if (!response.ok) {

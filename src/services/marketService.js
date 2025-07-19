@@ -23,7 +23,7 @@ class MarketService {
                 // Fallback to public endpoint if no token
                 const publicResponse = await fetch(API_ENDPOINTS.MARKET.GET_ACTIVE, { 
                     headers,
-                    credentials: 'include'
+                    
                 });
                 console.log('🔍 getAllMarkets - Public response status:', publicResponse.status);
                 
@@ -38,7 +38,7 @@ class MarketService {
 
             const response = await fetch(url, { 
                 headers,
-                credentials: 'include'
+                
             });
 
             console.log('🔍 getAllMarkets - Response status:', response.status);
@@ -225,7 +225,7 @@ class MarketService {
             const response = await fetch(url, { 
                 method: 'GET',
                 headers,
-                credentials: 'include'
+                
             });
             
             console.log('🔍 searchMarkets - Response status:', response.status);
@@ -287,7 +287,7 @@ class MarketService {
             const response = await fetch(url, { 
                 method: 'GET',
                 headers,
-                credentials: 'include'
+                
             });
             
             console.log('🔍 filterMarkets - Response status:', response.status);

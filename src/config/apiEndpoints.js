@@ -66,18 +66,18 @@ export const API_ENDPOINTS = {
 
     // Product Unit Endpoints
     PRODUCT_UNIT: {
-        GET_ACTIVE: `${API_URL}/api/productunit`, // Public - Active units
-        GET_ALL_ADMIN: `${API_URL}/api/productunit/admin`, // Admin - All units with pagination
-        GET_BY_ID: (id) => `${API_URL}/api/productunit/${id}`,
-        CREATE: `${API_URL}/api/productunit`,
-        UPDATE: (id) => `${API_URL}/api/productunit/${id}`,
-        DELETE: (id) => `${API_URL}/api/productunit/${id}`,
-        TOGGLE: (id) => `${API_URL}/api/productunit/${id}/toggle`,
-        SEARCH: `${API_URL}/api/productunit/search`,
-        SEARCH_ADMIN: `${API_URL}/api/productunit/admin/search`,
-        GET_BY_TYPE: (unitType) => `${API_URL}/api/productunit/type/${unitType}`,
-        REORDER: `${API_URL}/api/productunit/reorder`,
-        GET_UNIT_TYPES: `${API_URL}/api/productunit/types`,
+        GET_ACTIVE: `${API_URL}/api/ProductUnit`, // Public - Active units
+        GET_ALL_ADMIN: `${API_URL}/api/ProductUnit/admin`, // Admin - All units with pagination
+        GET_BY_ID: (id) => `${API_URL}/api/ProductUnit/${id}`,
+        CREATE: `${API_URL}/api/ProductUnit`,
+        UPDATE: (id) => `${API_URL}/api/ProductUnit/${id}`,
+        DELETE: (id) => `${API_URL}/api/ProductUnit/${id}`,
+        TOGGLE: (id) => `${API_URL}/api/ProductUnit/${id}/toggle`,
+        SEARCH: `${API_URL}/api/ProductUnit/search`,
+        SEARCH_ADMIN: `${API_URL}/api/ProductUnit/admin/search`,
+        GET_BY_TYPE: (unitType) => `${API_URL}/api/ProductUnit/type/${unitType}`,
+        REORDER: `${API_URL}/api/ProductUnit/reorder`,
+        GET_UNIT_TYPES: `${API_URL}/api/ProductUnit/types`,
     },
 
     // Order Endpoints
@@ -109,20 +109,20 @@ export const API_ENDPOINTS = {
 
     // Market Endpoints
     MARKET: {
-        GET_ALL: `${API_URL}/api/market/admin`, // Admin endpoint for all markets
-        GET_ACTIVE: `${API_URL}/api/market`, // Public endpoint for active markets only
-        GET_BY_ID: (id) => `${API_URL}/api/market/${id}`,
-        CREATE: `${API_URL}/api/market`,
-        UPDATE: (id) => `${API_URL}/api/market/${id}`,
-        DELETE: (id) => `${API_URL}/api/market/${id}`,
-        TOGGLE_STATUS: (id) => `${API_URL}/api/market/${id}/toggle`,
-        SEARCH: `${API_URL}/api/market/search`,
-        SEARCH_ADMIN: `${API_URL}/api/market/admin/search`,
-        FILTER: `${API_URL}/api/market/filter`,
-        FILTER_ADMIN: `${API_URL}/api/market/admin/filter`,
-        ADMIN_GET_ALL: `${API_URL}/api/market/admin`,
-        ADMIN_SEARCH: `${API_URL}/api/market/admin/search`,
-        ADMIN_FILTER: `${API_URL}/api/market/admin/filter`,
+        GET_ALL: `${API_URL}/api/Market/admin`, // Admin endpoint for all markets
+        GET_ACTIVE: `${API_URL}/api/Market`, // Public endpoint for active markets only
+        GET_BY_ID: (id) => `${API_URL}/api/Market/${id}`,
+        CREATE: `${API_URL}/api/Market`,
+        UPDATE: (id) => `${API_URL}/api/Market/${id}`,
+        DELETE: (id) => `${API_URL}/api/Market/${id}`,
+        TOGGLE_STATUS: (id) => `${API_URL}/api/Market/${id}/toggle`,
+        SEARCH: `${API_URL}/api/Market/search`,
+        SEARCH_ADMIN: `${API_URL}/api/Market/admin/search`,
+        FILTER: `${API_URL}/api/Market/filter`,
+        FILTER_ADMIN: `${API_URL}/api/Market/admin/filter`,
+        ADMIN_GET_ALL: `${API_URL}/api/Market/admin`,
+        ADMIN_SEARCH: `${API_URL}/api/Market/admin/search`,
+        ADMIN_FILTER: `${API_URL}/api/Market/admin/filter`,
     },
 
     // Market Fee Endpoints
