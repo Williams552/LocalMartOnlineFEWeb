@@ -1,3 +1,4 @@
+import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
@@ -22,7 +23,6 @@ import SellerApp from "../SellerApp"; // New seller app without header/footer
 import AdminLayout from "../pages/Admin/AdminLayout";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
 import UserManagement from "../pages/Admin/User/UserManagement";
-import CreateUser from "../pages/Admin/User/CreateUser";
 import UserAnalytics from "../pages/Admin/Analytics/UserAnalytics";
 import CategoryManagement from "../pages/Admin/Category/CategoryManagement";
 import CategoryRegistrationManagement from "../pages/Admin/CategoryRegistration/CategoryRegistrationManagement";
@@ -42,7 +42,6 @@ import SupportManagement from "../pages/Admin/SupportManagement";
 import CartPage from "../pages/Buyer/CartPage";
 import FavoritesPage from "../pages/Buyer/FavoritesPage";
 import FollowingStoresPage from "../pages/Buyer/FollowingStores";
-import TestFavorites from "../pages/TestFavorites";
 import ProxyShopperList from "../pages/ProxyShopper/ProxyShopperList";
 import RegisterProxyShopper from "../pages/ProxyShopper/RegisterProxyShopper";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
@@ -52,6 +51,7 @@ import ChatListPage from "../pages/Buyer/ChatListPage";
 import ChatPage from "../pages/Buyer/ChatPage";
 import FastBargainPage from "../pages/FastBargain/FastBargainPage";
 import BargainDetail from "../pages/FastBargain/BargainDetail";
+import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
 
 // Seller pages
 import SellerDashboard from "../pages/Sellers/SellerDashboard";
@@ -98,7 +98,6 @@ const AppRoutes = () => {
                 <Route path="/buyer/orders" element={<ProtectedRoute><BuyerOrders /></ProtectedRoute>} />
                 <Route path="/buyer/chat" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                 <Route path="/buyer/chat/:sellerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-                <Route path="/test-favorites" element={<TestFavorites />} />
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
                 <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
@@ -135,9 +134,10 @@ const AppRoutes = () => {
 
                 {/* User Management */}
                 <Route path="users" element={<UserManagement />} />
-                <Route path="users/create" element={<CreateUser />} />
                 <Route path="users/edit/:id" element={<UserManagement />} />
                 <Route path="users/:id" element={<UserManagement />} />
+                <Route path="seller-register" element={<SellerRegisterList />} />
+                <Route path="proxy-register" element={<ProxyRegisterList />} />
                 <Route path="seller-registrations" element={<UserManagement />} />
                 <Route path="proxy-registrations" element={<UserManagement />} />
 
@@ -151,7 +151,7 @@ const AppRoutes = () => {
                 <Route path="markets/dashboard" element={<MarketDashboard />} />
                 <Route path="market-fees" element={<MarketFeeManagement />} />
                 <Route path="market-rules" element={<MarketRuleManagement />} />
-                
+
 
                 {/* Store Management */}
                 <Route path="stores" element={<StoreManagement />} />

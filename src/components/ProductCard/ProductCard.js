@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
 import AddToCartButton from "../Common/AddToCartButton";
 import FavoriteButton from "../Common/FavoriteButton";
+import FollowStoreButton from "../FollowStoreButton";
 import { FaHandshake } from "react-icons/fa";
 import StartBargainModal from "../FastBargain/StartBargainModal";
 import authService from "../../services/authService";
@@ -97,10 +98,26 @@ const ProductCard = ({
                     </p>
                 )}
                 <div className="mb-3">
-                    <p className="text-gray-600 text-sm flex items-center">
-                        <span className="mr-2">🏪</span>
-                        <span className="text-blue-600 font-medium">{storeName || market || 'Gian hàng'}</span>
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <p className="text-gray-600 text-sm flex items-center">
+                            <span className="mr-2">🏪</span>
+                            <Link
+                                to={`/store/${storeId}`}
+                                className="text-blue-600 font-medium hover:text-blue-800 transition-colors"
+                            >
+                                {storeName || market || 'Gian hàng'}
+                            </Link>
+                        </p>
+                        {/* Follow Store Button */}
+                        {storeId && (
+                            <FollowStoreButton
+                                storeId={storeId}
+                                variant="icon-only"
+                                size="sm"
+                                className="ml-2"
+                            />
+                        )}
+                    </div>
                 </div>
                 <div className="flex items-center justify-between">
                     <p className="text-xl font-bold text-supply-primary">

@@ -239,12 +239,12 @@ const ChartsAnalytics = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatCurrency(analytics.revenue.summary.totalRevenue)}
+                                {formatCurrency(analytics?.revenue?.summary?.totalRevenue || 0)}
                             </p>
-                            <p className={`text-sm flex items-center mt-1 ${analytics.revenue.summary.growthRate >= 0 ? 'text-green-600' : 'text-red-600'
+                            <p className={`text-sm flex items-center mt-1 ${((analytics?.revenue?.summary?.growthRate ?? 0) >= 0) ? 'text-green-600' : 'text-red-600'
                                 }`}>
-                                {analytics.revenue.summary.growthRate >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
-                                {formatPercentage(analytics.revenue.summary.growthRate)}
+                                {(analytics?.revenue?.summary?.growthRate ?? 0) >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
+                                {formatPercentage(analytics?.revenue?.summary?.growthRate ?? 0)}
                             </p>
                         </div>
                         <div className="p-3 bg-green-100 rounded-lg">
@@ -259,10 +259,10 @@ const ChartsAnalytics = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatNumber(analytics.orders.summary.totalOrders)}
+                                {formatNumber(analytics?.orders?.summary?.totalOrders || 0)}
                             </p>
                             <p className="text-sm text-gray-500 mt-1">
-                                {formatNumber(analytics.orders.summary.averageOrdersPerDay)} đơn/ngày
+                                {formatNumber(analytics?.orders?.summary?.averageOrdersPerDay || 0)} đơn/ngày
                             </p>
                         </div>
                         <div className="p-3 bg-blue-100 rounded-lg">
@@ -277,10 +277,10 @@ const ChartsAnalytics = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Giá trị TB/đơn</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatCurrency(analytics.revenue.summary.averageOrderValue)}
+                                {formatCurrency(analytics?.revenue?.summary?.averageOrderValue || 0)}
                             </p>
                             <p className="text-sm text-gray-500 mt-1">
-                                Từ {formatNumber(analytics.orders.summary.totalOrders)} đơn
+                                Từ {formatNumber(analytics?.orders?.summary?.totalOrders || 0)} đơn
                             </p>
                         </div>
                         <div className="p-3 bg-purple-100 rounded-lg">
@@ -406,7 +406,7 @@ const ChartsAnalytics = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {analytics.products.data.slice(0, 8).map((product, index) => (
+                            {(analytics?.products?.data ?? []).slice(0, 8).map((product, index) => (
                                 <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
                                     <td className="py-3">
                                         <div className="flex items-center space-x-3">
@@ -471,7 +471,7 @@ const ChartsAnalytics = () => {
                     <div className="bg-white rounded-lg p-4">
                         <h4 className="font-semibold text-gray-700 mb-2">🏆 Danh mục nổi bật</h4>
                         <p className="text-sm text-gray-600">
-                            {analytics.categories.data[0]?.name} đang dẫn đầu với {formatCurrency(analytics.categories.data[0]?.revenue)} doanh thu.
+                            {(analytics?.categories?.data?.[0]?.name || 'Không có dữ liệu')} đang dẫn đầu với {formatCurrency(analytics?.categories?.data?.[0]?.revenue || 0)} doanh thu.
                             Nên tập trung phát triển danh mục này.
                         </p>
                     </div>

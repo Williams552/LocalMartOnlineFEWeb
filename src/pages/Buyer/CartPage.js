@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaTruck } from "react-icons/fa";
+import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaTruck, FaCheckSquare, FaSquare } from "react-icons/fa";
 import { FiShoppingBag, FiClock, FiCheck, FiLoader } from "react-icons/fi";
 import { toast } from "react-toastify";
 import toastService from "../../services/toastService";
@@ -55,6 +55,8 @@ const CartPage = () => {
     const [deliveryMethod, setDeliveryMethod] = useState("delivery"); // delivery, pickup, proxy
     const [selectedItems, setSelectedItems] = useState(new Set());
     const [selectAll, setSelectAll] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+    const [showClearSellerConfirm, setShowClearSellerConfirm] = useState(null);
 
     // Check authentication on component mount
     useEffect(() => {
@@ -112,16 +114,29 @@ const CartPage = () => {
         }
     };
 
-    const handleRemove = async (cartItemId) => {
+    const handleRemove = async (cartItemId, productName = '') => {
         try {
             console.log('🗑️ CartPage: Removing item:', cartItemId);
             setUpdating(prev => ({ ...prev, [cartItemId]: true }));
 
-            const result = await cartService.removeFromCart(cartItemId);
+            // Find the cart item to get productId
+            const cartItem = cartItems.find(item => item.id === cartItemId);
+            if (!cartItem) {
+                toastService.error('Không tìm thấy sản phẩm trong giỏ hàng');
+                return;
+            }
+
+            const result = await cartService.removeFromCart(cartItem.productId);
             if (result.success) {
-                toastService.success('Đã xóa sản phẩm khỏi giỏ hàng');
+                toastService.success(`Đã xóa ${productName || 'sản phẩm'} khỏi giỏ hàng`);
                 // Remove from local state
                 setCartItems(items => items.filter(item => item.id !== cartItemId));
+                // Remove from selected items if it was selected
+                setSelectedItems(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(cartItemId);
+                    return newSet;
+                });
             } else {
                 toastService.error(result.message || 'Không thể xóa sản phẩm');
             }
@@ -130,7 +145,31 @@ const CartPage = () => {
             toastService.error('Có lỗi khi xóa sản phẩm');
         } finally {
             setUpdating(prev => ({ ...prev, [cartItemId]: false }));
+            setShowDeleteConfirm(null);
         }
+    };
+
+
+
+    const toggleSelectItem = (itemId) => {
+        setSelectedItems(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(itemId)) {
+                newSet.delete(itemId);
+            } else {
+                newSet.add(itemId);
+            }
+            return newSet;
+        });
+    };
+
+    const toggleSelectAll = () => {
+        if (selectAll) {
+            setSelectedItems(new Set());
+        } else {
+            setSelectedItems(new Set(formattedCartItems.map(item => item.id)));
+        }
+        setSelectAll(!selectAll);
     };
 
     const updateQuantity = async (cartItemId, productId, newQuantity) => {
@@ -204,9 +243,132 @@ const CartPage = () => {
         return acc;
     }, {});
 
-    const totalAmount = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shippingFee = totalAmount >= 200000 ? 0 : 15000;
-    const finalTotal = totalAmount + shippingFee;
+    const handleClearSeller = async (sellerName) => {
+        try {
+            const sellerItems = formattedCartItems.filter(item => item.seller === sellerName);
+            setUpdating(prev => {
+                const newState = { ...prev };
+                sellerItems.forEach(item => {
+                    newState[item.id] = true;
+                });
+                return newState;
+            });
+
+            // Remove all items from this seller
+            const removePromises = sellerItems.map(item =>
+                cartService.removeFromCart(item.productId)
+            );
+
+            const results = await Promise.all(removePromises);
+            const successfulRemovals = results.filter(result => result.success);
+
+            if (successfulRemovals.length === sellerItems.length) {
+                toastService.success(`Đã xóa tất cả sản phẩm từ ${sellerName}`);
+                // Remove all seller items from local state
+                setCartItems(items =>
+                    items.filter(item => !sellerItems.some(sellerItem => sellerItem.id === item.id))
+                );
+                // Remove from selected items
+                setSelectedItems(prev => {
+                    const newSet = new Set(prev);
+                    sellerItems.forEach(item => newSet.delete(item.id));
+                    return newSet;
+                });
+            } else {
+                toastService.warning(`Đã xóa ${successfulRemovals.length}/${sellerItems.length} sản phẩm từ ${sellerName}`);
+                // Refresh cart to sync state
+                fetchCartData();
+            }
+        } catch (error) {
+            console.error('❌ CartPage: Error clearing seller items:', error);
+            toastService.error('Có lỗi khi xóa sản phẩm');
+        } finally {
+            const sellerItems = formattedCartItems.filter(item => item.seller === sellerName);
+            setUpdating(prev => {
+                const newState = { ...prev };
+                sellerItems.forEach(item => {
+                    newState[item.id] = false;
+                });
+                return newState;
+            });
+            setShowClearSellerConfirm(null);
+        }
+    };
+
+    const handleRemoveSelected = async () => {
+        if (selectedItems.size === 0) {
+            toastService.warning('Vui lòng chọn sản phẩm để xóa');
+            return;
+        }
+
+        try {
+            const itemsToRemove = formattedCartItems.filter(item => selectedItems.has(item.id));
+
+            setUpdating(prev => {
+                const newState = { ...prev };
+                itemsToRemove.forEach(item => {
+                    newState[item.id] = true;
+                });
+                return newState;
+            });
+
+            const removePromises = itemsToRemove.map(item =>
+                cartService.removeFromCart(item.productId)
+            );
+
+            const results = await Promise.all(removePromises);
+            const successfulRemovals = results.filter(result => result.success);
+
+            if (successfulRemovals.length === itemsToRemove.length) {
+                toastService.success(`Đã xóa ${successfulRemovals.length} sản phẩm khỏi giỏ hàng`);
+                // Remove successful items from local state
+                setCartItems(items =>
+                    items.filter(item => !itemsToRemove.some(removeItem => removeItem.id === item.id))
+                );
+            } else {
+                toastService.warning(`Đã xóa ${successfulRemovals.length}/${itemsToRemove.length} sản phẩm`);
+                // Refresh cart to sync state
+                fetchCartData();
+            }
+
+            // Clear selection
+            setSelectedItems(new Set());
+            setSelectAll(false);
+        } catch (error) {
+            console.error('❌ CartPage: Error removing selected items:', error);
+            toastService.error('Có lỗi khi xóa sản phẩm');
+        } finally {
+            const itemsToRemove = formattedCartItems.filter(item => selectedItems.has(item.id));
+            setUpdating(prev => {
+                const newState = { ...prev };
+                itemsToRemove.forEach(item => {
+                    newState[item.id] = false;
+                });
+                return newState;
+            });
+        }
+    };
+
+    const totalAmount = cartItems.reduce((sum, item) => {
+        const price = item.product?.price || 0;
+        const quantity = item.quantity || 0;
+        return sum + (price * quantity);
+    }, 0);
+
+    // Calculate fees based on delivery method
+    let additionalFee = 0;
+    if (deliveryMethod === "proxy") {
+        additionalFee = 20000 + (totalAmount * 0.05); // Proxy service fee
+    }
+
+    const finalTotal = totalAmount + additionalFee;
+
+    // Update selectAll state when selectedItems changes
+    useEffect(() => {
+        if (formattedCartItems.length > 0) {
+            setSelectAll(selectedItems.size === formattedCartItems.length);
+        }
+    }, [selectedItems, formattedCartItems.length]);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -232,7 +394,10 @@ const CartPage = () => {
                         <FaShoppingCart className="w-24 h-24 text-gray-300 mx-auto mb-4" />
                         <h2 className="text-2xl font-semibold text-gray-500 mb-2">Giỏ hàng trống</h2>
                         <p className="text-gray-400 mb-6">Hãy thêm một số sản phẩm tươi sạch vào giỏ hàng!</p>
-                        <button className="bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition">
+                        <button
+                            onClick={() => navigate('/')}
+                            className="bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition"
+                        >
                             Tiếp tục mua sắm
                         </button>
                     </div>
@@ -240,9 +405,38 @@ const CartPage = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Cart Items */}
                         <div className="lg:col-span-2 space-y-6">
+                            {/* Bulk Actions */}
+                            {formattedCartItems.length > 0 && (
+                                <div className="bg-white rounded-xl shadow-sm border p-4">
+                                    <div className="flex items-center justify-between">
+                                        <label className="flex items-center space-x-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={selectAll}
+                                                onChange={toggleSelectAll}
+                                                className="w-4 h-4 text-supply-primary rounded border-gray-300 focus:ring-supply-primary"
+                                            />
+                                            <span className="text-sm font-medium text-gray-700">
+                                                Chọn tất cả ({formattedCartItems.length} sản phẩm)
+                                            </span>
+                                        </label>
+                                        {selectedItems.size > 0 && (
+                                            <button
+                                                onClick={handleRemoveSelected}
+                                                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition flex items-center space-x-2"
+                                            >
+                                                <FaTrash className="w-4 h-4" />
+                                                <span>Xóa đã chọn ({selectedItems.size})</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
                             {Object.entries(groupedBySeller).map(([seller, items], idx) => {
                                 const sellerInfo = sellerInfoMap[seller];
-                                const sellerTotal = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
+                                const sellerTotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                                const sellerItemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
                                 return (
                                     <div key={idx} className="bg-white rounded-xl shadow-sm border p-6">
@@ -256,20 +450,39 @@ const CartPage = () => {
                                                         <FaMapMarkerAlt className="w-3 h-3 mr-1" />
                                                         {sellerInfo?.market}
                                                     </p>
+                                                    <p className="text-sm text-supply-primary font-medium">
+                                                        {sellerItemCount} sản phẩm • {sellerTotal.toLocaleString()}đ
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => setSelectedSeller(seller)}
-                                                className="text-supply-primary hover:text-green-600 transition"
-                                            >
-                                                <FaPhone className="w-4 h-4" />
-                                            </button>
+                                            <div className="flex items-center space-x-2">
+                                                <button
+                                                    onClick={() => setShowClearSellerConfirm(seller)}
+                                                    className="text-red-500 hover:text-red-700 transition p-2 rounded-lg hover:bg-red-50"
+                                                    title="Xóa tất cả sản phẩm từ gian hàng này"
+                                                >
+                                                    <FaTrash className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => setSelectedSeller(seller)}
+                                                    className="text-supply-primary hover:text-green-600 transition p-2 rounded-lg hover:bg-green-50"
+                                                    title="Liên hệ người bán"
+                                                >
+                                                    <FaPhone className="w-4 h-4" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         {/* Items */}
                                         <div className="space-y-4 mt-4">
                                             {items.map(item => (
                                                 <div key={item.id} className="flex items-center space-x-4">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedItems.has(item.id)}
+                                                        onChange={() => toggleSelectItem(item.id)}
+                                                        className="w-4 h-4 text-supply-primary rounded border-gray-300 focus:ring-supply-primary"
+                                                    />
                                                     <img
                                                         src={item.image}
                                                         alt={item.name}
@@ -319,9 +532,10 @@ const CartPage = () => {
                                                             {item.subTotal.toLocaleString()}đ
                                                         </p>
                                                         <button
-                                                            onClick={() => handleRemove(item.id)}
+                                                            onClick={() => setShowDeleteConfirm({ id: item.id, name: item.name })}
                                                             disabled={updating[item.id]}
-                                                            className="text-red-500 hover:text-red-700 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            className="text-red-500 hover:text-red-700 mt-1 disabled:opacity-50 disabled:cursor-not-allowed p-1 rounded hover:bg-red-50 transition"
+                                                            title="Xóa sản phẩm"
                                                         >
                                                             {updating[item.id] ? (
                                                                 <FiLoader className="animate-spin w-3 h-3" />
@@ -372,18 +586,6 @@ const CartPage = () => {
                                             <input
                                                 type="radio"
                                                 name="delivery"
-                                                value="delivery"
-                                                checked={deliveryMethod === "delivery"}
-                                                onChange={(e) => setDeliveryMethod(e.target.value)}
-                                                className="text-supply-primary"
-                                            />
-                                            <FaTruck className="text-supply-primary" />
-                                            <span className="text-sm">Giao hàng tận nơi</span>
-                                        </label>
-                                        <label className="flex items-center space-x-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="delivery"
                                                 value="pickup"
                                                 checked={deliveryMethod === "pickup"}
                                                 onChange={(e) => setDeliveryMethod(e.target.value)}
@@ -409,24 +611,46 @@ const CartPage = () => {
 
                                 {/* Price Breakdown */}
                                 <div className="space-y-3 pb-4 border-b">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-gray-600">Số lượng sản phẩm</span>
+                                        <span className="font-medium">{formattedCartItems.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                                    </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Tạm tính</span>
                                         <span className="font-medium">{totalAmount.toLocaleString()}đ</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-gray-600">Phí giao hàng</span>
-                                        <span className="font-medium">
-                                            {shippingFee === 0 ? (
-                                                <span className="text-green-600">Miễn phí</span>
-                                            ) : (
-                                                `${shippingFee.toLocaleString()}đ`
+                                    {deliveryMethod === "delivery" && (
+                                        <>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Phí giao hàng</span>
+                                                <span className="font-medium">
+                                                    {additionalFee === 0 ? (
+                                                        <span className="text-green-600">Miễn phí</span>
+                                                    ) : (
+                                                        `${additionalFee.toLocaleString()}đ`
+                                                    )}
+                                                </span>
+                                            </div>
+                                            {totalAmount < 200000 && (
+                                                <p className="text-xs text-gray-500">
+                                                    Mua thêm {(200000 - totalAmount).toLocaleString()}đ để được miễn phí giao hàng
+                                                </p>
                                             )}
-                                        </span>
-                                    </div>
-                                    {totalAmount < 200000 && (
-                                        <p className="text-xs text-gray-500">
-                                            Mua thêm {(200000 - totalAmount).toLocaleString()}đ để được miễn phí giao hàng
-                                        </p>
+                                        </>
+                                    )}
+                                    {deliveryMethod === "proxy" && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Phí dịch vụ đi chợ</span>
+                                            <span className="font-medium text-blue-600">
+                                                {additionalFee.toLocaleString()}đ
+                                            </span>
+                                        </div>
+                                    )}
+                                    {deliveryMethod === "pickup" && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Phí giao hàng</span>
+                                            <span className="font-medium text-green-600">Miễn phí</span>
+                                        </div>
                                     )}
                                 </div>
 
@@ -456,8 +680,14 @@ const CartPage = () => {
 
             {/* Modal liên hệ người bán */}
             {selectedSeller && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-xl w-[90%] max-w-md shadow-2xl">
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+                    onClick={() => setSelectedSeller(null)}
+                >
+                    <div
+                        className="bg-white p-8 rounded-xl w-[90%] max-w-md shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <button
                             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
                             onClick={() => setSelectedSeller(null)}
@@ -514,10 +744,17 @@ const CartPage = () => {
                 </div>
             )}
 
+
             {/* Modal người đi chợ giùm */}
             {showProxyListFor && (
-                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-white p-8 rounded-xl w-[90%] max-w-lg shadow-2xl">
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+                    onClick={() => setShowProxyListFor(null)}
+                >
+                    <div
+                        className="bg-white p-8 rounded-xl w-[90%] max-w-lg shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <button
                             className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-xl"
                             onClick={() => setShowProxyListFor(null)}
@@ -591,6 +828,85 @@ const CartPage = () => {
                     </div>
                 </div>
             )}
+
+            {/* Modal xác nhận xóa sản phẩm */}
+            {showDeleteConfirm && (
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+                    onClick={() => setShowDeleteConfirm(null)}
+                >
+                    <div
+                        className="bg-white p-6 rounded-xl w-[90%] max-w-md shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FaTrash className="w-8 h-8 text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                                Xác nhận xóa sản phẩm
+                            </h3>
+                            <p className="text-gray-600 mb-6">
+                                Bạn có chắc chắn muốn xóa <span className="font-medium text-gray-800">"{showDeleteConfirm.name}"</span> khỏi giỏ hàng?
+                            </p>
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={() => setShowDeleteConfirm(null)}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={() => handleRemove(showDeleteConfirm.id, showDeleteConfirm.name)}
+                                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                                >
+                                    Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal xác nhận xóa tất cả sản phẩm của seller */}
+            {showClearSellerConfirm && (
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+                    onClick={() => setShowClearSellerConfirm(null)}
+                >
+                    <div
+                        className="bg-white p-6 rounded-xl w-[90%] max-w-md shadow-2xl relative"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="text-center">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FaTrash className="w-8 h-8 text-red-500" />
+                            </div>
+                            <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                                Xóa tất cả sản phẩm
+                            </h3>
+                            <p className="text-gray-600 mb-6">
+                                Bạn có chắc chắn muốn xóa tất cả sản phẩm từ <span className="font-medium text-gray-800">"{showClearSellerConfirm}"</span> khỏi giỏ hàng?
+                            </p>
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={() => setShowClearSellerConfirm(null)}
+                                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    onClick={() => handleClearSeller(showClearSellerConfirm)}
+                                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                                >
+                                    Xóa tất cả
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
         </div>
     );
 };

@@ -9,6 +9,7 @@ import { CartProvider } from './contexts/CartContext';
 // Components for Seller App only
 import UserIdFixer from './components/Common/UserIdFixer';
 import SessionTimeoutWarning from './components/Common/SessionTimeoutWarning';
+import ScrollToTop from './components/Common/ScrollToTop';
 
 // Services
 import authService from './services/authService';
@@ -29,6 +30,9 @@ const SellerApp = () => {
 
     return (
         <div className="SellerApp">
+            {/* Scroll to top on route change */}
+            <ScrollToTop />
+
             {/* User ID Fixer - tự động sửa userId trong localStorage */}
             <UserIdFixer />
 

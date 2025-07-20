@@ -78,8 +78,10 @@ class ProductUnitService {
             const url = `${API_ENDPOINTS.PRODUCT_UNIT.GET_ALL_ADMIN}?${queryParams}`;
             console.log('🔍 ProductUnitService - Calling admin endpoint:', url);
 
+
             const response = await apiClient.get(url);
             console.log('🔍 ProductUnitService - Response:', response.data);
+
 
             if (response.data && response.data.success && response.data.data) {
                 return response.data.data;
@@ -112,10 +114,12 @@ class ProductUnitService {
     // Admin: Create new unit
     async createUnit(unitData) {
         try {
+
             const response = await apiClient.post(API_ENDPOINTS.PRODUCT_UNIT.CREATE, unitData);
             
             if (response.data && response.data.success) {
                 return response.data.data || response.data;
+
             }
             return response.data;
         } catch (error) {
@@ -127,10 +131,12 @@ class ProductUnitService {
     // Admin: Update unit
     async updateUnit(id, unitData) {
         try {
+
             const response = await apiClient.put(API_ENDPOINTS.PRODUCT_UNIT.UPDATE(id), unitData);
             
             if (response.data && response.data.success) {
                 return response.data.data || response.data;
+
             }
             return response.data;
         } catch (error) {
@@ -142,10 +148,12 @@ class ProductUnitService {
     // Admin: Delete unit
     async deleteUnit(id) {
         try {
+
             const response = await apiClient.delete(API_ENDPOINTS.PRODUCT_UNIT.DELETE(id));
             
             if (response.data && response.data.success) {
                 return response.data.data || response.data;
+
             }
             return response.data;
         } catch (error) {
@@ -157,10 +165,12 @@ class ProductUnitService {
     // Admin: Toggle unit status
     async toggleUnitStatus(id) {
         try {
+
             const response = await apiClient.patch(API_ENDPOINTS.PRODUCT_UNIT.TOGGLE(id));
             
             if (response.data && response.data.success) {
                 return response.data.data || response.data;
+
             }
             return response.data;
         } catch (error) {
@@ -208,10 +218,12 @@ class ProductUnitService {
     // Admin: Reorder units
     async reorderUnits(reorderList) {
         try {
+
             const response = await apiClient.post(API_ENDPOINTS.PRODUCT_UNIT.REORDER, reorderList);
             
             if (response.data && response.data.success) {
                 return response.data.data || response.data;
+
             }
             return response.data;
         } catch (error) {

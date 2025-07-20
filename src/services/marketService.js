@@ -46,7 +46,10 @@ class MarketService {
     // Get all markets with admin privileges
     async getAllMarkets(page = 1, pageSize = 20, params = {}) {
         try {
+
             const queryParams = new URLSearchParams();
+
+           
 
             // Add pagination parameters
             queryParams.append('page', page.toString());
@@ -59,6 +62,7 @@ class MarketService {
             // Use admin endpoint for MarketManagement
             const url = `${API_ENDPOINTS.MARKET.GET_ALL}?${queryParams}`;
             console.log('🔍 MarketService - Calling admin endpoint:', url);
+
 
             const response = await apiClient.get(url);
             console.log('🔍 MarketService - Response:', response.data);
@@ -188,7 +192,9 @@ class MarketService {
             if (response.data && response.data.success && response.data.data) {
                 return response.data.data;
             }
+
             return response.data || [];
+
         } catch (error) {
             console.error('❌ searchMarkets - Error:', error);
             if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
@@ -217,8 +223,10 @@ class MarketService {
             const url = `${API_ENDPOINTS.MARKET.FILTER_ADMIN}?${queryParams}`;
             console.log('🔍 filterMarkets - URL:', url);
             
+
             const response = await apiClient.get(url);
             console.log('🔍 filterMarkets - Response:', response.data);
+
             
             if (response.data && response.data.success && response.data.data) {
                 return response.data.data;
