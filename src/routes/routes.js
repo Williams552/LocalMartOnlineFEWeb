@@ -1,3 +1,4 @@
+import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
@@ -136,6 +137,7 @@ const AppRoutes = () => {
                 <Route path="users/edit/:id" element={<UserManagement />} />
                 <Route path="users/:id" element={<UserManagement />} />
                 <Route path="seller-register" element={<SellerRegisterList />} />
+                <Route path="proxy-register" element={<ProxyRegisterList />} />
                 <Route path="seller-registrations" element={<UserManagement />} />
                 <Route path="proxy-registrations" element={<UserManagement />} />
 

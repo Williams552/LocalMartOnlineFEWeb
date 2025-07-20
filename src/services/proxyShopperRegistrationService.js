@@ -70,21 +70,23 @@ class ProxyShopperRegistrationService {
     }
 
     // Get all registrations (Admin only)
-    async getAllRegistrations() {
+    async getAll() {
         try {
-            const response = await authService.makeAuthenticatedRequest(
-                API_ENDPOINTS.PROXY_SHOPPER_REGISTRATION.GET_ALL
-            );
-
-            if (!response.ok) {
-                throw new Error('Không thể tải danh sách đăng ký');
-            }
-
-            const result = await response.json();
-            return result.data || result;
+            const token = localStorage.getItem('token');
+            const res = await fetch(API_ENDPOINTS.PROXY_SHOPPER_REGISTRATION.GET_ALL, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                }
+            });
+            if (!res.ok) throw new Error('Không thể tải danh sách đăng ký proxy shopper');
+            const result = await res.json();
+            // Trả về đúng data gốc từ response
+            return Array.isArray(result) ? result : (result.data || []);
         } catch (error) {
-            console.error('Error fetching registrations:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            console.error('Error getAll proxy shopper registrations:', error);
+            throw error;
         }
     }
 
