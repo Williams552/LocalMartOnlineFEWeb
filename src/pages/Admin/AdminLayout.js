@@ -50,8 +50,8 @@ const AdminLayout = () => {
             key: 'users', icon: <UserOutlined />, label: 'Quản lý người dùng', children: [
                 { key: '/admin/users', label: 'Danh sách người dùng' },
                 { key: '/admin/users/create', label: 'Thêm người dùng' },
-                { key: '/admin/seller-register', label: 'danh sách đăng ký bán hàng' },
-                { key: '/admin/proxy-register', label: 'danh sách đăng ký người mua hộ' },
+                { key: '/admin/seller-register', label: 'Ds đăng ký bán hàng' },
+                { key: '/admin/proxy-register', label: 'Ds đăng ký người mua hộ' },
             ]
         },
         {
@@ -72,7 +72,7 @@ const AdminLayout = () => {
         {
             key: 'product-units', icon: <TagsOutlined />, label: 'Quản lý đơn vị sản phẩm', children: [
                 { key: '/admin/product-units', label: 'Danh sách đơn vị' },
-                { key: '/admin/product-units/demo', label: 'Demo Selector' },
+        
             ]
         },
         {
@@ -86,8 +86,8 @@ const AdminLayout = () => {
         
         {
             key: 'content', icon: <FileTextOutlined />, label: 'Quản lý nội dung', children: [
-                { key: '/admin/faqs', label: 'FAQ' },
-                { key: '/admin/policies', label: 'Chính sách' },
+                { key: '/admin/faqs', label: 'FAQ và Chính sách' },
+                
                 { key: '/admin/notifications', label: 'Thông báo' },
             ]
         },
@@ -102,8 +102,7 @@ const AdminLayout = () => {
             key: 'analytics', icon: <BarChartOutlined />, label: 'Báo cáo & Thống kê', children: [
                 { key: '/admin/analytics/users', label: 'Thống kê người dùng' },
                 { key: '/admin/analytics/revenue', label: 'Doanh thu' },
-                { key: '/admin/analytics/products', label: 'Sản phẩm' },
-                { key: '/admin/analytics/orders', label: 'Đơn hàng' },
+             
             ]
         },
         
@@ -128,13 +127,15 @@ const AdminLayout = () => {
             'products': 'Quản lý sản phẩm',
             'product-units': 'Quản lý đơn vị sản phẩm',
             'categories': 'Quản lý danh mục',
+            'category-registrations': 'Đăng ký danh mục',
             'markets': 'Quản lý chợ',
             'stores': 'Quản lý cửa hàng',
             'orders': 'Quản lý đơn hàng',
             'content': 'Quản lý nội dung',
             'support': 'Hỗ trợ khách hàng',
             'analytics': 'Báo cáo & Thống kê',
-            'demo': 'Demo Selector'
+            'demo': 'Demo Selector',
+            'test': 'Test API'
         };
         
         pathSegments.slice(1).forEach((segment, index) => {

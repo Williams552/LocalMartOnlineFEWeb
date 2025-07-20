@@ -107,6 +107,14 @@ export const API_ENDPOINTS = {
         FILTER_ADMIN: `${API_URL}/api/category/filterAdmin`,
     },
 
+    // Category Registration Endpoints
+    CATEGORY_REGISTRATION: {
+        GET_ALL: `${API_URL}/api/categoryregistration`, // Admin/MarketStaff - Get all registrations
+        CREATE: `${API_URL}/api/categoryregistration`, // Seller - Register new category
+        APPROVE: (id) => `${API_URL}/api/categoryregistration/${id}/approve`, // Admin/MarketStaff - Approve
+        REJECT: (id) => `${API_URL}/api/categoryregistration/${id}/reject`, // Admin/MarketStaff - Reject
+    },
+
     // Market Endpoints
     MARKET: {
         GET_ALL: `${API_URL}/api/market/admin`, // Admin endpoint for all markets
@@ -275,6 +283,15 @@ export const API_ENDPOINTS = {
 
         // Profile endpoints
         GET_SELLER_PROFILE: (userId) => `${API_URL}/api/sellerregistration/profile/${userId}`,
+    },
+
+    // FAQ Endpoints
+    FAQ: {
+        GET_ALL: `${API_URL}/api/faq`,
+        GET_BY_ID: (id) => `${API_URL}/api/faq/${id}`,
+        CREATE: `${API_URL}/api/faq`,
+        UPDATE: (id) => `${API_URL}/api/faq/${id}`,
+        DELETE: (id) => `${API_URL}/api/faq/${id}`,
     },
 };
 
