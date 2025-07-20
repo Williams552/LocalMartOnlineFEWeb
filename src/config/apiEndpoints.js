@@ -217,7 +217,7 @@ export const API_ENDPOINTS = {
         REGISTER: `${API_URL}/api/proxyshopperregistration`,
         GET_MY: `${API_URL}/api/proxyshopperregistration/my`,
         GET_ALL: `${API_URL}/api/proxyshopperregistration`,
-        APPROVE: `${API_URL}/api/proxyshopperregistration/approve`,
+        APPROVE: `${API_URL}/api/ProxyShopperRegistration/approve`,
     },
 
     // Notification Endpoints

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import dayjs from 'dayjs';
 import { Table, Tag, Button, Space, Modal, Input, DatePicker, message } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import proxyShopperRegistrationService from '../../../services/proxyShopperRegistrationService';
@@ -9,8 +10,7 @@ const ProxyRegisterList = () => {
   const [approveModal, setApproveModal] = useState({ visible: false, id: null });
   const [rejectModal, setRejectModal] = useState({ visible: false, id: null });
   const [rejectReason, setRejectReason] = useState('');
-  const [licenseEffectiveDate, setLicenseEffectiveDate] = useState(null);
-  const [licenseExpiryDate, setLicenseExpiryDate] = useState(null);
+  // Proxy shopper không cần ngày hiệu lực và hết hạn
 
   useEffect(() => {
     fetchData();
@@ -29,35 +29,12 @@ const ProxyRegisterList = () => {
   };
 
   const handleApprove = (id) => {
-    const today = new Date();
-    const threeYearsLater = new Date(today);
-    threeYearsLater.setFullYear(today.getFullYear() + 3);
     setApproveModal({ visible: true, id });
-    setLicenseEffectiveDate(today);
-    setLicenseExpiryDate(threeYearsLater);
   };
 
   const submitApprove = async () => {
-    let effective = licenseEffectiveDate;
-    let expiry = licenseExpiryDate;
-    if (!effective) {
-      effective = new Date();
-    } else if (effective.$d) {
-      effective = effective.$d;
-    }
-    if (!expiry) {
-      expiry = new Date(effective);
-      expiry.setFullYear(expiry.getFullYear() + 3);
-    } else if (expiry.$d) {
-      expiry = expiry.$d;
-    }
     try {
-      await proxyShopperRegistrationService.approve({
-        RegistrationId: approveModal.id,
-        Approve: true,
-        LicenseEffectiveDate: effective,
-        LicenseExpiryDate: expiry
-      });
+      await proxyShopperRegistrationService.approveRegistration(approveModal.id, true);
       message.success('Đã duyệt đăng ký');
       setApproveModal({ visible: false, id: null });
       fetchData();
@@ -71,8 +48,6 @@ const ProxyRegisterList = () => {
   const handleReject = (id) => {
     setRejectModal({ visible: true, id });
     setRejectReason('');
-    setLicenseEffectiveDate(null);
-    setLicenseExpiryDate(null);
   };
 
   const submitReject = async () => {
@@ -80,18 +55,8 @@ const ProxyRegisterList = () => {
       message.warning('Vui lòng nhập lý do từ chối');
       return;
     }
-    if (!licenseEffectiveDate || !licenseExpiryDate) {
-      message.warning('Vui lòng nhập ngày hiệu lực và hết hạn');
-      return;
-    }
     try {
-      await proxyShopperRegistrationService.approve({
-        RegistrationId: rejectModal.id,
-        Approve: false,
-        RejectionReason: rejectReason,
-        LicenseEffectiveDate: licenseEffectiveDate,
-        LicenseExpiryDate: licenseExpiryDate
-      });
+      await proxyShopperRegistrationService.approveRegistration(rejectModal.id, false, rejectReason);
       message.success('Đã từ chối đăng ký');
       setRejectModal({ visible: false, id: null });
       setRejectReason('');
@@ -127,29 +92,16 @@ const ProxyRegisterList = () => {
       <Table rowKey="id" columns={columns} dataSource={data} loading={loading} />
       {/* Modal duyệt */}
       <Modal
-        title="Nhập ngày hiệu lực và hết hạn giấy phép"
+        title="Xác nhận duyệt đăng ký proxy shopper"
         open={approveModal.visible}
         onOk={submitApprove}
         onCancel={() => setApproveModal({ visible: false, id: null })}
       >
-        <div style={{ marginBottom: 8 }}>Ngày hiệu lực:</div>
-        <DatePicker
-          style={{ width: '100%', marginBottom: 16 }}
-          value={licenseEffectiveDate}
-          onChange={setLicenseEffectiveDate}
-          format="DD/MM/YYYY"
-        />
-        <div style={{ marginBottom: 8 }}>Ngày hết hạn:</div>
-        <DatePicker
-          style={{ width: '100%' }}
-          value={licenseExpiryDate}
-          onChange={setLicenseExpiryDate}
-          format="DD/MM/YYYY"
-        />
+        <div>Bạn có chắc chắn muốn duyệt đăng ký này?</div>
       </Modal>
       {/* Modal từ chối */}
       <Modal
-        title="Nhập lý do từ chối và ngày hiệu lực/hết hạn"
+        title="Nhập lý do từ chối"
         open={rejectModal.visible}
         onOk={submitReject}
         onCancel={() => setRejectModal({ visible: false, id: null })}
@@ -160,21 +112,6 @@ const ProxyRegisterList = () => {
           onChange={e => setRejectReason(e.target.value)}
           rows={3}
           placeholder="Nhập lý do từ chối..."
-          style={{ marginBottom: 16 }}
-        />
-        <div style={{ marginBottom: 8 }}>Ngày hiệu lực:</div>
-        <DatePicker
-          style={{ width: '100%', marginBottom: 16 }}
-          value={licenseEffectiveDate}
-          onChange={setLicenseEffectiveDate}
-          format="DD/MM/YYYY"
-        />
-        <div style={{ marginBottom: 8 }}>Ngày hết hạn:</div>
-        <DatePicker
-          style={{ width: '100%' }}
-          value={licenseExpiryDate}
-          onChange={setLicenseExpiryDate}
-          format="DD/MM/YYYY"
         />
       </Modal>
     </div>
