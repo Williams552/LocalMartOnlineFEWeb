@@ -19,9 +19,9 @@ class DashboardService {
             ] = await Promise.allSettled([
                 userService.getAllUsers({ pageNumber: 1, pageSize: 10 }), // Lấy 10 items để có totalCount
                 storeService.getAllStores({ page: 1, pageSize: 10 }),
-                categoryService.getAllCategories({ page: 1, pageSize: 10 }),
+                categoryService.getAllCategories(1, 10), // CategoryService takes (page, pageSize, params)
                 productUnitService.getAllUnits({ page: 1, pageSize: 10 }),
-                marketService.getAllMarkets({ page: 1, pageSize: 10 })
+                marketService.getAllMarkets(1, 10) // MarketService takes (page, pageSize, params)
             ]);
 
             console.log('API Responses:', {
@@ -55,17 +55,28 @@ class DashboardService {
             let totalCategories = 0;
             if (categoriesResponse.status === 'fulfilled') {
                 const categoryData = categoriesResponse.value;
+                // CategoryService trả về { items, totalCount, page, pageSize }
                 totalCategories = categoryData?.totalCount || categoryData?.totalItems || categoryData?.total || 
+                                (categoryData?.items ? categoryData.items.length : 0) ||
                                 (categoryData?.data ? categoryData.data.length : 0) || 0;
                 console.log('Categories data:', categoryData, 'Total:', totalCategories);
+            } else {
+                console.error('Categories fetch failed:', categoriesResponse.reason);
             }
 
             let totalProductUnits = 0;
             if (productUnitsResponse.status === 'fulfilled') {
                 const unitData = productUnitsResponse.value;
-                totalProductUnits = unitData?.totalCount || unitData?.totalItems || unitData?.total || 
-                                  (unitData?.data ? unitData.data.length : 0) || 0;
+                // ProductUnitService có thể trả về array trực tiếp hoặc object với data
+                if (Array.isArray(unitData)) {
+                    totalProductUnits = unitData.length;
+                } else {
+                    totalProductUnits = unitData?.totalCount || unitData?.totalItems || unitData?.total || 
+                                      (unitData?.data ? (Array.isArray(unitData.data) ? unitData.data.length : 0) : 0) || 0;
+                }
                 console.log('Product units data:', unitData, 'Total:', totalProductUnits);
+            } else {
+                console.error('Product units fetch failed:', productUnitsResponse.reason);
             }
 
             let totalMarkets = 0;

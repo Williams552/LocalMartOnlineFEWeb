@@ -1,82 +1,68 @@
 import React, { useState, useEffect } from 'react';
 import {
-    Table,
     Card,
+    Table,
     Button,
     Space,
     Tag,
-    message,
-    Popconfirm,
-    Modal,
-    Form,
-    Input,
-    Descriptions,
-    Image,
+    Typography,
     Row,
     Col,
     Statistic,
-    Badge,
-    Avatar,
-    Drawer,
-    Typography,
-    Upload,
-    Pagination
+    message,
+    Modal,
+    Descriptions,
+    Image,
+    Empty
 } from 'antd';
 import {
-    CheckOutlined,
-    CloseOutlined,
     EyeOutlined,
-    ReloadOutlined,
     PlusOutlined,
-    UploadOutlined,
-    FileImageOutlined
+    ReloadOutlined,
+    FileImageOutlined,
+    CheckCircleOutlined,
+    ClockCircleOutlined,
+    CloseCircleOutlined
 } from '@ant-design/icons';
 import categoryRegistrationService from '../../../services/categoryRegistrationService';
+import { useAuth } from '../../../hooks/useAuth';
 
 const { Title, Text } = Typography;
-const { TextArea } = Input;
 
-const CategoryRegistrationManagement = () => {
+const MyRegistrations = () => {
     const [registrations, setRegistrations] = useState([]);
     const [loading, setLoading] = useState(false);
     const [viewModalVisible, setViewModalVisible] = useState(false);
-    const [rejectModalVisible, setRejectModalVisible] = useState(false);
     const [selectedRegistration, setSelectedRegistration] = useState(null);
-    const [form] = Form.useForm();
+    const { user } = useAuth();
+
     const [statistics, setStatistics] = useState({
         total: 0,
         pending: 0,
         approved: 0,
         rejected: 0
     });
-    const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 10,
-        total: 0
-    });
 
     useEffect(() => {
-        loadRegistrations();
-    }, [pagination.current, pagination.pageSize]);
+        loadMyRegistrations();
+    }, []);
 
-    const loadRegistrations = async () => {
+    const loadMyRegistrations = async () => {
         setLoading(true);
         try {
-            const response = await categoryRegistrationService.getAllRegistrations({
-                page: pagination.current,
-                pageSize: pagination.pageSize
-            });
-
+            // Note: This would require a new API endpoint to get registrations by seller ID
+            // For now, we'll get all and filter client-side (not ideal for production)
+            const response = await categoryRegistrationService.getAllRegistrations();
+            
             if (response.success && Array.isArray(response.data)) {
-                const formattedData = response.data.map(reg => 
+                // Filter registrations by current user
+                const myRegistrations = response.data.filter(reg => reg.sellerId === user?.id);
+                
+                const formattedData = myRegistrations.map(reg => 
                     categoryRegistrationService.formatRegistrationDisplay(reg)
                 );
-                setRegistrations(formattedData);
                 
-                setPagination(prev => ({
-                    ...prev,
-                    total: response.pagination?.total || formattedData.length
-                }));
+                setRegistrations(formattedData);
 
                 // Calculate statistics
                 const stats = {
@@ -94,47 +80,25 @@ const CategoryRegistrationManagement = () => {
         }
     };
 
-    const handleApprove = async (registration) => {
-        try {
-            await categoryRegistrationService.approveRegistration(registration.id);
-            message.success('Đã phê duyệt đăng ký danh mục thành công');
-            loadRegistrations();
-        } catch (error) {
-            message.error('Lỗi khi phê duyệt: ' + error.message);
-        }
-    };
-
-    const handleReject = async (values) => {
-        try {
-            await categoryRegistrationService.rejectRegistration(
-                selectedRegistration.id, 
-                values.rejectionReason
-            );
-            message.success('Đã từ chối đăng ký danh mục');
-            setRejectModalVisible(false);
-            form.resetFields();
-            loadRegistrations();
-        } catch (error) {
-            message.error('Lỗi khi từ chối: ' + error.message);
-        }
-    };
-
     const showViewModal = (registration) => {
         setSelectedRegistration(registration);
         setViewModalVisible(true);
     };
 
-    const showRejectModal = (registration) => {
-        setSelectedRegistration(registration);
-        setRejectModalVisible(true);
-    };
-
-    const handlePaginationChange = (page, pageSize) => {
-        setPagination(prev => ({
-            ...prev,
-            current: page,
-            pageSize: pageSize
-        }));
+    const getStatusIcon = (status) => {
+        switch (status) {
+            case 'Pending':
+            case 0:
+                return <ClockCircleOutlined />;
+            case 'Approved':
+            case 1:
+                return <CheckCircleOutlined />;
+            case 'Rejected':
+            case 2:
+                return <CloseCircleOutlined />;
+            default:
+                return <ClockCircleOutlined />;
+        }
     };
 
     const columns = [
@@ -143,15 +107,15 @@ const CategoryRegistrationManagement = () => {
             dataIndex: 'categoryName',
             key: 'categoryName',
             render: (text, record) => (
-                <Space>
-                    <Avatar shape="square" icon={<FileImageOutlined />} />
+                <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <FileImageOutlined style={{ marginRight: 8, color: '#1890ff' }} />
                     <div>
                         <div style={{ fontWeight: 500 }}>{text}</div>
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                            ID: {record.id}
+                            {record.createdAtDisplay}
                         </Text>
                     </div>
-                </Space>
+                </div>
             )
         },
         {
@@ -173,78 +137,47 @@ const CategoryRegistrationManagement = () => {
             )
         },
         {
-            title: 'Người đăng ký',
-            dataIndex: 'sellerId',
-            key: 'sellerId',
-            render: (sellerId) => (
-                <Text code>{sellerId}</Text>
-            )
-        },
-        {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
             render: (status, record) => (
-                <Tag color={record.statusColor}>
+                <Tag icon={getStatusIcon(status)} color={record.statusColor}>
                     {record.statusDisplay}
                 </Tag>
-            ),
-            filters: [
-                { text: 'Chờ duyệt', value: 'Pending' },
-                { text: 'Đã duyệt', value: 'Approved' },
-                { text: 'Đã từ chối', value: 'Rejected' }
-            ],
-            onFilter: (value, record) => record.status === value
-        },
-        {
-            title: 'Ngày tạo',
-            dataIndex: 'createdAtDisplay',
-            key: 'createdAt',
-            sorter: (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+            )
         },
         {
             title: 'Hành động',
             key: 'actions',
-            width: 200,
             render: (_, record) => (
-                <Space size="small">
-                    <Button
-                        type="text"
-                        icon={<EyeOutlined />}
-                        onClick={() => showViewModal(record)}
-                        title="Xem chi tiết"
-                    />
-                    
-                    {(record.status === 'Pending' || record.status === 0) && (
-                        <>
-                            <Popconfirm
-                                title="Xác nhận phê duyệt"
-                                description="Bạn có chắc muốn phê duyệt đăng ký này?"
-                                onConfirm={() => handleApprove(record)}
-                                okText="Phê duyệt"
-                                cancelText="Hủy"
-                            >
-                                <Button
-                                    type="text"
-                                    icon={<CheckOutlined />}
-                                    style={{ color: '#52c41a' }}
-                                    title="Phê duyệt"
-                                />
-                            </Popconfirm>
-                            
-                            <Button
-                                type="text"
-                                danger
-                                icon={<CloseOutlined />}
-                                onClick={() => showRejectModal(record)}
-                                title="Từ chối"
-                            />
-                        </>
-                    )}
-                </Space>
+                <Button
+                    type="text"
+                    icon={<EyeOutlined />}
+                    onClick={() => showViewModal(record)}
+                    title="Xem chi tiết"
+                />
             )
         }
     ];
+
+    if (registrations.length === 0 && !loading) {
+        return (
+            <div style={{ textAlign: 'center', padding: '48px' }}>
+                <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description={
+                        <span>
+                            Bạn chưa có đăng ký danh mục nào
+                        </span>
+                    }
+                >
+                    <Button type="primary" icon={<PlusOutlined />}>
+                        Đăng ký danh mục mới
+                    </Button>
+                </Empty>
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -255,6 +188,7 @@ const CategoryRegistrationManagement = () => {
                         <Statistic
                             title="Tổng đăng ký"
                             value={statistics.total}
+                            prefix={<FileImageOutlined />}
                             valueStyle={{ color: '#1890ff' }}
                         />
                     </Card>
@@ -264,6 +198,7 @@ const CategoryRegistrationManagement = () => {
                         <Statistic
                             title="Chờ duyệt"
                             value={statistics.pending}
+                            prefix={<ClockCircleOutlined />}
                             valueStyle={{ color: '#faad14' }}
                         />
                     </Card>
@@ -273,6 +208,7 @@ const CategoryRegistrationManagement = () => {
                         <Statistic
                             title="Đã duyệt"
                             value={statistics.approved}
+                            prefix={<CheckCircleOutlined />}
                             valueStyle={{ color: '#52c41a' }}
                         />
                     </Card>
@@ -282,6 +218,7 @@ const CategoryRegistrationManagement = () => {
                         <Statistic
                             title="Đã từ chối"
                             value={statistics.rejected}
+                            prefix={<CloseCircleOutlined />}
                             valueStyle={{ color: '#f5222d' }}
                         />
                     </Card>
@@ -289,15 +226,23 @@ const CategoryRegistrationManagement = () => {
             </Row>
 
             <Card 
-                title="Quản lý đăng ký danh mục"
+                title="Danh sách đăng ký của tôi"
                 extra={
-                    <Button
-                        icon={<ReloadOutlined />}
-                        onClick={loadRegistrations}
-                        loading={loading}
-                    >
-                        Làm mới
-                    </Button>
+                    <Space>
+                        <Button
+                            icon={<ReloadOutlined />}
+                            onClick={loadMyRegistrations}
+                            loading={loading}
+                        >
+                            Làm mới
+                        </Button>
+                        <Button
+                            type="primary"
+                            icon={<PlusOutlined />}
+                        >
+                            Đăng ký mới
+                        </Button>
+                    </Space>
                 }
             >
                 <Table
@@ -305,24 +250,14 @@ const CategoryRegistrationManagement = () => {
                     columns={columns}
                     rowKey="id"
                     loading={loading}
-                    pagination={false}
-                    scroll={{ x: 1200 }}
-                />
-                
-                <div style={{ textAlign: 'right', marginTop: 16 }}>
-                    <Pagination
-                        current={pagination.current}
-                        pageSize={pagination.pageSize}
-                        total={pagination.total}
-                        showQuickJumper
-                        showSizeChanger
-                        showTotal={(total, range) => 
+                    pagination={{
+                        pageSize: 10,
+                        showQuickJumper: true,
+                        showSizeChanger: true,
+                        showTotal: (total, range) => 
                             `${range[0]}-${range[1]} của ${total} đăng ký`
-                        }
-                        onChange={handlePaginationChange}
-                        onShowSizeChange={handlePaginationChange}
-                    />
-                </div>
+                    }}
+                />
             </Card>
 
             {/* View Detail Modal */}
@@ -338,19 +273,16 @@ const CategoryRegistrationManagement = () => {
                         <Row gutter={[16, 16]}>
                             <Col span={24}>
                                 <Descriptions bordered column={2}>
-                                    <Descriptions.Item label="ID">
-                                        {selectedRegistration.id}
+                                    <Descriptions.Item label="Tên danh mục" span={2}>
+                                        <Text strong>{selectedRegistration.categoryName}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Trạng thái">
-                                        <Tag color={selectedRegistration.statusColor}>
+                                        <Tag 
+                                            icon={getStatusIcon(selectedRegistration.status)} 
+                                            color={selectedRegistration.statusColor}
+                                        >
                                             {selectedRegistration.statusDisplay}
                                         </Tag>
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="Tên danh mục">
-                                        {selectedRegistration.categoryName}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="Người đăng ký">
-                                        {selectedRegistration.sellerId}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Ngày tạo">
                                         {selectedRegistration.createdAtDisplay}
@@ -371,7 +303,7 @@ const CategoryRegistrationManagement = () => {
                                     borderRadius: 4,
                                     background: '#fafafa'
                                 }}>
-                                    {selectedRegistration.description || 'Không có mô tả'}
+                                    {selectedRegistration.description}
                                 </div>
                             </Col>
                         </Row>
@@ -388,18 +320,6 @@ const CategoryRegistrationManagement = () => {
                                                 height={100}
                                                 src={url}
                                                 style={{ objectFit: 'cover', borderRadius: 4 }}
-                                                placeholder={
-                                                    <div style={{ 
-                                                        width: 100, 
-                                                        height: 100, 
-                                                        display: 'flex', 
-                                                        alignItems: 'center', 
-                                                        justifyContent: 'center',
-                                                        background: '#f0f0f0' 
-                                                    }}>
-                                                        <FileImageOutlined />
-                                                    </div>
-                                                }
                                             />
                                         ))}
                                     </div>
@@ -410,7 +330,10 @@ const CategoryRegistrationManagement = () => {
                         {selectedRegistration.rejectionReason && (
                             <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
                                 <Col span={24}>
-                                    <Title level={5} style={{ color: '#f5222d' }}>Lý do từ chối</Title>
+                                    <Title level={5} style={{ color: '#f5222d' }}>
+                                        <CloseCircleOutlined style={{ marginRight: 8 }} />
+                                        Lý do từ chối
+                                    </Title>
                                     <div style={{ 
                                         padding: 12, 
                                         border: '1px solid #ffccc7',
@@ -425,44 +348,8 @@ const CategoryRegistrationManagement = () => {
                     </div>
                 )}
             </Modal>
-
-            {/* Reject Modal */}
-            <Modal
-                title="Từ chối đăng ký danh mục"
-                open={rejectModalVisible}
-                onCancel={() => {
-                    setRejectModalVisible(false);
-                    form.resetFields();
-                }}
-                onOk={() => form.submit()}
-                okText="Từ chối"
-                cancelText="Hủy"
-                okButtonProps={{ danger: true }}
-            >
-                <Form
-                    form={form}
-                    layout="vertical"
-                    onFinish={handleReject}
-                >
-                    <Form.Item
-                        name="rejectionReason"
-                        label="Lý do từ chối"
-                        rules={[
-                            { required: true, message: 'Vui lòng nhập lý do từ chối' },
-                            { min: 10, message: 'Lý do phải có ít nhất 10 ký tự' }
-                        ]}
-                    >
-                        <TextArea 
-                            rows={4} 
-                            placeholder="Nhập lý do từ chối đăng ký này..." 
-                            maxLength={500}
-                            showCount
-                        />
-                    </Form.Item>
-                </Form>
-            </Modal>
         </div>
     );
 };
 
-export default CategoryRegistrationManagement;
+export default MyRegistrations;
