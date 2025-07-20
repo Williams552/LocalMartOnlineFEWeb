@@ -29,6 +29,11 @@ const HomePage = () => {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
+    // Scroll to top when component mounts (page loads)
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     // Fetch data from API on component mount
     useEffect(() => {
         const fetchData = async () => {

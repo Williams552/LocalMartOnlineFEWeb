@@ -13,6 +13,7 @@ import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import UserIdFixer from './components/Common/UserIdFixer';
 import SessionTimeoutWarning from './components/Common/SessionTimeoutWarning';
+import ScrollToTop from './components/Common/ScrollToTop';
 
 // Services
 import authService from './services/authService';
@@ -33,6 +34,9 @@ const App = () => {
 
   return (
     <div className="App">
+      {/* Scroll to top on route change */}
+      <ScrollToTop />
+
       {/* User ID Fixer - tự động sửa userId trong localStorage */}
       <UserIdFixer />
 
