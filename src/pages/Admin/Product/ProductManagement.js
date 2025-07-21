@@ -312,29 +312,18 @@ const ProductManagement = () => {
     };
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'Active':
-                return 'green';
-            case 'OutOfStock':
-                return 'orange';
-            case 'Inactive':
-                return 'red';
-            default:
-                return 'default';
-        }
+        // status: 0=Active, 1=OutOfStock, 2=Inactive or string
+        if (status === 0 || status === 'Active') return 'green';
+        if (status === 1 || status === 'OutOfStock') return 'orange';
+        if (status === 2 || status === 'Inactive') return 'red';
+        return 'default';
     };
 
     const getStatusText = (status) => {
-        switch (status) {
-            case 'Active':
-                return 'Hoạt động';
-            case 'OutOfStock':
-                return 'Hết hàng';
-            case 'Inactive':
-                return 'Vô hiệu hóa';
-            default:
-                return 'Không xác định';
-        }
+        if (status === 0 || status === 'Active') return 'Còn hàng';
+        if (status === 1 || status === 'OutOfStock') return 'Hết hàng';
+        if (status === 2 || status === 'Inactive') return 'Đã xóa';
+        return 'Không xác định';
     };
 
     const columns = [
