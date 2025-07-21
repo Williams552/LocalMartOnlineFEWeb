@@ -27,12 +27,10 @@ import {
     EnvironmentOutlined,
     PhoneOutlined,
     StopOutlined,
-    PlayCircleOutlined,
-    UserOutlined
+    PlayCircleOutlined
 } from '@ant-design/icons';
 import storeService from '../../../services/storeService';
 import marketService from '../../../services/marketService';
-import userService from '../../../services/userService';
 import StoreNavigation from './StoreNavigation';
 
 const { Search } = Input;
@@ -41,7 +39,6 @@ const { Option } = Select;
 const StoreManagement = () => {
     const [stores, setStores] = useState([]);
     const [markets, setMarkets] = useState([]);
-    const [sellers, setSellers] = useState({}); // Cache for seller information
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
         current: 1,
@@ -55,12 +52,6 @@ const StoreManagement = () => {
     });
     const [selectedStore, setSelectedStore] = useState(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
-    const [statistics, setStatistics] = useState({
-        totalStores: 0,
-        openStores: 0,
-        closedStores: 0,
-        suspendedStores: 0
-    });
 
     const storeStatuses = [
         { value: 'Open', label: 'Đang mở', color: 'green' },
@@ -71,7 +62,6 @@ const StoreManagement = () => {
     useEffect(() => {
         loadInitialStores();
         loadMarkets();
-        loadStatistics(); // Load statistics separately
     }, []); // Only run once on mount
 
     // Separate useEffect for pagination changes (not including filters to avoid loops)
@@ -83,84 +73,6 @@ const StoreManagement = () => {
         // Only reload if no filters are active and pagination changed
         loadInitialStores();
     }, [pagination.current, pagination.pageSize]);
-
-    // Load seller information for stores
-    const loadSellersInfo = async (storesData) => {
-        try {
-            const uniqueSellerIds = [...new Set(storesData.map(store => store.sellerId))];
-            const sellerPromises = uniqueSellerIds.map(async (sellerId) => {
-                if (sellers[sellerId]) {
-                    return { sellerId, seller: sellers[sellerId] };
-                }
-                try {
-                    const response = await userService.getUserById(sellerId);
-                    return { 
-                        sellerId, 
-                        seller: response.success ? response.data : null 
-                    };
-                } catch (error) {
-                    console.error(`Error loading seller ${sellerId}:`, error);
-                    return { sellerId, seller: null };
-                }
-            });
-
-            const sellerResults = await Promise.all(sellerPromises);
-            const newSellers = { ...sellers };
-            
-            sellerResults.forEach(({ sellerId, seller }) => {
-                if (seller) {
-                    newSellers[sellerId] = seller;
-                }
-            });
-
-            setSellers(newSellers);
-        } catch (error) {
-            console.error('Error loading sellers info:', error);
-        }
-    };
-
-    // Load statistics from all stores
-    const loadStatistics = async () => {
-        try {
-            console.log('📊 StoreManagement - Loading statistics...');
-            
-            // Get all stores without pagination for statistics
-            const allStoresResponse = await storeService.getAllStores({ 
-                page: 1, 
-                pageSize: 1000 // Get a large number to get all
-            });
-            
-            let allStoresData = [];
-            
-            if (allStoresResponse && allStoresResponse.items) {
-                allStoresData = allStoresResponse.items;
-            } else if (allStoresResponse && allStoresResponse.success && allStoresResponse.data) {
-                if (Array.isArray(allStoresResponse.data)) {
-                    allStoresData = allStoresResponse.data;
-                } else if (allStoresResponse.data.items && Array.isArray(allStoresResponse.data.items)) {
-                    allStoresData = allStoresResponse.data.items;
-                }
-            } else if (Array.isArray(allStoresResponse)) {
-                allStoresData = allStoresResponse;
-            }
-            
-            console.log('📊 StoreManagement - All stores for statistics:', allStoresData);
-            
-            // Calculate statistics from all stores
-            const stats = {
-                totalStores: allStoresData.length,
-                openStores: allStoresData.filter(s => s.status === 'Open').length,
-                closedStores: allStoresData.filter(s => s.status === 'Closed').length,
-                suspendedStores: allStoresData.filter(s => s.status === 'Suspended').length
-            };
-            
-            console.log('📊 StoreManagement - Calculated statistics:', stats);
-            setStatistics(stats);
-        } catch (error) {
-            console.error('❌ StoreManagement - Error loading statistics:', error);
-            // Don't show error message for statistics, just log it
-        }
-    };
 
     const loadInitialStores = async () => {
         setLoading(true);
@@ -203,11 +115,6 @@ const StoreManagement = () => {
                 ...prev,
                 total
             }));
-            
-            // Load seller information for the stores
-            if (storesData.length > 0) {
-                await loadSellersInfo(storesData);
-            }
         } catch (error) {
             console.error('❌ StoreManagement - Error loading stores:', error);
             message.error(`Lỗi khi tải danh sách cửa hàng: ${error.message}`);
@@ -266,11 +173,8 @@ const StoreManagement = () => {
                 current: 1,
                 total
             }));
-            
-            // Load seller information for the stores
-            if (storesData.length > 0) {
-                await loadSellersInfo(storesData);
-            }
+
+            // Removed success message for refresh as requested
         } catch (error) {
             console.error('❌ StoreManagement - Error refreshing stores:', error);
             message.error(`Lỗi khi làm mới: ${error.message}`);
@@ -352,11 +256,6 @@ const StoreManagement = () => {
                 total
             }));
             setFilters(prev => ({ ...prev, search: value }));
-            
-            // Load seller information for the stores
-            if (storesData.length > 0) {
-                await loadSellersInfo(storesData);
-            }
 
             // Removed success message for search as requested
         } catch (error) {
@@ -409,11 +308,6 @@ const StoreManagement = () => {
                 total,
                 current: 1
             }));
-            
-            // Load seller information for the stores
-            if (storesData.length > 0) {
-                await loadSellersInfo(storesData);
-            }
         } catch (error) {
             console.error('❌ Error filtering stores:', error);
             message.error('Lỗi khi lọc cửa hàng');
@@ -448,7 +342,6 @@ const StoreManagement = () => {
                     await storeService.suspendStore(storeId, suspendReason);
                     message.success('Tạm ngưng cửa hàng thành công');
                     loadStores();
-                    loadStatistics(); // Reload statistics after suspend
                 } catch (error) {
                     console.error('❌ Error suspending store:', error);
                     message.error(`Lỗi khi tạm ngưng cửa hàng: ${error.message}`);
@@ -470,7 +363,6 @@ const StoreManagement = () => {
                     await storeService.reactivateStore(storeId);
                     message.success('Kích hoạt lại cửa hàng thành công');
                     loadStores();
-                    loadStatistics(); // Reload statistics after reactivate
                 } catch (error) {
                     console.error('❌ Error reactivating store:', error);
                     message.error(`Lỗi khi kích hoạt lại cửa hàng: ${error.message}`);
@@ -541,11 +433,6 @@ const StoreManagement = () => {
                 current: 1,
                 total
             }));
-            
-            // Load seller information for the stores
-            if (storesData.length > 0) {
-                await loadSellersInfo(storesData);
-            }
 
             // Removed success message for nearby search as requested
         } catch (error) {
@@ -579,17 +466,12 @@ const StoreManagement = () => {
         return market?.name || 'Không xác định';
     };
 
-    const getSellerName = (sellerId) => {
-        const seller = sellers[sellerId];
-        return seller ? (seller.fullName || seller.username || 'Không xác định') : 'Đang tải...';
-    };
-
     const columns = [
         {
             title: 'Cửa hàng',
             dataIndex: 'name',
             key: 'name',
-            width: 180,
+            width: 200,
             ellipsis: true,
             render: (text, record) => (
                 <Space>
@@ -618,27 +500,10 @@ const StoreManagement = () => {
             ),
         },
         {
-            title: 'Người bán',
-            dataIndex: 'sellerId',
-            key: 'sellerId',
-            width: 150,
-            ellipsis: true,
-            render: (sellerId) => {
-                const sellerName = getSellerName(sellerId);
-                return (
-                    <Tooltip title={sellerName}>
-                        <div>
-                            <UserOutlined /> {sellerName}
-                        </div>
-                    </Tooltip>
-                );
-            },
-        },
-        {
             title: 'Chợ',
             dataIndex: 'marketId',
             key: 'marketId',
-            width: 130,
+            width: 150,
             render: (marketId) => (
                 <div>
                     <EnvironmentOutlined /> {getMarketName(marketId)}
@@ -649,7 +514,7 @@ const StoreManagement = () => {
             title: 'Địa chỉ',
             dataIndex: 'address',
             key: 'address',
-            width: 180,
+            width: 200,
             ellipsis: true,
             render: (address) => (
                 <Tooltip title={address}>
@@ -773,7 +638,7 @@ const StoreManagement = () => {
                         <Card>
                             <Statistic
                                 title="Tổng số cửa hàng"
-                                value={statistics.totalStores}
+                                value={pagination.total}
                                 prefix={<ShopOutlined />}
                             />
                         </Card>
@@ -782,7 +647,7 @@ const StoreManagement = () => {
                         <Card>
                             <Statistic
                                 title="Đang hoạt động"
-                                value={statistics.openStores}
+                                value={stores.filter(s => s.status === 'Open').length}
                                 valueStyle={{ color: '#3f8600' }}
                             />
                         </Card>
@@ -791,7 +656,7 @@ const StoreManagement = () => {
                         <Card>
                             <Statistic
                                 title="Đã đóng"
-                                value={statistics.closedStores}
+                                value={stores.filter(s => s.status === 'Closed').length}
                                 valueStyle={{ color: '#cf1322' }}
                             />
                         </Card>
@@ -800,7 +665,7 @@ const StoreManagement = () => {
                         <Card>
                             <Statistic
                                 title="Tạm ngưng"
-                                value={statistics.suspendedStores}
+                                value={stores.filter(s => s.status === 'Suspended').length}
                                 valueStyle={{ color: '#fa8c16' }}
                             />
                         </Card>
@@ -847,10 +712,7 @@ const StoreManagement = () => {
                             </Select>
                         </Col>
                         <Col span={4}>
-                            <Button onClick={() => {
-                                loadStores();
-                                loadStatistics(); // Reload statistics when refresh
-                            }}>Làm mới</Button>
+                            <Button onClick={loadStores}>Làm mới</Button>
                         </Col>
                         <Col span={6}>
                             <Button
@@ -914,7 +776,7 @@ const StoreManagement = () => {
                                     {selectedStore.id}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Người bán">
-                                    {getSellerName(selectedStore.sellerId)}
+                                    {selectedStore.sellerId}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Chợ">
                                     {getMarketName(selectedStore.marketId)}

@@ -16,7 +16,12 @@ const MarketNavigation = () => {
     const location = useLocation();
 
     const menuItems = [
-       
+        {
+            key: '/admin/markets/dashboard',
+            icon: <DashboardOutlined />,
+            label: 'Tổng quan',
+            onClick: () => navigate('/admin/markets/dashboard')
+        },
         {
             key: '/admin/markets',
             icon: <ShopOutlined />,

@@ -109,14 +109,6 @@ const UserManagement = () => {
         loadTotalStatistics();
     }, []);
 
-    // Filter users based on status (client-side since API doesn't support status filter)
-    const filteredUsers = users.filter(user => {
-        if (filterStatus === 'all') return true;
-        if (filterStatus === 'active') return user.status === 'Active' || user.isActive === true;
-        if (filterStatus === 'blocked') return user.status === 'Blocked' || user.isActive === false;
-        return true;
-    });
-
     const loadStatistics = async () => {
         try {
             const response = await userService.getUserStatistics();
@@ -128,24 +120,19 @@ const UserManagement = () => {
         }
     };
 
-    const loadUsers = async ({ pageNumber = 1, pageSize = 10, search = '', role = 'all' } = {}) => {
+    const loadUsers = async ({ pageNumber = 1, pageSize = 10 } = {}) => {
         setLoading(true);
         try {
-            console.log('📥 Gọi API với:', { pageNumber, pageSize, search, role });
+            console.log('📥 Gọi API với:', { pageNumber, pageSize });
 
-            const params = { pageNumber, pageSize };
-            if (search) params.search = search;
-            if (role !== 'all') params.role = role;
-
-            const response = await userService.getAllUsers(params);
+            const response = await userService.getAllUsers({ pageNumber, pageSize });
 
             if (response?.success && Array.isArray(response.data)) {
                 setUsers(response.data);
 
                 setPaginationConfig({
                     current: response.pagination.pageNumber,
-                    pageSize: response.pagination.pageSize,
-                    total: response.pagination.total
+                    pageSize: response.pagination.pageSize
                 });
 
                 setStatistics(prev => ({
@@ -158,50 +145,6 @@ const UserManagement = () => {
         } finally {
             setLoading(false);
         }
-    };
-
-    // Handle search functionality
-    const handleSearch = (value) => {
-        setSearchText(value);
-        loadUsers({ 
-            pageNumber: 1, 
-            pageSize: paginationConfig.pageSize, 
-            search: value,
-            role: filterRole
-        });
-    };
-
-    // Handle role filter
-    const handleRoleFilter = (value) => {
-        setFilterRole(value);
-        loadUsers({ 
-            pageNumber: 1, 
-            pageSize: paginationConfig.pageSize, 
-            search: searchText,
-            role: value
-        });
-    };
-
-    // Handle status filter (client-side since API doesn't support status filter)
-    const handleStatusFilter = (value) => {
-        setFilterStatus(value);
-        // Reload users and then filter client-side
-        loadUsers({ 
-            pageNumber: 1, 
-            pageSize: paginationConfig.pageSize, 
-            search: searchText,
-            role: filterRole
-        });
-    };
-
-    // Handle pagination change
-    const handleTableChange = (pagination) => {
-        loadUsers({
-            pageNumber: pagination.current,
-            pageSize: pagination.pageSize,
-            search: searchText,
-            role: filterRole
-        });
     };
 
     const handleDeleteUser = async (id) => {
@@ -449,13 +392,12 @@ const UserManagement = () => {
                             placeholder="Tìm kiếm theo tên, email..."
                             allowClear
                             style={{ width: 250 }}
-                            onSearch={handleSearch}
+                            onSearch={setSearchText}
                             onChange={(e) => setSearchText(e.target.value)}
-                            value={searchText}
                         />
                         <Select
                             value={filterRole}
-                            onChange={handleRoleFilter}
+                            onChange={setFilterRole}
                             style={{ width: 150 }}
                         >
                             <Option value="all">Tất cả vai trò</Option>
@@ -466,7 +408,7 @@ const UserManagement = () => {
                         </Select>
                         <Select
                             value={filterStatus}
-                            onChange={handleStatusFilter}
+                            onChange={setFilterStatus}
                             style={{ width: 150 }}
                         >
                             <Option value="all">Tất cả trạng thái</Option>
@@ -492,14 +434,14 @@ const UserManagement = () => {
                 </Space>
 
                 <Table
-                    dataSource={filteredUsers} // Sử dụng users thay vì filteredUsers để pagination hoạt động đúng
+                    dataSource={users} // Sử dụng users thay vì filteredUsers để pagination hoạt động đúng
                     columns={columns}
                     rowKey="id"
                     loading={loading}
                     pagination={{
                         current: paginationConfig.current,
                         pageSize: paginationConfig.pageSize,
-                        total: paginationConfig.total,
+                        total: statistics.totalUsers,
                         showQuickJumper: true,
                         showSizeChanger: true,
                         showTotal: (total, range) => 
@@ -507,12 +449,7 @@ const UserManagement = () => {
                         onChange: (page, pageSize) => {
                             console.log('📌 Chuyển trang:', page, 'pageSize:', pageSize);
                             setPaginationConfig({ current: page, pageSize });
-                            loadUsers({ 
-                                pageNumber: page, 
-                                pageSize,
-                                search: searchText,
-                                role: filterRole
-                            });
+                            loadUsers({ pageNumber: page, pageSize }); // ⬅️ GỌI ĐÚNG API THEO TRANG
                         }
                     }}
                 />

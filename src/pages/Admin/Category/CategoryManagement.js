@@ -82,12 +82,12 @@ const CategoryManagement = () => {
                     response = await categoryService.filterCategories(filters.alphabet);
                     console.log('🔍 CategoryManagement - Used filter endpoint');
                 } else {
-                    // Get all categories using admin endpoint
+                    // Get all categories
                     response = await categoryService.getAllCategories(pagination.current, pagination.pageSize);
-                    console.log('🔍 CategoryManagement - Used getAllCategories admin endpoint');
+                    console.log('🔍 CategoryManagement - Used getAllCategories endpoint');
                 }
             } catch (searchFilterError) {
-                console.warn('🔄 CategoryManagement - Search/Filter failed, falling back to getAllCategories admin:', searchFilterError.message);
+                console.warn('🔄 CategoryManagement - Search/Filter failed, falling back to getAllCategories:', searchFilterError.message);
                 response = await categoryService.getAllCategories(pagination.current, pagination.pageSize);
                 usedFallback = true;
             }
@@ -138,11 +138,14 @@ const CategoryManagement = () => {
 
             // Show appropriate messages
             if ((filters.search || filters.alphabet) && categoriesData.length === 0 && !usedFallback) {
-                // No message for empty search results
+                message.info('Không tìm thấy danh mục nào phù hợp với điều kiện tìm kiếm');
             } else if (usedFallback && (filters.search || filters.alphabet)) {
                 message.warning('API search/filter không khả dụng. Đang hiển thị tất cả danh mục.');
+            } else if (filters.search && !usedFallback) {
+                message.success(`Tìm thấy ${categoriesData.length} danh mục khớp với "${filters.search}"`);
+            } else if (filters.alphabet && !usedFallback) {
+                message.success(`Tìm thấy ${categoriesData.length} danh mục bắt đầu bằng "${filters.alphabet}"`);
             }
-            // Removed success messages for search results
         } catch (error) {
             console.error('❌ CategoryManagement - Error loading categories:', error);
             message.error(`Lỗi khi tải danh sách danh mục: ${error.message}`);
@@ -166,19 +169,9 @@ const CategoryManagement = () => {
     const handleSearch = (value) => {
         setSearchLoading(true);
         const trimmedValue = value ? value.trim() : '';
-        
-        // Reset pagination to first page when searching
-        setPagination(prev => ({ ...prev, current: 1 }));
-        
-        // Update filters
         setFilters(prev => ({ ...prev, search: trimmedValue }));
-        
+        setPagination(prev => ({ ...prev, current: 1 }));
         console.log('🔍 CategoryManagement - Search triggered with value:', trimmedValue);
-        
-        // If search is empty, reload all categories
-        if (!trimmedValue) {
-            setFilters(prev => ({ ...prev, search: '', alphabet: '' }));
-        }
     };
 
     const handleFilterChange = (key, value) => {
@@ -427,10 +420,6 @@ const CategoryManagement = () => {
                             onChange={(e) => {
                                 const value = e.target.value;
                                 setFilters(prev => ({ ...prev, search: value }));
-                                // Clear search loading when user types
-                                if (searchLoading) {
-                                    setSearchLoading(false);
-                                }
                             }}
                             onSearch={handleSearch}
                             style={{ width: '100%' }}

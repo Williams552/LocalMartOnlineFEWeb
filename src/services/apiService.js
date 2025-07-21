@@ -58,11 +58,10 @@ class ApiService {
     }
 
     // Generic CRUD operations
-    async get(endpoint, config = {}) {
+    async get(endpoint) {
         try {
             console.log('Making GET request to:', `${API_BASE_URL}${endpoint}`);
-            console.log('With config:', config);
-            const response = await apiClient.get(endpoint, config);
+            const response = await apiClient.get(endpoint);
             console.log('GET response:', response.data);
             return response.data;
         } catch (error) {

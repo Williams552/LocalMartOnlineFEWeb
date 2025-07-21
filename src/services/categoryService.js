@@ -44,48 +44,42 @@ const createApiClient = () => {
 const apiClient = createApiClient();
 
 class CategoryService {
-    // Get all categories for admin
-    async getAllCategories(page = 1, pageSize = 20, params = {}) {
+    // Get all categories
+    async getAllCategories(params = {}) {
         try {
             const queryParams = new URLSearchParams();
 
-            // Add pagination parameters
-            queryParams.append('page', page.toString());
-            queryParams.append('pageSize', pageSize.toString());
-            
-            // Add other parameters if provided
+            // Add pagination parameters if provided
+            if (params.page) queryParams.append('page', params.page);
+            if (params.pageSize) queryParams.append('pageSize', params.pageSize);
             if (params.search) queryParams.append('search', params.search);
             if (params.isActive !== undefined) queryParams.append('isActive', params.isActive);
 
-            // Use admin endpoint for CategoryManagement
-            const url = `${API_ENDPOINTS.CATEGORY.GET_ALL_ADMIN}?${queryParams}`;
-            console.log('🔍 CategoryService - Calling admin endpoint:', url);
+            const url = queryParams.toString()
+                ? `${API_ENDPOINTS.CATEGORY.GET_ALL}?${queryParams}`
+                : API_ENDPOINTS.CATEGORY.GET_ALL;
 
             const response = await apiClient.get(url);
-            console.log('🔍 CategoryService - Response:', response.data);
 
             // Return the items from the API response
             if (response.data && response.data.success && response.data.data) {
                 return {
                     items: response.data.data.items || [],
                     totalCount: response.data.data.totalCount || 0,
-                    page: response.data.data.page || page,
-                    pageSize: response.data.data.pageSize || pageSize
+                    page: response.data.data.page || 1,
+                    pageSize: response.data.data.pageSize || 20
                 };
             }
 
             return {
                 items: [],
                 totalCount: 0,
-                page: page,
-                pageSize: pageSize
+                page: 1,
+                pageSize: 20
             };
         } catch (error) {
-            console.error('❌ Error fetching categories:', error);
-            if (error.message.includes('fetch')) {
-                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
-            }
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            console.error('Error fetching categories:', error);
+            throw error;
         }
     }
 
@@ -145,126 +139,6 @@ class CategoryService {
         } catch (error) {
             console.error('Error getting formatted categories:', error);
             throw error;
-        }
-    }
-
-    // Search categories for admin
-    async searchCategories(searchTerm) {
-        try {
-            console.log('🔍 CategoryService - Searching categories with term:', searchTerm);
-            const response = await apiClient.get(`${API_ENDPOINTS.CATEGORY.SEARCH_ADMIN}?name=${encodeURIComponent(searchTerm)}`);
-            console.log('🔍 CategoryService - Search response:', response.data);
-
-            if (response.data && response.data.success) {
-                // Return array format for consistency with getAllCategories
-                return response.data.data || [];
-            }
-
-            return [];
-        } catch (error) {
-            console.error('❌ Error searching categories:', error);
-            if (error.message.includes('fetch')) {
-                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
-            }
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi khi tìm kiếm danh mục');
-        }
-    }
-
-    // Filter categories for admin  
-    async filterCategories(alphabet) {
-        try {
-            console.log('🔍 CategoryService - Filtering categories by alphabet:', alphabet);
-            const response = await apiClient.get(`${API_ENDPOINTS.CATEGORY.FILTER_ADMIN}?letter=${alphabet}`);
-            console.log('🔍 CategoryService - Filter response:', response.data);
-
-            if (response.data && response.data.success) {
-                // Return array format for consistency with getAllCategories
-                return response.data.data || [];
-            }
-
-            return [];
-        } catch (error) {
-            console.error('❌ Error filtering categories:', error);
-            if (error.message.includes('fetch')) {
-                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
-            }
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi khi lọc danh mục');
-        }
-    }
-
-    // Create category (Admin only)
-    async createCategory(categoryData) {
-        try {
-            console.log('🔄 CategoryService - Creating category:', categoryData);
-            const response = await apiClient.post(API_ENDPOINTS.CATEGORY.CREATE, categoryData);
-            console.log('✅ CategoryService - Create response:', response.data);
-
-            if (response.data && response.data.success) {
-                return response.data.data;
-            }
-
-            throw new Error(response.data?.message || 'Tạo danh mục thất bại');
-        } catch (error) {
-            console.error('❌ Error creating category:', error);
-            if (error.message.includes('fetch')) {
-                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
-            }
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi khi tạo danh mục');
-        }
-    }
-
-    // Update category (Admin only)
-    async updateCategory(id, categoryData) {
-        try {
-            console.log('🔄 CategoryService - Updating category:', id, categoryData);
-            const response = await apiClient.put(API_ENDPOINTS.CATEGORY.UPDATE(id), categoryData);
-            console.log('✅ CategoryService - Update response:', response.data);
-
-            if (response.data && response.data.success) {
-                return response.data.data;
-            }
-
-            throw new Error(response.data?.message || 'Cập nhật danh mục thất bại');
-        } catch (error) {
-            console.error('❌ Error updating category:', error);
-            if (error.message.includes('fetch')) {
-                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
-            }
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi khi cập nhật danh mục');
-        }
-    }
-
-    // Delete category (Admin only)
-    async deleteCategory(id) {
-        try {
-            console.log('🔄 CategoryService - Deleting category:', id);
-            const response = await apiClient.delete(API_ENDPOINTS.CATEGORY.DELETE(id));
-            console.log('✅ CategoryService - Delete response:', response.data);
-
-            return response.data;
-        } catch (error) {
-            console.error('❌ Error deleting category:', error);
-            if (error.message.includes('fetch')) {
-                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
-            }
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi khi xóa danh mục');
-        }
-    }
-
-    // Toggle category status (Admin only)
-    async toggleCategoryStatus(id) {
-        try {
-            console.log('🔄 CategoryService - Toggling category status:', id);
-            const response = await apiClient.patch(API_ENDPOINTS.CATEGORY.TOGGLE(id));
-            console.log('✅ CategoryService - Toggle response:', response.data);
-
-            return response.data;
-        } catch (error) {
-            console.error('❌ Error toggling category status:', error);
-            if (error.message.includes('fetch')) {
-                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
-            }
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi khi thay đổi trạng thái danh mục');
         }
     }
 }

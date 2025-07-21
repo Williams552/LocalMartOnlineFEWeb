@@ -1,181 +1,204 @@
-import axios from 'axios';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
-
-// Create axios instance
-const createApiClient = () => {
-    const client = axios.create({
-        timeout: 10000,
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
-
-    // Add request interceptor for auth token
-    client.interceptors.request.use(
-        (config) => {
-            const token = localStorage.getItem('token');
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-            return config;
-        },
-        (error) => {
-            return Promise.reject(error);
-        }
-    );
-
-    // Add response interceptor for error handling
-    client.interceptors.response.use(
-        (response) => response,
-        (error) => {
-            if (error.response?.status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                // Don't auto redirect for public API calls
-            }
-            return Promise.reject(error);
-        }
-    );
-
-    return client;
-};
-
-const apiClient = createApiClient();
-
-// Create public API client (no auth required)
-const publicApiClient = axios.create({
-    timeout: 10000,
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+import authService from './authService';
 
 class ProductUnitService {
     // Get all active units for public use
     async getActiveUnits() {
         try {
-            const response = await apiClient.get(API_ENDPOINTS.PRODUCT_UNIT.GET_ACTIVE);
-            
-            if (response.data && response.data.success && response.data.data) {
-                return response.data.data;
+            const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.GET_ACTIVE);
+
+            if (!response.ok) {
+                throw new Error('Không thể tải danh sách đơn vị');
             }
-            return response.data || [];
+
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
             console.error('Error fetching active units:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
     // Admin: Get all units with pagination
     async getAllUnits(params = {}) {
         try {
+            const token = authService.getToken();
+            if (!token) {
+                throw new Error('Chưa đăng nhập');
+            }
+
             const queryParams = new URLSearchParams({
                 page: params.page || 1,
                 pageSize: params.pageSize || 20,
                 ...params
             });
 
-            const url = `${API_ENDPOINTS.PRODUCT_UNIT.GET_ALL_ADMIN}?${queryParams}`;
-            console.log('🔍 ProductUnitService - Calling admin endpoint:', url);
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
 
+            const response = await fetch(`${API_ENDPOINTS.PRODUCT_UNIT.GET_ALL_ADMIN}?${queryParams}`, {
+                headers,
+                
+            });
 
-            const response = await apiClient.get(url);
-            console.log('🔍 ProductUnitService - Response:', response.data);
-
-
-            if (response.data && response.data.success && response.data.data) {
-                return response.data.data;
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: Không thể tải danh sách đơn vị`);
             }
-            return response.data || [];
+
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
-            console.error('❌ Error fetching all units:', error);
-            if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
-                throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
-            }
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            console.error('Error fetching all units:', error);
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
     // Get unit by ID
     async getUnitById(id) {
         try {
-            const response = await apiClient.get(API_ENDPOINTS.PRODUCT_UNIT.GET_BY_ID(id));
-            
-            if (response.data && response.data.success && response.data.data) {
-                return response.data.data;
+            const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.GET_BY_ID(id));
+
+            if (!response.ok) {
+                throw new Error('Không tìm thấy thông tin đơn vị');
             }
-            return response.data || null;
+
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
             console.error('Error fetching unit:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
     // Admin: Create new unit
     async createUnit(unitData) {
         try {
-
-            const response = await apiClient.post(API_ENDPOINTS.PRODUCT_UNIT.CREATE, unitData);
-            
-            if (response.data && response.data.success) {
-                return response.data.data || response.data;
-
+            const token = authService.getToken();
+            if (!token) {
+                throw new Error('Chưa đăng nhập');
             }
-            return response.data;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+
+            const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.CREATE, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(unitData),
+                
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Không thể tạo đơn vị mới');
+            }
+
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
             console.error('Error creating unit:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
     // Admin: Update unit
     async updateUnit(id, unitData) {
         try {
-
-            const response = await apiClient.put(API_ENDPOINTS.PRODUCT_UNIT.UPDATE(id), unitData);
-            
-            if (response.data && response.data.success) {
-                return response.data.data || response.data;
-
+            const token = authService.getToken();
+            if (!token) {
+                throw new Error('Chưa đăng nhập');
             }
-            return response.data;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+
+            const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.UPDATE(id), {
+                method: 'PUT',
+                headers,
+                body: JSON.stringify(unitData),
+                
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Không thể cập nhật đơn vị');
+            }
+
+            const result = await response.json();
+            return result;
         } catch (error) {
             console.error('Error updating unit:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
     // Admin: Delete unit
     async deleteUnit(id) {
         try {
-
-            const response = await apiClient.delete(API_ENDPOINTS.PRODUCT_UNIT.DELETE(id));
-            
-            if (response.data && response.data.success) {
-                return response.data.data || response.data;
-
+            const token = authService.getToken();
+            if (!token) {
+                throw new Error('Chưa đăng nhập');
             }
-            return response.data;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+
+            const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.DELETE(id), {
+                method: 'DELETE',
+                headers,
+                
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Không thể xóa đơn vị');
+            }
+
+            const result = await response.json();
+            return result;
         } catch (error) {
             console.error('Error deleting unit:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
     // Admin: Toggle unit status
     async toggleUnitStatus(id) {
         try {
-
-            const response = await apiClient.patch(API_ENDPOINTS.PRODUCT_UNIT.TOGGLE(id));
-            
-            if (response.data && response.data.success) {
-                return response.data.data || response.data;
-
+            const token = authService.getToken();
+            if (!token) {
+                throw new Error('Chưa đăng nhập');
             }
-            return response.data;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+
+            const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.TOGGLE(id), {
+                method: 'PATCH',
+                headers,
+                
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Không thể thay đổi trạng thái đơn vị');
+            }
+
+            const result = await response.json();
+            return result;
         } catch (error) {
             console.error('Error toggling unit status:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
@@ -183,52 +206,83 @@ class ProductUnitService {
     async searchUnits(name, isAdmin = false) {
         try {
             const endpoint = isAdmin ? API_ENDPOINTS.PRODUCT_UNIT.SEARCH_ADMIN : API_ENDPOINTS.PRODUCT_UNIT.SEARCH;
-            const params = { name };
+            const queryParams = new URLSearchParams({ name });
 
-            const response = isAdmin 
-                ? await apiClient.get(endpoint, { params })
-                : await publicApiClient.get(endpoint, { params });
+            const headers = { 'Content-Type': 'application/json' };
             
-            if (response.data && response.data.success && response.data.data) {
-                return response.data.data;
+            if (isAdmin) {
+                const token = authService.getToken();
+                if (!token) {
+                    throw new Error('Chưa đăng nhập');
+                }
+                headers['Authorization'] = `Bearer ${token}`;
             }
-            return response.data || [];
+
+            const response = await fetch(`${endpoint}?${queryParams}`, {
+                headers,
+                credentials: isAdmin ? 'include' : 'omit'
+            });
+
+            if (!response.ok) {
+                throw new Error('Không thể tìm kiếm đơn vị');
+            }
+
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
             console.error('Error searching units:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
     // Get units by type
     async getUnitsByType(unitType, activeOnly = true) {
         try {
-            const params = { activeOnly };
-            const response = await publicApiClient.get(API_ENDPOINTS.PRODUCT_UNIT.GET_BY_TYPE(unitType), { params });
+            const queryParams = new URLSearchParams({ activeOnly });
+            const response = await fetch(`${API_ENDPOINTS.PRODUCT_UNIT.GET_BY_TYPE(unitType)}?${queryParams}`);
 
-            if (response.data && response.data.success && response.data.data) {
-                return response.data.data;
+            if (!response.ok) {
+                throw new Error('Không thể tải danh sách đơn vị theo loại');
             }
-            return response.data || [];
+
+            const result = await response.json();
+            return result.data || result;
         } catch (error) {
             console.error('Error fetching units by type:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
     // Admin: Reorder units
     async reorderUnits(reorderList) {
         try {
-
-            const response = await apiClient.post(API_ENDPOINTS.PRODUCT_UNIT.REORDER, reorderList);
-            
-            if (response.data && response.data.success) {
-                return response.data.data || response.data;
-
+            const token = authService.getToken();
+            if (!token) {
+                throw new Error('Chưa đăng nhập');
             }
-            return response.data;
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+
+            const response = await fetch(API_ENDPOINTS.PRODUCT_UNIT.REORDER, {
+                method: 'POST',
+                headers,
+                body: JSON.stringify(reorderList),
+                
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Không thể sắp xếp lại đơn vị');
+            }
+
+            const result = await response.json();
+            return result;
         } catch (error) {
             console.error('Error reordering units:', error);
-            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
+            throw new Error(error.message || 'Lỗi kết nối server');
         }
     }
 
