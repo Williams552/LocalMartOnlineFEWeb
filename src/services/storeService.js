@@ -43,6 +43,32 @@ const createApiClient = () => {
 const apiClient = createApiClient();
 
 class StoreService {
+    // Lấy thông tin gian hàng của user hiện tại
+    async getMyStore() {
+        try {
+            const url = API_ENDPOINTS.STORE.MY_STORE;
+            const response = await apiClient.get(url);
+            if (response.data && response.data.success && response.data.data) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                    message: response.data.message || ''
+                };
+            }
+            return {
+                success: false,
+                message: response.data?.message || 'Không tìm thấy thông tin gian hàng',
+                data: null
+            };
+        } catch (error) {
+            console.error('Error fetching my store:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Có lỗi xảy ra khi lấy thông tin gian hàng',
+                data: null
+            };
+        }
+    }
     // Get all stores (Admin only - shows all stores including inactive)
     async getAllStores(params = {}) {
         try {

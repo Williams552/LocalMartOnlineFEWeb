@@ -34,6 +34,7 @@ import StoreManagement from "../pages/Admin/Store/StoreManagement";
 import StoreDashboard from "../pages/Admin/Store/StoreDashboard";
 import StoreAnalytics from "../pages/Admin/Store/StoreAnalytics";
 import ProductUnitManagement from "../pages/Admin/ProductUnit/ProductUnitManagement";
+import { ProductManagement, PendingProducts, FastBargainProducts } from "../pages/Admin/Product";
 import OrderManagement from "../pages/Admin/OrderManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
 import { FAQManagement } from "../pages/Admin/FAQ";
@@ -145,7 +146,7 @@ const AppRoutes = () => {
 
                 {/* Category Management */}
                 <Route path="categories" element={<CategoryManagement />} />
-                
+
 
                 {/* Market Management */}
                 <Route path="markets" element={<MarketManagement />} />
@@ -163,8 +164,13 @@ const AppRoutes = () => {
                 <Route path="stores/sellers" element={<StoreManagement />} />
                 <Route path="stores/reviews" element={<StoreManagement />} />
 
-            
-                
+                {/* Product Management */}
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="products/pending" element={<PendingProducts />} />
+                <Route path="products/fast-bargain" element={<FastBargainProducts />} />
+
+
+
                 <Route path="categories" element={<ContentManagement />} />
                 <Route path="category-registrations" element={<ContentManagement />} />
                 <Route path="product-units" element={<ProductUnitManagement />} />

@@ -165,13 +165,6 @@ const SellerDashboard = () => {
                                 <FaSyncAlt className={refreshing ? 'animate-spin' : ''} />
                                 Làm mới
                             </button>
-                            <Link
-                                to="/seller/products/add"
-                                className="flex items-center gap-2 bg-supply-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
-                            >
-                                <FaPlus />
-                                Thêm sản phẩm
-                            </Link>
                         </div>
                     </div>
                 </div>
