@@ -122,35 +122,6 @@ class FollowStoreService {
         }
     }
 
-    // Check if user is following a store
-    async checkFollowing(storeId) {
-        try {
-            const userId = this.getCurrentUserId();
-            if (!userId) {
-                return { success: true, isFollowing: false };
-            }
-
-            const response = await apiClient.get(
-                API_ENDPOINTS.STORE.CHECK_FOLLOWING(storeId),
-                {
-                    params: { userId }
-                }
-            );
-
-            return {
-                success: true,
-                isFollowing: response.data?.isFollowing || false,
-                data: response.data
-            };
-        } catch (error) {
-            console.error('Error checking follow status:', error);
-            return {
-                success: false,
-                isFollowing: false,
-                message: 'Không thể kiểm tra trạng thái theo dõi'
-            };
-        }
-    }
 
     // Get list of stores user is following
     async getFollowingStores(page = 1, pageSize = 20) {

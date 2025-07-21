@@ -253,7 +253,10 @@ const TopProducts = ({ limit = 5 }) => {
                                             alt={product.name}
                                             className="w-16 h-16 rounded-lg object-cover border border-gray-200"
                                             onError={(e) => {
-                                                e.target.src = 'https://via.placeholder.com/80x80?text=No+Image';
+                                                if (!e.target.dataset.fallback) {
+                                                    e.target.src = '/assets/image/no-image.png';
+                                                    e.target.dataset.fallback = 'true';
+                                                }
                                             }}
                                         />
                                     </div>

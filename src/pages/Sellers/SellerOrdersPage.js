@@ -61,11 +61,15 @@ const SellerOrdersPage = () => {
             const result = await orderService.getSellerOrders(currentUser.id, params);
 
             if (result.success) {
-                setOrders(result.data);
-                console.log('✅ Orders loaded:', result.data.length, 'orders');
+                // result.data.items is the array of orders per new API
+                const ordersData = Array.isArray(result.data?.items) ? result.data.items : [];
+                console.log('✅ Orders loaded:', ordersData.length, 'orders');
+                console.log('📋 Sample order structure:', ordersData[0]);
+                setOrders(ordersData);
             } else {
-                setOrders(result.data || []);
-                if (result.message.includes('mẫu')) {
+                const ordersData = Array.isArray(result.data?.items) ? result.data.items : [];
+                setOrders(ordersData);
+                if (result.message && result.message.includes('mẫu')) {
                     toast.info(result.message);
                 } else {
                     setError(result.message);
@@ -134,10 +138,11 @@ const SellerOrdersPage = () => {
             'preparing': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Đang chuẩn bị' },
             'shipping': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Đang giao hàng' },
             'delivered': { bg: 'bg-green-100', text: 'text-green-800', label: 'Đã giao hàng' },
-            'cancelled': { bg: 'bg-red-100', text: 'text-red-800', label: 'Đã hủy' }
+            'cancelled': { bg: 'bg-red-100', text: 'text-red-800', label: 'Đã hủy' },
+            'unknown': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Không xác định' }
         };
 
-        const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status };
+        const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status || 'Không xác định' };
 
         return (
             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}>
@@ -218,9 +223,9 @@ const SellerOrdersPage = () => {
     };
 
     const filteredOrders = orders.filter(order => {
-        const matchesSearch = order.id.toLowerCase().includes(filters.search.toLowerCase()) ||
-            order.customerName.toLowerCase().includes(filters.search.toLowerCase()) ||
-            order.customerPhone.includes(filters.search);
+        const matchesSearch = (order.id || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+            (order.customerName || '').toLowerCase().includes(filters.search.toLowerCase()) ||
+            (order.customerPhone || '').includes(filters.search);
         const matchesStatus = filters.status === 'all' || order.status === filters.status;
         return matchesSearch && matchesStatus;
     });
@@ -352,48 +357,55 @@ const SellerOrdersPage = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {filteredOrders.map((order) => (
-                                        <tr key={order.id} className="hover:bg-gray-50">
+                                    {filteredOrders.map((order, index) => (
+                                        <tr key={order.id || index} className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                <span className="font-medium text-blue-600">{order.id}</span>
+                                                <span className="font-medium text-blue-600">{order.id || 'N/A'}</span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div>
-                                                    <div className="font-medium text-gray-900">{order.customerName}</div>
-                                                    <div className="text-sm text-gray-500">{order.customerPhone}</div>
+                                                    <div className="font-medium text-gray-900">{order.customerName || 'Khách hàng'}</div>
+                                                    <div className="text-sm text-gray-500">{order.customerPhone || 'Chưa có SĐT'}</div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="max-w-xs">
-                                                    {order.items.length === 1 ? (
-                                                        <span className="text-sm text-gray-900">{order.items[0].productName}</span>
+                                                    {order.items && order.items.length > 0 ? (
+                                                        order.items.length === 1 ? (
+                                                            <span className="text-sm text-gray-900">{order.items[0]?.productName || 'Sản phẩm không xác định'}</span>
+                                                        ) : (
+                                                            <div>
+                                                                <span className="text-sm text-gray-900">{order.items[0]?.productName || 'Sản phẩm không xác định'}</span>
+                                                                <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+                                                                    +{order.items.length - 1} khác
+                                                                </span>
+                                                            </div>
+                                                        )
                                                     ) : (
-                                                        <div>
-                                                            <span className="text-sm text-gray-900">{order.items[0].productName}</span>
-                                                            <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                                +{order.items.length - 1} khác
-                                                            </span>
-                                                        </div>
+                                                        <span className="text-sm text-gray-500">Không có sản phẩm</span>
                                                     )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {order.items.reduce((total, item) => total + item.quantity, 0)} SP
+                                                {order.items && order.items.length > 0
+                                                    ? order.items.reduce((total, item) => total + (item.quantity || 0), 0) + ' SP'
+                                                    : '0 SP'
+                                                }
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="font-medium text-green-600">
-                                                    {orderService.formatCurrency(order.totalAmount)}
+                                                    {orderService.formatCurrency(order.totalAmount || 0)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                {getStatusBadge(order.status)}
+                                                {getStatusBadge(order.status || 'unknown')}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span
                                                     className="text-sm text-gray-500"
-                                                    title={orderService.formatDate(order.orderDate)}
+                                                    title={orderService.formatDate(order.orderDate || order.createdAt)}
                                                 >
-                                                    {orderService.getTimeAgo(order.orderDate)}
+                                                    {orderService.getTimeAgo(order.orderDate || order.createdAt)}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
@@ -433,14 +445,14 @@ const SellerOrdersPage = () => {
                                             Thông tin khách hàng
                                         </h4>
                                         <div className="space-y-2">
-                                            <p><strong>Tên:</strong> {selectedOrder.customerName}</p>
+                                            <p><strong>Tên:</strong> {selectedOrder.customerName || 'Chưa có tên'}</p>
                                             <p className="flex items-center">
                                                 <FaPhone className="mr-2 text-gray-400" />
-                                                {selectedOrder.customerPhone}
+                                                {selectedOrder.customerPhone || 'Chưa có số điện thoại'}
                                             </p>
                                             <p className="flex items-start">
                                                 <FaMapMarkerAlt className="mr-2 mt-1 text-gray-400 flex-shrink-0" />
-                                                <span>{selectedOrder.customerAddress}</span>
+                                                <span>{selectedOrder.customerAddress || 'Chưa có địa chỉ'}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -453,7 +465,7 @@ const SellerOrdersPage = () => {
                                         </h4>
                                         <div className="space-y-2">
                                             <p><strong>Ngày đặt:</strong> {orderService.formatDate(selectedOrder.orderDate)}</p>
-                                            <p><strong>Trạng thái:</strong> {getStatusBadge(selectedOrder.status)}</p>
+                                            <p><strong>Trạng thái:</strong> {getStatusBadge(selectedOrder.status || 'unknown')}</p>
                                             <p><strong>Thanh toán:</strong> {orderService.getPaymentMethodText(selectedOrder.paymentMethod)}</p>
                                             <p><strong>Ghi chú:</strong> {selectedOrder.notes || 'Không có'}</p>
                                         </div>
@@ -478,28 +490,44 @@ const SellerOrdersPage = () => {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-200">
-                                                {selectedOrder.items.map((item, index) => (
-                                                    <tr key={index}>
-                                                        <td className="px-4 py-3">
-                                                            <div className="flex items-center">
-                                                                {item.productImage && (
-                                                                    <img
-                                                                        src={item.productImage}
-                                                                        alt={item.productName}
-                                                                        className="w-10 h-10 rounded object-cover mr-3"
-                                                                        onError={(e) => {
-                                                                            e.target.style.display = 'none';
-                                                                        }}
-                                                                    />
-                                                                )}
-                                                                <span className="text-sm font-medium text-gray-900">{item.productName}</span>
-                                                            </div>
+                                                {selectedOrder.items && selectedOrder.items.length > 0 ? (
+                                                    selectedOrder.items.map((item, index) => (
+                                                        <tr key={index}>
+                                                            <td className="px-4 py-3">
+                                                                <div className="flex items-center">
+                                                                    {item.productImage && (
+                                                                        <img
+                                                                            src={item.productImage}
+                                                                            alt={item.productName || 'Sản phẩm'}
+                                                                            className="w-10 h-10 rounded object-cover mr-3"
+                                                                            onError={(e) => {
+                                                                                e.target.style.display = 'none';
+                                                                            }}
+                                                                        />
+                                                                    )}
+                                                                    <span className="text-sm font-medium text-gray-900">
+                                                                        {item.productName || 'Sản phẩm không xác định'}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-gray-900">
+                                                                {item.quantity || 0} {item.unit || 'cái'}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-gray-900">
+                                                                {orderService.formatCurrency(item.unitPrice || 0)}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm font-medium text-gray-900">
+                                                                {orderService.formatCurrency(item.totalPrice || 0)}
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="4" className="px-4 py-6 text-center text-gray-500">
+                                                            Không có sản phẩm trong đơn hàng này
                                                         </td>
-                                                        <td className="px-4 py-3 text-sm text-gray-900">{item.quantity} {item.unit}</td>
-                                                        <td className="px-4 py-3 text-sm text-gray-900">{orderService.formatCurrency(item.unitPrice)}</td>
-                                                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{orderService.formatCurrency(item.totalPrice)}</td>
                                                     </tr>
-                                                ))}
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>
@@ -508,15 +536,15 @@ const SellerOrdersPage = () => {
                                     <div className="border-t border-gray-200 pt-4 mt-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <p><strong>Tạm tính:</strong> {orderService.formatCurrency(selectedOrder.subtotal)}</p>
-                                                <p><strong>Phí vận chuyển:</strong> {orderService.formatCurrency(selectedOrder.shippingFee)}</p>
-                                                {selectedOrder.discount > 0 && (
+                                                <p><strong>Tạm tính:</strong> {orderService.formatCurrency(selectedOrder.subtotal || 0)}</p>
+                                                <p><strong>Phí vận chuyển:</strong> {orderService.formatCurrency(selectedOrder.shippingFee || 0)}</p>
+                                                {(selectedOrder.discount || 0) > 0 && (
                                                     <p><strong>Giảm giá:</strong> -{orderService.formatCurrency(selectedOrder.discount)}</p>
                                                 )}
                                             </div>
                                             <div className="text-right">
                                                 <h5 className="text-xl font-bold text-green-600">
-                                                    Tổng cộng: {orderService.formatCurrency(selectedOrder.totalAmount)}
+                                                    Tổng cộng: {orderService.formatCurrency(selectedOrder.totalAmount || 0)}
                                                 </h5>
                                             </div>
                                         </div>

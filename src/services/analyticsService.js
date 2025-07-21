@@ -6,6 +6,19 @@ const analyticsService = {
     getRevenueAnalytics: async (period = '30d') => {
         try {
             const response = await apiService.get(`/api/seller/analytics/revenue?period=${period}`);
+            // Normalize real API response to FE-expected structure
+            if (response && typeof response === 'object' && ('totalRevenue' in response || 'orderCount' in response)) {
+                return {
+                    data: [], // No chart data from BE, keep empty array
+                    summary: {
+                        totalRevenue: response.totalRevenue ?? 0,
+                        totalOrders: response.orderCount ?? 0,
+                        averageOrderValue: response.orderCount ? Math.floor((response.totalRevenue || 0) / response.orderCount) : 0,
+                        growthRate: 0, // Not provided by BE
+                        period: response.period || period
+                    }
+                };
+            }
             return response;
         } catch (error) {
             console.warn('📊 Analytics: Using mock revenue data due to API error:', error.message);
@@ -17,7 +30,43 @@ const analyticsService = {
     getOrderAnalytics: async (period = '30d') => {
         try {
             const response = await apiService.get(`/api/seller/analytics/orders?period=${period}`);
-            return response;
+            // Normalize real API response to FE-expected structure
+            let totalOrders = 0;
+            let completedOrders = 0;
+            let cancelledOrders = 0;
+            let completionRate = 0;
+            let averageOrdersPerDay = 0;
+            let periodValue = period;
+            if (response && typeof response === 'object') {
+                totalOrders = response.orderCount ?? 0;
+                completedOrders = response.completedCount ?? 0;
+                cancelledOrders = response.cancelledCount ?? 0;
+                periodValue = response.period || period;
+                completionRate = totalOrders > 0 ? (completedOrders / totalOrders * 100) : 0;
+                // If BE provides averageOrdersPerDay, use it
+                if ('averageOrdersPerDay' in response) {
+                    averageOrdersPerDay = response.averageOrdersPerDay ?? 0;
+                } else if (periodValue && totalOrders) {
+                    // Try to estimate averageOrdersPerDay if possible
+                    let days = 30;
+                    if (typeof periodValue === 'string') {
+                        if (periodValue.endsWith('d')) {
+                            days = parseInt(periodValue);
+                        }
+                    }
+                    averageOrdersPerDay = days > 0 ? Math.floor(totalOrders / days) : 0;
+                }
+            }
+            return {
+                data: [], // No chart data from BE, keep empty array
+                summary: {
+                    totalOrders,
+                    completedOrders,
+                    completionRate,
+                    averageOrdersPerDay,
+                    period: periodValue
+                }
+            };
         } catch (error) {
             console.warn('📊 Analytics: Using mock order data due to API error:', error.message);
             return getMockOrderData(period);

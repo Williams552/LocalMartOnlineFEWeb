@@ -5,7 +5,7 @@ const notificationService = {
     // Get all notifications for seller
     getNotifications: async (page = 1, limit = 20) => {
         try {
-            const response = await apiService.get(`/api/seller/notifications?page=${page}&limit=${limit}`);
+            const response = await apiService.get(`/api/Notification?page=${page}&limit=${limit}`);
             return response;
         } catch (error) {
             console.warn('🔔 Notifications: Using mock data due to API error:', error.message);
@@ -16,7 +16,7 @@ const notificationService = {
     // Get unread notification count
     getUnreadCount: async () => {
         try {
-            const response = await apiService.get('/api/seller/notifications/unread-count');
+            const response = await apiService.get('/api/Notification/unread-count');
             return response;
         } catch (error) {
             console.warn('🔔 Notifications: Using mock unread count due to API error:', error.message);

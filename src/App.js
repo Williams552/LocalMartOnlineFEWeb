@@ -6,12 +6,15 @@ import 'react-toastify/dist/ReactToastify.css';
 // Contexts
 import { CartProvider } from './contexts/CartContext';
 import { FavoriteProvider } from './contexts/FavoriteContext';
+import { FollowStoreProvider } from './contexts/FollowStoreContext';
 
 // Components
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 import UserIdFixer from './components/Common/UserIdFixer';
 import SessionTimeoutWarning from './components/Common/SessionTimeoutWarning';
+import ScrollToTop from './components/Common/ScrollToTop';
+import SupportButton from './components/Support/SupportButton';
 
 // Services
 import authService from './services/authService';
@@ -32,27 +35,35 @@ const App = () => {
 
   return (
     <div className="App">
+      {/* Scroll to top on route change */}
+      <ScrollToTop />
+
       {/* User ID Fixer - tự động sửa userId trong localStorage */}
       <UserIdFixer />
 
       {/* Session Timeout Warning - cảnh báo session sắp hết hạn */}
-      <SessionTimeoutWarning />
-
-      {/* Cart Provider - quản lý global cart state */}
+      <SessionTimeoutWarning />        {/* Cart Provider - quản lý global cart state */}
       <CartProvider>
         {/* Favorite Provider - quản lý global favorite state */}
         <FavoriteProvider>
-          <div className="app-layout">
-            {/* Header - Navigation và user menu */}
-            <Header />
+          {/* Follow Store Provider - quản lý global follow store state */}
+          <FollowStoreProvider>
+            <div className="app-layout">
+              {/* Header - Navigation và user menu */}
+              <Header />
 
-            {/* Main Content Area */}
-            <main className="main-content">
-              <Outlet />
-            </main>
+              {/* Main Content Area */}
+              <main className="main-content">
+                <Outlet />
+              </main>
 
-            {/* Footer */}
-            <Footer />          </div>
+              {/* Footer */}
+              <Footer />
+
+              {/* Floating Support Button */}
+              <SupportButton variant="floating" />
+            </div>
+          </FollowStoreProvider>
         </FavoriteProvider>
       </CartProvider>
 

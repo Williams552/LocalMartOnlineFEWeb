@@ -134,8 +134,7 @@ const AdminLayout = () => {
             'content': 'Quản lý nội dung',
             'support': 'Hỗ trợ khách hàng',
             'analytics': 'Báo cáo & Thống kê',
-            'demo': 'Demo Selector',
-            'test': 'Test API'
+            'demo': 'Demo Selector'
         };
         
         pathSegments.slice(1).forEach((segment, index) => {

@@ -1,3 +1,4 @@
+import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
@@ -22,7 +23,6 @@ import SellerApp from "../SellerApp"; // New seller app without header/footer
 import AdminLayout from "../pages/Admin/AdminLayout";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
 import UserManagement from "../pages/Admin/User/UserManagement";
-import CreateUser from "../pages/Admin/User/CreateUser";
 import UserAnalytics from "../pages/Admin/Analytics/UserAnalytics";
 import CategoryManagement from "../pages/Admin/Category/CategoryManagement";
 import CategoryRegistrationManagement from "../pages/Admin/CategoryRegistration/CategoryRegistrationManagement";
@@ -34,6 +34,7 @@ import StoreManagement from "../pages/Admin/Store/StoreManagement";
 import StoreDashboard from "../pages/Admin/Store/StoreDashboard";
 import StoreAnalytics from "../pages/Admin/Store/StoreAnalytics";
 import ProductUnitManagement from "../pages/Admin/ProductUnit/ProductUnitManagement";
+import { ProductManagement, PendingProducts, FastBargainProducts } from "../pages/Admin/Product";
 import OrderManagement from "../pages/Admin/OrderManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
 import { FAQManagement } from "../pages/Admin/FAQ";
@@ -42,7 +43,6 @@ import SupportManagement from "../pages/Admin/SupportManagement";
 import CartPage from "../pages/Buyer/CartPage";
 import FavoritesPage from "../pages/Buyer/FavoritesPage";
 import FollowingStoresPage from "../pages/Buyer/FollowingStores";
-import TestFavorites from "../pages/TestFavorites";
 import ProxyShopperList from "../pages/ProxyShopper/ProxyShopperList";
 import RegisterProxyShopper from "../pages/ProxyShopper/RegisterProxyShopper";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
@@ -52,6 +52,8 @@ import ChatListPage from "../pages/Buyer/ChatListPage";
 import ChatPage from "../pages/Buyer/ChatPage";
 import FastBargainPage from "../pages/FastBargain/FastBargainPage";
 import BargainDetail from "../pages/FastBargain/BargainDetail";
+import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
+import SupportRequestPage from "../pages/Support/SupportRequestPage";
 
 // Seller pages
 import SellerDashboard from "../pages/Sellers/SellerDashboard";
@@ -98,11 +100,11 @@ const AppRoutes = () => {
                 <Route path="/buyer/orders" element={<ProtectedRoute><BuyerOrders /></ProtectedRoute>} />
                 <Route path="/buyer/chat" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                 <Route path="/buyer/chat/:sellerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
-                <Route path="/test-favorites" element={<TestFavorites />} />
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
                 <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
                 <Route path="/buyer/bargains" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
+                <Route path="/support-requests" element={<ProtectedRoute><SupportRequestPage /></ProtectedRoute>} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/store/:storeId" element={<StorePage />} />
                 <Route path="/about" element={<AboutPage />} />
@@ -135,9 +137,10 @@ const AppRoutes = () => {
 
                 {/* User Management */}
                 <Route path="users" element={<UserManagement />} />
-                <Route path="users/create" element={<CreateUser />} />
                 <Route path="users/edit/:id" element={<UserManagement />} />
                 <Route path="users/:id" element={<UserManagement />} />
+                <Route path="seller-register" element={<SellerRegisterList />} />
+                <Route path="proxy-register" element={<ProxyRegisterList />} />
                 <Route path="seller-registrations" element={<UserManagement />} />
                 <Route path="proxy-registrations" element={<UserManagement />} />
 
@@ -145,13 +148,14 @@ const AppRoutes = () => {
                 <Route path="categories" element={<CategoryManagement />} />
                 
 
+
                 {/* Market Management */}
                 <Route path="markets" element={<MarketManagement />} />
                 <Route path="markets/create" element={<MarketManagement />} />
                 <Route path="markets/dashboard" element={<MarketDashboard />} />
                 <Route path="market-fees" element={<MarketFeeManagement />} />
                 <Route path="market-rules" element={<MarketRuleManagement />} />
-                
+
 
                 {/* Store Management */}
                 <Route path="stores" element={<StoreManagement />} />
@@ -163,6 +167,13 @@ const AppRoutes = () => {
 
             
                 
+                {/* Product Management */}
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="products/pending" element={<PendingProducts />} />
+                <Route path="products/fast-bargain" element={<FastBargainProducts />} />
+
+
+
                 <Route path="categories" element={<ContentManagement />} />
                 <Route path="category-registrations" element={<ContentManagement />} />
                 <Route path="product-units" element={<ProductUnitManagement />} />
