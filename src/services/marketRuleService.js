@@ -62,14 +62,12 @@ class MarketRuleService {
     async createMarketRule(ruleData) {
         try {
             const token = authService.getToken();
-            const userId = authService.getUserId();
             
             const response = await fetch(API_ENDPOINTS.MARKET_RULE.CREATE, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'userId': userId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(ruleData)
             });
@@ -90,14 +88,12 @@ class MarketRuleService {
     async updateMarketRule(ruleId, ruleData) {
         try {
             const token = authService.getToken();
-            const userId = authService.getUserId();
             
             const response = await fetch(API_ENDPOINTS.MARKET_RULE.UPDATE(ruleId), {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'userId': userId
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(ruleData)
             });
@@ -118,13 +114,11 @@ class MarketRuleService {
     async deleteMarketRule(ruleId) {
         try {
             const token = authService.getToken();
-            const userId = authService.getUserId();
             
             const response = await fetch(API_ENDPOINTS.MARKET_RULE.DELETE(ruleId), {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'userId': userId
+                    'Authorization': `Bearer ${token}`
                 }
             });
 
@@ -173,14 +167,12 @@ class MarketRuleService {
     async toggleRuleStatus(ruleId) {
         try {
             const token = authService.getToken();
-            const userId = authService.getUserId();
             
             const response = await fetch(API_ENDPOINTS.MARKET_RULE.TOGGLE_STATUS(ruleId), {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'userId': userId
+                    'Content-Type': 'application/json'
                 }
             });
 
