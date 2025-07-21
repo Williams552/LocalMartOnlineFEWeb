@@ -63,10 +63,7 @@ class MarketService {
             const url = `${API_ENDPOINTS.MARKET.GET_ALL}?${queryParams}`;
             console.log('🔍 MarketService - Calling admin endpoint:', url);
 
-<<<<<<< HEAD
-=======
 
->>>>>>> af8ab0becec22c2dd5bef35708da6a2680fd5e4b
             const response = await apiClient.get(url);
             console.log('🔍 MarketService - Response:', response.data);
 
@@ -195,13 +192,11 @@ class MarketService {
             if (response.data && response.data.success && response.data.data) {
                 return response.data.data;
             }
-<<<<<<< HEAD
-            return response.data || [];
-=======
+
 
             return response.data || [];
 
->>>>>>> af8ab0becec22c2dd5bef35708da6a2680fd5e4b
+
         } catch (error) {
             console.error('❌ searchMarkets - Error:', error);
             if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
@@ -230,7 +225,6 @@ class MarketService {
             const url = `${API_ENDPOINTS.MARKET.FILTER_ADMIN}?${queryParams}`;
             console.log('🔍 filterMarkets - URL:', url);
             
-
             const response = await apiClient.get(url);
             console.log('🔍 filterMarkets - Response:', response.data);
 
