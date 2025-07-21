@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
 import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox } from "react-icons/fi";
-import { FaUserCircle, FaStore, FaHandshake } from "react-icons/fa";
+import { FaUserCircle, FaStore, FaHandshake, FaHeadset } from "react-icons/fa";
 import { useCart } from "../../contexts/CartContext";
 import { useFavorites } from "../../contexts/FavoriteContext";
 import { useFollowStore } from "../../contexts/FollowStoreContext";
@@ -333,6 +333,10 @@ const Header = () => {
                                                 <Link to="/fast-bargain" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FaHandshake size={16} />
                                                     <span>Thương lượng của tôi</span>
+                                                </Link>
+                                                <Link to="/support-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                    <FaHeadset size={16} />
+                                                    <span>Yêu cầu hỗ trợ</span>
                                                 </Link>
 
                                                 {/* Seller Navigation */}
