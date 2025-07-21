@@ -36,6 +36,8 @@ export const API_ENDPOINTS = {
         UPDATE: (id) => `${API_URL}/api/product/${id}`,
         DELETE: (id) => `${API_URL}/api/product/${id}`,
         TOGGLE: (id) => `${API_URL}/api/product/${id}/toggle`,
+        // Toggle product status for my-store
+        TOGGLE_STATUS_MY_STORE: (productId, enable) => `${API_URL}/api/Store/my-store/products/${productId}/toggle?enable=${enable}`,
 
         // Search & Filter endpoints
         SEARCH: `${API_URL}/api/product/search`,
@@ -155,6 +157,7 @@ export const API_ENDPOINTS = {
 
     // Store Endpoints
     STORE: {
+        MY_STORE: `${API_URL}/api/Store/my-store`,
         GET_ALL: `${API_URL}/api/store`,
         GET_ALL_ADMIN: `${API_URL}/api/store/admin`,
         GET_BY_ID: (id) => `${API_URL}/api/store/${id}`,
@@ -217,7 +220,7 @@ export const API_ENDPOINTS = {
         REGISTER: `${API_URL}/api/proxyshopperregistration`,
         GET_MY: `${API_URL}/api/proxyshopperregistration/my`,
         GET_ALL: `${API_URL}/api/proxyshopperregistration`,
-        APPROVE: `${API_URL}/api/ProxyShopperRegistration/approve`,
+        APPROVE: `${API_URL}/api/proxyshopperregistration/approve`,
     },
 
     // Notification Endpoints

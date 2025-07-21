@@ -173,16 +173,23 @@ class StoreService {
             throw error;
         }
     }
-    async getStoresBySellerId(sellerId) {
+    // Lấy store của chính user hiện tại (dựa vào token)
+    async getStoresBySellerId() {
         try {
-            const url = API_ENDPOINTS.STORE.GET_BY_SELLER_ID(sellerId);
-            console.log('📦 Fetching stores by sellerId:', url);
+            const url = API_ENDPOINTS.STORE.MY_STORE;
+            console.log('📦 Fetching my store:', url);
 
             const response = await apiClient.get(url);
 
-            if (response.data && response.data.success) {
-                const stores = Array.isArray(response.data.data) ? response.data.data : [];
+            if (response.data && response.data.success && response.data.data) {
+                // Có thể trả về 1 object hoặc array
+                const stores = Array.isArray(response.data.data) ? response.data.data : [response.data.data];
                 const formatted = stores.map(store => this.formatStoreForFrontend(store));
+
+                // Lưu storeId đầu tiên vào sessionStorage
+                if (formatted.length > 0 && formatted[0].id) {
+                    sessionStorage.setItem('storeId', formatted[0].id);
+                }
 
                 return {
                     success: true,
@@ -195,10 +202,10 @@ class StoreService {
                 message: 'Không tìm thấy gian hàng'
             };
         } catch (error) {
-            console.error(`❌ Error in getStoresBySellerId(${sellerId}):`, error);
+            console.error(`❌ Error in getStoresBySellerId:`, error);
             return {
                 success: false,
-                message: error.response?.data?.message || 'Lỗi khi lấy danh sách gian hàng theo sellerId'
+                message: error.response?.data?.message || 'Lỗi khi lấy danh sách gian hàng của bản thân'
             };
         }
     }

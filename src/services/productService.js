@@ -43,6 +43,33 @@ const createApiClient = () => {
 const apiClient = createApiClient();
 
 class ProductService {
+    // Create new product
+    async createProduct(payload) {
+        try {
+            const response = await apiClient.post('http://localhost:5183/api/Product', payload);
+            if (response.data?.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                    message: response.data.message || 'Thêm sản phẩm thành công'
+                };
+            } else {
+                return {
+                    success: false,
+                    message: response.data?.message || 'Thêm sản phẩm thất bại'
+                };
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error creating product:', error);
+            return {
+                success: false,
+                message:
+                    error.response?.data?.message ||
+                    error.message ||
+                    'Có lỗi xảy ra khi thêm sản phẩm'
+            };
+        }
+    }
     // Get all products
     async getAllProducts(params = {}) {
         try {
@@ -524,29 +551,26 @@ class ProductService {
     // ========== SELLER METHODS ==========
 
     // Get all products for seller (including inactive)
-    async getSellerProducts(storeId, page = 1, pageSize = 20) {
+    async getSellerProducts(page = 1, pageSize = 20) {
         try {
-            console.log('🛍️ ProductService: Getting seller products...', { storeId, page, pageSize });
+            console.log('🛍️ ProductService: Getting seller products (my-store)...', { page, pageSize });
 
-            const response = await apiClient.get(`${API_ENDPOINTS.PRODUCTS}/seller/store/${storeId}`, {
+            const response = await apiClient.get(`/api/store/my-store/products`, {
                 params: { page, pageSize }
             });
 
-            if (response.data?.success) {
+            if (response.data?.success && response.data.data) {
                 console.log('✅ ProductService: Seller products fetched successfully');
 
-                // Transform the data to match frontend expectations
                 const transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
 
                 return {
                     success: true,
                     data: {
                         items: transformedProducts,
-                        totalItems: response.data.data.totalItems || 0,
-                        currentPage: response.data.data.currentPage || page,
-                        totalPages: response.data.data.totalPages || 1,
-                        hasNextPage: response.data.data.hasNextPage || false,
-                        hasPreviousPage: response.data.data.hasPreviousPage || false
+                        totalCount: response.data.data.totalCount || 0,
+                        page: response.data.data.page || page,
+                        pageSize: response.data.data.pageSize || pageSize
                     },
                     message: response.data.message || 'Lấy danh sách sản phẩm thành công'
                 };
@@ -673,19 +697,15 @@ class ProductService {
     // Toggle product status
     async toggleProductStatus(productId, isActive) {
         try {
-            console.log('🔄 ProductService: Toggling product status...', { productId, isActive });
-
-            // This would need to be implemented in the backend
-            // For now, we'll use the edit product endpoint with just the status change
-            const response = await apiClient.put(`${API_ENDPOINTS.PRODUCTS}/${productId}`, {
-                isAvailable: isActive
-            });
-
+            console.log('🔄 ProductService: Toggling product status (my-store endpoint)...', { productId, isActive });
+            // Use correct endpoint and method as in Swagger
+            const url = API_ENDPOINTS.PRODUCT.TOGGLE_STATUS_MY_STORE(productId, isActive);
+            const response = await apiClient.patch(url);
             if (response.data?.success) {
                 console.log('✅ ProductService: Product status toggled successfully');
                 return {
                     success: true,
-                    message: response.data.message || `${isActive ? 'Kích hoạt' : 'Tạm ngưng'} sản phẩm thành công`
+                    message: response.data.message || 'Thay đổi trạng thái sản phẩm thành công'
                 };
             } else {
                 throw new Error(response.data?.message || 'Failed to toggle product status');
@@ -742,12 +762,12 @@ class ProductService {
             images: product.imageUrls || product.images || [],
             unit: product.unit || 'kg',
             minimumQuantity: product.minimumQuantity || 1,
-            stockQuantity: product.stockQuantity || 0,
             soldQuantity: product.soldQuantity || 0,
             viewCount: product.viewCount || 0,
             likeCount: product.likeCount || 0,
             isAvailable: product.isAvailable !== false,
-            status: product.status || (product.isAvailable !== false ? 'Còn hàng' : 'Hết hàng'),
+            status: product.status,
+            statusDisplay: product.statusDisplay || '',
             createdAt: product.createdAt,
             updatedAt: product.updatedAt
         };

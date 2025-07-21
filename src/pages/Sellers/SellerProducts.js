@@ -9,6 +9,8 @@ import {
 import SellerLayout from "../../layouts/SellerLayout";
 import productService from "../../services/productService";
 import storeService from "../../services/storeService";
+import categoryService from "../../services/categoryService";
+import productUnitService from "../../services/productUnitService";
 import { getCurrentUser } from "../../services/authService";
 import toastService from "../../services/toastService";
 
@@ -27,6 +29,21 @@ const SellerProducts = () => {
     const [totalItems, setTotalItems] = useState(0);
     const [userStore, setUserStore] = useState(null);
     const [categories, setCategories] = useState(["all"]);
+    const [categoryOptions, setCategoryOptions] = useState([]);
+    const [unitOptions, setUnitOptions] = useState([]);
+
+    // Modal state for adding product
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [addForm, setAddForm] = useState({
+        name: '',
+        description: '',
+        price: '',
+        categoryId: '',
+        unitId: '',
+        minimumQuantity: '',
+        imageUrls: [''],
+    });
+    const [addLoading, setAddLoading] = useState(false);
 
     const currentUser = getCurrentUser();
     const pageSize = 20;
@@ -49,22 +66,116 @@ const SellerProducts = () => {
 
             // First get the seller's store
             const storeResult = await storeService.getStoresBySellerId(currentUser?.id);
-            if (!storeResult.success || !storeResult.data?.length) {
+            let store = null;
+            if (storeResult.success) {
+                if (Array.isArray(storeResult.data) && storeResult.data.length > 0) {
+                    store = storeResult.data[0];
+                } else if (storeResult.data && typeof storeResult.data === 'object') {
+                    store = storeResult.data;
+                }
+            }
+            if (!store) {
                 toastService.error('Bạn chưa có gian hàng nào. Vui lòng tạo gian hàng trước.');
                 return;
             }
-
-            const store = storeResult.data[0]; // Get first store
             setUserStore(store);
 
             // Get categories for filter (this would come from category service)
             setCategories(["all", "Rau củ", "Trái cây", "Thịt cá", "Gia vị", "Đồ khô"]);
-
         } catch (error) {
             console.error('Error loading initial data:', error);
             toastService.error('Có lỗi khi tải dữ liệu ban đầu');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Handler for opening add modal
+    const handleOpenAddModal = async () => {
+        setAddForm({
+            name: '',
+            description: '',
+            price: '',
+            categoryId: '',
+            unitId: '',
+            minimumQuantity: '',
+            imageUrls: [''],
+        });
+        // Fetch categories and units for dropdowns
+        try {
+            const [cats, units] = await Promise.all([
+                categoryService.getActiveCategories(),
+                productUnitService.getActiveUnits()
+            ]);
+            setCategoryOptions(cats || []);
+            setUnitOptions(units || []);
+        } catch (err) {
+            toastService.error('Không thể tải danh mục hoặc đơn vị');
+        }
+        setShowAddModal(true);
+    };
+
+    // Handler for closing add modal
+    const handleCloseAddModal = () => {
+        setShowAddModal(false);
+    };
+
+    // Handler for form change
+    const handleAddFormChange = (e) => {
+        const { name, value } = e.target;
+        setAddForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // Handler for imageUrls (array)
+    const handleImageUrlChange = (idx, value) => {
+        setAddForm((prev) => {
+            const urls = [...prev.imageUrls];
+            urls[idx] = value;
+            return { ...prev, imageUrls: urls };
+        });
+    };
+
+    const handleAddImageField = () => {
+        setAddForm((prev) => ({ ...prev, imageUrls: [...prev.imageUrls, ''] }));
+    };
+
+    // Handler for submit add product
+    const handleAddProduct = async (e) => {
+        e.preventDefault();
+        if (!userStore) return; 
+        setAddLoading(true);
+        try {
+            // Validate required fields
+            if (!addForm.name || !addForm.price || !addForm.categoryId || !addForm.unitId) {
+                toastService.error('Vui lòng nhập đầy đủ thông tin bắt buộc');
+                setAddLoading(false);
+                return;
+            }
+            // Prepare payload
+            const payload = {
+                storeId: userStore.id,
+                categoryId: addForm.categoryId,
+                name: addForm.name,
+                description: addForm.description,
+                price: parseFloat(addForm.price),
+                unitId: addForm.unitId,
+                minimumQuantity: addForm.minimumQuantity ? parseFloat(addForm.minimumQuantity) : 0.01,
+                imageUrls: addForm.imageUrls.filter(url => url.trim()),
+            };
+            // Call API
+            const res = await productService.createProduct(payload);
+            if (res.success) {
+                toastService.success('Thêm sản phẩm thành công!');
+                setShowAddModal(false);
+                loadProducts(1);
+            } else {
+                toastService.error(res.message || 'Thêm sản phẩm thất bại');
+            }
+        } catch (err) {
+            console.error('Lỗi khi thêm sản phẩm:', err);
+            toastService.error(err?.message ? `Có lỗi khi thêm sản phẩm: ${err.message}` : 'Có lỗi khi thêm sản phẩm');
+        } finally {
+            setAddLoading(false);
         }
     };
 
@@ -87,7 +198,6 @@ const SellerProducts = () => {
             } else {
                 // Get all products
                 result = await productService.getSellerProducts(
-                    userStore.id,
                     page,
                     pageSize
                 );
@@ -105,9 +215,9 @@ const SellerProducts = () => {
                 products = applySorting(products, sortBy);
 
                 setProducts(products);
-                setTotalItems(result.data.totalItems || 0);
-                setTotalPages(result.data.totalPages || 1);
-                setCurrentPage(result.data.currentPage || page);
+                setTotalItems(result.data.totalCount || 0);
+                setCurrentPage(result.data.page || page);
+                setTotalPages(Math.ceil((result.data.totalCount || 0) / (result.data.pageSize || pageSize)) || 1);
             } else {
                 toastService.error(result.message || 'Có lỗi khi tải danh sách sản phẩm');
             }
@@ -223,10 +333,11 @@ const SellerProducts = () => {
             : <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Tạm ngưng</span>;
     };
 
-    const getStockStatus = (stock) => {
-        if (stock === 0) return <span className="text-red-600 font-medium">Hết hàng</span>;
-        if (stock < 10) return <span className="text-orange-600 font-medium">Sắp hết ({stock}{getUnit(stock)})</span>;
-        return <span className="text-green-600 font-medium">{stock}{getUnit(stock)}</span>;
+    // Chỉ hiển thị theo statusDisplay từ backend
+    const getStockStatus = (product) => {
+        if (product.statusDisplay)
+            return <span className={product.statusDisplay === 'Hết hàng' ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>{product.statusDisplay}</span>;
+        return <span className="text-gray-500">Không xác định</span>;
     };
 
     const getUnit = (stock) => {
@@ -259,6 +370,85 @@ const SellerProducts = () => {
 
     return (
         <SellerLayout>
+            {/* Modal thêm sản phẩm */}
+            {showAddModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg relative">
+                        <button onClick={handleCloseAddModal} className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl">×</button>
+                        <h2 className="text-xl font-bold mb-4">Thêm sản phẩm mới</h2>
+                        <form onSubmit={handleAddProduct} className="space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Tên sản phẩm *</label>
+                                <input name="name" value={addForm.name} onChange={handleAddFormChange} className="w-full border rounded px-3 py-2" required />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Mô tả</label>
+                                <textarea name="description" value={addForm.description} onChange={handleAddFormChange} className="w-full border rounded px-3 py-2" rows={2} />
+                            </div>
+                            <div className="flex space-x-2">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium mb-1">Giá *</label>
+                                    <input name="price" type="number" min="0.01" step="0.01" value={addForm.price} onChange={handleAddFormChange} className="w-full border rounded px-3 py-2" required />
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium mb-1">Số lượng tối thiểu</label>
+                                    <input name="minimumQuantity" type="number" min="0.01" step="0.01" value={addForm.minimumQuantity} onChange={handleAddFormChange} className="w-full border rounded px-3 py-2" />
+                                </div>
+                            </div>
+                            <div className="flex space-x-2">
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium mb-1">Danh mục *</label>
+                                    <select
+                                        name="categoryId"
+                                        value={addForm.categoryId}
+                                        onChange={handleAddFormChange}
+                                        className="w-full border rounded px-3 py-2"
+                                        required
+                                    >
+                                        <option value="">Chọn danh mục</option>
+                                        {categoryOptions.map(cat => (
+                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="flex-1">
+                                    <label className="block text-sm font-medium mb-1">Đơn vị *</label>
+                                    <select
+                                        name="unitId"
+                                        value={addForm.unitId}
+                                        onChange={handleAddFormChange}
+                                        className="w-full border rounded px-3 py-2"
+                                        required
+                                    >
+                                        <option value="">Chọn đơn vị</option>
+                                        {unitOptions.map(unit => (
+                                            <option key={unit.id} value={unit.id}>{unit.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Ảnh sản phẩm (URL)</label>
+                                {addForm.imageUrls.map((url, idx) => (
+                                    <div key={idx} className="flex space-x-2 mb-1">
+                                        <input value={url} onChange={e => handleImageUrlChange(idx, e.target.value)} className="w-full border rounded px-3 py-2" placeholder="https://..." />
+                                        {idx === addForm.imageUrls.length - 1 && (
+                                            <button type="button" onClick={handleAddImageField} className="px-2 py-1 bg-gray-200 rounded">+</button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex justify-end space-x-2 mt-4">
+                                <button type="button" onClick={handleCloseAddModal} className="px-4 py-2 rounded bg-gray-200 text-gray-700">Hủy</button>
+                                <button type="submit" disabled={addLoading} className="px-4 py-2 rounded bg-supply-primary text-white hover:bg-green-600 disabled:opacity-50">
+                                    {addLoading ? 'Đang thêm...' : 'Thêm sản phẩm'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
@@ -269,13 +459,13 @@ const SellerProducts = () => {
                                 {userStore && <span> - Gian hàng: {userStore.name}</span>}
                             </p>
                         </div>
-                        <Link
-                            to="/seller/products/add"
+                        <button
+                            onClick={handleOpenAddModal}
                             className="flex items-center space-x-2 bg-supply-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
                         >
                             <FaPlus />
                             <span>Thêm sản phẩm</span>
-                        </Link>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -440,7 +630,7 @@ const SellerProducts = () => {
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-gray-600">Tồn kho:</span>
-                                            {getStockStatus(product.stockQuantity || 0)}
+                                            {getStockStatus(product)}
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-gray-600">Đã bán:</span>
@@ -557,7 +747,7 @@ const SellerProducts = () => {
                                             <td className="py-3 px-4 font-medium text-supply-primary">
                                                 {formatPrice(product.price)}đ/{product.unit || 'kg'}
                                             </td>
-                                            <td className="py-3 px-4">{getStockStatus(product.stockQuantity || 0)}</td>
+                                            <td className="py-3 px-4">{getStockStatus(product)}</td>
                                             <td className="py-3 px-4 font-medium">{product.soldQuantity || 0}</td>
                                             <td className="py-3 px-4">{getStatusBadge(product)}</td>
                                             <td className="py-3 px-4">
@@ -600,13 +790,13 @@ const SellerProducts = () => {
                         <div className="text-6xl mb-4">📦</div>
                         <h3 className="text-xl font-semibold text-gray-700 mb-2">Không tìm thấy sản phẩm</h3>
                         <p className="text-gray-500 mb-4">Thử thay đổi bộ lọc hoặc thêm sản phẩm mới</p>
-                        <Link
-                            to="/seller/products/add"
+                        <button
+                            onClick={handleOpenAddModal}
                             className="inline-flex items-center space-x-2 bg-supply-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
                         >
                             <FaPlus />
                             <span>Thêm sản phẩm đầu tiên</span>
-                        </Link>
+                        </button>
                     </div>
                 )}
 
