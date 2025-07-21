@@ -81,7 +81,7 @@ const SupportService = {
     // Lấy tất cả yêu cầu hỗ trợ (cho admin/staff)
     getAllSupportRequests: async () => {
         try {
-            const response = await apiClient.get('/api/supportrequest');
+            const response = await apiClient.get('/api/SupportRequest');
             return response.data;
         } catch (error) {
             console.error('Error fetching all support requests:', error);
