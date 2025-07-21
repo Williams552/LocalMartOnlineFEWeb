@@ -66,7 +66,13 @@ const AdminLayout = () => {
 
             ]
         },
-
+        {
+            key: 'products', icon: <BoxPlotOutlined />, label: 'Quản lý sản phẩm', children: [
+                { key: '/admin/products', label: 'Danh sách sản phẩm' },
+                { key: '/admin/products/pending', label: 'Sản phẩm chờ duyệt' },
+                { key: '/admin/products/fast-bargain', label: 'Sản phẩm thương lượng' },
+            ]
+        },
         {
             key: 'product-units', icon: <TagsOutlined />, label: 'Quản lý đơn vị sản phẩm', children: [
                 { key: '/admin/product-units', label: 'Danh sách đơn vị' }
@@ -129,6 +135,8 @@ const AdminLayout = () => {
             'content': 'Quản lý nội dung',
             'support': 'Hỗ trợ khách hàng',
             'analytics': 'Báo cáo & Thống kê',
+            'pending': 'Chờ duyệt',
+            'fast-bargain': 'Khuyến mãi',
             'demo': 'Demo Selector'
         };
 
