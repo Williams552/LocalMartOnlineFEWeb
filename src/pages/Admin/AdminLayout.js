@@ -69,8 +69,7 @@ const AdminLayout = () => {
 
         {
             key: 'product-units', icon: <TagsOutlined />, label: 'Quản lý đơn vị sản phẩm', children: [
-                { key: '/admin/product-units', label: 'Danh sách đơn vị' },
-                { key: '/admin/product-units/demo', label: 'Demo Selector' },
+                { key: '/admin/product-units', label: 'Danh sách đơn vị' }
             ]
         },
         {
@@ -84,7 +83,6 @@ const AdminLayout = () => {
         {
             key: 'content', icon: <FileTextOutlined />, label: 'Quản lý nội dung', children: [
                 { key: '/admin/faqs', label: 'FAQ' },
-                { key: '/admin/policies', label: 'Chính sách' },
                 { key: '/admin/notifications', label: 'Thông báo' },
             ]
         },
