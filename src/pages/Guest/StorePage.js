@@ -240,7 +240,7 @@ const StorePage = () => {
                                         <FaRegStar key={i} className="text-white opacity-50" />
                                 ))}
                                 <span className="ml-2 text-white">
-                                    {(store.rating || 4.5).toFixed(1)} ({(statistics?.reviewCount || store.reviewCount || 128)} đánh giá)
+                                    {(store.rating || 0).toFixed(1)} ({(statistics?.reviewCount || store.reviewCount || 0)} đánh giá)
                                 </span>
                             </div>
 
@@ -276,11 +276,11 @@ const StorePage = () => {
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <FaUsers className="text-green-200" />
-                                    <span>{statistics?.followerCount || store.followerCount || 345} người theo dõi</span>
+                                    <span>{statistics?.followerCount || store.followerCount || 0} người theo dõi</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <FaEye className="text-green-200" />
-                                    <span>{statistics?.viewCount || store.viewCount || 1205} lượt xem</span>
+                                    <span>{statistics?.viewCount || store.viewCount || 0} lượt xem</span>
                                 </div>
                                 <div className="flex items-center gap-1">
                                     <FaCalendarAlt className="text-green-200" />
@@ -336,21 +336,21 @@ const StorePage = () => {
                         </div>
                     </div>
                     <div className="bg-white rounded-lg shadow-md p-4 text-center">
-                        <div className="text-2xl font-bold text-yellow-600 mb-1">{(store.rating || 4.5).toFixed(1)}</div>
+                        <div className="text-2xl font-bold text-yellow-600 mb-1">{(store.rating || 0).toFixed(1)}</div>
                         <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
                             <FaStar />
                             Đánh giá
                         </div>
                     </div>
                     <div className="bg-white rounded-lg shadow-md p-4 text-center">
-                        <div className="text-2xl font-bold text-green-600 mb-1">{statistics?.orderCount || store.orderCount || 156}</div>
+                        <div className="text-2xl font-bold text-green-600 mb-1">{statistics?.orderCount || store.orderCount || 0}</div>
                         <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
                             <FaShoppingBag />
                             Đơn hàng
                         </div>
                     </div>
                     <div className="bg-white rounded-lg shadow-md p-4 text-center">
-                        <div className="text-2xl font-bold text-blue-600 mb-1">{statistics?.followerCount || store.followerCount || 345}</div>
+                        <div className="text-2xl font-bold text-blue-600 mb-1">{statistics?.followerCount || store.followerCount || 0}</div>
                         <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
                             <FaUsers />
                             Theo dõi

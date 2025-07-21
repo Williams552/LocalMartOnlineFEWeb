@@ -25,6 +25,7 @@ import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
 import UserManagement from "../pages/Admin/User/UserManagement";
 import UserAnalytics from "../pages/Admin/Analytics/UserAnalytics";
 import CategoryManagement from "../pages/Admin/Category/CategoryManagement";
+import CategoryRegistrationManagement from "../pages/Admin/CategoryRegistration/CategoryRegistrationManagement";
 import MarketManagement from "../pages/Admin/Market/MarketManagement";
 import MarketDashboard from "../pages/Admin/Market/MarketDashboard";
 import MarketFeeManagement from "../pages/Admin/Market/MarketFeeManagement";
@@ -32,11 +33,10 @@ import MarketRuleManagement from "../pages/Admin/Market/MarketRuleManagement";
 import StoreManagement from "../pages/Admin/Store/StoreManagement";
 import StoreDashboard from "../pages/Admin/Store/StoreDashboard";
 import StoreAnalytics from "../pages/Admin/Store/StoreAnalytics";
-import StoreSellers from "../pages/Admin/Store/StoreSellers";
-import StoreReviews from "../pages/Admin/Store/StoreReviews";
 import ProductUnitManagement from "../pages/Admin/ProductUnit/ProductUnitManagement";
 import OrderManagement from "../pages/Admin/OrderManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
+import { FAQManagement } from "../pages/Admin/FAQ";
 import Analytics from "../pages/Admin/Analytics";
 import SupportManagement from "../pages/Admin/SupportManagement";
 import CartPage from "../pages/Buyer/CartPage";
@@ -143,6 +143,7 @@ const AppRoutes = () => {
 
                 {/* Category Management */}
                 <Route path="categories" element={<CategoryManagement />} />
+                
 
                 {/* Market Management */}
                 <Route path="markets" element={<MarketManagement />} />
@@ -157,11 +158,11 @@ const AppRoutes = () => {
                 <Route path="stores/dashboard" element={<StoreDashboard />} />
                 <Route path="stores/create" element={<StoreManagement />} />
                 <Route path="stores/analytics" element={<StoreAnalytics />} />
-                <Route path="stores/sellers" element={<StoreSellers />} />
-                <Route path="stores/reviews" element={<StoreReviews />} />
+                <Route path="stores/sellers" element={<StoreManagement />} />
+                <Route path="stores/reviews" element={<StoreManagement />} />
 
-                {/* Product Management */}
-                <Route path="products" element={<UserManagement />} />
+            
+                
                 <Route path="categories" element={<ContentManagement />} />
                 <Route path="category-registrations" element={<ContentManagement />} />
                 <Route path="product-units" element={<ProductUnitManagement />} />
@@ -176,7 +177,7 @@ const AppRoutes = () => {
                 <Route path="market-fee-payments" element={<OrderManagement />} />
 
                 {/* Content Management */}
-                <Route path="faqs" element={<ContentManagement />} />
+                <Route path="faqs" element={<FAQManagement />} />
                 <Route path="policies" element={<ContentManagement />} />
                 <Route path="notifications" element={<ContentManagement />} />
 
