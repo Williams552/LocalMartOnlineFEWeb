@@ -514,7 +514,9 @@ const OrderManagement = ({ defaultStatus = null }) => {
                 <Space>
                     <Avatar icon={<ShopOutlined />} size="small" />
                     <div>
-                        <div style={{ fontWeight: 'bold' }}>{record.sellerName || 'Không xác định'}</div>
+                        <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
+                            {record.storeName ? `Cửa hàng: ${record.storeName}` : ''}
+                        </div>
                         <div style={{ fontSize: '12px', color: '#666' }}>
                             ID: {record.sellerId?.slice(-8) || 'N/A'}
                         </div>
@@ -894,6 +896,9 @@ const OrderManagement = ({ defaultStatus = null }) => {
                                     <Avatar icon={<ShopOutlined />} />
                                     <div>
                                         <div>{selectedOrder.sellerName || 'Không xác định'}</div>
+                                        <div style={{ fontSize: '12px', color: '#666' }}>
+                                            {selectedOrder.storeName || ''}
+                                        </div>
                                         <div style={{ fontSize: '12px', color: '#666' }}>
                                             ID: {selectedOrder.sellerId}
                                         </div>
