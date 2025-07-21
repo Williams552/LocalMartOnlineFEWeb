@@ -52,6 +52,7 @@ import ChatPage from "../pages/Buyer/ChatPage";
 import FastBargainPage from "../pages/FastBargain/FastBargainPage";
 import BargainDetail from "../pages/FastBargain/BargainDetail";
 import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
+import SupportRequestPage from "../pages/Support/SupportRequestPage";
 
 // Seller pages
 import SellerDashboard from "../pages/Sellers/SellerDashboard";
@@ -102,6 +103,7 @@ const AppRoutes = () => {
                 <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
                 <Route path="/buyer/bargains" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
+                <Route path="/support-requests" element={<ProtectedRoute><SupportRequestPage /></ProtectedRoute>} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/store/:storeId" element={<StorePage />} />
                 <Route path="/about" element={<AboutPage />} />
