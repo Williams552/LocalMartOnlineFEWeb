@@ -146,6 +146,7 @@ const AppRoutes = () => {
 
                 {/* Category Management */}
                 <Route path="categories" element={<CategoryManagement />} />
+                
 
 
                 {/* Market Management */}
@@ -164,6 +165,8 @@ const AppRoutes = () => {
                 <Route path="stores/sellers" element={<StoreManagement />} />
                 <Route path="stores/reviews" element={<StoreManagement />} />
 
+            
+                
                 {/* Product Management */}
                 <Route path="products" element={<ProductManagement />} />
                 <Route path="products/pending" element={<PendingProducts />} />
