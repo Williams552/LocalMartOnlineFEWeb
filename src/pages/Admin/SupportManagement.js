@@ -19,7 +19,8 @@ import {
     Timeline,
     Avatar,
     Badge,
-    Tabs
+    Tabs,
+    Popconfirm
 } from 'antd';
 import {
     CustomerServiceOutlined,
@@ -30,8 +31,11 @@ import {
     ExclamationCircleOutlined,
     UserOutlined,
     PhoneOutlined,
-    MailOutlined
+    MailOutlined,
+    DeleteOutlined,
+    ReloadOutlined
 } from '@ant-design/icons';
+import SupportService from '../../services/supportService';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -39,9 +43,14 @@ const { TextArea } = Input;
 const { TabPane } = Tabs;
 
 const SupportManagement = () => {
-    const [activeTab, setActiveTab] = useState('requests');
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [statistics, setStatistics] = useState({
+        total: 0,
+        open: 0,
+        inProgress: 0,
+        resolved: 0
+    });
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
@@ -58,66 +67,24 @@ const SupportManagement = () => {
     const [responseModal, setResponseModal] = useState(false);
     const [form] = Form.useForm();
 
-    // Mock data for support requests
-    const mockRequests = [
-        {
-            id: 1,
-            ticketNumber: 'SUP-2024-001',
-            user: {
-                name: 'Nguyễn Văn A',
-                email: 'customer1@example.com',
-                phone: '0901234567'
-            },
-            subject: 'Không thể thanh toán đơn hàng',
-            category: 'payment',
-            priority: 'high',
-            status: 'open',
-            description: 'Tôi gặp lỗi khi thanh toán đơn hàng qua VnPay. Hệ thống báo lỗi "Transaction failed".',
-            createdAt: '2024-01-15T10:30:00Z',
-            assignedTo: 'Admin User',
-            responses: [
-                {
-                    id: 1,
-                    author: 'Nguyễn Văn A',
-                    message: 'Tôi gặp lỗi khi thanh toán đơn hàng qua VnPay.',
-                    timestamp: '2024-01-15T10:30:00Z',
-                    isCustomer: true
-                }
-            ]
-        },
-        {
-            id: 2,
-            ticketNumber: 'SUP-2024-002',
-            user: {
-                name: 'Trần Thị B',
-                email: 'customer2@example.com',
-                phone: '0901234568'
-            },
-            subject: 'Sản phẩm giao không đúng',
-            category: 'delivery',
-            priority: 'medium',
-            status: 'in_progress',
-            description: 'Đơn hàng của tôi giao sai sản phẩm. Tôi đặt rau xanh nhưng nhận được thịt.',
-            createdAt: '2024-01-14T14:20:00Z',
-            assignedTo: 'Support Agent 1'
-        },
-        {
-            id: 3,
-            ticketNumber: 'SUP-2024-003',
-            user: {
-                name: 'Lê Văn C',
-                email: 'seller1@example.com',
-                phone: '0901234569'
-            },
-            subject: 'Tài khoản bị khóa',
-            category: 'account',
-            priority: 'urgent',
-            status: 'resolved',
-            description: 'Tài khoản bán hàng của tôi bị khóa mà không có thông báo.',
-            createdAt: '2024-01-13T09:15:00Z',
-            assignedTo: 'Admin User'
+    // Helper function to handle API errors
+    const handleApiError = (error, defaultMessage) => {
+        console.error('API Error:', error);
+        let errorMessage = defaultMessage;
+
+        if (error?.message) {
+            errorMessage = error.message;
+        } else if (error?.response?.data?.message) {
+            errorMessage = error.response.data.message;
+        } else if (typeof error === 'string') {
+            errorMessage = error;
         }
-    ];
+
+        message.error(errorMessage);
+    };
+
+    // Mock data for support requests
+    const mockRequests = [];
 
     const categories = [
         { value: 'payment', label: 'Thanh toán', color: 'blue' },
@@ -136,27 +103,69 @@ const SupportManagement = () => {
     ];
 
     const statuses = [
-        { value: 'open', label: 'Mở', color: 'orange' },
-        { value: 'in_progress', label: 'Đang xử lý', color: 'blue' },
-        { value: 'resolved', label: 'Đã giải quyết', color: 'green' },
-        { value: 'closed', label: 'Đã đóng', color: 'default' }
+        { value: 'Open', label: 'Mở', color: 'orange' },
+        { value: 'InProgress', label: 'Đang xử lý', color: 'blue' },
+        { value: 'Resolved', label: 'Đã giải quyết', color: 'green' }
     ];
 
     useEffect(() => {
         loadRequests();
+        loadStatistics();
     }, [pagination.current, pagination.pageSize, filters]);
 
-    const loadRequests = () => {
+    const loadRequests = async () => {
         setLoading(true);
-        // Mock API call
-        setTimeout(() => {
-            setRequests(mockRequests);
-            setPagination(prev => ({
-                ...prev,
-                total: mockRequests.length
-            }));
+        try {
+            let response;
+            if (filters.status) {
+                response = await SupportService.getSupportRequestsByStatus(filters.status);
+            } else {
+                response = await SupportService.getAllSupportRequests();
+            }
+
+            if (response.success && response.data) {
+                let filteredRequests = response.data;
+
+                // Apply search filter
+                if (filters.search) {
+                    const searchLower = filters.search.toLowerCase();
+                    filteredRequests = filteredRequests.filter(request =>
+                        request.subject?.toLowerCase().includes(searchLower) ||
+                        request.userName?.toLowerCase().includes(searchLower) ||
+                        request.userEmail?.toLowerCase().includes(searchLower) ||
+                        request.id?.toLowerCase().includes(searchLower)
+                    );
+                }
+
+                setRequests(filteredRequests);
+                setPagination(prev => ({
+                    ...prev,
+                    total: filteredRequests.length
+                }));
+            }
+        } catch (error) {
+            handleApiError(error, 'Lỗi khi tải danh sách yêu cầu hỗ trợ');
+            setRequests([]);
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
+    };
+
+    const loadStatistics = async () => {
+        try {
+            const response = await SupportService.getAllSupportRequests();
+            if (response.success && response.data) {
+                const data = response.data;
+                setStatistics({
+                    total: data.length,
+                    open: data.filter(r => r.status === 'Open').length,
+                    inProgress: data.filter(r => r.status === 'InProgress').length,
+                    resolved: data.filter(r => r.status === 'Resolved').length
+                });
+            }
+        } catch (error) {
+            handleApiError(error, 'Lỗi khi tải thống kê');
+        }
     };
 
     const getColorByValue = (value, type) => {
@@ -202,62 +211,107 @@ const SupportManagement = () => {
         setDrawerVisible(true);
     };
 
-    const handleResponse = (request) => {
-        setSelectedRequest(request);
-        form.resetFields();
-        setResponseModal(true);
+    const handleResponse = async (request) => {
+        try {
+            // Load fresh data for the request
+            const response = await SupportService.getSupportRequestById(request.id);
+            if (response.success && response.data) {
+                setSelectedRequest(response.data);
+            } else {
+                setSelectedRequest(request);
+            }
+            form.resetFields();
+            setResponseModal(true);
+        } catch (error) {
+            handleApiError(error, 'Lỗi khi tải chi tiết yêu cầu hỗ trợ');
+            setSelectedRequest(request);
+            form.resetFields();
+            setResponseModal(true);
+        }
     };
 
     const handleSubmitResponse = async (values) => {
         try {
-            // Mock API call to add response
-            const newResponse = {
-                id: Date.now(),
-                author: 'Admin User',
-                message: values.message,
-                timestamp: new Date().toISOString(),
-                isCustomer: false
+            const responseData = {
+                response: values.message,
+                status: values.status || selectedRequest.status
             };
 
-            setRequests(prev => prev.map(req =>
-                req.id === selectedRequest.id
-                    ? {
-                        ...req,
-                        responses: [...(req.responses || []), newResponse],
-                        status: values.status || req.status
-                    }
-                    : req
-            ));
+            await SupportService.respondToSupportRequest(selectedRequest.id, responseData);
+            message.success('Phản hồi đã được gửi thành công');
 
-            message.success('Phản hồi đã được gửi');
             setResponseModal(false);
             form.resetFields();
+
+            // Reload data
+            await loadRequests();
+            await loadStatistics();
+
+            // If drawer is open, refresh the selected request
+            if (drawerVisible) {
+                const updatedRequest = await SupportService.getSupportRequestById(selectedRequest.id);
+                if (updatedRequest.success && updatedRequest.data) {
+                    setSelectedRequest(updatedRequest.data);
+                }
+            }
         } catch (error) {
-            message.error('Lỗi khi gửi phản hồi');
+            handleApiError(error, 'Lỗi khi gửi phản hồi');
+        }
+    };
+
+    const handleDeleteRequest = async (requestId) => {
+        try {
+            await SupportService.deleteSupportRequest(requestId);
+            message.success('Đã xóa yêu cầu hỗ trợ');
+            await loadRequests();
+            await loadStatistics();
+        } catch (error) {
+            handleApiError(error, 'Lỗi khi xóa yêu cầu hỗ trợ');
+        }
+    };
+
+    const handleUpdateStatus = async (requestId, newStatus) => {
+        try {
+            await SupportService.updateSupportRequestStatus(requestId, newStatus);
+            message.success('Đã cập nhật trạng thái');
+            await loadRequests();
+            await loadStatistics();
+
+            // If drawer is open and this is the selected request, refresh it
+            if (drawerVisible && selectedRequest?.id === requestId) {
+                const updatedRequest = await SupportService.getSupportRequestById(requestId);
+                if (updatedRequest.success && updatedRequest.data) {
+                    setSelectedRequest(updatedRequest.data);
+                }
+            }
+        } catch (error) {
+            handleApiError(error, 'Lỗi khi cập nhật trạng thái');
         }
     };
 
     const columns = [
         {
-            title: 'Mã ticket',
-            dataIndex: 'ticketNumber',
-            key: 'ticketNumber',
+            title: 'ID',
+            dataIndex: 'id',
+            key: 'id',
             width: 120,
             render: (text) => (
-                <div style={{ fontWeight: 'bold', color: '#1890ff' }}>{text}</div>
+                <div style={{ fontWeight: 'bold', color: '#1890ff' }}>
+                    {text?.substring(0, 8)}...
+                </div>
             ),
         },
         {
             title: 'Khách hàng',
-            dataIndex: 'user',
+            dataIndex: ['userName', 'userEmail'],
             key: 'user',
             width: 200,
-            render: (user) => (
+            render: (_, record) => (
                 <Space>
                     <Avatar icon={<UserOutlined />} size="small" />
                     <div>
-                        <div style={{ fontWeight: 'bold' }}>{user.name}</div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>{user.email}</div>
+                        <div style={{ fontWeight: 'bold' }}>{record.userName || 'N/A'}</div>
+                        <div style={{ fontSize: '12px', color: '#666' }}>{record.userEmail || 'N/A'}</div>
                     </div>
                 </Space>
             ),
@@ -267,28 +321,6 @@ const SupportManagement = () => {
             dataIndex: 'subject',
             key: 'subject',
             width: 250,
-        },
-        {
-            title: 'Danh mục',
-            dataIndex: 'category',
-            key: 'category',
-            width: 120,
-            render: (category) => (
-                <Tag color={getColorByValue(category, 'category')}>
-                    {getLabelByValue(category, 'category')}
-                </Tag>
-            ),
-        },
-        {
-            title: 'Độ ưu tiên',
-            dataIndex: 'priority',
-            key: 'priority',
-            width: 120,
-            render: (priority) => (
-                <Tag color={getColorByValue(priority, 'priority')}>
-                    {getLabelByValue(priority, 'priority')}
-                </Tag>
-            ),
         },
         {
             title: 'Trạng thái',
@@ -311,7 +343,7 @@ const SupportManagement = () => {
         {
             title: 'Thao tác',
             key: 'actions',
-            width: 150,
+            width: 200,
             render: (_, record) => (
                 <Space size="small">
                     <Button
@@ -326,6 +358,19 @@ const SupportManagement = () => {
                         onClick={() => handleResponse(record)}
                         title="Phản hồi"
                     />
+                    <Popconfirm
+                        title="Bạn có chắc chắn muốn xóa yêu cầu này?"
+                        onConfirm={() => handleDeleteRequest(record.id)}
+                        okText="Có"
+                        cancelText="Không"
+                    >
+                        <Button
+                            type="text"
+                            icon={<DeleteOutlined />}
+                            danger
+                            title="Xóa"
+                        />
+                    </Popconfirm>
                 </Space>
             ),
         },
@@ -347,7 +392,7 @@ const SupportManagement = () => {
                     <Card>
                         <Statistic
                             title="Tổng yêu cầu"
-                            value={pagination.total}
+                            value={statistics.total}
                             prefix={<CustomerServiceOutlined />}
                         />
                     </Card>
@@ -356,7 +401,7 @@ const SupportManagement = () => {
                     <Card>
                         <Statistic
                             title="Chờ xử lý"
-                            value={requests.filter(r => r.status === 'open').length}
+                            value={statistics.open}
                             valueStyle={{ color: '#fa8c16' }}
                             prefix={<ClockCircleOutlined />}
                         />
@@ -366,7 +411,7 @@ const SupportManagement = () => {
                     <Card>
                         <Statistic
                             title="Đang xử lý"
-                            value={requests.filter(r => r.status === 'in_progress').length}
+                            value={statistics.inProgress}
                             valueStyle={{ color: '#1890ff' }}
                             prefix={<ExclamationCircleOutlined />}
                         />
@@ -376,7 +421,7 @@ const SupportManagement = () => {
                     <Card>
                         <Statistic
                             title="Đã giải quyết"
-                            value={requests.filter(r => r.status === 'resolved').length}
+                            value={statistics.resolved}
                             valueStyle={{ color: '#3f8600' }}
                             prefix={<CheckCircleOutlined />}
                         />
@@ -389,9 +434,12 @@ const SupportManagement = () => {
                 <Row gutter={16}>
                     <Col span={6}>
                         <Search
-                            placeholder="Tìm kiếm theo mã ticket, khách hàng..."
+                            placeholder="Tìm kiếm theo ID, tiêu đề, khách hàng..."
                             allowClear
-                            onSearch={(value) => setFilters(prev => ({ ...prev, search: value }))}
+                            onSearch={(value) => {
+                                setFilters(prev => ({ ...prev, search: value }));
+                                setPagination(prev => ({ ...prev, current: 1 }));
+                            }}
                             style={{ width: '100%' }}
                         />
                     </Col>
@@ -400,7 +448,10 @@ const SupportManagement = () => {
                             placeholder="Trạng thái"
                             allowClear
                             style={{ width: '100%' }}
-                            onChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
+                            onChange={(value) => {
+                                setFilters(prev => ({ ...prev, status: value }));
+                                setPagination(prev => ({ ...prev, current: 1 }));
+                            }}
                         >
                             {statuses.map(status => (
                                 <Option key={status.value} value={status.value}>
@@ -438,7 +489,15 @@ const SupportManagement = () => {
                         </Select>
                     </Col>
                     <Col span={4}>
-                        <Button onClick={loadRequests}>Làm mới</Button>
+                        <Button
+                            icon={<ReloadOutlined />}
+                            onClick={() => {
+                                loadRequests();
+                                loadStatistics();
+                            }}
+                        >
+                            Làm mới
+                        </Button>
                     </Col>
                 </Row>
             </Card>
@@ -456,9 +515,20 @@ const SupportManagement = () => {
                         showQuickJumper: true,
                         showTotal: (total, range) =>
                             `${range[0]}-${range[1]} của ${total} yêu cầu`,
+                        pageSizeOptions: ['10', '20', '50', '100'],
                     }}
-                    onChange={setPagination}
+                    onChange={(paginationData) => {
+                        setPagination({
+                            current: paginationData.current,
+                            pageSize: paginationData.pageSize,
+                            total: pagination.total
+                        });
+                    }}
                     scroll={{ x: 1200 }}
+                    size="middle"
+                    locale={{
+                        emptyText: loading ? 'Đang tải...' : 'Không có yêu cầu hỗ trợ nào'
+                    }}
                 />
             </Card>
 
@@ -474,16 +544,10 @@ const SupportManagement = () => {
                     <div>
                         {/* Request Header */}
                         <div style={{ marginBottom: '24px' }}>
-                            <h3>{selectedRequest.ticketNumber}</h3>
+                            <h3>ID: {selectedRequest.id}</h3>
                             <Space>
                                 <Tag color={getColorByValue(selectedRequest.status, 'status')}>
                                     {getLabelByValue(selectedRequest.status, 'status')}
-                                </Tag>
-                                <Tag color={getColorByValue(selectedRequest.priority, 'priority')}>
-                                    {getLabelByValue(selectedRequest.priority, 'priority')}
-                                </Tag>
-                                <Tag color={getColorByValue(selectedRequest.category, 'category')}>
-                                    {getLabelByValue(selectedRequest.category, 'category')}
                                 </Tag>
                             </Space>
                         </div>
@@ -494,12 +558,9 @@ const SupportManagement = () => {
                                 <Space>
                                     <Avatar icon={<UserOutlined />} />
                                     <div>
-                                        <div>{selectedRequest.user.name}</div>
+                                        <div>{selectedRequest.userName || 'N/A'}</div>
                                         <div style={{ fontSize: '12px', color: '#666' }}>
-                                            <MailOutlined /> {selectedRequest.user.email}
-                                        </div>
-                                        <div style={{ fontSize: '12px', color: '#666' }}>
-                                            <PhoneOutlined /> {selectedRequest.user.phone}
+                                            <MailOutlined /> {selectedRequest.userEmail || 'N/A'}
                                         </div>
                                     </div>
                                 </Space>
@@ -510,43 +571,25 @@ const SupportManagement = () => {
                             <Descriptions.Item label="Mô tả">
                                 {selectedRequest.description}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Người phụ trách">
-                                {selectedRequest.assignedTo}
-                            </Descriptions.Item>
                             <Descriptions.Item label="Ngày tạo">
                                 {new Date(selectedRequest.createdAt).toLocaleString('vi-VN')}
                             </Descriptions.Item>
+                            <Descriptions.Item label="Cập nhật lần cuối">
+                                {new Date(selectedRequest.updatedAt).toLocaleString('vi-VN')}
+                            </Descriptions.Item>
+                            {selectedRequest.response && (
+                                <Descriptions.Item label="Phản hồi">
+                                    <div style={{
+                                        padding: '12px',
+                                        backgroundColor: '#f6ffed',
+                                        borderRadius: '8px',
+                                        border: '1px solid #d9f7be'
+                                    }}>
+                                        {selectedRequest.response}
+                                    </div>
+                                </Descriptions.Item>
+                            )}
                         </Descriptions>
-
-                        {/* Conversation Timeline */}
-                        <Card title="Lịch sử trao đổi" style={{ marginBottom: '16px' }}>
-                            <Timeline>
-                                {selectedRequest.responses?.map((response, index) => (
-                                    <Timeline.Item
-                                        key={response.id}
-                                        color={response.isCustomer ? 'blue' : 'green'}
-                                    >
-                                        <div style={{ marginBottom: '8px' }}>
-                                            <Badge
-                                                status={response.isCustomer ? 'processing' : 'success'}
-                                                text={response.author}
-                                            />
-                                            <span style={{ marginLeft: '8px', fontSize: '12px', color: '#666' }}>
-                                                {new Date(response.timestamp).toLocaleString('vi-VN')}
-                                            </span>
-                                        </div>
-                                        <div style={{
-                                            padding: '12px',
-                                            backgroundColor: response.isCustomer ? '#f0f9ff' : '#f6ffed',
-                                            borderRadius: '8px',
-                                            border: `1px solid ${response.isCustomer ? '#d1ecf1' : '#d9f7be'}`
-                                        }}>
-                                            {response.message}
-                                        </div>
-                                    </Timeline.Item>
-                                ))}
-                            </Timeline>
-                        </Card>
 
                         {/* Actions */}
                         <div style={{ textAlign: 'center' }}>
@@ -561,12 +604,31 @@ const SupportManagement = () => {
                                 >
                                     Phản hồi
                                 </Button>
-                                <Button>
-                                    Chuyển phụ trách
-                                </Button>
-                                <Button>
-                                    Đóng ticket
-                                </Button>
+                                <Select
+                                    placeholder="Cập nhật trạng thái"
+                                    style={{ width: 150 }}
+                                    onChange={(value) => handleUpdateStatus(selectedRequest.id, value)}
+                                    value={selectedRequest.status}
+                                >
+                                    {statuses.map(status => (
+                                        <Option key={status.value} value={status.value}>
+                                            {status.label}
+                                        </Option>
+                                    ))}
+                                </Select>
+                                <Popconfirm
+                                    title="Bạn có chắc chắn muốn xóa yêu cầu này?"
+                                    onConfirm={() => {
+                                        handleDeleteRequest(selectedRequest.id);
+                                        setDrawerVisible(false);
+                                    }}
+                                    okText="Có"
+                                    cancelText="Không"
+                                >
+                                    <Button danger icon={<DeleteOutlined />}>
+                                        Xóa
+                                    </Button>
+                                </Popconfirm>
                             </Space>
                         </div>
                     </div>
@@ -597,6 +659,7 @@ const SupportManagement = () => {
                     <Form.Item
                         name="status"
                         label="Cập nhật trạng thái"
+                        initialValue={selectedRequest?.status}
                     >
                         <Select placeholder="Chọn trạng thái mới">
                             {statuses.map(status => (

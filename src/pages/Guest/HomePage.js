@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import Carousel from "../../components/Carousel/Carousel";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import CategorySidebar from "../../components/Sidebar/CategorySidebar";
-import ChatboxBot from "../../components/Chat/ChatBoxBot";
 import productService from "../../services/productService";
 import categoryService from "../../services/categoryService";
 import marketService from "../../services/marketService";
@@ -378,9 +377,6 @@ const HomePage = () => {
                     </div>
                 </section>
             </main>
-
-            {/* Chatbox Bot */}
-            <ChatboxBot />
         </div>
     );
 };

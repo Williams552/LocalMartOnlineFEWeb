@@ -17,7 +17,6 @@ const StoreProfile = () => {
         name: '',
         address: '',
         contactNumber: '',
-        description: '',
         storeImageUrl: '',
         coverImageUrl: ''
     });
@@ -37,88 +36,20 @@ const StoreProfile = () => {
                 return;
             }
 
-            const currentUser = authService.getCurrentUser();
-            if (!currentUser?.id) {
-                setError("Không tìm thấy thông tin người dùng");
-                return;
+            // Gọi API /api/Store/my-store
+            const response = await storeService.getMyStore();
+            if (response.success && response.data) {
+                setStore(response.data);
+                setFormData({
+                    name: response.data.name || '',
+                    address: response.data.address || '',
+                    contactNumber: response.data.contactNumber || '',
+                    storeImageUrl: response.data.storeImageUrl || '',
+                    coverImageUrl: response.data.coverImageUrl || ''
+                });
+            } else {
+                setError(response.message || "Không tìm thấy thông tin gian hàng");
             }
-
-            console.log('=== DEBUGGING STORE FETCH ===');
-            console.log('Current user:', currentUser);
-            console.log('User role:', currentUser.role);
-            console.log('Auth token exists:', !!localStorage.getItem('token'));
-
-            // First check if user has seller registration
-            try {
-                console.log('Checking seller registration...');
-                const registrationResult = await sellerRegistrationService.getMyRegistration();
-                console.log('Seller registration result:', registrationResult);
-
-                if (registrationResult) {
-                    setHasSellerRegistration(true);
-                    console.log('User has seller registration');
-                } else {
-                    setHasSellerRegistration(false);
-                    setError('Bạn chưa đăng ký làm seller. Vui lòng đăng ký làm seller trước khi tạo gian hàng.');
-                    return;
-                }
-            } catch (regError) {
-                console.error('Error checking seller registration:', regError);
-                setHasSellerRegistration(false);
-                setError('Bạn chưa đăng ký làm seller. Vui lòng đăng ký làm seller trước khi tạo gian hàng.');
-                return;
-            }
-
-            // Fetch stores by seller
-            try {
-                console.log('Fetching stores for seller ID:', currentUser.id);
-                const stores = await storeService.getStoresBySeller(currentUser.id);
-                console.log('Stores result:', stores);
-                console.log('Stores count:', stores.length);
-
-                if (stores && stores.length > 0) {
-                    const storeData = stores[0]; // Lấy gian hàng đầu tiên
-                    setStore(storeData);
-                    setFormData({
-                        name: storeData.name || '',
-                        address: storeData.address || '',
-                        contactNumber: storeData.contactNumber || '',
-                        description: storeData.description || '',
-                        storeImageUrl: storeData.storeImageUrl || '',
-                        coverImageUrl: storeData.coverImageUrl || ''
-                    });
-                    console.log('Store data set:', storeData);
-                } else {
-                    console.log('No stores found for this seller');
-                    setError("Bạn chưa có gian hàng nào. Vui lòng tạo gian hàng.");
-                }
-
-            } catch (apiError) {
-                console.error('Error fetching stores:', apiError);
-                let errorMessage = 'Không thể tải thông tin gian hàng.';
-
-                if (apiError.response) {
-                    const status = apiError.response.status;
-                    const data = apiError.response.data;
-
-                    if (status === 401) {
-                        errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
-                    } else if (status === 403) {
-                        errorMessage = 'Bạn không có quyền truy cập thông tin này.';
-                    } else if (status === 404) {
-                        errorMessage = 'Không tìm thấy gian hàng nào.';
-                    } else if (data && data.message) {
-                        errorMessage = data.message;
-                    } else {
-                        errorMessage = `Lỗi server (${status}). Vui lòng thử lại sau.`;
-                    }
-                } else if (apiError.request) {
-                    errorMessage = 'Không thể kết nối đến server. Kiểm tra kết nối mạng.';
-                }
-
-                setError(errorMessage);
-            }
-
         } catch (error) {
             console.error('Error in fetchStoreData:', error);
             setError(error.message || "Có lỗi xảy ra khi tải thông tin gian hàng");
@@ -172,7 +103,6 @@ const StoreProfile = () => {
                 name: store.name || '',
                 address: store.address || '',
                 contactNumber: store.contactNumber || '',
-                description: store.description || '',
                 storeImageUrl: store.storeImageUrl || '',
                 coverImageUrl: store.coverImageUrl || ''
             });
@@ -208,28 +138,6 @@ const StoreProfile = () => {
     };
 
     // Debug info component
-    const DebugInfo = () => {
-        const currentUser = authService.getCurrentUser();
-        return (
-            <Card className="mt-3 border-warning">
-                <Card.Header className="bg-warning text-dark">
-                    <small>Debug Information</small>
-                </Card.Header>
-                <Card.Body>
-                    <small>
-                        <p><strong>User ID:</strong> {currentUser?.id}</p>
-                        <p><strong>User Role:</strong> {currentUser?.role}</p>
-                        <p><strong>Auth Token:</strong> {localStorage.getItem('token') ? 'Present' : 'Missing'}</p>
-                        <p><strong>API Base URL:</strong> {process.env.REACT_APP_API_URL || "http://localhost:5183"}</p>
-                        <p><strong>Has Seller Registration:</strong> {hasSellerRegistration ? 'Yes' : 'No'}</p>
-                        <p><strong>Store Found:</strong> {store ? 'Yes' : 'No'}</p>
-                        <p><strong>Loading:</strong> {loading ? 'Yes' : 'No'}</p>
-                        <p><strong>Error:</strong> {error || 'None'}</p>
-                    </small>
-                </Card.Body>
-            </Card>
-        );
-    };
 
     if (loading) {
         return (
@@ -261,9 +169,6 @@ const StoreProfile = () => {
                         </Button>
                     </div>
                 )}
-
-                {/* Debug info in case of error */}
-                <DebugInfo />
             </Container>
         );
     }
@@ -275,7 +180,6 @@ const StoreProfile = () => {
                     <FaStore className="me-2" />
                     Không tìm thấy thông tin gian hàng
                 </Alert>
-                <DebugInfo />
             </Container>
         );
     }
@@ -429,28 +333,6 @@ const StoreProfile = () => {
                                     </Form.Group>
                                 </Col>
 
-                                {/* Description */}
-                                <Col md={12} className="mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-bold">
-                                            Mô tả gian hàng
-                                        </Form.Label>
-                                        {isEditing ? (
-                                            <Form.Control
-                                                as="textarea"
-                                                rows={3}
-                                                name="description"
-                                                value={formData.description}
-                                                onChange={handleInputChange}
-                                                placeholder="Nhập mô tả về gian hàng của bạn"
-                                            />
-                                        ) : (
-                                            <div className="form-control-plaintext">
-                                                {store.description || 'Chưa có mô tả'}
-                                            </div>
-                                        )}
-                                    </Form.Group>
-                                </Col>
 
                                 {/* Store Images */}
                                 {isEditing && (
@@ -511,7 +393,7 @@ const StoreProfile = () => {
                                 <Col md={6} className="mb-2">
                                     <strong>Đánh giá:</strong>
                                     <span className="ms-2">
-                                        {store.rating ? `${store.rating}/5 ⭐` : 'Chưa có đánh giá'}
+                                        {typeof store.rating === 'number' ? `${store.rating}/5 ⭐` : 'Chưa có đánh giá'}
                                     </span>
                                 </Col>
 
@@ -526,8 +408,6 @@ const StoreProfile = () => {
                         </Card.Body>
                     </Card>
 
-                    {/* Debug info for development */}
-                    {process.env.NODE_ENV === 'development' && <DebugInfo />}
                 </Col>
             </Row>
         </Container>

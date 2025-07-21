@@ -14,6 +14,7 @@ import Footer from './components/Footer/Footer';
 import UserIdFixer from './components/Common/UserIdFixer';
 import SessionTimeoutWarning from './components/Common/SessionTimeoutWarning';
 import ScrollToTop from './components/Common/ScrollToTop';
+import SupportButton from './components/Support/SupportButton';
 
 // Services
 import authService from './services/authService';
@@ -57,7 +58,11 @@ const App = () => {
               </main>
 
               {/* Footer */}
-              <Footer />          </div>
+              <Footer />
+
+              {/* Floating Support Button */}
+              <SupportButton variant="floating" />
+            </div>
           </FollowStoreProvider>
         </FavoriteProvider>
       </CartProvider>

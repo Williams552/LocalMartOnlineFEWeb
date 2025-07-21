@@ -48,6 +48,7 @@ const MarketRuleManagement = () => {
     const [rules, setRules] = useState([]);
     const [markets, setMarkets] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [loadingMarkets, setLoadingMarkets] = useState(false);
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
@@ -93,79 +94,78 @@ const MarketRuleManagement = () => {
     }, [pagination.current, pagination.pageSize, filters]);
 
     const loadMarkets = async () => {
+        setLoadingMarkets(true);
         try {
             const response = await marketService.getAllMarkets();
             if (response?.data) {
                 setMarkets(response.data);
+            } else if (response && Array.isArray(response)) {
+                // Trường hợp response trực tiếp là array
+                setMarkets(response);
+            } else {
+                setMarkets([]);
             }
         } catch (error) {
             console.error('Error loading markets:', error);
+            message.error(error.message || 'Lỗi khi tải danh sách chợ');
+            setMarkets([]);
+        } finally {
+            setLoadingMarkets(false);
         }
     };
 
     const loadRules = async () => {
         setLoading(true);
         try {
-            // Mock data - thay bằng API thực
-            const mockRules = [
-                {
-                    id: '1',
-                    ruleCode: 'BTH-001',
-                    marketId: 'market1',
-                    marketName: 'Chợ Bến Thành',
-                    title: 'Quy tắc về giờ hoạt động',
-                    description: 'Chợ hoạt động từ 5:00 - 22:00 hàng ngày. Nghiêm cấm mua bán ngoài giờ quy định.',
-                    category: 'general',
-                    priority: 'high',
-                    status: 'active',
-                    effectiveDate: '2024-01-01',
-                    expiryDate: null,
-                    createdBy: 'Admin',
-                    createdAt: '2024-01-01',
-                    updatedAt: '2024-01-01'
-                },
-                {
-                    id: '2',
-                    ruleCode: 'BTH-002',
-                    marketId: 'market1',
-                    marketName: 'Chợ Bến Thành',
-                    title: 'Quy tắc về vệ sinh thực phẩm',
-                    description: 'Tất cả thực phẩm phải đảm bảo chất lượng, có nguồn gốc rõ ràng. Khu vực bán thực phẩm phải được vệ sinh sạch sẽ.',
-                    category: 'safety',
-                    priority: 'high',
-                    status: 'active',
-                    effectiveDate: '2024-01-01',
-                    expiryDate: null,
-                    createdBy: 'Admin',
-                    createdAt: '2024-01-01',
-                    updatedAt: '2024-01-01'
-                },
-                {
-                    id: '3',
-                    ruleCode: 'DAM-001',
-                    marketId: 'market2',
-                    marketName: 'Chợ Đầm',
-                    title: 'Quy tắc về trông giữ xe',
-                    description: 'Phí trông giữ xe máy: 5,000 VNĐ/lượt. Xe ô tô: 20,000 VNĐ/lượt. Chợ không chịu trách nhiệm về tài sản bị mất cắp.',
-                    category: 'business',
-                    priority: 'medium',
-                    status: 'active',
-                    effectiveDate: '2024-01-01',
-                    expiryDate: null,
-                    createdBy: 'Admin',
-                    createdAt: '2024-01-01',
-                    updatedAt: '2024-01-01'
-                }
-            ];
+            const params = {
+                page: pagination.current,
+                limit: pagination.pageSize,
+                ...filters
+            };
 
-            setRules(mockRules);
-            setPagination(prev => ({
-                ...prev,
-                total: mockRules.length
-            }));
+            console.log('Loading rules with params:', params);
+            
+            // Gọi API thông qua marketRuleService
+            const response = await marketRuleService.getAllMarketRules(params);
+            
+            console.log('API response:', response);
+            
+            // Sửa lại để xử lý đúng cấu trúc response từ API
+            if (response && response.marketRules) {
+                console.log('Rules loaded:', response.marketRules);
+                // Map dữ liệu để thêm các trường thiếu
+                const processedRules = response.marketRules.map(rule => ({
+                    ...rule,
+                    title: rule.title || rule.description || 'Quy tắc chưa có tiêu đề', // Fallback nếu thiếu title
+                    ruleCode: rule.ruleCode || `RULE-${rule.id.slice(-6)}`, // Tạo ruleCode nếu thiếu
+                    category: rule.category || 'general',
+                    priority: rule.priority || 'medium',
+                    status: rule.status || 'active',
+                }));
+                
+                setRules(processedRules);
+                setPagination(prev => ({
+                    ...prev,
+                    total: response.totalCount || processedRules.length
+                }));
+            } else if (response && response.data) {
+                // Fallback cho trường hợp API trả về data
+                console.log('Rules loaded from data field:', response.data);
+                setRules(response.data);
+                setPagination(prev => ({
+                    ...prev,
+                    total: response.totalCount || response.total || response.data.length
+                }));
+            } else {
+                console.log('No data in response, setting empty array');
+                setRules([]);
+                setPagination(prev => ({ ...prev, total: 0 }));
+            }
         } catch (error) {
             console.error('Error loading rules:', error);
-            message.error('Lỗi khi tải danh sách quy tắc');
+            message.error(error.message || 'Lỗi khi tải danh sách quy tắc');
+            setRules([]);
+            setPagination(prev => ({ ...prev, total: 0 }));
         } finally {
             setLoading(false);
         }
@@ -184,6 +184,39 @@ const MarketRuleManagement = () => {
         setPagination(prev => ({ ...prev, current: 1 }));
     };
 
+    // Thêm hàm tìm kiếm riêng biệt
+    const handleAdvancedSearch = async (keyword) => {
+        if (!keyword.trim()) {
+            loadRules();
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const params = {
+                ...filters,
+                page: 1,
+                limit: pagination.pageSize
+            };
+
+            const response = await marketRuleService.searchMarketRules(keyword, params);
+            
+            if (response && response.data) {
+                setRules(response.data);
+                setPagination(prev => ({
+                    ...prev,
+                    current: 1,
+                    total: response.totalCount || response.total || response.data.length
+                }));
+            }
+        } catch (error) {
+            console.error('Error searching rules:', error);
+            message.error(error.message || 'Lỗi khi tìm kiếm quy tắc');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({ ...prev, [key]: value }));
         setPagination(prev => ({ ...prev, current: 1 }));
@@ -199,56 +232,72 @@ const MarketRuleManagement = () => {
     const handleEditRule = (rule) => {
         setSelectedRule(rule);
         setEditMode(true);
+        // Set 3 trường từ backend
         form.setFieldsValue({
-            ...rule,
-            effectiveDate: rule.effectiveDate ? moment(rule.effectiveDate) : null,
-            expiryDate: rule.expiryDate ? moment(rule.expiryDate) : null,
+            marketId: rule.marketId,
+            ruleName: rule.ruleName,
+            description: rule.description
         });
         setModalVisible(true);
     };
 
-    const handleViewRule = (rule) => {
-        setSelectedRule(rule);
-        setDrawerVisible(true);
+    const handleViewRule = async (rule) => {
+        try {
+            // Lấy thông tin chi tiết của quy tắc từ API
+            const detailedRule = await marketRuleService.getMarketRuleById(rule.id);
+            setSelectedRule(detailedRule.data || rule);
+            setDrawerVisible(true);
+        } catch (error) {
+            console.error('Error loading rule details:', error);
+            // Nếu không tải được chi tiết, vẫn hiển thị thông tin cơ bản
+            setSelectedRule(rule);
+            setDrawerVisible(true);
+        }
     };
 
     const handleDeleteRule = async (ruleId) => {
         try {
-            // API call to delete rule
+            await marketRuleService.deleteMarketRule(ruleId);
             message.success('Xóa quy tắc thành công');
             loadRules();
         } catch (error) {
             console.error('Error deleting rule:', error);
-            message.error('Lỗi khi xóa quy tắc');
+            message.error(error.message || 'Lỗi khi xóa quy tắc');
         }
     };
 
     const handleToggleStatus = async (ruleId, currentStatus) => {
         try {
+            await marketRuleService.toggleRuleStatus(ruleId);
             const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-            // API call to toggle status
             message.success(`${newStatus === 'active' ? 'Kích hoạt' : 'Tạm ngưng'} quy tắc thành công`);
             loadRules();
         } catch (error) {
             console.error('Error toggling status:', error);
-            message.error('Lỗi khi thay đổi trạng thái');
+            message.error(error.message || 'Lỗi khi thay đổi trạng thái');
         }
     };
 
     const handleSubmit = async (values) => {
         try {
+            console.log('Form values:', values);
+            
+            // Backend cần marketId, ruleName và description
             const ruleData = {
-                ...values,
-                effectiveDate: values.effectiveDate?.format('YYYY-MM-DD'),
-                expiryDate: values.expiryDate?.format('YYYY-MM-DD'),
-                ruleCode: values.ruleCode || generateRuleCode(values.marketId),
+                marketId: values.marketId,
+                ruleName: values.ruleName,
+                description: values.description,
             };
 
-            if (editMode) {
-                // API call to update rule
+            console.log('Sending rule data:', ruleData);
+
+            if (editMode && selectedRule) {
+                const result = await marketRuleService.updateMarketRule(selectedRule.id, ruleData);
+                console.log('Update result:', result);
                 message.success('Cập nhật quy tắc thành công');
             } else {
-                // API call to create rule
+                const result = await marketRuleService.createMarketRule(ruleData);
+                console.log('Create result:', result);
                 message.success('Tạo quy tắc thành công');
             }
 
@@ -257,7 +306,7 @@ const MarketRuleManagement = () => {
             loadRules();
         } catch (error) {
             console.error('Error saving rule:', error);
-            message.error(editMode ? 'Lỗi khi cập nhật quy tắc' : 'Lỗi khi tạo quy tắc');
+            message.error(error.message || (editMode ? 'Lỗi khi cập nhật quy tắc' : 'Lỗi khi tạo quy tắc'));
         }
     };
 
@@ -311,61 +360,47 @@ const MarketRuleManagement = () => {
             dataIndex: 'marketName',
             key: 'marketName',
             width: 150,
+            render: (text, record) => {
+                // Nếu có thông tin market object
+                return record.market?.name || text || 'Chưa xác định';
+            }
         },
         {
-            title: 'Tiêu đề',
-            dataIndex: 'title',
-            key: 'title',
+            title: 'Tên quy tắc',
+            dataIndex: 'ruleName',
+            key: 'ruleName',
             width: 200,
-            render: (text) => <Text strong>{text}</Text>
-        },
-        {
-            title: 'Phân loại',
-            dataIndex: 'category',
-            key: 'category',
-            width: 120,
-            render: (category) => (
-                <Tag color={getCategoryColor(category)}>
-                    {getCategoryLabel(category)}
-                </Tag>
+            render: (text) => (
+                <Text strong>{text || 'Chưa đặt tên'}</Text>
             ),
         },
         {
-            title: 'Mức độ',
-            dataIndex: 'priority',
-            key: 'priority',
-            width: 100,
-            render: (priority) => (
-                <Tag color={getPriorityColor(priority)}>
-                    {getPriorityLabel(priority)}
-                </Tag>
+            title: 'Nội dung quy tắc',
+            dataIndex: 'description',
+            key: 'description',
+            width: 250,
+            render: (text) => (
+                <div>
+                    <Text>{text}</Text>
+                </div>
             ),
+            ellipsis: {
+                showTitle: false,
+            },
         },
         {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            width: 120,
-            render: (status, record) => (
-                <Space>
-                    <Tag color={getStatusColor(status)}>
-                        {getStatusLabel(status)}
-                    </Tag>
-                    <Switch
-                        size="small"
-                        checked={status === 'active'}
-                        onChange={() => handleToggleStatus(record.id, status)}
-                        title={status === 'active' ? 'Tạm ngưng' : 'Kích hoạt'}
-                    />
-                </Space>
-            ),
-        },
-        {
-            title: 'Ngày hiệu lực',
-            dataIndex: 'effectiveDate',
-            key: 'effectiveDate',
-            width: 120,
-            render: (date) => date ? moment(date).format('DD/MM/YYYY') : '',
+            title: 'Ngày tạo',
+            dataIndex: 'createdAt',
+            key: 'createdAt',
+            width: 150,
+            render: (date) => {
+                if (!date) return '';
+                try {
+                    return moment(date).format('DD/MM/YYYY HH:mm');
+                } catch {
+                    return date;
+                }
+            },
         },
         {
             title: 'Thao tác',
@@ -427,7 +462,12 @@ const MarketRuleManagement = () => {
                         <Search
                             placeholder="Tìm kiếm quy tắc..."
                             allowClear
-                            onSearch={handleSearch}
+                            onSearch={handleAdvancedSearch}
+                            onChange={(e) => {
+                                if (!e.target.value.trim()) {
+                                    handleSearch('');
+                                }
+                            }}
                             style={{ width: '100%' }}
                         />
                     </Col>
@@ -435,6 +475,7 @@ const MarketRuleManagement = () => {
                         <Select
                             placeholder="Chọn chợ"
                             allowClear
+                            loading={loadingMarkets}
                             value={filters.marketId}
                             onChange={(value) => handleFilterChange('marketId', value)}
                             style={{ width: '100%' }}
@@ -446,37 +487,7 @@ const MarketRuleManagement = () => {
                             ))}
                         </Select>
                     </Col>
-                    <Col xs={24} sm={8} lg={4}>
-                        <Select
-                            placeholder="Phân loại"
-                            allowClear
-                            value={filters.category}
-                            onChange={(value) => handleFilterChange('category', value)}
-                            style={{ width: '100%' }}
-                        >
-                            {ruleCategories.map(category => (
-                                <Option key={category.value} value={category.value}>
-                                    {category.label}
-                                </Option>
-                            ))}
-                        </Select>
-                    </Col>
-                    <Col xs={24} sm={8} lg={4}>
-                        <Select
-                            placeholder="Trạng thái"
-                            allowClear
-                            value={filters.status}
-                            onChange={(value) => handleFilterChange('status', value)}
-                            style={{ width: '100%' }}
-                        >
-                            {ruleStatuses.map(status => (
-                                <Option key={status.value} value={status.value}>
-                                    {status.label}
-                                </Option>
-                            ))}
-                        </Select>
-                    </Col>
-                    <Col xs={24} sm={8} lg={4}>
+                    <Col xs={24} sm={8} lg={6}>
                         <Button
                             type="primary"
                             icon={<PlusOutlined />}
@@ -512,46 +523,42 @@ const MarketRuleManagement = () => {
                 open={modalVisible}
                 onCancel={() => setModalVisible(false)}
                 footer={null}
-                width={700}
+                width={600}
             >
                 <Form
                     form={form}
                     layout="vertical"
                     onFinish={handleSubmit}
                 >
-                    <Row gutter={16}>
-                        <Col span={12}>
-                            <Form.Item
-                                name="marketId"
-                                label="Chọn chợ"
-                                rules={[{ required: true, message: 'Vui lòng chọn chợ!' }]}
-                            >
-                                <Select placeholder="Chọn chợ">
-                                    {markets.map(market => (
-                                        <Option key={market.id} value={market.id}>
-                                            {market.name}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="ruleCode"
-                                label="Mã quy tắc"
-                                tooltip="Để trống để tự động tạo mã"
-                            >
-                                <Input placeholder="VD: BTH-001" />
-                            </Form.Item>
-                        </Col>
-                    </Row>
+                    {/* 3 trường: marketId, ruleName và description */}
+                    <Form.Item
+                        name="marketId"
+                        label="Chọn chợ"
+                        rules={[{ required: true, message: 'Vui lòng chọn chợ!' }]}
+                    >
+                        <Select 
+                            placeholder="Chọn chợ" 
+                            loading={loadingMarkets}
+                            showSearch
+                            optionFilterProp="children"
+                            filterOption={(input, option) =>
+                                option.children.toLowerCase().includes(input.toLowerCase())
+                            }
+                        >
+                            {markets.map(market => (
+                                <Option key={market.id} value={market.id}>
+                                    {market.name}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
 
                     <Form.Item
-                        name="title"
-                        label="Tiêu đề quy tắc"
-                        rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}
+                        name="ruleName"
+                        label="Tên quy tắc"
+                        rules={[{ required: true, message: 'Vui lòng nhập tên quy tắc!' }]}
                     >
-                        <Input placeholder="Nhập tiêu đề quy tắc..." />
+                        <Input placeholder="Nhập tên quy tắc..." />
                     </Form.Item>
 
                     <Form.Item
@@ -564,51 +571,6 @@ const MarketRuleManagement = () => {
                             placeholder="Mô tả chi tiết nội dung quy tắc..."
                         />
                     </Form.Item>
-
-                    <Row gutter={16}>
-                        <Col span={8}>
-                            <Form.Item
-                                name="category"
-                                label="Phân loại"
-                                rules={[{ required: true, message: 'Vui lòng chọn phân loại!' }]}
-                            >
-                                <Select placeholder="Chọn phân loại">
-                                    {ruleCategories.map(category => (
-                                        <Option key={category.value} value={category.value}>
-                                            {category.label}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item
-                                name="priority"
-                                label="Mức độ ưu tiên"
-                                rules={[{ required: true, message: 'Vui lòng chọn mức độ!' }]}
-                            >
-                                <Select placeholder="Chọn mức độ">
-                                    {priorityLevels.map(priority => (
-                                        <Option key={priority.value} value={priority.value}>
-                                            {priority.label}
-                                        </Option>
-                                    ))}
-                                </Select>
-                            </Form.Item>
-                        </Col>
-                        <Col span={8}>
-                            <Form.Item
-                                name="status"
-                                label="Trạng thái"
-                                initialValue="active"
-                            >
-                                <Radio.Group>
-                                    <Radio value="active">Có hiệu lực</Radio>
-                                    <Radio value="draft">Bản nháp</Radio>
-                                </Radio.Group>
-                            </Form.Item>
-                        </Col>
-                    </Row>
 
                     <Form.Item>
                         <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
@@ -646,18 +608,11 @@ const MarketRuleManagement = () => {
                             }}>
                                 <BookOutlined style={{ fontSize: '32px' }} />
                             </div>
-                            <h3>{selectedRule.title}</h3>
-                            <Space>
-                                <Tag color={getStatusColor(selectedRule.status)}>
-                                    {getStatusLabel(selectedRule.status)}
-                                </Tag>
-                                <Tag color={getCategoryColor(selectedRule.category)}>
-                                    {getCategoryLabel(selectedRule.category)}
-                                </Tag>
-                                <Tag color={getPriorityColor(selectedRule.priority)}>
-                                    {getPriorityLabel(selectedRule.priority)}
-                                </Tag>
-                            </Space>
+                            <h3>{selectedRule.ruleName || selectedRule.description}</h3>
+                            {/* Chỉ hiển thị market name */}
+                            <Tag color="blue">
+                                {selectedRule.market?.name || selectedRule.marketName || 'Chưa xác định'}
+                            </Tag>
                         </div>
 
                         <Descriptions bordered column={1}>
@@ -665,19 +620,13 @@ const MarketRuleManagement = () => {
                                 <Text code>{selectedRule.ruleCode}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item label="Chợ áp dụng">
-                                {selectedRule.marketName}
+                                {selectedRule.market?.name || selectedRule.marketName || 'Chưa xác định'}
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Tên quy tắc">
+                                <Text strong>{selectedRule.ruleName || 'Chưa đặt tên'}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item label="Nội dung">
                                 <Paragraph>{selectedRule.description}</Paragraph>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Ngày hiệu lực">
-                                {selectedRule.effectiveDate ? moment(selectedRule.effectiveDate).format('DD/MM/YYYY') : 'Chưa xác định'}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Ngày hết hạn">
-                                {selectedRule.expiryDate ? moment(selectedRule.expiryDate).format('DD/MM/YYYY') : 'Không thời hạn'}
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Người tạo">
-                                {selectedRule.createdBy || 'Chưa cập nhật'}
                             </Descriptions.Item>
                             <Descriptions.Item label="Ngày tạo">
                                 {selectedRule.createdAt ? moment(selectedRule.createdAt).format('DD/MM/YYYY HH:mm') : 'Chưa cập nhật'}
@@ -690,27 +639,16 @@ const MarketRuleManagement = () => {
                         <Divider />
 
                         <div style={{ textAlign: 'center' }}>
-                            <Space>
-                                <Button
-                                    type="primary"
-                                    icon={<EditOutlined />}
-                                    onClick={() => {
-                                        setDrawerVisible(false);
-                                        handleEditRule(selectedRule);
-                                    }}
-                                >
-                                    Chỉnh sửa
-                                </Button>
-                                <Button
-                                    icon={selectedRule.status === 'active' ? <ExclamationCircleOutlined /> : <CheckCircleOutlined />}
-                                    onClick={() => {
-                                        handleToggleStatus(selectedRule.id, selectedRule.status);
-                                        setDrawerVisible(false);
-                                    }}
-                                >
-                                    {selectedRule.status === 'active' ? 'Tạm ngưng' : 'Kích hoạt'}
-                                </Button>
-                            </Space>
+                            <Button
+                                type="primary"
+                                icon={<EditOutlined />}
+                                onClick={() => {
+                                    setDrawerVisible(false);
+                                    handleEditRule(selectedRule);
+                                }}
+                            >
+                                Chỉnh sửa
+                            </Button>
                         </div>
                     </div>
                 )}

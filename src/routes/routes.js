@@ -34,6 +34,7 @@ import StoreManagement from "../pages/Admin/Store/StoreManagement";
 import StoreDashboard from "../pages/Admin/Store/StoreDashboard";
 import StoreAnalytics from "../pages/Admin/Store/StoreAnalytics";
 import ProductUnitManagement from "../pages/Admin/ProductUnit/ProductUnitManagement";
+import { ProductManagement, PendingProducts, FastBargainProducts } from "../pages/Admin/Product";
 import OrderManagement from "../pages/Admin/OrderManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
 import { FAQManagement } from "../pages/Admin/FAQ";
@@ -52,6 +53,7 @@ import ChatPage from "../pages/Buyer/ChatPage";
 import FastBargainPage from "../pages/FastBargain/FastBargainPage";
 import BargainDetail from "../pages/FastBargain/BargainDetail";
 import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
+import SupportRequestPage from "../pages/Support/SupportRequestPage";
 
 // Seller pages
 import SellerDashboard from "../pages/Sellers/SellerDashboard";
@@ -102,6 +104,7 @@ const AppRoutes = () => {
                 <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
                 <Route path="/buyer/bargains" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
+                <Route path="/support-requests" element={<ProtectedRoute><SupportRequestPage /></ProtectedRoute>} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 <Route path="/store/:storeId" element={<StorePage />} />
                 <Route path="/about" element={<AboutPage />} />
@@ -145,6 +148,7 @@ const AppRoutes = () => {
                 <Route path="categories" element={<CategoryManagement />} />
                 
 
+
                 {/* Market Management */}
                 <Route path="markets" element={<MarketManagement />} />
                 <Route path="markets/create" element={<MarketManagement />} />
@@ -163,6 +167,13 @@ const AppRoutes = () => {
 
             
                 
+                {/* Product Management */}
+                <Route path="products" element={<ProductManagement />} />
+                <Route path="products/pending" element={<PendingProducts />} />
+                <Route path="products/fast-bargain" element={<FastBargainProducts />} />
+
+
+
                 <Route path="categories" element={<ContentManagement />} />
                 <Route path="category-registrations" element={<ContentManagement />} />
                 <Route path="product-units" element={<ProductUnitManagement />} />

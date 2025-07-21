@@ -79,8 +79,10 @@ class ProductUnitService {
             console.log('🔍 ProductUnitService - Calling admin endpoint:', url);
 
 
+
             const response = await apiClient.get(url);
             console.log('🔍 ProductUnitService - Response:', response.data);
+
 
 
             if (response.data && response.data.success && response.data.data) {
