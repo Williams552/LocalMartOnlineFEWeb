@@ -379,9 +379,6 @@ const ProductManagement = () => {
                         <div style={{ fontWeight: 'bold' }}>
                             {seller?.storeName || seller?.name || record.storeName || 'N/A'}
                         </div>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
-                            {seller?.fullName || seller?.ownerName || record.sellerName || 'N/A'}
-                        </Text>
                     </div>
                 );
             },
@@ -687,22 +684,7 @@ const ProductManagement = () => {
                             </Descriptions.Item>
                             <Descriptions.Item label="Cửa hàng">
                                 <div>
-                                    <div>
-                                        <ShopOutlined /> {
-                                            selectedProduct.seller?.storeName ||
-                                            selectedProduct.seller?.name ||
-                                            selectedProduct.storeName ||
-                                            'N/A'
-                                        }
-                                    </div>
-                                    <Text type="secondary">
-                                        {
-                                            selectedProduct.seller?.fullName ||
-                                            selectedProduct.seller?.ownerName ||
-                                            selectedProduct.sellerName ||
-                                            'N/A'
-                                        }
-                                    </Text>
+                                    <ShopOutlined /> {selectedProduct.storeName || 'N/A'}
                                 </div>
                             </Descriptions.Item>
                             <Descriptions.Item label="Ngày tạo">
