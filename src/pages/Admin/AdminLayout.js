@@ -105,9 +105,7 @@ const AdminLayout = () => {
         {
             key: 'analytics', icon: <BarChartOutlined />, label: 'Báo cáo & Thống kê', children: [
                 { key: '/admin/analytics/users', label: 'Thống kê người dùng' },
-                { key: '/admin/analytics/revenue', label: 'Doanh thu' },
-                { key: '/admin/analytics/products', label: 'Sản phẩm' },
-                { key: '/admin/analytics/orders', label: 'Đơn hàng' },
+                { key: '/admin/analytics/revenue', label: 'Doanh thu' }
             ]
         },
 
