@@ -17,6 +17,8 @@ import {
     Row,
     Col,
     Statistic,
+    Upload,
+    Image,
     TimePicker
 } from 'antd';
 import {
@@ -24,8 +26,10 @@ import {
     EditOutlined,
     DeleteOutlined,
     PlusOutlined,
+    SearchOutlined,
     ExportOutlined,
     EyeOutlined,
+    UploadOutlined,
     ClockCircleOutlined,
     EnvironmentOutlined,
     PoweroffOutlined
@@ -50,13 +54,18 @@ const MarketManagement = () => {
         search: '',
         status: ''
     });
-    const [searchTerm, setSearchTerm] = useState(''); // Separate state for actual search execution
     const [selectedMarket, setSelectedMarket] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [form] = Form.useForm();
     const [searchLoading, setSearchLoading] = useState(false);
+    const [statistics, setStatistics] = useState({
+        totalMarkets: 0,
+        activeMarkets: 0,
+        maintenanceMarkets: 0,
+        suspendedMarkets: 0
+    });
 
     const marketStatuses = [
         { value: 'Active', label: 'Hoạt động', color: 'green' },
@@ -66,48 +75,85 @@ const MarketManagement = () => {
 
     useEffect(() => {
         loadMarkets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchTerm, filters.status]); // Only trigger when searchTerm or status changes
+        loadStatistics(); // Load statistics separately
+    }, [pagination.current, pagination.pageSize, filters.search, filters.status]);
+
+    // Load statistics from all markets
+    const loadStatistics = async () => {
+        try {
+            console.log('📊 MarketManagement - Loading statistics...');
+            
+            // Get all markets without pagination for statistics
+            const allMarketsResponse = await marketService.getAllMarkets(1, 1000); // Get a large number to get all
+            
+            let allMarketsData = [];
+            
+            if (Array.isArray(allMarketsResponse)) {
+                allMarketsData = allMarketsResponse;
+            } else if (allMarketsResponse && typeof allMarketsResponse === 'object') {
+                allMarketsData = allMarketsResponse.items || allMarketsResponse.data || [];
+            }
+            
+            console.log('📊 MarketManagement - All markets for statistics:', allMarketsData);
+            
+            // Calculate statistics from all markets
+            const stats = {
+                totalMarkets: allMarketsData.length,
+                activeMarkets: allMarketsData.filter(m => m.status === 'Active').length,
+                maintenanceMarkets: allMarketsData.filter(m => m.status === 'Maintenance').length,
+                suspendedMarkets: allMarketsData.filter(m => m.status === 'Suspended').length
+            };
+            
+            console.log('📊 MarketManagement - Calculated statistics:', stats);
+            setStatistics(stats);
+        } catch (error) {
+            console.error('❌ MarketManagement - Error loading statistics:', error);
+            // Don't show error message for statistics, just log it
+        }
+    };
 
     const loadMarkets = async () => {
         setLoading(true);
         try {
-            console.log('🔍 MarketManagement - Loading markets with searchTerm:', searchTerm, 'status:', filters.status);
+            const params = {
+                page: pagination.current,
+                pageSize: pagination.pageSize,
+                search: filters.search,
+                status: filters.status
+            };
+
+            console.log('🔍 MarketManagement - Loading markets with params:', params);
             
             let response;
-            let usedFallback = false;
             
             // Use appropriate endpoint based on filters
             try {
-                if (searchTerm && searchTerm.trim() && filters.status) {
-                    // Both search and status filter
-                    // First search, then filter results on frontend
-                    response = await marketService.searchMarkets(searchTerm.trim());
-                    console.log('🔍 MarketManagement - Used search endpoint, filtering by status on frontend');
+                if (filters.search && filters.search.trim() && filters.status) {
+                    // Both search and status filter - need to combine results or use search then filter
+                    // For now, prioritize search over status filter
+                    response = await marketService.searchMarkets(filters.search.trim());
+                    console.log('🔍 MarketManagement - Used search endpoint with search term:', filters.search);
                     
-                    // Apply status filter on frontend
+                    // Apply status filter on frontend if needed
                     if (Array.isArray(response)) {
                         response = response.filter(market => market.status === filters.status);
-                    } else if (response?.data && Array.isArray(response.data)) {
-                        response.data = response.data.filter(market => market.status === filters.status);
                     }
-                } else if (searchTerm && searchTerm.trim()) {
+                } else if (filters.search && filters.search.trim()) {
                     // Only search
-                    response = await marketService.searchMarkets(searchTerm.trim());
-                    console.log('🔍 MarketManagement - Used search endpoint');
+                    response = await marketService.searchMarkets(filters.search.trim());
+                    console.log('🔍 MarketManagement - Used search endpoint with search term:', filters.search);
                 } else if (filters.status) {
                     // Only status filter
                     response = await marketService.filterMarkets({ status: filters.status });
-                    console.log('🔍 MarketManagement - Used filter endpoint');
+                    console.log('🔍 MarketManagement - Used filter endpoint with status:', filters.status);
                 } else {
-                    // No filters - use regular getAllMarkets
-                    response = await marketService.getAllMarkets();
+                    // No filters - use regular getAllMarkets with pagination
+                    response = await marketService.getAllMarkets(pagination.current, pagination.pageSize, params);
                     console.log('🔍 MarketManagement - Used getAllMarkets endpoint');
                 }
-            } catch (searchFilterError) {
-                console.warn('🔄 MarketManagement - Search/Filter failed, falling back to getAllMarkets:', searchFilterError.message);
-                response = await marketService.getAllMarkets();
-                usedFallback = true;
+            } catch (apiError) {
+                console.warn('🔄 MarketManagement - API call failed, will show error to user:', apiError.message);
+                throw apiError; // Re-throw to be caught by outer catch
             }
             
             console.log('🔍 MarketManagement - API response:', response);
@@ -117,22 +163,16 @@ const MarketManagement = () => {
             let total = 0;
 
             if (Array.isArray(response)) {
-                // Direct array response
+                // Direct array response (search/filter results)
                 marketsData = response;
                 total = response.length;
-            } else if (response?.data && Array.isArray(response.data)) {
-                // Response with data property
-                marketsData = response.data;
-                total = response.total || response.data.length;
             } else if (response && typeof response === 'object') {
-                // Response is an object, might contain markets directly
-                marketsData = Object.values(response).filter(item =>
-                    item && typeof item === 'object' && item.id
-                );
-                total = marketsData.length;
+                // Response with pagination info or data property
+                marketsData = response.items || response.data || response;
+                total = response.totalCount || response.total || marketsData.length;
             }
 
-            console.log('🔍 MarketManagement - Processed markets data:', marketsData);
+            console.log('🔍 MarketManagement - Processed markets:', marketsData);
 
             setMarkets(marketsData);
             setPagination(prev => ({
@@ -140,29 +180,26 @@ const MarketManagement = () => {
                 total
             }));
             
-            // Show appropriate messages
-            if ((searchTerm || filters.status) && marketsData.length === 0 && !usedFallback) {
-                message.info('Không tìm thấy chợ nào phù hợp với điều kiện tìm kiếm');
-            } else if (usedFallback && (searchTerm || filters.status)) {
-                message.warning('API search/filter không khả dụng. Đang hiển thị tất cả chợ.');
-            } else if (searchTerm && !usedFallback) {
-                message.success(`Tìm thấy ${marketsData.length} chợ khớp với "${searchTerm}"`);
-            } else if (filters.status && !usedFallback) {
-                message.success(`Tìm thấy ${marketsData.length} chợ có trạng thái "${filters.status}"`);
+            // Show appropriate message for search/filter results
+            if ((filters.search || filters.status) && marketsData.length === 0) {
+                // No message for empty search results
             }
+            // Removed success messages for search/filter results
         } catch (error) {
             console.error('❌ MarketManagement - Error loading markets:', error);
             let errorMessage = 'Lỗi khi tải danh sách chợ';
             
-            if (searchTerm && filters.status) {
+            if (filters.search && filters.status) {
                 errorMessage = 'Lỗi khi tìm kiếm và lọc chợ';
-            } else if (searchTerm) {
+            } else if (filters.search) {
                 errorMessage = 'Lỗi khi tìm kiếm chợ';
             } else if (filters.status) {
                 errorMessage = 'Lỗi khi lọc chợ theo trạng thái';
             }
             
             message.error(`${errorMessage}: ${error.message}`);
+            
+            // On error, clear the results but keep the previous pagination
             setMarkets([]);
         } finally {
             setLoading(false);
@@ -173,7 +210,7 @@ const MarketManagement = () => {
     const handleTableChange = (paginationData) => {
         // For search/filter results, we don't support server-side pagination
         // Only allow pagination change for normal getAllMarkets
-        if (!searchTerm && !filters.status) {
+        if (!filters.search && !filters.status) {
             setPagination({
                 ...pagination,
                 current: paginationData.current,
@@ -185,12 +222,15 @@ const MarketManagement = () => {
     const handleSearch = (value) => {
         setSearchLoading(true);
         
-        // Update the searchTerm which will trigger useEffect to reload data
+        // Trim the search value and handle empty searches
         const trimmedValue = value ? value.trim() : '';
-        setSearchTerm(trimmedValue);
-        setPagination(prev => ({ ...prev, current: 1 }));
         
         console.log('🔍 MarketManagement - Search triggered with value:', trimmedValue);
+        
+        setFilters(prev => ({ ...prev, search: trimmedValue }));
+        setPagination(prev => ({ ...prev, current: 1 }));
+        
+        // Clear search loading will be handled in loadMarkets
     };
 
     const handleFilterChange = (key, value) => {
@@ -255,6 +295,7 @@ const MarketManagement = () => {
             await marketService.deleteMarket(marketId);
             message.success('Xóa chợ thành công');
             loadMarkets();
+            loadStatistics(); // Reload statistics after delete
         } catch (error) {
             console.error('Error deleting market:', error);
             message.error('Lỗi khi xóa chợ');
@@ -267,6 +308,7 @@ const MarketManagement = () => {
             const newStatus = currentStatus === 'Active' ? 'Suspended' : 'Active';
             message.success(`Đã chuyển trạng thái chợ thành ${newStatus === 'Active' ? 'Hoạt động' : 'Tạm ngừng'}`);
             loadMarkets();
+            loadStatistics(); // Reload statistics after status change
         } catch (error) {
             console.error('Error toggling market status:', error);
             message.error('Lỗi khi thay đổi trạng thái chợ');
@@ -323,6 +365,7 @@ const MarketManagement = () => {
             setModalVisible(false);
             form.resetFields();
             loadMarkets();
+            loadStatistics(); // Reload statistics after create/update
         } catch (error) {
             console.error('Error saving market:', error);
             message.error(editMode ? 'Lỗi khi cập nhật chợ' : 'Lỗi khi tạo chợ');
@@ -481,7 +524,7 @@ const MarketManagement = () => {
                         <Card>
                             <Statistic
                                 title="Tổng số chợ"
-                                value={pagination.total}
+                                value={statistics.totalMarkets}
                                 prefix={<ShopOutlined />}
                             />
                         </Card>
@@ -490,7 +533,7 @@ const MarketManagement = () => {
                         <Card>
                             <Statistic
                                 title="Đang hoạt động"
-                                value={markets.filter(m => m.status === 'Active').length}
+                                value={statistics.activeMarkets}
                                 valueStyle={{ color: '#3f8600' }}
                             />
                         </Card>
@@ -499,7 +542,7 @@ const MarketManagement = () => {
                         <Card>
                             <Statistic
                                 title="Bảo trì"
-                                value={markets.filter(m => m.status === 'Maintenance').length}
+                                value={statistics.maintenanceMarkets}
                                 valueStyle={{ color: '#fa8c16' }}
                             />
                         </Card>
@@ -507,9 +550,9 @@ const MarketManagement = () => {
                     <Col span={6}>
                         <Card>
                             <Statistic
-                                title="Tổng cửa hàng"
-                                value={markets.reduce((sum, m) => sum + (m.storeCount || 0), 0)}
-                                valueStyle={{ color: '#1890ff' }}
+                                title="Không hoạt động"
+                                value={statistics.suspendedMarkets}
+                                valueStyle={{ color: '#cf1322' }}
                             />
                         </Card>
                     </Col>
@@ -523,11 +566,12 @@ const MarketManagement = () => {
                                 placeholder="Tìm kiếm theo tên chợ, địa chỉ..."
                                 allowClear
                                 loading={searchLoading}
-                                value={filters.search}
                                 onChange={(e) => {
                                     // Handle real-time input change for controlled component
-                                    const value = e.target.value;
-                                    setFilters(prev => ({ ...prev, search: value }));
+                                    if (!e.target.value) {
+                                        // If cleared, immediately search with empty value
+                                        handleSearch('');
+                                    }
                                 }}
                                 onSearch={handleSearch}
                                 style={{ width: '100%' }}
@@ -553,8 +597,8 @@ const MarketManagement = () => {
                             <Button 
                                 onClick={() => {
                                     setFilters({ search: '', status: '' });
-                                    setSearchTerm(''); // Also reset searchTerm
                                     setPagination(prev => ({ ...prev, current: 1 }));
+                                    loadStatistics(); // Reload statistics when refresh
                                 }}
                                 loading={loading}
                             >

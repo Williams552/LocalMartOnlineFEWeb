@@ -1,203 +1,180 @@
+import axios from 'axios';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
-import authService from './authService';
+
+// Create axios instance
+const createApiClient = () => {
+    const client = axios.create({
+        timeout: 10000,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    });
+
+    // Add request interceptor for auth token
+    client.interceptors.request.use(
+        (config) => {
+            const token = localStorage.getItem('token');
+            if (token) {
+                config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+        },
+        (error) => {
+            return Promise.reject(error);
+        }
+    );
+
+    // Add response interceptor for error handling
+    client.interceptors.response.use(
+        (response) => response,
+        (error) => {
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                // Don't auto redirect for public API calls
+            }
+            return Promise.reject(error);
+        }
+    );
+
+    return client;
+};
+
+const apiClient = createApiClient();
 
 class MarketService {
     // Get all markets with admin privileges
-    async getAllMarkets() {
+    async getAllMarkets(page = 1, pageSize = 20, params = {}) {
         try {
-            const token = authService.getToken();
-            console.log('🔍 getAllMarkets - Token:', token ? 'Present' : 'Missing');
+
+            const queryParams = new URLSearchParams();
+
+           
+
+            // Add pagination parameters
+            queryParams.append('page', page.toString());
+            queryParams.append('pageSize', pageSize.toString());
             
-            const url = API_ENDPOINTS.MARKET.GET_ALL;
-            console.log('🔍 getAllMarkets - URL:', url);
+            // Add other parameters if provided
+            if (params.search) queryParams.append('search', params.search);
+            if (params.status) queryParams.append('status', params.status);
 
-            const headers = {
-                'Content-Type': 'application/json',
-            };
+            // Use admin endpoint for MarketManagement
+            const url = `${API_ENDPOINTS.MARKET.GET_ALL}?${queryParams}`;
+            console.log('🔍 MarketService - Calling admin endpoint:', url);
 
-            // Only add Authorization header if token exists
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            } else {
-                console.warn('🔍 getAllMarkets - No token found, trying public endpoint');
-                // Fallback to public endpoint if no token
-                const publicResponse = await fetch(API_ENDPOINTS.MARKET.GET_ACTIVE, { 
-                    headers,
-                    
-                });
-                console.log('🔍 getAllMarkets - Public response status:', publicResponse.status);
-                
-                if (publicResponse.ok) {
-                    const result = await publicResponse.json();
-                    console.log('🔍 getAllMarkets - Public success result:', result);
-                    return result.data || result;
-                }
+
+            const response = await apiClient.get(url);
+            console.log('🔍 MarketService - Response:', response.data);
+
+            // Return the data from the API response
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data;
             }
 
-            console.log('🔍 getAllMarkets - Headers:', headers);
-
-            const response = await fetch(url, { 
-                headers,
-                
-            });
-
-            console.log('🔍 getAllMarkets - Response status:', response.status);
-            console.log('🔍 getAllMarkets - Response ok:', response.ok);
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🔍 getAllMarkets - Error response:', errorText);
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tải danh sách chợ'}`);
-            }
-
-            const result = await response.json();
-            console.log('🔍 getAllMarkets - Success result:', result);
-            
-            return result.data || result;
+            return [];
         } catch (error) {
-            console.error('❌ getAllMarkets - Error:', error);
-            if (error.message.includes('fetch')) {
+            console.error('❌ Error fetching markets:', error);
+            if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
                 throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
             }
-            throw new Error(error.message || 'Lỗi kết nối server');
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 
     // Get all active markets for public use
     async getActiveMarkets() {
         try {
-            const response = await fetch(API_ENDPOINTS.MARKET.GET_ACTIVE);
-
-            if (!response.ok) {
-                throw new Error('Không thể tải danh sách chợ');
+            const response = await apiClient.get(API_ENDPOINTS.MARKET.GET_ACTIVE);
+            
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data;
             }
-
-            const result = await response.json();
-            return result.data || result; // Handle different response formats
+            return response.data || [];
         } catch (error) {
-            console.error('Error fetching markets:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            console.error('Error fetching active markets:', error);
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 
     // Get market by ID
     async getMarketById(marketId) {
         try {
-            const response = await fetch(API_ENDPOINTS.MARKET.GET_BY_ID(marketId));
-
-            if (!response.ok) {
-                throw new Error('Không tìm thấy thông tin chợ');
+            const response = await apiClient.get(API_ENDPOINTS.MARKET.GET_BY_ID(marketId));
+            
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data;
             }
-
-            const result = await response.json();
-            return result.data || result;
+            return response.data || null;
         } catch (error) {
             console.error('Error fetching market:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 
     // Create new market (Admin only)
     async createMarket(marketData) {
         try {
-            const token = authService.getToken();
-            const response = await fetch(API_ENDPOINTS.MARKET.CREATE, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(marketData)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Không thể tạo chợ mới');
+            const response = await apiClient.post(API_ENDPOINTS.MARKET.CREATE, marketData);
+            
+            if (response.data && response.data.success) {
+                return response.data.data || response.data;
             }
-
-            return await response.json();
+            return response.data;
         } catch (error) {
             console.error('Error creating market:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 
     // Update market (Admin only)
     async updateMarket(marketId, marketData) {
         try {
-            const token = authService.getToken();
-            const response = await fetch(API_ENDPOINTS.MARKET.UPDATE(marketId), {
-                method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(marketData)
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Không thể cập nhật chợ');
+            const response = await apiClient.put(API_ENDPOINTS.MARKET.UPDATE(marketId), marketData);
+            
+            if (response.data && response.data.success) {
+                return response.data.data || response.data;
             }
-
-            return await response.json();
+            return response.data;
         } catch (error) {
             console.error('Error updating market:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 
     // Toggle market status (Admin only)
     async toggleMarketStatus(marketId) {
         try {
-            const token = authService.getToken();
-            const response = await fetch(API_ENDPOINTS.MARKET.TOGGLE_STATUS(marketId), {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                }
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Không thể thay đổi trạng thái chợ');
+            const response = await apiClient.patch(API_ENDPOINTS.MARKET.TOGGLE_STATUS(marketId));
+            
+            if (response.data && response.data.success) {
+                return response.data.data || response.data;
             }
-
-            return await response.json();
+            return response.data;
         } catch (error) {
             console.error('Error toggling market status:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 
     // Delete market (Admin only)
     async deleteMarket(marketId) {
         try {
-            const token = authService.getToken();
-            const response = await fetch(API_ENDPOINTS.MARKET.DELETE(marketId), {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                }
-            });
-
-            if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Không thể xóa chợ');
+            const response = await apiClient.delete(API_ENDPOINTS.MARKET.DELETE(marketId));
+            
+            if (response.data && response.data.success) {
+                return response.data.data || response.data;
             }
-
-            return await response.json();
+            return response.data;
         } catch (error) {
             console.error('Error deleting market:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 
     // Search markets (Admin)
     async searchMarkets(keyword) {
         try {
-            const token = authService.getToken();
-            
             if (!keyword || keyword.trim() === '') {
                 console.log('🔍 searchMarkets - No keyword provided, returning all markets');
                 return this.getAllMarkets();
@@ -208,53 +185,28 @@ class MarketService {
             
             const url = `${API_ENDPOINTS.MARKET.SEARCH_ADMIN}?${queryParams}`;
             console.log('🔍 searchMarkets - URL:', url);
-            console.log('🔍 searchMarkets - Token:', token ? 'Present' : 'Missing');
             
-            const headers = {
-                'Content-Type': 'application/json',
-            };
+            const response = await apiClient.get(url);
+            console.log('🔍 searchMarkets - Response:', response.data);
             
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            } else {
-                console.warn('🔍 searchMarkets - No token found');
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data;
             }
-            
-            console.log('🔍 searchMarkets - Headers:', headers);
-            
-            const response = await fetch(url, { 
-                method: 'GET',
-                headers,
-                
-            });
-            
-            console.log('🔍 searchMarkets - Response status:', response.status);
-            console.log('🔍 searchMarkets - Response ok:', response.ok);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🔍 searchMarkets - Error response:', errorText);
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tìm kiếm chợ'}`);
-            }
-            
-            const result = await response.json();
-            console.log('🔍 searchMarkets - Success result:', result);
-            
-            return result.data || result;
+
+            return response.data || [];
+
         } catch (error) {
             console.error('❌ searchMarkets - Error:', error);
-            if (error.message.includes('fetch')) {
+            if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
                 throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
             }
-            throw new Error(error.message || 'Lỗi kết nối server');
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 
     // Filter markets (Admin)
     async filterMarkets(filters = {}) {
         try {
-            const token = authService.getToken();
-            
             const queryParams = new URLSearchParams();
             
             if (filters.status) queryParams.append('status', filters.status);
@@ -270,45 +222,22 @@ class MarketService {
             
             const url = `${API_ENDPOINTS.MARKET.FILTER_ADMIN}?${queryParams}`;
             console.log('🔍 filterMarkets - URL:', url);
-            console.log('🔍 filterMarkets - Token:', token ? 'Present' : 'Missing');
             
-            const headers = {
-                'Content-Type': 'application/json',
-            };
+
+            const response = await apiClient.get(url);
+            console.log('🔍 filterMarkets - Response:', response.data);
+
             
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            } else {
-                console.warn('🔍 filterMarkets - No token found');
+            if (response.data && response.data.success && response.data.data) {
+                return response.data.data;
             }
-            
-            console.log('🔍 filterMarkets - Headers:', headers);
-            
-            const response = await fetch(url, { 
-                method: 'GET',
-                headers,
-                
-            });
-            
-            console.log('🔍 filterMarkets - Response status:', response.status);
-            console.log('🔍 filterMarkets - Response ok:', response.ok);
-            
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('🔍 filterMarkets - Error response:', errorText);
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể lọc chợ'}`);
-            }
-            
-            const result = await response.json();
-            console.log('🔍 filterMarkets - Success result:', result);
-            
-            return result.data || result;
+            return response.data || [];
         } catch (error) {
             console.error('❌ filterMarkets - Error:', error);
-            if (error.message.includes('fetch')) {
+            if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
                 throw new Error('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng hoặc trạng thái server.');
             }
-            throw new Error(error.message || 'Lỗi kết nối server');
+            throw new Error(error.response?.data?.message || error.message || 'Lỗi kết nối server');
         }
     }
 }

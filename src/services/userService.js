@@ -24,8 +24,25 @@ class UserService {
                 queryParams.pageSize = 1000;
             }
 
-            console.log('🔄 Gọi API để lấy users với params:', queryParams);
-            const response = await apiService.get('/api/User', { params: queryParams });
+            // Add search and filter parameters
+            if (params.search) {
+                queryParams.search = params.search;
+            }
+            if (params.role && params.role !== 'all') {
+                queryParams.role = params.role;
+            }
+            if (params.sortField) {
+                queryParams.sortField = params.sortField;
+            }
+
+            // Build URL with query parameters
+            const queryString = new URLSearchParams(queryParams).toString();
+            const endpoint = `/api/User?${queryString}`;
+
+            console.log('🔄 Gọi API để lấy users với endpoint:', endpoint);
+            console.log('🔄 Query params:', queryParams);
+            
+            const response = await apiService.get(endpoint);
 
             if (!response || typeof response !== 'object') {
                 throw new Error('Phản hồi từ API không hợp lệ');
