@@ -78,15 +78,12 @@ class ProductUnitService {
             const url = `${API_ENDPOINTS.PRODUCT_UNIT.GET_ALL_ADMIN}?${queryParams}`;
             console.log('🔍 ProductUnitService - Calling admin endpoint:', url);
 
-<<<<<<< HEAD
-            const response = await apiClient.get(url);
-            console.log('🔍 ProductUnitService - Response:', response.data);
-=======
+
 
             const response = await apiClient.get(url);
             console.log('🔍 ProductUnitService - Response:', response.data);
 
->>>>>>> af8ab0becec22c2dd5bef35708da6a2680fd5e4b
+
 
             if (response.data && response.data.success && response.data.data) {
                 return response.data.data;
