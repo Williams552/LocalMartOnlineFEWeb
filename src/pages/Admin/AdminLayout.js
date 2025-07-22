@@ -48,11 +48,7 @@ const AdminLayout = () => {
         },
         {
             key: 'users', icon: <UserOutlined />, label: 'Quản lý người dùng', children: [
-                { key: '/admin/users', label: 'Danh sách người dùng' },
-
-
-                { key: '/admin/users/create', label: 'Thêm người dùng' },
-                
+                { key: '/admin/users', label: 'Danh sách người dùng' },                
                 { key: '/admin/seller-register', label: 'Danh sách đăng ký bán hàng' },
                 { key: '/admin/proxy-register', label: 'Danh sách đăng ký người mua hộ' },
             ]
