@@ -1,6 +1,6 @@
 import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
 import Register from "../components/AuthComponents/Register";
 import ForgotPassword from "../components/AuthComponents/ForgotPassword";
@@ -56,7 +56,6 @@ import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
 import SupportRequestPage from "../pages/Support/SupportRequestPage";
 
 // Seller pages
-import SellerDashboard from "../pages/Sellers/SellerDashboard";
 import SellerProducts from "../pages/Sellers/SellerProducts";
 import SellerOrdersPage from "../pages/Sellers/SellerOrdersPage";
 import StoreProfile from "../pages/Sellers/StoreProfile";
@@ -114,20 +113,20 @@ const AppRoutes = () => {
 
             {/* Seller Routes - Separate layout without Header/Footer */}
             <Route element={<SellerApp />}>
-                <Route path="/seller/dashboard" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
+                <Route path="/seller" element={<Navigate to="/seller/products" replace />} />
+                <Route path="/seller/dashboard" element={<Navigate to="/seller/products" replace />} />
                 <Route path="/seller/products" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
                 <Route path="/seller/products/add" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
                 <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['Seller']}><SellerOrdersPage /></ProtectedRoute>} />
                 <Route path="/seller/profile" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
-                <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
+                <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><ChartsAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/seller/customers" element={<ProtectedRoute allowedRoles={['Seller']}><CustomerManagement /></ProtectedRoute>} />
                 <Route path="/seller/personal-shopping" element={<ProtectedRoute allowedRoles={['Seller']}><PersonalShopping /></ProtectedRoute>} />
                 <Route path="/seller/quick-actions" element={<ProtectedRoute allowedRoles={['Seller']}><QuickActionsPage /></ProtectedRoute>} />
-                <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><ChartsAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/seller/notifications" element={<ProtectedRoute allowedRoles={['Seller']}><NotificationsPage /></ProtectedRoute>} />
                 <Route path="/seller/priority-actions" element={<ProtectedRoute allowedRoles={['Seller']}><PriorityActionsPage /></ProtectedRoute>} />
-                <Route path="/seller/payments" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/licenses" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
+                <Route path="/seller/payments" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
+                <Route path="/seller/licenses" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
                 <Route path="/seller/store" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
             </Route>
 
@@ -146,7 +145,7 @@ const AppRoutes = () => {
 
                 {/* Category Management */}
                 <Route path="categories" element={<CategoryManagement />} />
-                
+
 
 
                 {/* Market Management */}
@@ -165,8 +164,8 @@ const AppRoutes = () => {
                 <Route path="stores/sellers" element={<StoreManagement />} />
                 <Route path="stores/reviews" element={<StoreManagement />} />
 
-            
-                
+
+
                 {/* Product Management */}
                 <Route path="products" element={<ProductManagement />} />
                 <Route path="products/pending" element={<PendingProducts />} />
