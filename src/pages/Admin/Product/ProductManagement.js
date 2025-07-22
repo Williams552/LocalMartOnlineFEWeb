@@ -466,9 +466,6 @@ const ProductManagement = () => {
             render: (text, record) => (
                 <div>
                     <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{text}</div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                        ID: {record.id}
-                    </Text>
                 </div>
             ),
         },
@@ -502,7 +499,7 @@ const ProductManagement = () => {
                         }).format(price)}
                     </div>
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                        /{record.unit}
+                        /{record.unitName || record.unit || 'đơn vị'}
                     </Text>
                 </div>
             ),
@@ -819,10 +816,10 @@ const ProductManagement = () => {
                                                 currency: 'VND',
                                             }).format(selectedProduct.price)}
                                         </Text>
-                                        <Text type="secondary"> /{selectedProduct.unit}</Text>
+                                        <Text type="secondary"> /{selectedProduct.unitName || selectedProduct.unit || 'đơn vị'}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Số lượng tối thiểu">
-                                        {selectedProduct.minimumQuantity} {selectedProduct.unit}
+                                        {selectedProduct.minimumQuantity} {selectedProduct.unitName || selectedProduct.unit || 'đơn vị'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Lượt mua">
                                         {selectedProduct.purchaseCount || 0} lượt
