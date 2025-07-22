@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Row, Col, Form, Button, Spinner, Alert, Badge } from 'react-bootstrap';
-import { FaStore, FaEdit, FaSave, FaTimes, FaMapMarkerAlt, FaPhone, FaUser, FaClock, FaPlus } from 'react-icons/fa';
+import { FaStore, FaEdit, FaSave, FaTimes, FaMapMarkerAlt, FaPhone, FaUser, FaClock, FaPlus, FaImage, FaCalendarAlt, FaIdCard, FaStar } from 'react-icons/fa';
+import { FiLoader } from 'react-icons/fi';
 import storeService from '../../services/storeService';
 import authService from '../../services/authService';
 import sellerRegistrationService from '../../services/sellerRegistrationService';
 import { toast } from 'react-toastify';
+import SellerLayout from '../../layouts/SellerLayout';
 
 const StoreProfile = () => {
     const [store, setStore] = useState(null);
@@ -122,18 +123,18 @@ const StoreProfile = () => {
 
     const getStatusBadge = (status) => {
         const statusConfig = {
-            'Open': { color: 'success', text: 'Đang hoạt động' },
-            'Closed': { color: 'danger', text: 'Đã đóng' },
-            'Pending': { color: 'warning', text: 'Chờ duyệt' },
-            'Suspended': { color: 'secondary', text: 'Tạm ngưng' }
+            'Open': { color: 'bg-green-100 text-green-800 border-green-200', text: 'Đang hoạt động' },
+            'Closed': { color: 'bg-red-100 text-red-800 border-red-200', text: 'Đã đóng' },
+            'Pending': { color: 'bg-yellow-100 text-yellow-800 border-yellow-200', text: 'Chờ duyệt' },
+            'Suspended': { color: 'bg-gray-100 text-gray-800 border-gray-200', text: 'Tạm ngưng' }
         };
 
-        const config = statusConfig[status] || { color: 'secondary', text: status || 'Không xác định' };
+        const config = statusConfig[status] || { color: 'bg-gray-100 text-gray-800 border-gray-200', text: status || 'Không xác định' };
 
         return (
-            <Badge bg={config.color} className="ms-2">
+            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${config.color}`}>
                 {config.text}
-            </Badge>
+            </span>
         );
     };
 
@@ -141,276 +142,361 @@ const StoreProfile = () => {
 
     if (loading) {
         return (
-            <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '60vh' }}>
-                <div className="text-center">
-                    <Spinner animation="border" variant="primary" className="mb-3" />
-                    <div>Đang tải thông tin gian hàng...</div>
+            <SellerLayout>
+                <div className="flex items-center justify-center min-h-96">
+                    <div className="text-center">
+                        <div className="w-16 h-16 border-4 border-supply-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-gray-600 text-lg">Đang tải thông tin gian hàng...</p>
+                    </div>
                 </div>
-            </Container>
+            </SellerLayout>
         );
     }
 
     if (error) {
         return (
-            <Container className="mt-4">
-                <Alert variant="danger" className="text-center">
-                    <FaStore className="me-2" />
-                    {error}
-                </Alert>
+            <SellerLayout>
+                <div className="flex items-center justify-center min-h-96">
+                    <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FaStore className="text-red-500 text-2xl" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">Không thể tải thông tin</h3>
+                        <p className="text-gray-600 mb-6">{error}</p>
 
-                {!hasSellerRegistration && (
-                    <div className="text-center mt-3">
-                        <Button
-                            variant="primary"
-                            onClick={() => window.location.href = '/register-seller'}
-                        >
-                            <FaPlus className="me-2" />
-                            Đăng ký làm Seller
-                        </Button>
+                        {!hasSellerRegistration && (
+                            <button
+                                onClick={() => window.location.href = '/register-seller'}
+                                className="bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center mx-auto"
+                            >
+                                <FaPlus className="mr-2" />
+                                Đăng ký làm Seller
+                            </button>
+                        )}
                     </div>
-                )}
-            </Container>
+                </div>
+            </SellerLayout>
         );
     }
 
     if (!store) {
         return (
-            <Container className="mt-4">
-                <Alert variant="info" className="text-center">
-                    <FaStore className="me-2" />
-                    Không tìm thấy thông tin gian hàng
-                </Alert>
-            </Container>
+            <SellerLayout>
+                <div className="flex items-center justify-center min-h-96">
+                    <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center">
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FaStore className="text-blue-500 text-2xl" />
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-4">Chưa có gian hàng</h3>
+                        <p className="text-gray-600">Không tìm thấy thông tin gian hàng của bạn</p>
+                    </div>
+                </div>
+            </SellerLayout>
         );
     }
 
     return (
-        <Container className="mt-4 mb-5">
-            <Row>
-                <Col lg={8} className="mx-auto">
-                    <Card className="shadow-lg border-0">
-                        {/* Header */}
-                        <Card.Header className="bg-primary text-white py-4">
-                            <div className="d-flex justify-content-between align-items-center">
-                                <div className="d-flex align-items-center">
-                                    <FaStore className="me-3" size={24} />
-                                    <h3 className="mb-0">Thông tin gian hàng</h3>
+        <SellerLayout>
+            <div className="py-6">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Page Header */}
+                    <div className="mb-6">
+                        <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+                            <FaStore className="mr-3 text-supply-primary" />
+                            Thông tin gian hàng
+                        </h1>
+                        <p className="text-gray-600 mt-1">Quản lý thông tin và cài đặt gian hàng của bạn</p>
+                    </div>
+
+                    {/* Store Profile Card */}
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+                        {/* Cover Image */}
+                        <div className="relative h-48 bg-gradient-to-r from-supply-primary to-green-600">
+                            {store.coverImageUrl && (
+                                <img
+                                    src={store.coverImageUrl}
+                                    alt="Cover"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        e.target.style.display = 'none';
+                                    }}
+                                />
+                            )}
+                            <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+
+                            {/* Store Avatar */}
+                            <div className="absolute -bottom-16 left-8">
+                                <div className="w-32 h-32 rounded-2xl bg-white p-2 shadow-lg">
+                                    {store.storeImageUrl ? (
+                                        <img
+                                            src={store.storeImageUrl}
+                                            alt={store.name}
+                                            className="w-full h-full object-cover rounded-xl"
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-r from-supply-primary to-green-600 rounded-xl flex items-center justify-center">
+                                            <FaStore className="text-white text-4xl" />
+                                        </div>
+                                    )}
                                 </div>
+                            </div>
+
+                            {/* Edit Button */}
+                            <div className="absolute top-4 right-4">
                                 {!isEditing ? (
-                                    <Button
-                                        variant="light"
-                                        size="sm"
+                                    <button
                                         onClick={() => setIsEditing(true)}
-                                        className="d-flex align-items-center"
+                                        className="bg-white/90 backdrop-blur-sm text-gray-800 px-4 py-2 rounded-lg hover:bg-white transition-colors flex items-center shadow-md"
                                     >
-                                        <FaEdit className="me-2" />
+                                        <FaEdit className="mr-2" />
                                         Chỉnh sửa
-                                    </Button>
+                                    </button>
                                 ) : (
-                                    <div className="d-flex gap-2">
-                                        <Button
-                                            variant="success"
-                                            size="sm"
+                                    <div className="flex space-x-2">
+                                        <button
                                             onClick={handleSave}
                                             disabled={saving}
-                                            className="d-flex align-items-center"
+                                            className="bg-supply-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors flex items-center disabled:opacity-50"
                                         >
                                             {saving ? (
-                                                <Spinner animation="border" size="sm" className="me-2" />
+                                                <FiLoader className="mr-2 animate-spin" />
                                             ) : (
-                                                <FaSave className="me-2" />
+                                                <FaSave className="mr-2" />
                                             )}
                                             Lưu
-                                        </Button>
-                                        <Button
-                                            variant="outline-light"
-                                            size="sm"
+                                        </button>
+                                        <button
                                             onClick={handleCancel}
                                             disabled={saving}
-                                            className="d-flex align-items-center"
+                                            className="bg-white/90 backdrop-blur-sm text-gray-800 px-4 py-2 rounded-lg hover:bg-white transition-colors flex items-center disabled:opacity-50"
                                         >
-                                            <FaTimes className="me-2" />
+                                            <FaTimes className="mr-2" />
                                             Hủy
-                                        </Button>
+                                        </button>
                                     </div>
                                 )}
                             </div>
-                        </Card.Header>
+                        </div>
 
-                        <Card.Body className="p-4">
-                            {/* Store Image */}
-                            {(store.storeImageUrl || store.coverImageUrl) && (
-                                <div className="text-center mb-4">
-                                    <img
-                                        src={store.storeImageUrl || store.coverImageUrl}
-                                        alt="Store"
-                                        className="img-fluid rounded"
-                                        style={{ maxHeight: '300px', maxWidth: '100%' }}
-                                        onError={(e) => {
-                                            e.target.style.display = 'none';
-                                        }}
-                                    />
+                        {/* Store Info */}
+                        <div className="pt-20 pb-8 px-8">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+                                <div>
+                                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{store.name || 'Chưa đặt tên'}</h1>
+                                    <div className="flex items-center space-x-4">
+                                        {getStatusBadge(store.status)}
+                                        {typeof store.rating === 'number' && (
+                                            <div className="flex items-center">
+                                                <FaStar className="text-yellow-400 mr-1" />
+                                                <span className="text-gray-700 font-medium">{store.rating}/5</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
-                            )}
+                            </div>
 
-                            <Row>
+                            {/* Main Content */}
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                                 {/* Basic Information */}
-                                <Col md={12}>
-                                    <h5 className="border-bottom pb-2 mb-3">
-                                        <FaUser className="me-2 text-primary" />
-                                        Thông tin cơ bản
-                                    </h5>
-                                </Col>
+                                <div className="space-y-6">
+                                    <div>
+                                        <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                                            <FaUser className="mr-2 text-supply-primary" />
+                                            Thông tin cơ bản
+                                        </h2>
 
-                                {/* Store Name */}
-                                <Col md={6} className="mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-bold">
-                                            <FaStore className="me-2 text-primary" />
-                                            Tên gian hàng
-                                        </Form.Label>
-                                        {isEditing ? (
-                                            <Form.Control
-                                                type="text"
-                                                name="name"
-                                                value={formData.name}
-                                                onChange={handleInputChange}
-                                                placeholder="Nhập tên gian hàng"
-                                            />
-                                        ) : (
-                                            <div className="form-control-plaintext">
-                                                {store.name || 'Chưa cập nhật'}
-                                                {getStatusBadge(store.status)}
+                                        <div className="space-y-4">
+                                            {/* Store Name */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    <FaStore className="inline mr-2 text-supply-primary" />
+                                                    Tên gian hàng
+                                                </label>
+                                                {isEditing ? (
+                                                    <input
+                                                        type="text"
+                                                        name="name"
+                                                        value={formData.name}
+                                                        onChange={handleInputChange}
+                                                        placeholder="Nhập tên gian hàng"
+                                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent"
+                                                    />
+                                                ) : (
+                                                    <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900">
+                                                        {store.name || 'Chưa cập nhật'}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </Form.Group>
-                                </Col>
 
-                                {/* Contact Number */}
-                                <Col md={6} className="mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-bold">
-                                            <FaPhone className="me-2 text-primary" />
-                                            Số điện thoại
-                                        </Form.Label>
-                                        {isEditing ? (
-                                            <Form.Control
-                                                type="tel"
-                                                name="contactNumber"
-                                                value={formData.contactNumber}
-                                                onChange={handleInputChange}
-                                                placeholder="Nhập số điện thoại"
-                                            />
-                                        ) : (
-                                            <div className="form-control-plaintext">
-                                                {store.contactNumber || 'Chưa cập nhật'}
+                                            {/* Contact Number */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    <FaPhone className="inline mr-2 text-supply-primary" />
+                                                    Số điện thoại
+                                                </label>
+                                                {isEditing ? (
+                                                    <input
+                                                        type="tel"
+                                                        name="contactNumber"
+                                                        value={formData.contactNumber}
+                                                        onChange={handleInputChange}
+                                                        placeholder="Nhập số điện thoại"
+                                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent"
+                                                    />
+                                                ) : (
+                                                    <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900">
+                                                        {store.contactNumber || 'Chưa cập nhật'}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </Form.Group>
-                                </Col>
 
-                                {/* Address */}
-                                <Col md={12} className="mb-3">
-                                    <Form.Group>
-                                        <Form.Label className="fw-bold">
-                                            <FaMapMarkerAlt className="me-2 text-primary" />
-                                            Địa chỉ
-                                        </Form.Label>
-                                        {isEditing ? (
-                                            <Form.Control
-                                                as="textarea"
-                                                rows={2}
-                                                name="address"
-                                                value={formData.address}
-                                                onChange={handleInputChange}
-                                                placeholder="Nhập địa chỉ gian hàng"
-                                            />
-                                        ) : (
-                                            <div className="form-control-plaintext">
-                                                {store.address || 'Chưa cập nhật'}
+                                            {/* Address */}
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    <FaMapMarkerAlt className="inline mr-2 text-supply-primary" />
+                                                    Địa chỉ
+                                                </label>
+                                                {isEditing ? (
+                                                    <textarea
+                                                        name="address"
+                                                        value={formData.address}
+                                                        onChange={handleInputChange}
+                                                        placeholder="Nhập địa chỉ gian hàng"
+                                                        rows={3}
+                                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent resize-none"
+                                                    />
+                                                ) : (
+                                                    <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-gray-900 min-h-[84px]">
+                                                        {store.address || 'Chưa cập nhật'}
+                                                    </div>
+                                                )}
                                             </div>
-                                        )}
-                                    </Form.Group>
-                                </Col>
+                                        </div>
+                                    </div>
 
+                                    {/* Image URLs - Only show when editing */}
+                                    {isEditing && (
+                                        <div>
+                                            <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                                                <FaImage className="mr-2 text-supply-primary" />
+                                                Hình ảnh
+                                            </h2>
 
-                                {/* Store Images */}
-                                {isEditing && (
-                                    <>
-                                        <Col md={6} className="mb-3">
-                                            <Form.Group>
-                                                <Form.Label className="fw-bold">
-                                                    URL ảnh gian hàng
-                                                </Form.Label>
-                                                <Form.Control
-                                                    type="url"
-                                                    name="storeImageUrl"
-                                                    value={formData.storeImageUrl}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Nhập URL ảnh gian hàng"
-                                                />
-                                            </Form.Group>
-                                        </Col>
+                                            <div className="space-y-4">
+                                                {/* Store Image URL */}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        URL ảnh gian hàng
+                                                    </label>
+                                                    <input
+                                                        type="url"
+                                                        name="storeImageUrl"
+                                                        value={formData.storeImageUrl}
+                                                        onChange={handleInputChange}
+                                                        placeholder="Nhập URL ảnh gian hàng"
+                                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent"
+                                                    />
+                                                </div>
 
-                                        <Col md={6} className="mb-3">
-                                            <Form.Group>
-                                                <Form.Label className="fw-bold">
-                                                    URL ảnh bìa
-                                                </Form.Label>
-                                                <Form.Control
-                                                    type="url"
-                                                    name="coverImageUrl"
-                                                    value={formData.coverImageUrl}
-                                                    onChange={handleInputChange}
-                                                    placeholder="Nhập URL ảnh bìa"
-                                                />
-                                            </Form.Group>
-                                        </Col>
-                                    </>
-                                )}
+                                                {/* Cover Image URL */}
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        URL ảnh bìa
+                                                    </label>
+                                                    <input
+                                                        type="url"
+                                                        name="coverImageUrl"
+                                                        value={formData.coverImageUrl}
+                                                        onChange={handleInputChange}
+                                                        placeholder="Nhập URL ảnh bìa"
+                                                        className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* System Information */}
-                                <Col md={12} className="mt-4">
-                                    <h5 className="border-bottom pb-2 mb-3">
-                                        <FaClock className="me-2 text-primary" />
+                                <div>
+                                    <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                                        <FaClock className="mr-2 text-supply-primary" />
                                         Thông tin hệ thống
-                                    </h5>
-                                </Col>
+                                    </h2>
 
-                                <Col md={6} className="mb-2">
-                                    <strong>ID gian hàng:</strong> {store.id}
-                                </Col>
+                                    <div className="bg-gray-50 rounded-lg p-6 space-y-4">
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm font-medium text-gray-600 flex items-center">
+                                                    <FaIdCard className="mr-2" />
+                                                    ID gian hàng:
+                                                </span>
+                                                <span className="text-sm text-gray-900 font-mono bg-white px-2 py-1 rounded">
+                                                    {store.id}
+                                                </span>
+                                            </div>
 
-                                <Col md={6} className="mb-2">
-                                    <strong>ID người bán:</strong> {store.sellerId}
-                                </Col>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm font-medium text-gray-600 flex items-center">
+                                                    <FaUser className="mr-2" />
+                                                    ID người bán:
+                                                </span>
+                                                <span className="text-sm text-gray-900 font-mono bg-white px-2 py-1 rounded">
+                                                    {store.sellerId}
+                                                </span>
+                                            </div>
 
-                                <Col md={6} className="mb-2">
-                                    <strong>Trạng thái:</strong>
-                                    {getStatusBadge(store.status)}
-                                </Col>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm font-medium text-gray-600">
+                                                    Trạng thái:
+                                                </span>
+                                                {getStatusBadge(store.status)}
+                                            </div>
 
-                                <Col md={6} className="mb-2">
-                                    <strong>Đánh giá:</strong>
-                                    <span className="ms-2">
-                                        {typeof store.rating === 'number' ? `${store.rating}/5 ⭐` : 'Chưa có đánh giá'}
-                                    </span>
-                                </Col>
+                                            {typeof store.rating === 'number' && (
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-sm font-medium text-gray-600 flex items-center">
+                                                        <FaStar className="mr-2" />
+                                                        Đánh giá:
+                                                    </span>
+                                                    <div className="flex items-center">
+                                                        <FaStar className="text-yellow-400 mr-1" />
+                                                        <span className="text-sm text-gray-900 font-medium">{store.rating}/5</span>
+                                                    </div>
+                                                </div>
+                                            )}
 
-                                <Col md={6} className="mb-2">
-                                    <strong>Ngày tạo:</strong> {formatDate(store.createdAt)}
-                                </Col>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm font-medium text-gray-600 flex items-center">
+                                                    <FaCalendarAlt className="mr-2" />
+                                                    Ngày tạo:
+                                                </span>
+                                                <span className="text-sm text-gray-900">
+                                                    {formatDate(store.createdAt)}
+                                                </span>
+                                            </div>
 
-                                <Col md={6} className="mb-2">
-                                    <strong>Cập nhật lần cuối:</strong> {formatDate(store.updatedAt)}
-                                </Col>
-                            </Row>
-                        </Card.Body>
-                    </Card>
-
-                </Col>
-            </Row>
-        </Container>
+                                            <div className="flex justify-between items-center">
+                                                <span className="text-sm font-medium text-gray-600 flex items-center">
+                                                    <FaClock className="mr-2" />
+                                                    Cập nhật cuối:
+                                                </span>
+                                                <span className="text-sm text-gray-900">
+                                                    {formatDate(store.updatedAt)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </SellerLayout>
     );
 };
 
