@@ -19,7 +19,8 @@ import {
     Statistic,
     InputNumber,
     DatePicker,
-    Typography
+    Typography,
+    Alert
 } from 'antd';
 import {
     DollarOutlined,
@@ -53,9 +54,7 @@ const MarketFeeManagement = () => {
     });
     const [filters, setFilters] = useState({
         search: '',
-        marketId: '',
-        feeType: '',
-        status: ''
+        marketId: ''
     });
     const [selectedFee, setSelectedFee] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
@@ -63,74 +62,90 @@ const MarketFeeManagement = () => {
     const [editMode, setEditMode] = useState(false);
     const [form] = Form.useForm();
 
-    const feeTypes = [
-        { value: 'monthly_rent', label: 'Phí thuê tháng', color: 'blue' },
-        { value: 'setup_fee', label: 'Phí thiết lập', color: 'green' },
-        { value: 'service_fee', label: 'Phí dịch vụ', color: 'orange' },
-        { value: 'maintenance_fee', label: 'Phí bảo trì', color: 'purple' },
-        { value: 'penalty_fee', label: 'Phí phạt', color: 'red' }
-    ];
-
-    const feeStatuses = [
-        { value: 'pending', label: 'Chờ thanh toán', color: 'orange' },
-        { value: 'paid', label: 'Đã thanh toán', color: 'green' },
-        { value: 'overdue', label: 'Quá hạn', color: 'red' },
-        { value: 'cancelled', label: 'Đã hủy', color: 'gray' }
-    ];
-
     useEffect(() => {
         loadMarkets();
         loadFees();
-    }, [pagination.current, pagination.pageSize, filters]);
+    }, [filters]); // Chỉ reload khi filters thay đổi, không cần pagination
 
     const loadMarkets = async () => {
         try {
             const response = await marketService.getAllMarkets();
             if (response?.data) {
                 setMarkets(response.data);
+            } else if (response && Array.isArray(response)) {
+                // Trường hợp response trực tiếp là array
+                setMarkets(response);
+            } else {
+                setMarkets([]);
             }
         } catch (error) {
             console.error('Error loading markets:', error);
+            message.error(error.message || 'Lỗi khi tải danh sách chợ');
+            setMarkets([]);
         }
     };
 
     const loadFees = async () => {
         setLoading(true);
         try {
-            // Mock data - thay bằng API thực
-            const mockFees = [
-                {
-                    id: '1',
-                    marketId: 'market1',
-                    marketName: 'Chợ Bến Thành',
-                    feeType: 'monthly_rent',
-                    amount: 2000000,
-                    description: 'Phí thuê tháng 12/2024',
-                    dueDate: '2024-12-31',
-                    status: 'pending',
-                    createdAt: '2024-12-01'
-                },
-                {
-                    id: '2',
-                    marketId: 'market2',
-                    marketName: 'Chợ Đầm',
-                    feeType: 'service_fee',
-                    amount: 500000,
-                    description: 'Phí dịch vụ quý 4/2024',
-                    dueDate: '2024-12-15',
-                    status: 'paid',
-                    createdAt: '2024-11-15'
-                }
-            ];
+            // Backend API sử dụng DTO với tên parameters khác
+            const params = {};
+            
+            // Tìm kiếm theo tên phí - backend nhận SearchKeyword
+            if (filters.search && filters.search.trim()) {
+                params.search = filters.search.trim(); // Sẽ được chuyển thành SearchKeyword
+            }
+            
+            // Lọc theo marketId - backend nhận MarketFeeId (có thể là marketId)
+            if (filters.marketId) {
+                params.marketId = filters.marketId; // Sẽ được chuyển thành MarketFeeId
+            }
 
-            setFees(mockFees);
-            setPagination(prev => ({
-                ...prev,
-                total: mockFees.length
-            }));
+            console.log('=== LOAD FEES DEBUG ===');
+            console.log('Current filters state:', filters);
+            console.log('Params being sent to API:', params);
+            console.log('========================');
+            
+            // Gọi API thông qua marketFeeService
+            const response = await marketFeeService.getAllMarketFees(params);
+            
+            console.log('API response:', response);
+            
+            // Xử lý response từ API - backend trả về tất cả data không phân trang
+            if (response && Array.isArray(response)) {
+                // Trường hợp response trực tiếp là array
+                console.log('Fees loaded directly as array:', response);
+                setFees(response);
+                setPagination(prev => ({
+                    ...prev,
+                    total: response.length
+                }));
+            } else if (response && response.data && Array.isArray(response.data)) {
+                // Trường hợp API trả về {data: [...]}
+                console.log('Fees loaded from data field:', response.data);
+                setFees(response.data);
+                setPagination(prev => ({
+                    ...prev,
+                    total: response.data.length
+                }));
+            } else if (response && response.marketFees && Array.isArray(response.marketFees)) {
+                // Trường hợp API trả về {marketFees: [...]}
+                console.log('Fees loaded from marketFees field:', response.marketFees);
+                setFees(response.marketFees);
+                setPagination(prev => ({
+                    ...prev,
+                    total: response.marketFees.length
+                }));
+            } else {
+                console.log('No data in response or unexpected format, setting empty array');
+                setFees([]);
+                setPagination(prev => ({ ...prev, total: 0 }));
+            }
         } catch (error) {
             console.error('Error loading fees:', error);
-            message.error('Lỗi khi tải danh sách phí');
+            message.error(error.message || 'Lỗi khi tải danh sách phí');
+            setFees([]);
+            setPagination(prev => ({ ...prev, total: 0 }));
         } finally {
             setLoading(false);
         }
@@ -149,7 +164,24 @@ const MarketFeeManagement = () => {
         setPagination(prev => ({ ...prev, current: 1 }));
     };
 
+    // Thêm hàm tìm kiếm riêng biệt
+    const handleAdvancedSearch = async (keyword) => {
+        console.log('handleAdvancedSearch called with keyword:', keyword);
+        if (!keyword.trim()) {
+            // Nếu không có keyword, load lại toàn bộ với filter hiện tại
+            console.log('Keyword is empty, clearing search filter');
+            setFilters(prev => ({ ...prev, search: '' }));
+            return;
+        }
+
+        // Cập nhật search filter và tự động reload
+        console.log('Setting search filter to:', keyword.trim());
+        setFilters(prev => ({ ...prev, search: keyword.trim() }));
+        setPagination(prev => ({ ...prev, current: 1 }));
+    };
+
     const handleFilterChange = (key, value) => {
+        console.log(`handleFilterChange called: ${key} = ${value}`);
         setFilters(prev => ({ ...prev, [key]: value }));
         setPagination(prev => ({ ...prev, current: 1 }));
     };
@@ -165,40 +197,62 @@ const MarketFeeManagement = () => {
         setSelectedFee(fee);
         setEditMode(true);
         form.setFieldsValue({
-            ...fee,
-            dueDate: fee.dueDate ? moment(fee.dueDate) : null,
+            marketId: fee.marketId,
+            name: fee.name,
+            amount: fee.amount,
+            description: fee.description,
+            paymentDay: fee.paymentDay // Backend sử dụng paymentDay thay vì dueDate
         });
         setModalVisible(true);
     };
 
-    const handleViewFee = (fee) => {
-        setSelectedFee(fee);
-        setDrawerVisible(true);
+    const handleViewFee = async (fee) => {
+        try {
+            // Lấy thông tin chi tiết của phí từ API
+            const detailedFee = await marketFeeService.getMarketFeeById(fee.id);
+            setSelectedFee(detailedFee.data || fee);
+            setDrawerVisible(true);
+        } catch (error) {
+            console.error('Error loading fee details:', error);
+            // Nếu không tải được chi tiết, vẫn hiển thị thông tin cơ bản
+            setSelectedFee(fee);
+            setDrawerVisible(true);
+        }
     };
 
     const handleDeleteFee = async (feeId) => {
         try {
-            // API call to delete fee
+            await marketFeeService.deleteMarketFee(feeId);
             message.success('Xóa phí thành công');
             loadFees();
         } catch (error) {
             console.error('Error deleting fee:', error);
-            message.error('Lỗi khi xóa phí');
+            message.error(error.message || 'Lỗi khi xóa phí');
         }
     };
 
     const handleSubmit = async (values) => {
         try {
+            console.log('Form values:', values);
+            
+            // Backend sử dụng name và paymentDay
             const feeData = {
-                ...values,
-                dueDate: values.dueDate?.format('YYYY-MM-DD'),
+                marketId: values.marketId,
+                name: values.name,
+                amount: values.amount,
+                description: values.description,
+                paymentDay: values.paymentDay // Backend sử dụng paymentDay thay vì dueDate
             };
 
-            if (editMode) {
-                // API call to update fee
+            console.log('Sending fee data:', feeData);
+
+            if (editMode && selectedFee) {
+                const result = await marketFeeService.updateMarketFee(selectedFee.id, feeData);
+                console.log('Update result:', result);
                 message.success('Cập nhật phí thành công');
             } else {
-                // API call to create fee
+                const result = await marketFeeService.createMarketFee(feeData);
+                console.log('Create result:', result);
                 message.success('Tạo phí thành công');
             }
 
@@ -207,28 +261,8 @@ const MarketFeeManagement = () => {
             loadFees();
         } catch (error) {
             console.error('Error saving fee:', error);
-            message.error(editMode ? 'Lỗi khi cập nhật phí' : 'Lỗi khi tạo phí');
+            message.error(error.message || (editMode ? 'Lỗi khi cập nhật phí' : 'Lỗi khi tạo phí'));
         }
-    };
-
-    const getStatusColor = (status) => {
-        const statusObj = feeStatuses.find(s => s.value === status);
-        return statusObj?.color || 'default';
-    };
-
-    const getStatusLabel = (status) => {
-        const statusObj = feeStatuses.find(s => s.value === status);
-        return statusObj?.label || status;
-    };
-
-    const getFeeTypeLabel = (type) => {
-        const typeObj = feeTypes.find(t => t.value === type);
-        return typeObj?.label || type;
-    };
-
-    const getFeeTypeColor = (type) => {
-        const typeObj = feeTypes.find(t => t.value === type);
-        return typeObj?.color || 'default';
     };
 
     const columns = [
@@ -243,17 +277,18 @@ const MarketFeeManagement = () => {
             dataIndex: 'marketName',
             key: 'marketName',
             width: 150,
-            render: (text) => <Text strong>{text}</Text>
+            render: (text, record) => {
+                // Nếu có thông tin market object
+                return record.market?.name || text || 'Chưa xác định';
+            }
         },
         {
-            title: 'Loại phí',
-            dataIndex: 'feeType',
-            key: 'feeType',
-            width: 120,
-            render: (type) => (
-                <Tag color={getFeeTypeColor(type)}>
-                    {getFeeTypeLabel(type)}
-                </Tag>
+            title: 'Tên phí',
+            dataIndex: 'name',
+            key: 'name',
+            width: 200,
+            render: (text) => (
+                <Text strong>{text || 'Chưa đặt tên'}</Text>
             ),
         },
         {
@@ -269,21 +304,15 @@ const MarketFeeManagement = () => {
         },
         {
             title: 'Hạn thanh toán',
-            dataIndex: 'dueDate',
-            key: 'dueDate',
+            dataIndex: 'paymentDay',
+            key: 'paymentDay',
             width: 120,
-            render: (date) => date ? moment(date).format('DD/MM/YYYY') : '',
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            key: 'status',
-            width: 120,
-            render: (status) => (
-                <Tag color={getStatusColor(status)}>
-                    {getStatusLabel(status)}
-                </Tag>
-            ),
+            render: (paymentDay) => {
+                if (typeof paymentDay === 'number' && paymentDay > 0) {
+                    return `Ngày ${paymentDay} hàng tháng`;
+                }
+                return 'Chưa thiết lập';
+            },
         },
         {
             title: 'Ngày tạo',
@@ -337,15 +366,30 @@ const MarketFeeManagement = () => {
                     <Title level={3}>
                         <DollarOutlined /> Quản lý Phí Chợ
                     </Title>
+                    <Alert
+                        message="Thông tin"
+                        description="Quản lý các khoản phí của chợ bao gồm phí thuê, phí dịch vụ, phí bảo trì và các khoản phí khác."
+                        type="info"
+                        showIcon
+                        style={{ marginTop: '8px' }}
+                    />
                 </div>
 
                 {/* Filters */}
                 <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
                     <Col xs={24} sm={8} lg={6}>
                         <Search
-                            placeholder="Tìm kiếm..."
+                            placeholder="Tìm kiếm phí..."
                             allowClear
-                            onSearch={handleSearch}
+                            onSearch={handleAdvancedSearch}
+                            onChange={(e) => {
+                                console.log('Search input changed:', e.target.value);
+                                // Cho phép người dùng gõ tự do, chỉ clear filter khi input trống
+                                if (!e.target.value.trim()) {
+                                    console.log('Search input is empty, clearing search filter');
+                                    setFilters(prev => ({ ...prev, search: '' }));
+                                }
+                            }}
                             style={{ width: '100%' }}
                         />
                     </Col>
@@ -353,6 +397,7 @@ const MarketFeeManagement = () => {
                         <Select
                             placeholder="Chọn chợ"
                             allowClear
+                            loading={loading}
                             value={filters.marketId}
                             onChange={(value) => handleFilterChange('marketId', value)}
                             style={{ width: '100%' }}
@@ -364,37 +409,19 @@ const MarketFeeManagement = () => {
                             ))}
                         </Select>
                     </Col>
-                    <Col xs={24} sm={8} lg={4}>
-                        <Select
-                            placeholder="Loại phí"
-                            allowClear
-                            value={filters.feeType}
-                            onChange={(value) => handleFilterChange('feeType', value)}
-                            style={{ width: '100%' }}
-                        >
-                            {feeTypes.map(type => (
-                                <Option key={type.value} value={type.value}>
-                                    {type.label}
-                                </Option>
-                            ))}
-                        </Select>
+                    <Col span={4}>
+                        <Button 
+                            onClick={() => {
+                                console.log('Reset button clicked');
+                                setFilters({ search: '', marketId: '' });
+                                setPagination(prev => ({ ...prev, current: 1 }));
+                            }}
+                            loading={loading}
+                            >
+                            Làm mới
+                        </Button>
                     </Col>
-                    <Col xs={24} sm={8} lg={4}>
-                        <Select
-                            placeholder="Trạng thái"
-                            allowClear
-                            value={filters.status}
-                            onChange={(value) => handleFilterChange('status', value)}
-                            style={{ width: '100%' }}
-                        >
-                            {feeStatuses.map(status => (
-                                <Option key={status.value} value={status.value}>
-                                    {status.label}
-                                </Option>
-                            ))}
-                        </Select>
-                    </Col>
-                    <Col xs={24} sm={8} lg={4}>
+                    <Col xs={24} sm={8} lg={6}>
                         <Button
                             type="primary"
                             icon={<PlusOutlined />}
@@ -455,22 +482,31 @@ const MarketFeeManagement = () => {
                         </Col>
                         <Col span={12}>
                             <Form.Item
-                                name="feeType"
-                                label="Loại phí"
-                                rules={[{ required: true, message: 'Vui lòng chọn loại phí!' }]}
+                                name="name"
+                                label="Tên phí"
+                                rules={[{ required: true, message: 'Vui lòng nhập tên phí!' }]}
                             >
-                                <Select placeholder="Chọn loại phí">
-                                    {feeTypes.map(type => (
-                                        <Option key={type.value} value={type.value}>
-                                            {type.label}
-                                        </Option>
-                                    ))}
-                                </Select>
+                                <Input placeholder="Nhập tên phí..." />
                             </Form.Item>
                         </Col>
                     </Row>
 
                     <Row gutter={16}>
+                        <Col span={12}>
+                            <Form.Item
+                                name="paymentDay"
+                                label="Ngày thanh toán hàng tháng"
+                                rules={[{ required: true, message: 'Vui lòng chọn ngày thanh toán hàng tháng!' }]}
+                            >
+                                <Select placeholder="Chọn ngày">
+                                    {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                                        <Option key={day} value={day}>
+                                            {day}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
                         <Col span={12}>
                             <Form.Item
                                 name="amount"
@@ -486,19 +522,6 @@ const MarketFeeManagement = () => {
                                 />
                             </Form.Item>
                         </Col>
-                        <Col span={12}>
-                            <Form.Item
-                                name="dueDate"
-                                label="Hạn thanh toán"
-                                rules={[{ required: true, message: 'Vui lòng chọn hạn thanh toán!' }]}
-                            >
-                                <DatePicker
-                                    style={{ width: '100%' }}
-                                    format="DD/MM/YYYY"
-                                    placeholder="Chọn ngày hạn"
-                                />
-                            </Form.Item>
-                        </Col>
                     </Row>
 
                     <Form.Item
@@ -511,21 +534,6 @@ const MarketFeeManagement = () => {
                             placeholder="Nhập mô tả cho phí này..."
                         />
                     </Form.Item>
-
-                    {editMode && (
-                        <Form.Item
-                            name="status"
-                            label="Trạng thái"
-                        >
-                            <Select placeholder="Chọn trạng thái">
-                                {feeStatuses.map(status => (
-                                    <Option key={status.value} value={status.value}>
-                                        {status.label}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </Form.Item>
-                    )}
 
                     <Form.Item>
                         <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
@@ -564,19 +572,14 @@ const MarketFeeManagement = () => {
                                 <DollarOutlined style={{ fontSize: '32px' }} />
                             </div>
                             <h3>Chi tiết phí #{selectedFee.id}</h3>
-                            <Tag color={getStatusColor(selectedFee.status)}>
-                                {getStatusLabel(selectedFee.status)}
-                            </Tag>
                         </div>
 
                         <Descriptions bordered column={1}>
                             <Descriptions.Item label="Chợ">
-                                {selectedFee.marketName}
+                                {selectedFee.market?.name || selectedFee.marketName || 'Chưa xác định'}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Loại phí">
-                                <Tag color={getFeeTypeColor(selectedFee.feeType)}>
-                                    {getFeeTypeLabel(selectedFee.feeType)}
-                                </Tag>
+                            <Descriptions.Item label="Tên phí">
+                                <Text strong>{selectedFee.name || 'Chưa đặt tên'}</Text>
                             </Descriptions.Item>
                             <Descriptions.Item label="Số tiền">
                                 <Text strong style={{ color: '#52c41a', fontSize: '16px' }}>
@@ -586,8 +589,11 @@ const MarketFeeManagement = () => {
                             <Descriptions.Item label="Mô tả">
                                 {selectedFee.description}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Hạn thanh toán">
-                                {selectedFee.dueDate ? moment(selectedFee.dueDate).format('DD/MM/YYYY') : 'Chưa cập nhật'}
+                            <Descriptions.Item label="Ngày thanh toán">
+                                {typeof selectedFee.paymentDay === 'number' && selectedFee.paymentDay > 0
+                                    ? `Ngày ${selectedFee.paymentDay} hàng tháng`
+                                    : 'Chưa thiết lập'
+                                }
                             </Descriptions.Item>
                             <Descriptions.Item label="Ngày tạo">
                                 {selectedFee.createdAt ? moment(selectedFee.createdAt).format('DD/MM/YYYY HH:mm') : 'Chưa cập nhật'}

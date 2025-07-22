@@ -9,14 +9,17 @@ class MarketFeeService {
             const token = authService.getToken();
             const queryParams = new URLSearchParams();
 
-            if (params.page) queryParams.append('page', params.page);
-            if (params.limit) queryParams.append('limit', params.limit);
-            if (params.marketId) queryParams.append('marketId', params.marketId);
-            if (params.feeType) queryParams.append('feeType', params.feeType);
-            if (params.status) queryParams.append('status', params.status);
-            if (params.search) queryParams.append('search', params.search);
+            // Backend sử dụng các tên parameter khác
+            if (params.marketId) queryParams.append('MarketFeeId', params.marketId); // MarketFeeId thay vì marketId
+            if (params.name) queryParams.append('SearchKeyword', params.name); // SearchKeyword thay vì name
+            if (params.search) queryParams.append('SearchKeyword', params.search); // SearchKeyword thay vì search
 
-            const response = await fetch(`${API_ENDPOINTS.MARKET_FEE.GET_ALL}?${queryParams}`, {
+            const finalUrl = `${API_ENDPOINTS.MARKET_FEE.GET_ALL}?${queryParams}`;
+            console.log('MarketFeeService - API URL:', finalUrl);
+            console.log('MarketFeeService - Params received:', params);
+            console.log('MarketFeeService - Query params sent:', Object.fromEntries(queryParams));
+
+            const response = await fetch(finalUrl, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -97,11 +100,29 @@ class MarketFeeService {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Không thể cập nhật phí');
+                let errorMessage = 'Không thể cập nhật phí';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.message || errorMessage;
+                } catch (e) {
+                    // Response không có JSON, sử dụng status text
+                    errorMessage = response.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
-            return await response.json();
+            // Kiểm tra xem response có content không
+            if (response.status === 204 || response.headers.get('content-length') === '0') {
+                return { success: true, message: 'Cập nhật phí thành công' };
+            }
+
+            // Chỉ parse JSON nếu có content
+            try {
+                return await response.json();
+            } catch (e) {
+                // Nếu không parse được JSON, vẫn coi là thành công
+                return { success: true, message: 'Cập nhật phí thành công' };
+            }
         } catch (error) {
             console.error('Error updating market fee:', error);
             throw new Error(error.message || 'Lỗi kết nối server');
@@ -120,11 +141,29 @@ class MarketFeeService {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Không thể xóa phí');
+                let errorMessage = 'Không thể xóa phí';
+                try {
+                    const error = await response.json();
+                    errorMessage = error.message || errorMessage;
+                } catch (e) {
+                    // Response không có JSON, sử dụng status text
+                    errorMessage = response.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
             }
 
-            return await response.json();
+            // Kiểm tra xem response có content không
+            if (response.status === 204 || response.headers.get('content-length') === '0') {
+                return { success: true, message: 'Xóa phí thành công' };
+            }
+
+            // Chỉ parse JSON nếu có content
+            try {
+                return await response.json();
+            } catch (e) {
+                // Nếu không parse được JSON, vẫn coi là thành công
+                return { success: true, message: 'Xóa phí thành công' };
+            }
         } catch (error) {
             console.error('Error deleting market fee:', error);
             throw new Error(error.message || 'Lỗi kết nối server');
