@@ -59,6 +59,11 @@ const ProductDetail = () => {
                 console.log('Product data loaded:', productData);
                 setProduct(productData);
 
+                // Set initial quantity to product's minimum quantity
+                if (productData.minimumQuantity) {
+                    setQuantity(productData.minimumQuantity);
+                }
+
                 // Fetch additional data in parallel
                 const promises = [];
 
@@ -810,6 +815,7 @@ const ProductDetail = () => {
                                 description={relatedProduct.description}
                                 rating={relatedProduct.rating}
                                 status={relatedProduct.statusDisplay}
+                                minimumQuantity={relatedProduct.minimumQuantity || 0.5}
                             />
                         ))}
                     </div>
