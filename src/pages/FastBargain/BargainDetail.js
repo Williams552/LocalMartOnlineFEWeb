@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { FaArrowLeft, FaCheckCircle, FaTimesCircle, FaComment, FaSpinner } from 'react-icons/fa';
 import fastBargainService from '../../services/fastBargainService';
+import authService from '../../services/authService';
 import '../../styles/fast-bargain.css';
 
 const BargainDetail = () => {
@@ -22,11 +23,19 @@ const BargainDetail = () => {
 
     const fetchBargainDetails = async () => {
         try {
-            const data = await fastBargainService.getBargainById(id);
-            setBargain(data);
-            setError(null);
+            const result = await fastBargainService.getBargainById(id);
+
+            if (result.success) {
+                setBargain(result.data);
+                setError(null);
+            } else {
+                setError(result.message || 'Không thể tải thông tin thương lượng');
+                setBargain(null);
+            }
         } catch (error) {
+            console.error('Fetch bargain details error:', error);
             setError('Không thể tải thông tin thương lượng');
+            setBargain(null);
         } finally {
             setLoading(false);
         }
@@ -35,13 +44,45 @@ const BargainDetail = () => {
     const handleAction = async (actionType, price = null) => {
         setActionLoading(true);
         try {
-            await fastBargainService.takeAction(id, actionType, price);
-            await fetchBargainDetails();
-            if (actionType === 'propose') {
-                setProposedPrice('');
-                setMessage('');
+            const actionData = {
+                bargainId: id,
+                userId: authService.getCurrentUser()?.id,
+                action: actionType.charAt(0).toUpperCase() + actionType.slice(1)
+            };
+
+            if (actionType === 'propose' && price) {
+                const result = await fastBargainService.proposePrice({
+                    bargainId: id,
+                    userId: authService.getCurrentUser()?.id,
+                    proposedPrice: price
+                });
+
+                if (result.success) {
+                    await fetchBargainDetails();
+                    setProposedPrice('');
+                    setMessage('');
+                } else {
+                    setError(result.message || 'Có lỗi xảy ra khi đề xuất giá');
+                }
+            } else {
+                if (actionType === 'counter' && price) {
+                    actionData.counterPrice = price;
+                }
+
+                const result = await fastBargainService.takeAction(actionData);
+
+                if (result.success) {
+                    await fetchBargainDetails();
+                    if (actionType === 'propose') {
+                        setProposedPrice('');
+                        setMessage('');
+                    }
+                } else {
+                    setError(result.message || 'Có lỗi xảy ra khi thực hiện hành động');
+                }
             }
         } catch (error) {
+            console.error('Handle action error:', error);
             setError('Có lỗi xảy ra khi thực hiện hành động');
         } finally {
             setActionLoading(false);
@@ -106,143 +147,210 @@ const BargainDetail = () => {
     }
 
     return (
-        <div className="bargain-detail-container">
-            <div className="bargain-header">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="back-button"
-                >
-                    <FaArrowLeft className="mr-2" />
-                    Quay lại
-                </button>
-                <h1 className="bargain-title">Chi tiết thương lượng</h1>
-            </div>
-
-            <div className="bargain-info">
-                <h2>Thông tin sản phẩm</h2>
-                <div className="product-info">
-                    <img
-                        src={bargain.productImage || '/placeholder-image.jpg'}
-                        alt={bargain.productName}
-                        className="product-image"
-                    />
-                    <div>
-                        <h3>{bargain.productName}</h3>
-                        <p className="text-gray-600">Giá gốc: {formatPrice(bargain.originalPrice)}</p>
-                        <p className="text-blue-600">Giá đề xuất hiện tại: {formatPrice(bargain.currentPrice)}</p>
-                        <p className={`status-badge ${bargain.status}`}>
-                            Trạng thái: {bargain.status === 'pending' ? 'Đang chờ' :
-                                bargain.status === 'accepted' ? 'Đã chấp nhận' : 'Đã từ chối'}
-                        </p>
-                    </div>
+        <div className="min-h-screen bg-gray-50">
+            <div className="max-w-4xl mx-auto px-4 py-8">
+                {/* Header */}
+                <div className="mb-8">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="flex items-center text-gray-600 hover:text-gray-800 mb-4 transition-colors"
+                    >
+                        <FaArrowLeft className="mr-2" />
+                        Quay lại
+                    </button>
+                    <h1 className="text-3xl font-bold text-gray-800">Chi tiết thương lượng</h1>
                 </div>
-            </div>
 
-            <div className="bargain-history">
-                <h2>Lịch sử thương lượng</h2>
-                <div className="timeline">
-                    {bargain.negotiations?.map((item, index) => (
-                        <div key={index} className="timeline-item">
-                            <div className="timeline-icon">
-                                {getStatusIcon(item.status)}
-                            </div>
-                            <div className="timeline-content">
-                                <div className="flex justify-between items-start">
-                                    <div>
-                                        <p className="font-medium">
-                                            {item.action === 'start' ? 'Bắt đầu thương lượng' :
-                                                item.action === 'propose' ? 'Đề xuất giá mới' :
-                                                    item.action === 'accept' ? 'Chấp nhận giá' :
-                                                        'Từ chối giá'}
-                                        </p>
-                                        <p className="text-sm text-gray-600">
-                                            {new Date(item.timestamp).toLocaleString('vi-VN')}
-                                        </p>
-                                        {item.price && (
-                                            <p className="font-bold text-blue-600">
-                                                Giá: {formatPrice(item.price)}
-                                            </p>
-                                        )}
-                                        {item.message && (
-                                            <p className="text-gray-700 mt-1">{item.message}</p>
-                                        )}
-                                    </div>
-                                    <span className="text-sm text-gray-500">
-                                        {item.userType === 'buyer' ? 'Bạn' : 'Người bán'}
-                                    </span>
+                {/* Product Information */}
+                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Thông tin sản phẩm</h2>
+                    <div className="flex items-start space-x-6">
+                        {/* Product Image */}
+                        <div className="flex-shrink-0">
+                            {bargain.productImage ? (
+                                <img
+                                    src={bargain.productImage}
+                                    alt={bargain.productName}
+                                    className="w-32 h-32 object-cover rounded-lg border"
+                                    onError={(e) => {
+                                        e.target.src = '/placeholder-product.png';
+                                    }}
+                                />
+                            ) : (
+                                <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
+                                    <FaComment className="text-gray-400 text-2xl" />
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Product Details */}
+                        <div className="flex-1">
+                            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                                {bargain.productName || 'Tên sản phẩm không có'}
+                            </h3>
+
+                            {bargain.storeName && (
+                                <p className="text-gray-600 mb-3">
+                                    <span className="font-medium">Cửa hàng:</span> {bargain.storeName}
+                                </p>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <p className="text-sm text-gray-500">Giá gốc</p>
+                                    <p className="text-lg font-semibold text-gray-700">
+                                        {bargain.originalPrice ? formatPrice(bargain.originalPrice) : 'Chưa có'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Giá hiện tại</p>
+                                    <p className="text-lg font-semibold text-blue-600">
+                                        {bargain.currentPrice ? formatPrice(bargain.currentPrice) : 'Chưa có'}
+                                    </p>
                                 </div>
                             </div>
+
+                            <div className="mt-4">
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${bargain.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                        bargain.status === 'accepted' ? 'bg-green-100 text-green-800' :
+                                            bargain.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                                'bg-gray-100 text-gray-800'
+                                    }`}>
+                                    Trạng thái: {
+                                        bargain.status === 'pending' ? 'Đang chờ' :
+                                            bargain.status === 'accepted' ? 'Đã chấp nhận' :
+                                                bargain.status === 'rejected' ? 'Đã từ chối' :
+                                                    bargain.status || 'Không xác định'
+                                    }
+                                </span>
+                            </div>
                         </div>
-                    ))}
+                    </div>
                 </div>
-            </div>
 
-            {bargain.status === 'pending' && bargain.canTakeAction && (
-                <div className="bargain-actions">
-                    <h2>Hành động</h2>
+                {/* Bargain History */}
+                <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                    <h2 className="text-xl font-semibold text-gray-800 mb-4">Lịch sử thương lượng</h2>
+                    <div className="space-y-4">
+                        {bargain.negotiations?.length > 0 ? (
+                            bargain.negotiations.map((item, index) => (
+                                <div key={index} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+                                    <div className="flex-shrink-0">
+                                        {getStatusIcon(item.status)}
+                                    </div>
+                                    <div className="flex-1">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <p className="font-medium text-gray-900">
+                                                    {item.action === 'start' ? 'Bắt đầu thương lượng' :
+                                                        item.action === 'propose' ? 'Đề xuất giá mới' :
+                                                            item.action === 'accept' ? 'Chấp nhận giá' :
+                                                                'Từ chối giá'}
+                                                </p>
+                                                <p className="text-sm text-gray-500 mt-1">
+                                                    {new Date(item.timestamp).toLocaleString('vi-VN')}
+                                                </p>
+                                                {item.price && (
+                                                    <p className="font-semibold text-blue-600 mt-1">
+                                                        Giá: {formatPrice(item.price)}
+                                                    </p>
+                                                )}
+                                                {item.message && (
+                                                    <p className="text-gray-700 mt-2 p-2 bg-white rounded border-l-4 border-blue-500">
+                                                        {item.message}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            <span className="text-sm font-medium text-gray-600 bg-gray-200 px-2 py-1 rounded">
+                                                {item.userType === 'buyer' ? 'Bạn' : 'Người bán'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="text-center py-8">
+                                <FaComment className="mx-auto text-4xl text-gray-400 mb-4" />
+                                <p className="text-gray-500">Chưa có lịch sử thương lượng</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
-                    <div className="action-section">
-                        <h3>Đề xuất giá mới</h3>
-                        <div className="propose-form">
-                            <div className="form-group">
-                                <label>Giá đề xuất (VND):</label>
-                                <input
-                                    type="number"
-                                    value={proposedPrice}
-                                    onChange={(e) => setProposedPrice(e.target.value)}
-                                    placeholder="Nhập giá đề xuất"
-                                    className="price-input"
-                                    min="0"
-                                />
+                {/* Action Section */}
+                {bargain.status === 'pending' && bargain.canTakeAction && (
+                    <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
+                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Hành động</h2>
+
+                        <div className="mb-6">
+                            <h3 className="text-lg font-medium text-gray-700 mb-4">Đề xuất giá mới</h3>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Giá đề xuất (VND):
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={proposedPrice}
+                                        onChange={(e) => setProposedPrice(e.target.value)}
+                                        placeholder="Nhập giá đề xuất"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        min="0"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Tin nhắn (tùy chọn):
+                                    </label>
+                                    <textarea
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                        placeholder="Thêm tin nhắn cho đề xuất của bạn"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                                        rows="3"
+                                    />
+                                </div>
+                                <button
+                                    onClick={() => handleAction('propose', parseFloat(proposedPrice))}
+                                    disabled={!proposedPrice || actionLoading}
+                                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                >
+                                    {actionLoading ? <FaSpinner className="animate-spin mr-2" /> : null}
+                                    Đề xuất giá
+                                </button>
                             </div>
-                            <div className="form-group">
-                                <label>Tin nhắn (tùy chọn):</label>
-                                <textarea
-                                    value={message}
-                                    onChange={(e) => setMessage(e.target.value)}
-                                    placeholder="Thêm tin nhắn cho đề xuất của bạn"
-                                    className="message-input"
-                                    rows="3"
-                                />
-                            </div>
+                        </div>
+
+                        <div className="flex space-x-4">
                             <button
-                                onClick={() => handleAction('propose', parseFloat(proposedPrice))}
-                                disabled={!proposedPrice || actionLoading}
-                                className="propose-button"
+                                onClick={() => handleAction('accept')}
+                                disabled={actionLoading}
+                                className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                             >
-                                {actionLoading ? <FaSpinner className="animate-spin" /> : 'Đề xuất giá'}
+                                {actionLoading ? <FaSpinner className="animate-spin mr-2" /> : null}
+                                Chấp nhận giá hiện tại
+                            </button>
+                            <button
+                                onClick={() => handleAction('reject')}
+                                disabled={actionLoading}
+                                className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                            >
+                                {actionLoading ? <FaSpinner className="animate-spin mr-2" /> : null}
+                                Từ chối
                             </button>
                         </div>
                     </div>
+                )}
 
-                    <div className="quick-actions">
-                        <button
-                            onClick={() => handleAction('accept')}
-                            disabled={actionLoading}
-                            className="accept-button"
-                        >
-                            {actionLoading ? <FaSpinner className="animate-spin" /> : 'Chấp nhận giá hiện tại'}
-                        </button>
-                        <button
-                            onClick={() => handleAction('reject')}
-                            disabled={actionLoading}
-                            className="reject-button"
-                        >
-                            {actionLoading ? <FaSpinner className="animate-spin" /> : 'Từ chối'}
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {bargain.status === 'accepted' && (
-                <div className="bargain-success">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                {/* Success State */}
+                {bargain.status === 'accepted' && (
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
                         <div className="flex items-center">
                             <FaCheckCircle className="text-green-500 text-2xl mr-3" />
                             <div>
-                                <h3 className="text-green-800 font-bold">Thương lượng thành công!</h3>
+                                <h3 className="text-green-800 font-bold text-lg">Thương lượng thành công!</h3>
                                 <p className="text-green-700">
-                                    Giá cuối cùng: {formatPrice(bargain.finalPrice)}
+                                    Giá cuối cùng: {formatPrice(bargain.finalPrice || bargain.currentPrice)}
                                 </p>
                                 <p className="text-sm text-green-600 mt-2">
                                     Bạn có thể tiến hành đặt hàng với giá này.
@@ -251,21 +359,20 @@ const BargainDetail = () => {
                         </div>
                         <button
                             onClick={() => navigate(`/product/${bargain.productId}`)}
-                            className="mt-4 px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+                            className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
                         >
                             Xem sản phẩm
                         </button>
                     </div>
-                </div>
-            )}
+                )}
 
-            {bargain.status === 'rejected' && (
-                <div className="bargain-rejected">
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                {/* Rejected State */}
+                {bargain.status === 'rejected' && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
                         <div className="flex items-center">
                             <FaTimesCircle className="text-red-500 text-2xl mr-3" />
                             <div>
-                                <h3 className="text-red-800 font-bold">Thương lượng không thành công</h3>
+                                <h3 className="text-red-800 font-bold text-lg">Thương lượng không thành công</h3>
                                 <p className="text-red-700">
                                     Người bán đã từ chối đề xuất cuối cùng.
                                 </p>
@@ -273,13 +380,13 @@ const BargainDetail = () => {
                         </div>
                         <button
                             onClick={() => navigate('/fast-bargain')}
-                            className="mt-4 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            className="mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
                         >
                             Thử thương lượng khác
                         </button>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 };
