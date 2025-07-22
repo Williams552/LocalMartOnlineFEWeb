@@ -28,11 +28,13 @@ import {
     CalendarOutlined,
     DollarOutlined,
     StockOutlined,
-    ReloadOutlined
+    ReloadOutlined,
+    BankOutlined
 } from '@ant-design/icons';
 import productService from '../../../services/productService';
 import storeService from '../../../services/storeService';
 import categoryService from '../../../services/categoryService';
+import marketService from '../../../services/marketService';
 import './ProductManagement.css';
 
 const { Search } = Input;
@@ -50,11 +52,13 @@ const ProductManagement = () => {
     const [searchKeyword, setSearchKeyword] = useState('');
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedStore, setSelectedStore] = useState(null);
+    const [selectedMarket, setSelectedMarket] = useState(null);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [categories, setCategories] = useState([]);
     const [stores, setStores] = useState([]);
+    const [markets, setMarkets] = useState([]);
     const [toggleLoading, setToggleLoading] = useState({});
 
     // Load initial data
@@ -62,25 +66,39 @@ const ProductManagement = () => {
         loadProducts();
         loadCategories();
         loadStores();
+        loadMarkets();
     }, []);
 
+    // Debug categories state
+    useEffect(() => {
+        console.log('Categories state updated:', categories.length, categories);
+    }, [categories]);
+
     const loadProducts = async (page = 1, pageSize = 20) => {
+        return loadProductsWithFilters(page, pageSize, {
+            search: searchKeyword,
+            categoryId: selectedCategory,
+            storeId: selectedStore,
+            marketId: selectedMarket
+        });
+    };
+
+    const loadProductsWithFilters = async (page = 1, pageSize = 20, filters = {}) => {
         try {
             setLoading(true);
             console.log('Loading products with params:', {
                 page,
                 pageSize,
-                search: searchKeyword,
-                categoryId: selectedCategory,
-                storeId: selectedStore
+                ...filters
             });
 
             const response = await productService.getAllProducts({
                 page,
                 pageSize,
-                search: searchKeyword,
-                categoryId: selectedCategory,
-                storeId: selectedStore
+                search: filters.search,
+                categoryId: filters.categoryId,
+                storeId: filters.storeId,
+                marketId: filters.marketId
             });
 
             console.log('Products response:', response);
@@ -95,7 +113,17 @@ const ProductManagement = () => {
                 });
             } else {
                 // Fallback - try direct API call if service response is not as expected
-                const directResponse = await fetch(`http://localhost:5183/api/Product?page=${page}&pageSize=${pageSize}`, {
+                const queryParams = new URLSearchParams({
+                    page: page.toString(),
+                    pageSize: pageSize.toString()
+                });
+
+                if (filters.search) queryParams.append('search', filters.search);
+                if (filters.categoryId) queryParams.append('categoryId', filters.categoryId);
+                if (filters.storeId) queryParams.append('storeId', filters.storeId);
+                if (filters.marketId) queryParams.append('marketId', filters.marketId);
+
+                const directResponse = await fetch(`http://localhost:5183/api/Product?${queryParams.toString()}`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${localStorage.getItem('token')}`,
@@ -131,12 +159,19 @@ const ProductManagement = () => {
             const response = await categoryService.getAllCategories();
             console.log('Categories response:', response);
 
-            if (response && response.success) {
-                setCategories(Array.isArray(response.data) ? response.data : []);
+            if (response && response.items && Array.isArray(response.items)) {
+                setCategories(response.items);
+                console.log('Categories loaded from items:', response.items.length, 'categories:', response.items);
+            } else if (response && response.success && response.data) {
+                const categoryList = Array.isArray(response.data) ? response.data : [];
+                setCategories(categoryList);
+                console.log('Categories loaded from success/data:', categoryList.length, 'categories:', categoryList);
             } else if (response && Array.isArray(response)) {
                 setCategories(response);
+                console.log('Categories loaded (direct array):', response.length, 'categories:', response);
             } else {
                 // Fallback - direct API call
+                console.log('Trying direct API call for categories...');
                 const directResponse = await fetch(`http://localhost:5183/api/Category`, {
                     method: 'GET',
                     headers: {
@@ -145,12 +180,62 @@ const ProductManagement = () => {
                     },
                 });
                 const result = await directResponse.json();
-                if (result.success) {
-                    setCategories(Array.isArray(result.data) ? result.data : []);
+                console.log('Direct categories API response:', result);
+
+                if (result.success && result.data) {
+                    const categoryList = Array.isArray(result.data) ? result.data : [];
+                    setCategories(categoryList);
+                    console.log('Categories loaded from direct API:', categoryList.length, 'categories:', categoryList);
+                } else {
+                    console.error('Failed to load categories:', result);
                 }
             }
         } catch (error) {
             console.error('Error loading categories:', error);
+        }
+    };
+
+    const loadMarkets = async () => {
+        try {
+            console.log('Loading markets...');
+
+            // Try to get all markets (admin endpoint) first
+            let response;
+            try {
+                response = await marketService.getAllMarkets();
+                console.log('All markets response:', response);
+            } catch (adminError) {
+                console.log('Admin markets failed, trying active markets:', adminError);
+                // Fallback to active markets if admin call fails
+                response = await marketService.getActiveMarkets();
+                console.log('Active markets response:', response);
+            }
+
+            if (response && Array.isArray(response)) {
+                setMarkets(response);
+                console.log('Markets loaded:', response.length, 'markets');
+            } else if (response && response.items && Array.isArray(response.items)) {
+                setMarkets(response.items);
+                console.log('Markets loaded:', response.items.length, 'markets');
+            } else if (response && response.data && Array.isArray(response.data)) {
+                setMarkets(response.data);
+                console.log('Markets loaded:', response.data.length, 'markets');
+            } else {
+                // Fallback - direct API call
+                const directResponse = await fetch(`http://localhost:5183/api/Market`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+                const result = await directResponse.json();
+                if (result.success) {
+                    setMarkets(Array.isArray(result.data) ? result.data : []);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading markets:', error);
         }
     };
 
@@ -188,19 +273,49 @@ const ProductManagement = () => {
     const handleSearch = (value) => {
         setSearchKeyword(value);
         setPagination(prev => ({ ...prev, current: 1 }));
-        loadProducts(1, pagination.pageSize);
+        loadProductsWithFilters(1, pagination.pageSize, {
+            search: value,
+            categoryId: selectedCategory,
+            storeId: selectedStore,
+            marketId: selectedMarket
+        });
     };
 
     const handleCategoryChange = (value) => {
+        console.log('Category changed to:', value);
         setSelectedCategory(value);
         setPagination(prev => ({ ...prev, current: 1 }));
-        loadProducts(1, pagination.pageSize);
+        loadProductsWithFilters(1, pagination.pageSize, {
+            search: searchKeyword,
+            categoryId: value,
+            storeId: selectedStore,
+            marketId: selectedMarket
+        });
     };
 
     const handleStoreChange = (value) => {
+        console.log('Store changed to:', value);
         setSelectedStore(value);
         setPagination(prev => ({ ...prev, current: 1 }));
-        loadProducts(1, pagination.pageSize);
+        loadProductsWithFilters(1, pagination.pageSize, {
+            search: searchKeyword,
+            categoryId: selectedCategory,
+            storeId: value,
+            marketId: selectedMarket
+        });
+    };
+
+    const handleMarketChange = (value) => {
+        console.log('Market changed to:', value);
+        setSelectedMarket(value);
+        setPagination(prev => ({ ...prev, current: 1 }));
+        // Load products immediately with new market value
+        loadProductsWithFilters(1, pagination.pageSize, {
+            search: searchKeyword,
+            categoryId: selectedCategory,
+            storeId: selectedStore,
+            marketId: value // Use the new value directly
+        });
     };
 
     const handleTableChange = (paginationConfig) => {
@@ -307,6 +422,7 @@ const ProductManagement = () => {
         setSearchKeyword('');
         setSelectedCategory(null);
         setSelectedStore(null);
+        setSelectedMarket(null);
         setPagination(prev => ({ ...prev, current: 1 }));
         loadProducts(1, pagination.pageSize);
     };
@@ -350,9 +466,6 @@ const ProductManagement = () => {
             render: (text, record) => (
                 <div>
                     <div style={{ fontWeight: 'bold', marginBottom: 4 }}>{text}</div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                        ID: {record.id}
-                    </Text>
                 </div>
             ),
         },
@@ -386,7 +499,7 @@ const ProductManagement = () => {
                         }).format(price)}
                     </div>
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                        /{record.unit}
+                        /{record.unitName || record.unit || 'đơn vị'}
                     </Text>
                 </div>
             ),
@@ -474,7 +587,7 @@ const ProductManagement = () => {
 
                 {/* Filters */}
                 <Row gutter={16} style={{ marginBottom: 16 }}>
-                    <Col span={8}>
+                    <Col span={6}>
                         <Search
                             placeholder="Tìm kiếm sản phẩm..."
                             value={searchKeyword}
@@ -484,22 +597,44 @@ const ProductManagement = () => {
                             allowClear
                         />
                     </Col>
-                    <Col span={6}>
+                    <Col span={4}>
                         <Select
                             placeholder="Chọn danh mục"
                             value={selectedCategory}
                             onChange={handleCategoryChange}
                             allowClear
                             style={{ width: '100%' }}
+                            loading={categories.length === 0}
+                            notFoundContent={categories.length === 0 ? "Đang tải..." : "Không có danh mục"}
                         >
-                            {Array.isArray(categories) && categories.map(category => (
-                                <Option key={category.id} value={category.id}>
-                                    {category.name}
+                            {Array.isArray(categories) && categories.length > 0 ?
+                                categories.map(category => (
+                                    <Option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </Option>
+                                )) :
+                                <Option disabled value="">
+                                    {categories.length === 0 ? "Đang tải danh mục..." : "Không có danh mục"}
+                                </Option>
+                            }
+                        </Select>
+                    </Col>
+                    <Col span={4}>
+                        <Select
+                            placeholder="Chọn chợ"
+                            value={selectedMarket}
+                            onChange={handleMarketChange}
+                            allowClear
+                            style={{ width: '100%' }}
+                        >
+                            {Array.isArray(markets) && markets.map(market => (
+                                <Option key={market.id} value={market.id}>
+                                    {market.name}
                                 </Option>
                             ))}
                         </Select>
                     </Col>
-                    <Col span={6}>
+                    <Col span={4}>
                         <Select
                             placeholder="Chọn cửa hàng"
                             value={selectedStore}
@@ -514,7 +649,7 @@ const ProductManagement = () => {
                             ))}
                         </Select>
                     </Col>
-                    <Col span={4}>
+                    <Col span={2}>
                         <Button
                             icon={<ReloadOutlined />}
                             onClick={handleRefresh}
@@ -524,6 +659,34 @@ const ProductManagement = () => {
                         </Button>
                     </Col>
                 </Row>
+
+                {/* Filter Status */}
+                {(searchKeyword || selectedCategory || selectedStore || selectedMarket) && (
+                    <Row style={{ marginBottom: 16 }}>
+                        <Col span={24}>
+                            <div style={{
+                                padding: '8px 12px',
+                                backgroundColor: '#f0f2f5',
+                                borderRadius: '6px',
+                                fontSize: '14px'
+                            }}>
+                                <Text strong>Bộ lọc đang áp dụng: </Text>
+                                {searchKeyword && <Tag color="blue">Tìm kiếm: {searchKeyword}</Tag>}
+                                {selectedCategory && <Tag color="green">Danh mục: {categories.find(c => c.id === selectedCategory)?.name}</Tag>}
+                                {selectedMarket && <Tag color="orange">Chợ: {markets.find(m => m.id === selectedMarket)?.name}</Tag>}
+                                {selectedStore && <Tag color="purple">Cửa hàng: {stores.find(s => s.id === selectedStore)?.name}</Tag>}
+                                <Button
+                                    type="link"
+                                    size="small"
+                                    onClick={handleRefresh}
+                                    style={{ padding: '0 4px', height: 'auto' }}
+                                >
+                                    Xóa tất cả
+                                </Button>
+                            </div>
+                        </Col>
+                    </Row>
+                )}
 
                 {/* Statistics */}
                 <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -653,10 +816,10 @@ const ProductManagement = () => {
                                                 currency: 'VND',
                                             }).format(selectedProduct.price)}
                                         </Text>
-                                        <Text type="secondary"> /{selectedProduct.unit}</Text>
+                                        <Text type="secondary"> /{selectedProduct.unitName || selectedProduct.unit || 'đơn vị'}</Text>
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Số lượng tối thiểu">
-                                        {selectedProduct.minimumQuantity} {selectedProduct.unit}
+                                        {selectedProduct.minimumQuantity} {selectedProduct.unitName || selectedProduct.unit || 'đơn vị'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Lượt mua">
                                         {selectedProduct.purchaseCount || 0} lượt
@@ -668,12 +831,14 @@ const ProductManagement = () => {
                         <Divider />
 
                         <Descriptions title="Thông tin chi tiết" column={2}>
-                            <Descriptions.Item label="ID sản phẩm">
-                                {selectedProduct.id}
-                            </Descriptions.Item>
                             <Descriptions.Item label="Cửa hàng">
                                 <div>
                                     <ShopOutlined /> {selectedProduct.storeName || 'N/A'}
+                                </div>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Chợ">
+                                <div>
+                                    <BankOutlined /> {selectedProduct.marketName || 'N/A'}
                                 </div>
                             </Descriptions.Item>
                             <Descriptions.Item label="Ngày tạo">

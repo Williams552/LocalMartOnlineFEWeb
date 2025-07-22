@@ -81,6 +81,7 @@ class ProductService {
             if (params.search) queryParams.append('search', params.search);
             if (params.categoryId) queryParams.append('categoryId', params.categoryId);
             if (params.storeId) queryParams.append('storeId', params.storeId);
+            if (params.marketId) queryParams.append('marketId', params.marketId);
 
             const url = queryParams.toString()
                 ? `${API_ENDPOINTS.PRODUCT.GET_ALL}?${queryParams}`
