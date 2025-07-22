@@ -48,7 +48,7 @@ const AdminLayout = () => {
         },
         {
             key: 'users', icon: <UserOutlined />, label: 'Quản lý người dùng', children: [
-                { key: '/admin/users', label: 'Danh sách người dùng' },                
+                { key: '/admin/users', label: 'Danh sách người dùng' },
                 { key: '/admin/seller-register', label: 'Danh sách đăng ký bán hàng' },
                 { key: '/admin/proxy-register', label: 'Danh sách đăng ký người mua hộ' },
             ]
@@ -63,28 +63,35 @@ const AdminLayout = () => {
         {
             key: 'stores', icon: <ShopOutlined />, label: 'Quản lý cửa hàng', children: [
                 { key: '/admin/stores', label: 'Danh sách cửa hàng' },
-                
+
             ]
         },
-      
+        {
+            key: 'products', icon: <BoxPlotOutlined />, label: 'Quản lý sản phẩm', children: [
+                { key: '/admin/products', label: 'Danh sách sản phẩm' },
+                { key: '/admin/products/pending', label: 'Sản phẩm chờ duyệt' },
+                { key: '/admin/products/fast-bargain', label: 'Sản phẩm thương lượng' },
+            ]
+        },
         {
             key: 'product-units', icon: <TagsOutlined />, label: 'Quản lý đơn vị sản phẩm', children: [
-                { key: '/admin/product-units', label: 'Danh sách đơn vị' },
-        
+                { key: '/admin/product-units', label: 'Danh sách đơn vị' }
             ]
         },
         {
             key: 'categories', icon: <AppstoreOutlined />, label: 'Quản lý danh mục', children: [
-                { key: '/admin/categories', label: 'Danh mục' }
+                { key: '/admin/categories', label: 'Danh mục' },
             ]
         },
-        
-      
-        
+        {
+            key: 'orders', icon: <ShoppingCartOutlined />, label: 'Quản lý đơn hàng', children: [
+                { key: '/admin/orders', label: 'Tất cả đơn hàng' },
+                { key: '/admin/orders/proxy-shopping', label: 'Đơn hàng mua hộ' },
+            ]
+        },
         {
             key: 'content', icon: <FileTextOutlined />, label: 'Quản lý nội dung', children: [
-                { key: '/admin/faqs', label: 'FAQ và Chính sách' },
-                
+                { key: '/admin/faqs', label: 'FAQ' },
                 { key: '/admin/notifications', label: 'Thông báo' },
             ]
         },
@@ -98,11 +105,10 @@ const AdminLayout = () => {
         {
             key: 'analytics', icon: <BarChartOutlined />, label: 'Báo cáo & Thống kê', children: [
                 { key: '/admin/analytics/users', label: 'Thống kê người dùng' },
-                { key: '/admin/analytics/revenue', label: 'Doanh thu' },
-             
+                { key: '/admin/analytics/revenue', label: 'Doanh thu' }
             ]
         },
-        
+
     ];
 
     const handleMenuClick = ({ key }) => navigate(key);
@@ -117,23 +123,24 @@ const AdminLayout = () => {
     const getBreadcrumbItems = () => {
         const pathSegments = location.pathname.split('/').filter(Boolean);
         const items = [{ title: 'Trang chủ', href: '/admin' }];
-        
+
         // Mapping để chuyển đổi path thành tiếng Việt
         const breadcrumbMap = {
             'users': 'Quản lý người dùng',
             'products': 'Quản lý sản phẩm',
             'product-units': 'Quản lý đơn vị sản phẩm',
             'categories': 'Quản lý danh mục',
-            'category-registrations': 'Đăng ký danh mục',
             'markets': 'Quản lý chợ',
             'stores': 'Quản lý cửa hàng',
             'orders': 'Quản lý đơn hàng',
             'content': 'Quản lý nội dung',
             'support': 'Hỗ trợ khách hàng',
             'analytics': 'Báo cáo & Thống kê',
+            'proxy-shopping': 'Đơn hàng mua hộ',
+            'fast-bargain': 'Khuyến mãi',
             'demo': 'Demo Selector'
         };
-        
+
         pathSegments.slice(1).forEach((segment, index) => {
             const title = breadcrumbMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
             items.push({
@@ -170,7 +177,7 @@ const AdminLayout = () => {
                 </div>
                 <Menu
                     theme="dark"
-                    mode="inline"   
+                    mode="inline"
                     selectedKeys={[location.pathname]}
                     items={menuItems}
                     onClick={handleMenuClick}
