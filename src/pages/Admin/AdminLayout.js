@@ -56,7 +56,6 @@ const AdminLayout = () => {
         {
             key: 'markets', icon: <BankOutlined />, label: 'Quản lý chợ', children: [
                 { key: '/admin/markets', label: 'Danh sách chợ' },
-                { key: '/admin/markets/create', label: 'Thêm chợ mới' },
                 { key: '/admin/market-fees', label: 'Phí chợ' },
                 { key: '/admin/market-rules', label: 'Quy định chợ' },
             ]
@@ -76,8 +75,7 @@ const AdminLayout = () => {
         },
         {
             key: 'categories', icon: <AppstoreOutlined />, label: 'Quản lý danh mục', children: [
-                { key: '/admin/categories', label: 'Danh mục' },
-                { key: '/admin/category-registrations', label: 'Đăng ký danh mục' },
+                { key: '/admin/categories', label: 'Danh mục' }
             ]
         },
         
