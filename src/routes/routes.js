@@ -113,22 +113,21 @@ const AppRoutes = () => {
             </Route>
 
             {/* Seller Routes - Separate layout without Header/Footer */}
-            <Route element={<SellerApp />}>
-                <Route path="/seller/dashboard" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/products" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
-                <Route path="/seller/products/add" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
-                <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['Seller']}><SellerOrdersPage /></ProtectedRoute>} />
-                <Route path="/seller/profile" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
-                <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/customers" element={<ProtectedRoute allowedRoles={['Seller']}><CustomerManagement /></ProtectedRoute>} />
-                <Route path="/seller/personal-shopping" element={<ProtectedRoute allowedRoles={['Seller']}><PersonalShopping /></ProtectedRoute>} />
-                <Route path="/seller/quick-actions" element={<ProtectedRoute allowedRoles={['Seller']}><QuickActionsPage /></ProtectedRoute>} />
-                <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><ChartsAnalyticsPage /></ProtectedRoute>} />
-                <Route path="/seller/notifications" element={<ProtectedRoute allowedRoles={['Seller']}><NotificationsPage /></ProtectedRoute>} />
-                <Route path="/seller/priority-actions" element={<ProtectedRoute allowedRoles={['Seller']}><PriorityActionsPage /></ProtectedRoute>} />
-                <Route path="/seller/payments" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/licenses" element={<ProtectedRoute allowedRoles={['Seller']}><SellerDashboard /></ProtectedRoute>} />
-                <Route path="/seller/store" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
+            <Route path="/seller" element={<ProtectedRoute allowedRoles={['Seller']}><SellerApp /></ProtectedRoute>}>
+                <Route path="dashboard" element={<SellerDashboard />} />
+                <Route path="products" element={<SellerProducts />} />
+                <Route path="products/add" element={<SellerProducts />} />
+                <Route path="orders" element={<SellerOrdersPage />} />
+                <Route path="profile" element={<StoreProfile />} />
+                <Route path="analytics" element={<ChartsAnalyticsPage />} />
+                <Route path="customers" element={<CustomerManagement />} />
+                <Route path="personal-shopping" element={<PersonalShopping />} />
+                <Route path="quick-actions" element={<QuickActionsPage />} />
+                <Route path="notifications" element={<NotificationsPage />} />
+                <Route path="priority-actions" element={<PriorityActionsPage />} />
+                <Route path="payments" element={<SellerDashboard />} />
+                <Route path="licenses" element={<SellerDashboard />} />
+                <Route path="store" element={<StoreProfile />} />
             </Route>
 
             {/* Admin Routes - Protected with admin role */}
@@ -146,10 +145,7 @@ const AppRoutes = () => {
 
                 {/* Category Management */}
                 <Route path="categories" element={<CategoryManagement />} />
-                
-
-
-                {/* Market Management */}
+                <Route path="category-registrations" element={<CategoryRegistrationManagement />} />
                 <Route path="markets" element={<MarketManagement />} />
                 <Route path="markets/create" element={<MarketManagement />} />
                 <Route path="markets/dashboard" element={<MarketDashboard />} />
@@ -171,11 +167,6 @@ const AppRoutes = () => {
                 <Route path="products" element={<ProductManagement />} />
                 <Route path="products/pending" element={<PendingProducts />} />
                 <Route path="products/fast-bargain" element={<FastBargainProducts />} />
-
-
-
-                <Route path="categories" element={<ContentManagement />} />
-                <Route path="category-registrations" element={<ContentManagement />} />
                 <Route path="product-units" element={<ProductUnitManagement />} />
 
                 {/* Order Management */}
