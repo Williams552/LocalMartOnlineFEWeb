@@ -112,6 +112,7 @@ const AppRoutes = () => {
             </Route>
 
             {/* Seller Routes - Separate layout without Header/Footer */}
+
             <Route element={<SellerApp />}>
                 <Route path="/seller" element={<Navigate to="/seller/products" replace />} />
                 <Route path="/seller/dashboard" element={<Navigate to="/seller/products" replace />} />
@@ -146,9 +147,13 @@ const AppRoutes = () => {
                 {/* Category Management */}
                 <Route path="categories" element={<CategoryManagement />} />
 
+                <Route path="category-registrations" element={<CategoryRegistrationManagement />} />
+
+
 
 
                 {/* Market Management */}
+
                 <Route path="markets" element={<MarketManagement />} />
                 <Route path="markets/create" element={<MarketManagement />} />
                 <Route path="markets/dashboard" element={<MarketDashboard />} />
@@ -170,11 +175,6 @@ const AppRoutes = () => {
                 <Route path="products" element={<ProductManagement />} />
                 <Route path="products/pending" element={<PendingProducts />} />
                 <Route path="products/fast-bargain" element={<FastBargainProducts />} />
-
-
-
-                <Route path="categories" element={<ContentManagement />} />
-                <Route path="category-registrations" element={<ContentManagement />} />
                 <Route path="product-units" element={<ProductUnitManagement />} />
 
                 {/* Order Management */}
