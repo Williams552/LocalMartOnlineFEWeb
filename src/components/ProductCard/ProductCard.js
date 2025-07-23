@@ -19,7 +19,9 @@ const ProductCard = ({
     price = 0,
     image = null,
     description = "",
-    status = "Còn hàng"
+    status = "Còn hàng",
+    minimumQuantity = 1,
+    unitName = "kg"
 }) => {
     const [showBargainModal, setShowBargainModal] = useState(false);
     const currentUser = authService.getCurrentUser();
@@ -124,7 +126,7 @@ const ProductCard = ({
                         {formatPrice(price)}đ
                     </p>
                     <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        /kg
+                        /{unitName}
                     </span>
                 </div>
                 <div className="mt-3 space-y-2">
@@ -133,8 +135,15 @@ const ProductCard = ({
                             {status}
                         </div>
                         <AddToCartButton
-                            product={{ id, name, price, image: getDisplayImage() }}
-                            quantity={0.5}
+                            product={{
+                                id,
+                                name,
+                                price,
+                                image: getDisplayImage(),
+                                unit: unitName,
+                                minimumQuantity: minimumQuantity
+                            }}
+                            quantity={minimumQuantity}
                             className="text-sm font-medium"
                             size="small"
                             showQuantityControls={false}
@@ -163,7 +172,7 @@ const ProductCard = ({
                     id,
                     name,
                     price,
-                    unit: 'kg', // Could be dynamic
+                    unit: unitName,
                     imageUrl: getDisplayImage(),
                     seller: storeName || seller
                 }}

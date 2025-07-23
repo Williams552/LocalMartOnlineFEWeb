@@ -291,17 +291,6 @@ const SupportManagement = () => {
 
     const columns = [
         {
-            title: 'ID',
-            dataIndex: 'id',
-            key: 'id',
-            width: 120,
-            render: (text) => (
-                <div style={{ fontWeight: 'bold', color: '#1890ff' }}>
-                    {text?.substring(0, 8)}...
-                </div>
-            ),
-        },
-        {
             title: 'Khách hàng',
             dataIndex: ['userName', 'userEmail'],
             key: 'user',

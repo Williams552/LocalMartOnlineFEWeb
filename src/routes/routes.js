@@ -1,6 +1,6 @@
 import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
 import Register from "../components/AuthComponents/Register";
 import ForgotPassword from "../components/AuthComponents/ForgotPassword";
@@ -56,7 +56,6 @@ import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
 import SupportRequestPage from "../pages/Support/SupportRequestPage";
 
 // Seller pages
-import SellerDashboard from "../pages/Sellers/SellerDashboard";
 import SellerProducts from "../pages/Sellers/SellerProducts";
 import SellerOrdersPage from "../pages/Sellers/SellerOrdersPage";
 import StoreProfile from "../pages/Sellers/StoreProfile";
@@ -113,21 +112,23 @@ const AppRoutes = () => {
             </Route>
 
             {/* Seller Routes - Separate layout without Header/Footer */}
-            <Route path="/seller" element={<ProtectedRoute allowedRoles={['Seller']}><SellerApp /></ProtectedRoute>}>
-                <Route path="dashboard" element={<SellerDashboard />} />
-                <Route path="products" element={<SellerProducts />} />
-                <Route path="products/add" element={<SellerProducts />} />
-                <Route path="orders" element={<SellerOrdersPage />} />
-                <Route path="profile" element={<StoreProfile />} />
-                <Route path="analytics" element={<ChartsAnalyticsPage />} />
-                <Route path="customers" element={<CustomerManagement />} />
-                <Route path="personal-shopping" element={<PersonalShopping />} />
-                <Route path="quick-actions" element={<QuickActionsPage />} />
-                <Route path="notifications" element={<NotificationsPage />} />
-                <Route path="priority-actions" element={<PriorityActionsPage />} />
-                <Route path="payments" element={<SellerDashboard />} />
-                <Route path="licenses" element={<SellerDashboard />} />
-                <Route path="store" element={<StoreProfile />} />
+
+            <Route element={<SellerApp />}>
+                <Route path="/seller" element={<Navigate to="/seller/products" replace />} />
+                <Route path="/seller/dashboard" element={<Navigate to="/seller/products" replace />} />
+                <Route path="/seller/products" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
+                <Route path="/seller/products/add" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
+                <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['Seller']}><SellerOrdersPage /></ProtectedRoute>} />
+                <Route path="/seller/profile" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
+                <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><ChartsAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/seller/customers" element={<ProtectedRoute allowedRoles={['Seller']}><CustomerManagement /></ProtectedRoute>} />
+                <Route path="/seller/personal-shopping" element={<ProtectedRoute allowedRoles={['Seller']}><PersonalShopping /></ProtectedRoute>} />
+                <Route path="/seller/quick-actions" element={<ProtectedRoute allowedRoles={['Seller']}><QuickActionsPage /></ProtectedRoute>} />
+                <Route path="/seller/notifications" element={<ProtectedRoute allowedRoles={['Seller']}><NotificationsPage /></ProtectedRoute>} />
+                <Route path="/seller/priority-actions" element={<ProtectedRoute allowedRoles={['Seller']}><PriorityActionsPage /></ProtectedRoute>} />
+                <Route path="/seller/payments" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
+                <Route path="/seller/licenses" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
+                <Route path="/seller/store" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
             </Route>
 
             {/* Admin Routes - Protected with admin role */}
@@ -145,7 +146,14 @@ const AppRoutes = () => {
 
                 {/* Category Management */}
                 <Route path="categories" element={<CategoryManagement />} />
+
                 <Route path="category-registrations" element={<CategoryRegistrationManagement />} />
+
+
+
+
+                {/* Market Management */}
+
                 <Route path="markets" element={<MarketManagement />} />
                 <Route path="markets/create" element={<MarketManagement />} />
                 <Route path="markets/dashboard" element={<MarketDashboard />} />
@@ -161,8 +169,8 @@ const AppRoutes = () => {
                 <Route path="stores/sellers" element={<StoreManagement />} />
                 <Route path="stores/reviews" element={<StoreManagement />} />
 
-            
-                
+
+
                 {/* Product Management */}
                 <Route path="products" element={<ProductManagement />} />
                 <Route path="products/pending" element={<PendingProducts />} />
