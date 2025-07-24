@@ -5,7 +5,7 @@ import {
     FaUser, FaHome, FaBell, FaCog, FaSignOutAlt,
     FaUsers, FaAccessibleIcon, FaCreditCard, FaComments,
     FaQuestionCircle, FaBars, FaTimes, FaChevronDown, FaShoppingBag,
-    FaExclamationTriangle
+    FaExclamationTriangle, FaHandshake
 } from "react-icons/fa";
 import { useAuth } from "../hooks/useAuth";
 import NotificationBell from "../components/Seller/NotificationBell";
@@ -62,6 +62,13 @@ const SellerLayout = ({ children }) => {
             label: 'Đơn hàng',
             color: 'text-orange-600',
             description: 'Quản lý đơn hàng'
+        },
+        {
+            path: '/seller/fast-bargains',
+            icon: FaHandshake,
+            label: 'Thương lượng nhanh',
+            color: 'text-orange-500',
+            description: 'Quản lý thương lượng từ khách hàng'
         },
         {
             path: '/seller/customers',
