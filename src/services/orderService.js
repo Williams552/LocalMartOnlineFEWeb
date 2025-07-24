@@ -93,18 +93,37 @@ class OrderService {
         }
     }
 
-    // Hủy đơn hàng
-    async cancelOrder(orderId) {
+    // Hủy đơn hàng với lý do (POST /api/order/{orderId}/cancel)
+    async cancelOrder(orderId, cancelReason) {
         try {
-            // Backend có thể có endpoint khác để hủy đơn hàng
-            const response = await apiService.put(`/api/Order/${orderId}/cancel`);
+            console.log('🚫 Cancelling order:', orderId, 'Reason:', cancelReason);
+            const response = await apiService.post(`/api/order/${orderId}/cancel`, {
+                cancelReason
+            });
+
             return {
                 success: true,
                 data: response.data || response,
                 message: 'Hủy đơn hàng thành công'
             };
         } catch (error) {
-            console.error('Error canceling order:', error);
+            console.error('❌ Error cancelling order:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        status: 'Cancelled',
+                        cancelReason: cancelReason,
+                        updatedAt: new Date().toISOString()
+                    },
+                    message: 'Hủy đơn hàng thành công (Mock)'
+                };
+            }
+            
             throw new Error(error.response?.data?.message || 'Không thể hủy đơn hàng');
         }
     }
@@ -415,19 +434,25 @@ class OrderService {
         }
     }
 
-    // Complete payment for order
+    // Complete payment for order - DEPRECATED (use markOrderAsPaid instead)
     async completePayment(orderId) {
+        console.warn('⚠️ completePayment is deprecated, use markOrderAsPaid instead');
+        return this.markOrderAsPaid(orderId);
+    }
+
+    // Seller xác nhận còn hàng (POST /api/order/{orderId}/confirm)
+    async confirmOrder(orderId) {
         try {
-            console.log('💰 Completing payment for order:', orderId);
-            const response = await apiService.post(`/api/order/${orderId}/complete`);
+            console.log('✅ Confirming order:', orderId);
+            const response = await apiService.post(`/api/order/${orderId}/confirm`);
 
             return {
                 success: true,
                 data: response.data || response,
-                message: 'Xác nhận thanh toán thành công'
+                message: 'Xác nhận đơn hàng thành công'
             };
         } catch (error) {
-            console.error('❌ Error completing payment:', error);
+            console.error('❌ Error confirming order:', error);
             
             // Fallback với mock response cho testing
             if (process.env.NODE_ENV === 'development') {
@@ -436,14 +461,78 @@ class OrderService {
                     success: true,
                     data: {
                         orderId: orderId,
-                        paymentStatus: 'completed',
-                        completedAt: new Date().toISOString()
+                        status: 'Confirmed',
+                        confirmedAt: new Date().toISOString()
                     },
-                    message: 'Xác nhận thanh toán thành công (Mock)'
+                    message: 'Xác nhận đơn hàng thành công (Mock)'
                 };
             }
             
-            throw new Error(error.response?.data?.message || 'Không thể xác nhận thanh toán');
+            throw new Error(error.response?.data?.message || 'Không thể xác nhận đơn hàng');
+        }
+    }
+
+    // Seller xác nhận đã nhận tiền (POST /api/order/{orderId}/mark-paid)
+    async markOrderAsPaid(orderId) {
+        try {
+            console.log('💰 Marking order as paid:', orderId);
+            const response = await apiService.post(`/api/order/${orderId}/mark-paid`);
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Xác nhận đã nhận tiền thành công'
+            };
+        } catch (error) {
+            console.error('❌ Error marking order as paid:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        paymentStatus: 'Paid',
+                        paidAt: new Date().toISOString()
+                    },
+                    message: 'Xác nhận đã nhận tiền thành công (Mock)'
+                };
+            }
+            
+            throw new Error(error.response?.data?.message || 'Không thể xác nhận đã nhận tiền');
+        }
+    }
+
+    // Buyer xác nhận đã nhận hàng (POST /api/order/{orderId}/complete)
+    async completeOrderByBuyer(orderId) {
+        try {
+            console.log('📦 Buyer completing order:', orderId);
+            const response = await apiService.post(`/api/order/${orderId}/complete`);
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Xác nhận đã nhận hàng thành công'
+            };
+        } catch (error) {
+            console.error('❌ Error completing order by buyer:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        status: 'Completed',
+                        completedAt: new Date().toISOString()
+                    },
+                    message: 'Xác nhận đã nhận hàng thành công (Mock)'
+                };
+            }
+            
+            throw new Error(error.response?.data?.message || 'Không thể xác nhận đã nhận hàng');
         }
     }
 
@@ -703,24 +792,6 @@ class OrderService {
             }
 
             throw new Error(error.response?.data?.message || 'Không thể lọc đơn hàng');
-        }
-    }
-
-    // Hủy đơn hàng (Admin/Seller)
-    async cancelOrder(orderId) {
-        try {
-            console.log('❌ Cancelling order:', orderId);
-            const response = await apiService.post(`/api/Order/${orderId}/cancel`);
-            console.log('❌ Cancel order response:', response);
-
-            return {
-                success: true,
-                data: response.data,
-                message: 'Đơn hàng đã được hủy'
-            };
-        } catch (error) {
-            console.error('❌ Error cancelling order:', error);
-            throw new Error(error.response?.data?.message || 'Không thể hủy đơn hàng');
         }
     }
 
