@@ -128,11 +128,15 @@ const BuyerOrders = () => {
     const handleReorder = async (orderId) => {
         try {
             const result = await orderService.reorderOrder(orderId);
-            if (result.success) {
-                toast.success("Đặt lại đơn hàng thành công!");
+            
+            if (result && result.success) {
+                toast.success(result.message || "Đặt lại đơn hàng thành công!");
                 fetchOrders(); // Refresh orders list
+            } else {
+                toast.error(result?.message || "Không thể đặt lại đơn hàng. Vui lòng thử lại.");
             }
         } catch (error) {
+            console.error('Error in handleReorder:', error);
             toast.error(error.message || "Lỗi khi đặt lại đơn hàng");
         }
     };
@@ -141,11 +145,15 @@ const BuyerOrders = () => {
         if (window.confirm("Bạn có chắc muốn hủy đơn hàng này?")) {
             try {
                 const result = await orderService.cancelOrder(orderId, "Buyer hủy đơn hàng");
-                if (result.success) {
-                    toast.success("Hủy đơn hàng thành công!");
+                
+                if (result && result.success) {
+                    toast.success(result.message || "Hủy đơn hàng thành công!");
                     fetchOrders(); // Refresh orders list
+                } else {
+                    toast.error(result?.message || "Không thể hủy đơn hàng. Vui lòng thử lại.");
                 }
             } catch (error) {
+                console.error('Error in handleCancelOrder:', error);
                 toast.error(error.message || "Lỗi khi hủy đơn hàng");
             }
         }
@@ -156,11 +164,17 @@ const BuyerOrders = () => {
         if (window.confirm("Bạn có chắc đã nhận được hàng và muốn hoàn thành đơn hàng này?")) {
             try {
                 const result = await orderService.completeOrderByBuyer(orderId);
-                if (result.success) {
-                    toast.success("Xác nhận hoàn thành đơn hàng thành công!");
+                
+                // Kiểm tra kết quả trả về
+                if (result && result.success) {
+                    toast.success(result.message || "Xác nhận hoàn thành đơn hàng thành công!");
                     fetchOrders(); // Refresh orders list
+                } else {
+                    // Trường hợp API trả về nhưng success = false
+                    toast.error(result?.message || "Không thể hoàn thành đơn hàng. Vui lòng thử lại.");
                 }
             } catch (error) {
+                console.error('Error in handleCompleteOrder:', error);
                 toast.error(error.message || "Lỗi khi hoàn thành đơn hàng");
             }
         }
@@ -183,11 +197,14 @@ const BuyerOrders = () => {
                 comment: reviewData.comment
             });
 
-            if (result.success) {
-                toast.success('Đánh giá thành công!');
+            if (result && result.success) {
+                toast.success(result.message || 'Đánh giá thành công!');
                 fetchOrders(); // Refresh orders to update review status
+            } else {
+                toast.error(result?.message || 'Không thể gửi đánh giá. Vui lòng thử lại.');
             }
         } catch (error) {
+            console.error('Error in handleSubmitReview:', error);
             toast.error(error.message || 'Lỗi khi gửi đánh giá');
         }
     };

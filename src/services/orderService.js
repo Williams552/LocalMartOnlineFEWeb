@@ -455,10 +455,29 @@ class OrderService {
             };
         } catch (error) {
             console.error('❌ Error confirming order:', error);
+            console.error('❌ Error details:', {
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data,
+                message: error.response?.data?.message || error.message
+            });
             
-            // Fallback với mock response cho testing
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('🔄 Using mock response for development');
+            // Check for specific error types
+            if (error.response?.status === 403) {
+                throw new Error('Bạn không có quyền xác nhận đơn hàng này.');
+            }
+            
+            if (error.response?.status === 401) {
+                throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+            }
+            
+            if (error.response?.status === 404) {
+                throw new Error('Không tìm thấy đơn hàng này.');
+            }
+            
+            // Fallback với mock response cho testing (chỉ khi không phải lỗi authorization/validation)
+            if (process.env.NODE_ENV === 'development' && !error.response?.status) {
+                console.warn('🔄 Using mock response for development (network error)');
                 return {
                     success: true,
                     data: {
@@ -487,10 +506,29 @@ class OrderService {
             };
         } catch (error) {
             console.error('❌ Error marking order as paid:', error);
+            console.error('❌ Error details:', {
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data,
+                message: error.response?.data?.message || error.message
+            });
             
-            // Fallback với mock response cho testing
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('🔄 Using mock response for development');
+            // Check for specific error types
+            if (error.response?.status === 403) {
+                throw new Error('Bạn không có quyền xác nhận thanh toán cho đơn hàng này.');
+            }
+            
+            if (error.response?.status === 401) {
+                throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+            }
+            
+            if (error.response?.status === 404) {
+                throw new Error('Không tìm thấy đơn hàng này.');
+            }
+            
+            // Fallback với mock response cho testing (chỉ khi không phải lỗi authorization/validation)
+            if (process.env.NODE_ENV === 'development' && !error.response?.status) {
+                console.warn('🔄 Using mock response for development (network error)');
                 return {
                     success: true,
                     data: {
@@ -510,6 +548,24 @@ class OrderService {
     async completeOrderByBuyer(orderId) {
         try {
             console.log('📦 Buyer completing order:', orderId);
+            
+            // Get current user to include buyer ID for authorization
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const buyerId = user.id || user._id;
+            const token = localStorage.getItem('token');
+            
+            console.log('👤 Current user info:', {
+                userId: buyerId,
+                userRole: user.role || user.userType,
+                hasToken: !!token,
+                tokenPreview: token ? token.substring(0, 20) + '...' : 'No token'
+            });
+            
+            if (!buyerId) {
+                throw new Error('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+            }
+            
+            console.log('📤 Sending complete order request...');
             const response = await apiService.post(API_ENDPOINTS.ORDER.COMPLETE(orderId));
 
             return {
@@ -519,10 +575,33 @@ class OrderService {
             };
         } catch (error) {
             console.error('❌ Error completing order by buyer:', error);
+            console.error('❌ Error details:', {
+                status: error.response?.status,
+                statusText: error.response?.statusText,
+                data: error.response?.data,
+                message: error.response?.data?.message || error.message
+            });
             
-            // Fallback với mock response cho testing
-            if (process.env.NODE_ENV === 'development') {
-                console.warn('🔄 Using mock response for development');
+            // Check if it's an authorization error
+            if (error.response?.status === 403) {
+                throw new Error('Bạn không có quyền hoàn thành đơn hàng này. Vui lòng kiểm tra lại thông tin đăng nhập.');
+            }
+            
+            if (error.response?.status === 401) {
+                throw new Error('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
+            }
+            
+            if (error.response?.status === 404) {
+                throw new Error('Không tìm thấy đơn hàng này.');
+            }
+            
+            if (error.response?.status === 400) {
+                throw new Error(error.response?.data?.message || 'Yêu cầu không hợp lệ.');
+            }
+            
+            // Fallback với mock response cho testing (chỉ khi không phải lỗi authorization/validation)
+            if (process.env.NODE_ENV === 'development' && !error.response?.status) {
+                console.warn('🔄 Using mock response for development (network error)');
                 return {
                     success: true,
                     data: {

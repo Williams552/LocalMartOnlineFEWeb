@@ -8,6 +8,8 @@ import { useFavorites } from "../../contexts/FavoriteContext";
 import { useFollowStore } from "../../contexts/FollowStoreContext";
 import { useAuth } from "../../hooks/useAuth";
 import authService from "../../services/authService";
+import notificationService from "../../services/notificationService";
+import chatService from "../../services/chatService";
 import "../../styles/logout-modal.css";
 
 const Header = () => {
@@ -16,6 +18,16 @@ const Header = () => {
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    
+    // Notification states
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [notificationsLoading, setNotificationsLoading] = useState(false);
+    
+    // Message states
+    const [messages, setMessages] = useState([]);
+    const [messagesLoading, setMessagesLoading] = useState(false);
+    const [messageCount, setMessageCount] = useState(0);
 
     // Use contexts with fallback values
     const { user, isAuthenticated, logout } = useAuth();
@@ -90,22 +102,142 @@ const Header = () => {
         setShowLogoutConfirm(false);
     };
 
-
-
     const notificationRef = useRef();
     const messageRef = useRef();
     const profileRef = useRef();
 
-    const notifications = [
-        { id: 1, message: "Đơn hàng #1234 đã được xác nhận", time: "5 phút trước", unread: true },
-        { id: 2, message: "Cà rốt Đà Lạt giảm giá 20%", time: "1 giờ trước", unread: true },
-        { id: 3, message: "Gian hàng Cô Lan có sản phẩm mới", time: "2 giờ trước", unread: false },
-    ];
+    // Handle notification click
+    const handleNotificationClick = async (notification) => {
+        try {
+            // Mark as read if unread
+            if (!notification.isRead) {
+                await notificationService.markAsRead(notification.id);
+                fetchNotifications(); // Refresh notifications
+            }
+            
+            // Navigate based on notification type if needed
+            if (notification.actionUrl) {
+                navigate(notification.actionUrl);
+                setShowNotifications(false);
+            } else if (notification.type === 'ORDER_CONFIRMED' || notification.type === 'PAYMENT_CONFIRMED') {
+                navigate('/buyer/orders');
+                setShowNotifications(false);
+            }
+        } catch (error) {
+            console.error('Error handling notification click:', error);
+        }
+    };
 
-    const messages = [
-        { id: 1, from: "Cô Lan (Chợ Cái Khế)", text: "Bạn còn cần thêm rau gì không?", time: "10 phút trước", avatar: "🧑‍🌾" },
-        { id: 2, from: "Anh Minh (Chợ An Hòa)", text: "Cà chua hôm nay rất tươi nhé!", time: "30 phút trước", avatar: "👨‍🌾" },
-    ];
+    // Format time display for notifications
+    const formatNotificationTime = (dateString) => {
+        if (!dateString) return 'Vừa xong';
+        
+        try {
+            // Handle the API date format "2025-07-24 12:21:35"
+            const notificationDate = new Date(dateString.replace(' ', 'T'));
+            const now = new Date();
+            const diffInMinutes = Math.floor((now - notificationDate) / (1000 * 60));
+            
+            if (diffInMinutes < 1) return 'Vừa xong';
+            if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
+            if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} giờ trước`;
+            return `${Math.floor(diffInMinutes / 1440)} ngày trước`;
+        } catch (error) {
+            console.error('Error formatting notification time:', error);
+            return 'Vừa xong';
+        }
+    };
+
+    // Fetch notifications from API
+    const fetchNotifications = async () => {
+        if (!isAuthenticated) return;
+        
+        try {
+            setNotificationsLoading(true);
+            console.log('🔔 Fetching notifications from API...');
+            
+            const response = await notificationService.getNotifications(1, 5);
+            console.log('🔔 Notifications response:', response);
+            
+            if (response && response.data) {
+                const notificationData = Array.isArray(response.data) ? response.data : response.data.items || [];
+                console.log('🔔 Setting notifications state with:', notificationData);
+                setNotifications(notificationData);
+                
+                // Count unread notifications
+                const unreadCountFromData = notificationData.filter(n => !n.isRead).length;
+                setUnreadCount(unreadCountFromData);
+                
+                console.log('🔔 Loaded notifications:', notificationData.length, 'Unread:', unreadCountFromData);
+                console.log('🔔 First notification:', notificationData[0]);
+            } else {
+                console.warn('🔔 No notification data received');
+                setNotifications([]);
+                setUnreadCount(0);
+            }
+        } catch (error) {
+            console.error('🔔 Error fetching notifications:', error);
+            // Fallback to empty notifications
+            setNotifications([]);
+            setUnreadCount(0);
+        } finally {
+            setNotificationsLoading(false);
+        }
+    };
+
+    // Fetch messages from API
+    const fetchMessages = async () => {
+        if (!isAuthenticated || !user?.id) return;
+        
+        try {
+            setMessagesLoading(true);
+            console.log('💬 Fetching messages from API for user:', user.id);
+            
+            const response = await chatService.getChatHistory(user.id);
+            console.log('💬 Messages response:', response);
+            
+            if (response && response.data) {
+                const messageData = Array.isArray(response.data) ? response.data : response.data.items || [];
+                console.log('💬 Setting messages state with:', messageData);
+                setMessages(messageData);
+                setMessageCount(messageData.length);
+                
+                console.log('💬 Loaded messages:', messageData.length);
+            } else {
+                console.warn('💬 No message data received');
+                setMessages([]);
+                setMessageCount(0);
+            }
+        } catch (error) {
+            console.error('💬 Error fetching messages:', error);
+            // Fallback to empty messages
+            setMessages([]);
+            setMessageCount(0);
+        } finally {
+            setMessagesLoading(false);
+        }
+    };
+
+    // Load notifications and messages when authenticated
+    useEffect(() => {
+        if (isAuthenticated && user?.id) {
+            fetchNotifications();
+            fetchMessages();
+            
+            // Set up auto-refresh every 30 seconds
+            const interval = setInterval(() => {
+                fetchNotifications();
+                fetchMessages();
+            }, 30000);
+            
+            return () => clearInterval(interval);
+        } else {
+            setNotifications([]);
+            setUnreadCount(0);
+            setMessages([]);
+            setMessageCount(0);
+        }
+    }, [isAuthenticated, user?.id]);
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -200,31 +332,82 @@ const Header = () => {
                                 {/* Notifications */}
                                 <div className="relative" ref={notificationRef}>
                                     <button
-                                        onClick={() => setShowNotifications((prev) => !prev)}
+                                        onClick={() => {
+                                            setShowNotifications((prev) => !prev);
+                                            if (!showNotifications) {
+                                                fetchNotifications(); // Refresh notifications when opening
+                                            }
+                                        }}
                                         className="relative text-gray-600 hover:text-supply-primary transition"
+                                        title="Thông báo"
                                     >
                                         <FiBell size={24} />
-                                        {notifications.filter(n => n.unread).length > 0 && (
+                                        {unreadCount > 0 && (
                                             <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                                {notifications.filter(n => n.unread).length}
+                                                {unreadCount > 99 ? '99+' : unreadCount}
                                             </span>
                                         )}
                                     </button>
                                     {showNotifications && (
                                         <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
-                                            <div className="p-4 border-b bg-gray-50 rounded-t-lg">
+                                            <div className="p-4 border-b bg-gray-50 rounded-t-lg flex items-center justify-between">
                                                 <h3 className="font-semibold text-gray-800">Thông báo</h3>
+                                                {notificationsLoading && (
+                                                    <div className="w-4 h-4 border-2 border-supply-primary border-t-transparent rounded-full animate-spin"></div>
+                                                )}
                                             </div>
                                             <div className="max-h-80 overflow-y-auto">
-                                                {notifications.map((notification) => (
-                                                    <div key={notification.id} className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${notification.unread ? 'bg-blue-50' : ''}`}>
-                                                        <p className="text-sm text-gray-800">{notification.message}</p>
-                                                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
+                                                {(() => {
+                                                    console.log('🔔 Rendering notifications:', notifications, 'Loading:', notificationsLoading);
+                                                    return null;
+                                                })()}
+                                                {notificationsLoading ? (
+                                                    <div className="p-8 text-center">
+                                                        <div className="w-8 h-8 border-2 border-supply-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                                        <p className="text-sm text-gray-500">Đang tải thông báo...</p>
                                                     </div>
-                                                ))}
+                                                ) : notifications.length > 0 ? (
+                                                    notifications.map((notification) => (
+                                                        <div 
+                                                            key={notification.id} 
+                                                            className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
+                                                                !notification.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                                                            }`}
+                                                            onClick={() => handleNotificationClick(notification)}
+                                                        >
+                                                            <div className="flex items-start space-x-2">
+                                                                <div className="flex-1">
+                                                                    <p className="text-sm text-gray-800 font-medium">
+                                                                        {notification.title}
+                                                                    </p>
+                                                                    {notification.message && notification.message !== notification.title && (
+                                                                        <p className="text-xs text-gray-600 mt-1">
+                                                                            {notification.message}
+                                                                        </p>
+                                                                    )}
+                                                                    <p className="text-xs text-gray-500 mt-1">
+                                                                        {formatNotificationTime(notification.createdAt)}
+                                                                    </p>
+                                                                </div>
+                                                                {!notification.isRead && (
+                                                                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-1"></div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-8 text-center">
+                                                        <div className="text-4xl mb-2">🔔</div>
+                                                        <p className="text-sm text-gray-500">Chưa có thông báo nào</p>
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="p-3 text-center border-t">
-                                                <Link to="/notifications" className="text-supply-primary text-sm hover:underline">
+                                                <Link 
+                                                    to="/notifications" 
+                                                    className="text-supply-primary text-sm hover:underline"
+                                                    onClick={() => setShowNotifications(false)}
+                                                >
                                                     Xem tất cả thông báo
                                                 </Link>
                                             </div>
@@ -235,35 +418,67 @@ const Header = () => {
                                 {/* Messages */}
                                 <div className="relative" ref={messageRef}>
                                     <button
-                                        onClick={() => setShowMessages((prev) => !prev)}
+                                        onClick={() => {
+                                            setShowMessages((prev) => !prev);
+                                            if (!showMessages) {
+                                                fetchMessages(); // Refresh messages when opening
+                                            }
+                                        }}
                                         className="relative text-gray-600 hover:text-supply-primary transition"
                                     >
                                         <FiMessageSquare size={24} />
-                                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                            {messages.length}
-                                        </span>
+                                        {messageCount > 0 && (
+                                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                                                {messageCount > 99 ? '99+' : messageCount}
+                                            </span>
+                                        )}
                                     </button>
                                     {showMessages && (
                                         <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
-                                            <div className="p-4 border-b bg-gray-50 rounded-t-lg">
+                                            <div className="p-4 border-b bg-gray-50 rounded-t-lg flex items-center justify-between">
                                                 <h3 className="font-semibold text-gray-800">Tin nhắn</h3>
+                                                {messagesLoading && (
+                                                    <div className="w-4 h-4 border-2 border-supply-primary border-t-transparent rounded-full animate-spin"></div>
+                                                )}
                                             </div>
                                             <div className="max-h-80 overflow-y-auto">
-                                                {messages.map((message) => (
-                                                    <div key={message.id} className="p-4 border-b hover:bg-gray-50 cursor-pointer">
-                                                        <div className="flex items-start space-x-3">
-                                                            <span className="text-2xl">{message.avatar}</span>
-                                                            <div className="flex-1">
-                                                                <p className="font-medium text-sm text-gray-800">{message.from}</p>
-                                                                <p className="text-sm text-gray-600 mt-1">{message.text}</p>
-                                                                <p className="text-xs text-gray-500 mt-1">{message.time}</p>
+                                                {messagesLoading ? (
+                                                    <div className="p-8 text-center">
+                                                        <div className="w-8 h-8 border-2 border-supply-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                                                        <p className="text-sm text-gray-500">Đang tải tin nhắn...</p>
+                                                    </div>
+                                                ) : messages.length > 0 ? (
+                                                    messages.map((message) => (
+                                                        <div key={message.id} className="p-4 border-b hover:bg-gray-50 cursor-pointer">
+                                                            <div className="flex items-start space-x-3">
+                                                                <span className="text-2xl">💬</span>
+                                                                <div className="flex-1">
+                                                                    <p className="font-medium text-sm text-gray-800">
+                                                                        {message.senderName || message.fromUser || 'Người dùng'}
+                                                                    </p>
+                                                                    <p className="text-sm text-gray-600 mt-1">
+                                                                        {message.content || message.lastMessage || message.text || 'Tin nhắn'}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500 mt-1">
+                                                                        {message.createdAt ? formatNotificationTime(message.createdAt) : 'Vừa xong'}
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                         </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="p-8 text-center">
+                                                        <div className="text-4xl mb-2">💬</div>
+                                                        <p className="text-sm text-gray-500">Chưa có tin nhắn nào</p>
                                                     </div>
-                                                ))}
+                                                )}
                                             </div>
                                             <div className="p-3 text-center border-t">
-                                                <Link to="/messages" className="text-supply-primary text-sm hover:underline">
+                                                <Link 
+                                                    to="/messages" 
+                                                    className="text-supply-primary text-sm hover:underline"
+                                                    onClick={() => setShowMessages(false)}
+                                                >
                                                     Xem tất cả tin nhắn
                                                 </Link>
                                             </div>
