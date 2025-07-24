@@ -487,6 +487,17 @@ const MarketRuleManagement = () => {
                             ))}
                         </Select>
                     </Col>
+                    <Col span={4}>
+                        <Button 
+                            onClick={() => {
+                                setFilters({ search: '', status: '' });
+                                setPagination(prev => ({ ...prev, current: 1 }));
+                            }}
+                            loading={loading}
+                            >
+                            Làm mới
+                        </Button>
+                    </Col>
                     <Col xs={24} sm={8} lg={6}>
                         <Button
                             type="primary"

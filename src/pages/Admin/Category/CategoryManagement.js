@@ -48,6 +48,12 @@ const CategoryManagement = () => {
         alphabet: ''
     });
     const [selectedCategory, setSelectedCategory] = useState(null);
+    const [statistics, setStatistics] = useState({
+        total: 0,
+        active: 0,
+        inactive: 0,
+        createdThisMonth: 0
+    });
     const [modalVisible, setModalVisible] = useState(false);
     const [drawerVisible, setDrawerVisible] = useState(false);
     const [editMode, setEditMode] = useState(false);
@@ -62,7 +68,44 @@ const CategoryManagement = () => {
 
     useEffect(() => {
         loadCategories();
+        loadStatistics(); // Load statistics separately
     }, [pagination.current, pagination.pageSize, filters.search, filters.status, filters.alphabet]);
+
+    // Load statistics for all categories
+    const loadStatistics = async () => {
+        try {
+            console.log('📊 CategoryManagement - Loading statistics...');
+            
+            // Get all categories without pagination for statistics
+            const allCategoriesResponse = await categoryService.getAllCategoriesAdmin(1, 1000); // Large page size to get all
+            const allCategories = allCategoriesResponse.items || [];
+            
+            console.log('📊 CategoryManagement - All categories for stats:', allCategories);
+            
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+            
+            const stats = {
+                total: allCategories.length,
+                active: allCategories.filter(c => c.isActive).length,
+                inactive: allCategories.filter(c => !c.isActive).length,
+                createdThisMonth: allCategories.filter(c => {
+                    if (!c.createdAt) return false;
+                    const createdDate = new Date(c.createdAt);
+                    return createdDate.getMonth() === currentMonth && 
+                           createdDate.getFullYear() === currentYear;
+                }).length
+            };
+            
+            console.log('📊 CategoryManagement - Calculated statistics:', stats);
+            setStatistics(stats);
+            
+        } catch (error) {
+            console.error('❌ CategoryManagement - Error loading statistics:', error);
+            // Don't show error to user for statistics, just log it
+        }
+    };
 
     const loadCategories = async () => {
         setLoading(true);
@@ -74,21 +117,21 @@ const CategoryManagement = () => {
 
             try {
                 if (filters.search && filters.search.trim()) {
-                    // Search by name
-                    response = await categoryService.searchCategories(filters.search.trim());
-                    console.log('🔍 CategoryManagement - Used search endpoint');
+                    // Search by name using admin endpoint
+                    response = await categoryService.searchCategoriesAdmin(filters.search.trim());
+                    console.log('🔍 CategoryManagement - Used admin search endpoint');
                 } else if (filters.alphabet) {
-                    // Filter by alphabet
-                    response = await categoryService.filterCategories(filters.alphabet);
-                    console.log('🔍 CategoryManagement - Used filter endpoint');
+                    // Filter by alphabet using admin endpoint
+                    response = await categoryService.filterCategoriesAdmin(filters.alphabet);
+                    console.log('🔍 CategoryManagement - Used admin filter endpoint');
                 } else {
                     // Get all categories using admin endpoint
-                    response = await categoryService.getAllCategories(pagination.current, pagination.pageSize);
-                    console.log('🔍 CategoryManagement - Used getAllCategories admin endpoint');
+                    response = await categoryService.getAllCategoriesAdmin(pagination.current, pagination.pageSize);
+                    console.log('🔍 CategoryManagement - Used getAllCategoriesAdmin endpoint');
                 }
             } catch (searchFilterError) {
-                console.warn('🔄 CategoryManagement - Search/Filter failed, falling back to getAllCategories admin:', searchFilterError.message);
-                response = await categoryService.getAllCategories(pagination.current, pagination.pageSize);
+                console.warn('🔄 CategoryManagement - Search/Filter failed, falling back to getAllCategoriesAdmin:', searchFilterError.message);
+                response = await categoryService.getAllCategoriesAdmin(pagination.current, pagination.pageSize);
                 usedFallback = true;
             }
 
@@ -209,26 +252,28 @@ const CategoryManagement = () => {
         setDrawerVisible(true);
     };
 
-    const handleDeleteCategory = async (categoryId) => {
-        try {
-            await categoryService.deleteCategory(categoryId);
-            message.success('Xóa danh mục thành công');
-            loadCategories();
-        } catch (error) {
-            console.error('Error deleting category:', error);
-            message.error('Lỗi khi xóa danh mục');
-        }
-    };
-
     const handleToggleCategoryStatus = async (categoryId, currentStatus) => {
         try {
             await categoryService.toggleCategoryStatus(categoryId);
             const newStatus = currentStatus ? 'Tạm ngừng' : 'Kích hoạt';
             message.success(`Đã ${newStatus} danh mục thành công`);
             loadCategories();
+            loadStatistics(); // Reload statistics after toggle
         } catch (error) {
             console.error('Error toggling category status:', error);
             message.error('Lỗi khi thay đổi trạng thái danh mục');
+        }
+    };
+
+    const handleDeleteCategory = async (categoryId) => {
+        try {
+            await categoryService.deleteCategory(categoryId);
+            message.success('Xóa danh mục thành công');
+            loadCategories();
+            loadStatistics(); // Reload statistics after delete
+        } catch (error) {
+            console.error('Error deleting category:', error);
+            message.error('Lỗi khi xóa danh mục');
         }
     };
 
@@ -245,6 +290,7 @@ const CategoryManagement = () => {
             setModalVisible(false);
             form.resetFields();
             loadCategories();
+            loadStatistics(); // Reload statistics after create/update
         } catch (error) {
             console.error('Error saving category:', error);
             message.error(editMode ? 'Lỗi khi cập nhật danh mục' : 'Lỗi khi tạo danh mục');
@@ -376,7 +422,7 @@ const CategoryManagement = () => {
                     <Card>
                         <Statistic
                             title="Tổng số danh mục"
-                            value={pagination.total}
+                            value={statistics.total}
                             prefix={<AppstoreOutlined />}
                         />
                     </Card>
@@ -385,7 +431,7 @@ const CategoryManagement = () => {
                     <Card>
                         <Statistic
                             title="Đang hoạt động"
-                            value={categories.filter(c => c.isActive).length}
+                            value={statistics.active}
                             valueStyle={{ color: '#3f8600' }}
                         />
                     </Card>
@@ -394,7 +440,7 @@ const CategoryManagement = () => {
                     <Card>
                         <Statistic
                             title="Tạm ngừng"
-                            value={categories.filter(c => !c.isActive).length}
+                            value={statistics.inactive}
                             valueStyle={{ color: '#cf1322' }}
                         />
                     </Card>
@@ -403,12 +449,7 @@ const CategoryManagement = () => {
                     <Card>
                         <Statistic
                             title="Tạo trong tháng"
-                            value={categories.filter(c => {
-                                const createdDate = new Date(c.createdAt);
-                                const now = new Date();
-                                return createdDate.getMonth() === now.getMonth() &&
-                                    createdDate.getFullYear() === now.getFullYear();
-                            }).length}
+                            value={statistics.createdThisMonth}
                             valueStyle={{ color: '#1890ff' }}
                         />
                     </Card>
