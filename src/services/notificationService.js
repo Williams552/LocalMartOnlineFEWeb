@@ -1,11 +1,14 @@
 // Notification Service
 import apiService from './apiService';
+import { API_ENDPOINTS } from '../config/apiEndpoints';
 
 const notificationService = {
-    // Get all notifications for seller
+    // Get all notifications for current user
     getNotifications: async (page = 1, limit = 20) => {
         try {
-            const response = await apiService.get(`/api/Notification?page=${page}&limit=${limit}`);
+            console.log('🔔 Fetching notifications from:', `${API_ENDPOINTS.NOTIFICATION.GET_ALL}?page=${page}&limit=${limit}`);
+            const response = await apiService.get(`${API_ENDPOINTS.NOTIFICATION.GET_ALL}?page=${page}&limit=${limit}`);
+            console.log('🔔 Raw API response:', response);
             return response;
         } catch (error) {
             console.warn('🔔 Notifications: Using mock data due to API error:', error.message);
@@ -16,7 +19,7 @@ const notificationService = {
     // Get unread notification count
     getUnreadCount: async () => {
         try {
-            const response = await apiService.get('/api/Notification/unread-count');
+            const response = await apiService.get(`${API_ENDPOINTS.NOTIFICATION.GET_ALL}/unread-count`);
             return response;
         } catch (error) {
             console.warn('🔔 Notifications: Using mock unread count due to API error:', error.message);
@@ -27,7 +30,7 @@ const notificationService = {
     // Mark notification as read
     markAsRead: async (notificationId) => {
         try {
-            const response = await apiService.patch(`/api/seller/notifications/${notificationId}/read`, {});
+            const response = await apiService.patch(API_ENDPOINTS.NOTIFICATION.MARK_READ(notificationId), {});
             return response;
         } catch (error) {
             console.warn('🔔 Notifications: Mock marking as read due to API error:', error.message);
@@ -38,7 +41,8 @@ const notificationService = {
     // Mark all notifications as read
     markAllAsRead: async () => {
         try {
-            const response = await apiService.patch('/api/seller/notifications/mark-all-read', {});
+            const response = await apiService.patch(API_ENDPOINTS.NOTIFICATION.MARK_ALL_READ, {});
+            return response;
             return response;
         } catch (error) {
             console.warn('🔔 Notifications: Mock marking all as read due to API error:', error.message);

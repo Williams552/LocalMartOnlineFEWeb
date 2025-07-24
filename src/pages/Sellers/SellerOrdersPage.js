@@ -70,6 +70,13 @@ const SellerOrdersPage = () => {
                 const ordersData = Array.isArray(result.data?.items) ? result.data.items : [];
                 console.log('✅ Orders loaded:', ordersData.length, 'orders');
                 console.log('📋 Sample order structure:', ordersData[0]);
+                console.log('👤 Customer info in first order:', {
+                    customerName: ordersData[0]?.customerName,
+                    customer: ordersData[0]?.customer,
+                    user: ordersData[0]?.user,
+                    buyerName: ordersData[0]?.buyerName,
+                    buyerPhone: ordersData[0]?.buyerPhone
+                });
                 setOrders(ordersData);
             } else {
                 const ordersData = Array.isArray(result.data?.items) ? result.data.items : [];
@@ -540,8 +547,12 @@ const SellerOrdersPage = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div>
-                                                    <div className="font-medium text-gray-900">{order.buyerName || 'Khách hàng'}</div>
-                                                    <div className="text-sm text-gray-500">{order.buyerPhone || 'Chưa có SĐT'}</div>
+                                                    <div className="font-medium text-gray-900">
+                                                        {order.customerName || order.customer?.name || order.user?.name || order.buyerName || 'Khách hàng'}
+                                                    </div>
+                                                    <div className="text-sm text-gray-500">
+                                                        {order.customerPhone || order.customer?.phone || order.user?.phone || order.buyerPhone || 'Chưa có SĐT'}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -621,14 +632,14 @@ const SellerOrdersPage = () => {
                                             Thông tin khách hàng
                                         </h4>
                                         <div className="space-y-2">
-                                            <p><strong>Tên:</strong> {selectedOrder.customerName || 'Chưa có tên'}</p>
+                                            <p><strong>Tên:</strong> {selectedOrder.customerName || selectedOrder.customer?.name || selectedOrder.user?.name || selectedOrder.buyerName || 'Chưa có tên'}</p>
                                             <p className="flex items-center">
                                                 <FaPhone className="mr-2 text-gray-400" />
-                                                {selectedOrder.customerPhone || 'Chưa có số điện thoại'}
+                                                {selectedOrder.customerPhone || selectedOrder.customer?.phone || selectedOrder.user?.phone || selectedOrder.buyerPhone || 'Chưa có số điện thoại'}
                                             </p>
                                             <p className="flex items-start">
                                                 <FaMapMarkerAlt className="mr-2 mt-1 text-gray-400 flex-shrink-0" />
-                                                <span>{selectedOrder.customerAddress || 'Chưa có địa chỉ'}</span>
+                                                <span>{selectedOrder.customerAddress || selectedOrder.customer?.address || selectedOrder.user?.address || selectedOrder.deliveryAddress || selectedOrder.shippingAddress || 'Chưa có địa chỉ'}</span>
                                             </p>
                                         </div>
                                     </div>
