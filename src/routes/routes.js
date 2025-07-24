@@ -58,6 +58,7 @@ import SupportRequestPage from "../pages/Support/SupportRequestPage";
 // Seller pages
 import SellerProducts from "../pages/Sellers/SellerProducts";
 import SellerOrdersPage from "../pages/Sellers/SellerOrdersPage";
+import SellerFastBargainPage from "../pages/Sellers/SellerFastBargainPage";
 import StoreProfile from "../pages/Sellers/StoreProfile";
 import CustomerManagement from "../pages/Sellers/CustomerManagement";
 import PersonalShopping from "../pages/Sellers/PersonalShopping";
@@ -119,6 +120,7 @@ const AppRoutes = () => {
                 <Route path="/seller/products" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
                 <Route path="/seller/products/add" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
                 <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['Seller']}><SellerOrdersPage /></ProtectedRoute>} />
+                <Route path="/seller/fast-bargains" element={<ProtectedRoute allowedRoles={['Seller']}><SellerFastBargainPage /></ProtectedRoute>} />
                 <Route path="/seller/profile" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
                 <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><ChartsAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/seller/customers" element={<ProtectedRoute allowedRoles={['Seller']}><CustomerManagement /></ProtectedRoute>} />
