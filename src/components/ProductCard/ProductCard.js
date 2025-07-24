@@ -20,12 +20,45 @@ const ProductCard = ({
     image = null,
     description = "",
     status = "Còn hàng",
+    statusDisplay = null, // Add statusDisplay prop
     minimumQuantity = 1,
     unitName = "kg"
 }) => {
     const [showBargainModal, setShowBargainModal] = useState(false);
     const currentUser = authService.getCurrentUser();
     const isAuthenticated = !!currentUser;
+
+    // Use statusDisplay if provided, otherwise use status
+    const displayStatus = statusDisplay || status;
+
+    // Helper function to convert backend status to display text
+    const getStatusDisplayText = (statusValue) => {
+        // Handle numeric status values
+        if (typeof statusValue === 'number') {
+            switch (statusValue) {
+                case 0: return 'Còn hàng';
+                case 1: return 'Hết hàng';
+                default: return 'Không xác định';
+            }
+        }
+
+        if (typeof statusValue === 'string') {
+            // If it's already a display text, return as is
+            if (['Còn hàng', 'Hết hàng', 'Đã xóa', 'Sắp hết'].includes(statusValue)) {
+                return statusValue;
+            }
+            // Convert backend status to display text
+            switch (statusValue) {
+                case 'Active': return 'Còn hàng';
+                case 'OutOfStock': return 'Hết hàng';
+                case 'Inactive': return 'Đã xóa';
+                default: return statusValue || 'Không xác định';
+            }
+        }
+        return 'Không xác định';
+    };
+
+    const finalStatus = getStatusDisplayText(displayStatus);
     // Function to format price
     const formatPrice = (price) => {
         if (typeof price === 'number') {
@@ -44,9 +77,18 @@ const ProductCard = ({
 
     // Function to get status color
     const getStatusColor = () => {
-        if (status === "Còn hàng") return "bg-green-500";
-        if (status === "Hết hàng") return "bg-red-500";
-        return "bg-orange-500";
+        switch (finalStatus) {
+            case "Còn hàng":
+                return "bg-green-500";
+            case "Hết hàng":
+                return "bg-red-500";
+            case "Sắp hết":
+                return "bg-yellow-500";
+            case "Đã xóa":
+                return "bg-gray-500";
+            default:
+                return "bg-gray-500"; // For undefined/unknown status
+        }
     };
 
     const handleBargainClick = (e) => {
@@ -58,8 +100,8 @@ const ProductCard = ({
             return;
         }
 
-        if (status === "Hết hàng") {
-            alert('Không thể thương lượng cho sản phẩm đã hết hàng');
+        if (finalStatus === "Hết hàng" || finalStatus === "Đã xóa") {
+            alert('Không thể thương lượng cho sản phẩm này');
             return;
         }
 
@@ -77,7 +119,7 @@ const ProductCard = ({
                     <img src={getDisplayImage()} alt={name} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
                 </Link>
                 <div className={`absolute top-3 right-3 text-white text-xs px-2 py-1 rounded-full font-medium ${getStatusColor()}`}>
-                    {status}
+                    {finalStatus}
                 </div>
                 {/* Favorite Button */}
                 <div className="absolute top-3 left-3">
@@ -130,29 +172,24 @@ const ProductCard = ({
                     </span>
                 </div>
                 <div className="mt-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                        <div className="text-sm text-gray-500">
-                            {status}
-                        </div>
-                        <AddToCartButton
-                            product={{
-                                id,
-                                name,
-                                price,
-                                image: getDisplayImage(),
-                                unit: unitName,
-                                minimumQuantity: minimumQuantity
-                            }}
-                            quantity={minimumQuantity}
-                            className="text-sm font-medium"
-                            size="small"
-                            showQuantityControls={false}
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                    </div>
+                    <AddToCartButton
+                        product={{
+                            id,
+                            name,
+                            price,
+                            image: getDisplayImage(),
+                            unit: unitName,
+                            minimumQuantity: minimumQuantity
+                        }}
+                        quantity={minimumQuantity}
+                        className="text-sm font-medium w-full"
+                        size="small"
+                        showQuantityControls={false}
+                        onClick={(e) => e.stopPropagation()}
+                    />
 
                     {/* Bargain Button */}
-                    {isAuthenticated && status === "Còn hàng" && (
+                    {isAuthenticated && finalStatus === "Còn hàng" && (
                         <button
                             onClick={handleBargainClick}
                             className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
