@@ -167,9 +167,9 @@ const BargainDetail = () => {
                     <div className="flex items-start space-x-6">
                         {/* Product Image */}
                         <div className="flex-shrink-0">
-                            {bargain.productImage ? (
+                            {bargain.productImages && bargain.productImages.length > 0 ? (
                                 <img
-                                    src={bargain.productImage}
+                                    src={bargain.productImages[0]}
                                     alt={bargain.productName}
                                     className="w-32 h-32 object-cover rounded-lg border"
                                     onError={(e) => {
@@ -203,23 +203,39 @@ const BargainDetail = () => {
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-sm text-gray-500">Giá hiện tại</p>
+                                    <p className="text-sm text-gray-500">Giá đề xuất</p>
                                     <p className="text-lg font-semibold text-blue-600">
-                                        {bargain.currentPrice ? formatPrice(bargain.currentPrice) : 'Chưa có'}
+                                        {bargain.proposals && bargain.proposals.length > 0 
+                                            ? formatPrice(bargain.proposals[bargain.proposals.length - 1].proposedPrice) 
+                                            : 'Chưa có'}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Số lượng</p>
+                                    <p className="text-lg font-semibold text-gray-700">
+                                        {bargain.quantity || 0} {bargain.productUnitName || ''}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Tổng giá</p>
+                                    <p className="text-lg font-semibold text-orange-600">
+                                        {bargain.proposals && bargain.proposals.length > 0 && bargain.quantity 
+                                            ? formatPrice(bargain.proposals[bargain.proposals.length - 1].proposedPrice * bargain.quantity)
+                                            : 'Chưa có'}
                                     </p>
                                 </div>
                             </div>
 
                             <div className="mt-4">
-                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${bargain.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                        bargain.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                                            bargain.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${bargain.status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                                        bargain.status?.toLowerCase() === 'accepted' ? 'bg-green-100 text-green-800' :
+                                            bargain.status?.toLowerCase() === 'rejected' ? 'bg-red-100 text-red-800' :
                                                 'bg-gray-100 text-gray-800'
                                     }`}>
                                     Trạng thái: {
-                                        bargain.status === 'pending' ? 'Đang chờ' :
-                                            bargain.status === 'accepted' ? 'Đã chấp nhận' :
-                                                bargain.status === 'rejected' ? 'Đã từ chối' :
+                                        bargain.status?.toLowerCase() === 'pending' ? 'Đang chờ' :
+                                            bargain.status?.toLowerCase() === 'accepted' ? 'Đã chấp nhận' :
+                                                bargain.status?.toLowerCase() === 'rejected' ? 'Đã từ chối' :
                                                     bargain.status || 'Không xác định'
                                     }
                                 </span>
@@ -232,37 +248,27 @@ const BargainDetail = () => {
                 <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">Lịch sử thương lượng</h2>
                     <div className="space-y-4">
-                        {bargain.negotiations?.length > 0 ? (
-                            bargain.negotiations.map((item, index) => (
+                        {bargain.proposals?.length > 0 ? (
+                            bargain.proposals.map((proposal, index) => (
                                 <div key={index} className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
                                     <div className="flex-shrink-0">
-                                        {getStatusIcon(item.status)}
+                                        {getStatusIcon('pending')}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex justify-between items-start">
                                             <div>
                                                 <p className="font-medium text-gray-900">
-                                                    {item.action === 'start' ? 'Bắt đầu thương lượng' :
-                                                        item.action === 'propose' ? 'Đề xuất giá mới' :
-                                                            item.action === 'accept' ? 'Chấp nhận giá' :
-                                                                'Từ chối giá'}
+                                                    Đề xuất giá
                                                 </p>
                                                 <p className="text-sm text-gray-500 mt-1">
-                                                    {new Date(item.timestamp).toLocaleString('vi-VN')}
+                                                    {new Date(proposal.proposedAt).toLocaleString('vi-VN')}
                                                 </p>
-                                                {item.price && (
-                                                    <p className="font-semibold text-blue-600 mt-1">
-                                                        Giá: {formatPrice(item.price)}
-                                                    </p>
-                                                )}
-                                                {item.message && (
-                                                    <p className="text-gray-700 mt-2 p-2 bg-white rounded border-l-4 border-blue-500">
-                                                        {item.message}
-                                                    </p>
-                                                )}
+                                                <p className="font-semibold text-blue-600 mt-1">
+                                                    Giá: {formatPrice(proposal.proposedPrice)} / {bargain.productUnitName || 'Chưa có'}
+                                                </p>
                                             </div>
                                             <span className="text-sm font-medium text-gray-600 bg-gray-200 px-2 py-1 rounded">
-                                                {item.userType === 'buyer' ? 'Bạn' : 'Người bán'}
+                                                Người mua
                                             </span>
                                         </div>
                                     </div>
@@ -278,7 +284,7 @@ const BargainDetail = () => {
                 </div>
 
                 {/* Action Section */}
-                {bargain.status === 'pending' && bargain.canTakeAction && (
+                {bargain.status?.toLowerCase() === 'pending' && bargain.canTakeAction && (
                     <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
                         <h2 className="text-xl font-semibold text-gray-800 mb-4">Hành động</h2>
 
@@ -343,14 +349,14 @@ const BargainDetail = () => {
                 )}
 
                 {/* Success State */}
-                {bargain.status === 'accepted' && (
+                {bargain.status?.toLowerCase() === 'accepted' && (
                     <div className="bg-green-50 border border-green-200 rounded-lg p-6 mb-6">
                         <div className="flex items-center">
                             <FaCheckCircle className="text-green-500 text-2xl mr-3" />
                             <div>
                                 <h3 className="text-green-800 font-bold text-lg">Thương lượng thành công!</h3>
                                 <p className="text-green-700">
-                                    Giá cuối cùng: {formatPrice(bargain.finalPrice || bargain.currentPrice)}
+                                    Giá cuối cùng: {formatPrice(bargain.finalPrice || (bargain.proposals && bargain.proposals.length > 0 ? bargain.proposals[bargain.proposals.length - 1].proposedPrice : bargain.originalPrice))}
                                 </p>
                                 <p className="text-sm text-green-600 mt-2">
                                     Bạn có thể tiến hành đặt hàng với giá này.
@@ -367,7 +373,7 @@ const BargainDetail = () => {
                 )}
 
                 {/* Rejected State */}
-                {bargain.status === 'rejected' && (
+                {bargain.status?.toLowerCase() === 'rejected' && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
                         <div className="flex items-center">
                             <FaTimesCircle className="text-red-500 text-2xl mr-3" />
