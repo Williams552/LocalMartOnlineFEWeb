@@ -258,8 +258,9 @@ export const API_ENDPOINTS = {
     // Notification Endpoints
     NOTIFICATION: {
         GET_ALL: `${API_URL}/api/notification`,
-        MARK_READ: (id) => `${API_URL}/api/notification/${id}/read`,
-        MARK_ALL_READ: `${API_URL}/api/notification/read-all`,
+        GET_UNREAD_COUNT: `${API_URL}/api/notification/unread-count`,
+        MARK_READ: (id) => `${API_URL}/api/notification/${id}/mark-as-read`,
+        MARK_ALL_READ: `${API_URL}/api/notification/mark-all-as-read`,
     },
 
     // Favorite Endpoints

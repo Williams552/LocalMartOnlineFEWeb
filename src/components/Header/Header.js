@@ -109,10 +109,22 @@ const Header = () => {
     // Handle notification click
     const handleNotificationClick = async (notification) => {
         try {
+            console.log('🔔 Notification clicked:', notification);
+            
             // Mark as read if unread
             if (!notification.isRead) {
+                console.log('🔔 Marking notification as read:', notification.id);
                 await notificationService.markAsRead(notification.id);
-                fetchNotifications(); // Refresh notifications
+                
+                // Update local state immediately for better UX
+                setNotifications(prev => prev.map(n => 
+                    n.id === notification.id ? { ...n, isRead: true } : n
+                ));
+                
+                // Update unread count
+                setUnreadCount(prev => Math.max(0, prev - 1));
+                
+                console.log('🔔 Notification marked as read successfully');
             }
             
             // Navigate based on notification type if needed
@@ -124,7 +136,28 @@ const Header = () => {
                 setShowNotifications(false);
             }
         } catch (error) {
-            console.error('Error handling notification click:', error);
+            console.error('🔔 Error handling notification click:', error);
+            // Still allow navigation even if marking as read fails
+            if (notification.actionUrl) {
+                navigate(notification.actionUrl);
+                setShowNotifications(false);
+            }
+        }
+    };
+
+    // Handle mark all notifications as read
+    const handleMarkAllAsRead = async () => {
+        try {
+            console.log('🔔 Marking all notifications as read');
+            await notificationService.markAllAsRead();
+            
+            // Update local state immediately
+            setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+            setUnreadCount(0);
+            
+            console.log('🔔 All notifications marked as read successfully');
+        } catch (error) {
+            console.error('🔔 Error marking all notifications as read:', error);
         }
     };
 
@@ -164,7 +197,7 @@ const Header = () => {
                 console.log('🔔 Setting notifications state with:', notificationData);
                 setNotifications(notificationData);
                 
-                // Count unread notifications
+                // Count unread notifications from the data
                 const unreadCountFromData = notificationData.filter(n => !n.isRead).length;
                 setUnreadCount(unreadCountFromData);
                 
@@ -182,6 +215,25 @@ const Header = () => {
             setUnreadCount(0);
         } finally {
             setNotificationsLoading(false);
+        }
+    };
+
+    // Fetch unread count from API
+    const fetchUnreadCount = async () => {
+        if (!isAuthenticated) return;
+        
+        try {
+            console.log('🔔 Fetching unread count from API...');
+            const response = await notificationService.getUnreadCount();
+            console.log('🔔 Unread count response:', response);
+            
+            if (response && response.data) {
+                const count = response.data.count || 0;
+                setUnreadCount(count);
+                console.log('🔔 Updated unread count:', count);
+            }
+        } catch (error) {
+            console.error('🔔 Error fetching unread count:', error);
         }
     };
 
@@ -223,11 +275,13 @@ const Header = () => {
         if (isAuthenticated && user?.id) {
             fetchNotifications();
             fetchMessages();
+            fetchUnreadCount(); // Fetch accurate unread count
             
             // Set up auto-refresh every 30 seconds
             const interval = setInterval(() => {
                 fetchNotifications();
                 fetchMessages();
+                fetchUnreadCount();
             }, 30000);
             
             return () => clearInterval(interval);
@@ -336,6 +390,7 @@ const Header = () => {
                                             setShowNotifications((prev) => !prev);
                                             if (!showNotifications) {
                                                 fetchNotifications(); // Refresh notifications when opening
+                                                fetchUnreadCount(); // Refresh unread count when opening
                                             }
                                         }}
                                         className="relative text-gray-600 hover:text-supply-primary transition"
@@ -352,9 +407,20 @@ const Header = () => {
                                         <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
                                             <div className="p-4 border-b bg-gray-50 rounded-t-lg flex items-center justify-between">
                                                 <h3 className="font-semibold text-gray-800">Thông báo</h3>
-                                                {notificationsLoading && (
-                                                    <div className="w-4 h-4 border-2 border-supply-primary border-t-transparent rounded-full animate-spin"></div>
-                                                )}
+                                                <div className="flex items-center space-x-2">
+                                                    {unreadCount > 0 && (
+                                                        <button
+                                                            onClick={handleMarkAllAsRead}
+                                                            className="text-xs bg-supply-primary text-white px-2 py-1 rounded hover:bg-green-600 transition"
+                                                            title="Đánh dấu tất cả đã đọc"
+                                                        >
+                                                            Đọc tất cả
+                                                        </button>
+                                                    )}
+                                                    {notificationsLoading && (
+                                                        <div className="w-4 h-4 border-2 border-supply-primary border-t-transparent rounded-full animate-spin"></div>
+                                                    )}
+                                                </div>
                                             </div>
                                             <div className="max-h-80 overflow-y-auto">
                                                 {(() => {
