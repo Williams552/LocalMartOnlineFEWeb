@@ -270,6 +270,14 @@ export const API_ENDPOINTS = {
         CHECK: (productId) => `${API_URL}/api/favorite/check/${productId}`,
     },
 
+    FAST_BARGAIN: {
+        GET_ALL_ADMIN: `${API_URL}/api/FastBargain/admin`,
+        GET_BY_BUYER: (userId) => `${API_URL}/api/FastBargain/user/${userId}`,
+        GET_BY_SELLER: (sellerId) => `${API_URL}/api/FastBargain/seller/${sellerId}`,
+        GET_BY_ID: (id) => `${API_URL}/api/FastBargain/${id}`,
+    },
+
+
     // Seller Dashboard & Management Endpoints
     SELLER: {
         // Dashboard endpoints

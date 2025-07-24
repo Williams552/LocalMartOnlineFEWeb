@@ -27,6 +27,7 @@ import {
     UserOutlined,
     CalendarOutlined
 } from '@ant-design/icons';
+import fastBargainService from '../../../services/fastBargainService';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -40,86 +41,53 @@ const FastBargainProducts = () => {
     const [statusFilter, setStatusFilter] = useState(null);
 
     useEffect(() => {
+        console.log('FastBargainProducts mounted, loading data...');
         loadFastBargains();
     }, [statusFilter]);
 
     const loadFastBargains = async () => {
         try {
             setLoading(true);
-            // TODO: Implement API call when backend has admin endpoints for fast bargains
-            // const response = await fastBargainService.getAllFastBargains({ status: statusFilter });
-            // setBargains(response.data);
-
-            // Mock data for demo
-            const mockData = [
-                {
-                    id: '1',
-                    productId: 'prod1',
-                    productName: 'Táo Fuji nhập khẩu',
-                    productImage: '/placeholder-product.png',
-                    originalPrice: 150000,
-                    buyerId: 'buyer1',
-                    buyerName: 'Nguyễn Văn A',
-                    sellerId: 'seller1',
-                    sellerName: 'Cửa hàng ABC',
-                    status: 'Pending',
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    proposals: [
-                        {
-                            id: 'prop1',
-                            userId: 'buyer1',
-                            userName: 'Nguyễn Văn A',
-                            proposedPrice: 120000,
-                            proposedAt: new Date().toISOString()
-                        }
-                    ]
-                },
-                {
-                    id: '2',
-                    productId: 'prod2',
-                    productName: 'Thịt bò tươi',
-                    productImage: '/placeholder-product.png',
-                    originalPrice: 450000,
-                    buyerId: 'buyer2',
-                    buyerName: 'Trần Thị B',
-                    sellerId: 'seller2',
-                    sellerName: 'Cửa hàng XYZ',
-                    status: 'Accepted',
-                    createdAt: new Date(Date.now() - 86400000).toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    proposals: [
-                        {
-                            id: 'prop2',
-                            userId: 'buyer2',
-                            userName: 'Trần Thị B',
-                            proposedPrice: 400000,
-                            proposedAt: new Date(Date.now() - 86400000).toISOString()
-                        }
-                    ]
+            console.log('Loading fast bargains...');
+            const result = await fastBargainService.getAllBargainsForAdmin();
+            
+            console.log('Bargains result:', result);
+            
+            if (result.success && result.data) {
+                let data = result.data;
+                
+                // Filter by status if selected
+                if (statusFilter) {
+                    data = data.filter(bargain => 
+                        bargain.status?.toLowerCase() === statusFilter.toLowerCase()
+                    );
                 }
-            ];
-
-            setTimeout(() => {
-                setBargains(statusFilter ? mockData.filter(b => b.status === statusFilter) : mockData);
-                setLoading(false);
-            }, 500);
+                
+                console.log('Setting bargains:', data);
+                setBargains(data);
+            } else {
+                console.error('Failed to load bargains:', result.message);
+                message.error(result.message || 'Không thể tải danh sách thương lượng nhanh');
+                setBargains([]);
+            }
         } catch (error) {
             console.error('Error loading fast bargains:', error);
             message.error('Không thể tải danh sách thương lượng nhanh');
+            setBargains([]);
+        } finally {
             setLoading(false);
         }
     };
 
     const getStatusColor = (status) => {
-        switch (status) {
-            case 'Pending':
+        switch (status?.toLowerCase()) {
+            case 'pending':
                 return 'orange';
-            case 'Accepted':
+            case 'accepted':
                 return 'green';
-            case 'Rejected':
+            case 'rejected':
                 return 'red';
-            case 'Expired':
+            case 'expired':
                 return 'gray';
             default:
                 return 'default';
@@ -127,17 +95,17 @@ const FastBargainProducts = () => {
     };
 
     const getStatusText = (status) => {
-        switch (status) {
-            case 'Pending':
+        switch (status?.toLowerCase()) {
+            case 'pending':
                 return 'Đang chờ';
-            case 'Accepted':
+            case 'accepted':
                 return 'Đã chấp nhận';
-            case 'Rejected':
+            case 'rejected':
                 return 'Đã từ chối';
-            case 'Expired':
+            case 'expired':
                 return 'Đã hết hạn';
             default:
-                return status;
+                return status || 'Không xác định';
         }
     };
 
@@ -154,7 +122,7 @@ const FastBargainProducts = () => {
             render: (text, record) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <img
-                        src={record.productImage}
+                        src={record.productImages && record.productImages.length > 0 ? record.productImages[0] : '/placeholder-product.png'}
                         alt={text}
                         style={{
                             width: 40,
@@ -163,13 +131,29 @@ const FastBargainProducts = () => {
                             borderRadius: 4,
                             border: '1px solid #f0f0f0'
                         }}
+                        onError={(e) => {
+                            e.target.src = '/placeholder-product.png';
+                        }}
                     />
                     <div>
                         <div style={{ fontWeight: 'bold' }}>{text}</div>
                         <Text type="secondary" style={{ fontSize: 12 }}>
-                            ID: {record.productId}
+                            ID: {record.bargainId}
                         </Text>
                     </div>
+                </div>
+            ),
+        },
+        {
+            title: 'Số lượng',
+            key: 'quantity',
+            width: 120,
+            render: (_, record) => (
+                <div>
+                    <div style={{ fontWeight: 'bold' }}>{record.quantity || 0}</div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                        {record.productUnitName || ''}
+                    </Text>
                 </div>
             ),
         },
@@ -180,9 +164,9 @@ const FastBargainProducts = () => {
             width: 150,
             render: (text, record) => (
                 <div>
-                    <div style={{ fontWeight: 'bold' }}>{text}</div>
+                    <div style={{ fontWeight: 'bold' }}>{text || 'Chưa có thông tin'}</div>
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                        ID: {record.buyerId}
+                        User ID: {record.proposals && record.proposals.length > 0 ? record.proposals[0].userId : 'N/A'}
                     </Text>
                 </div>
             ),
@@ -194,37 +178,46 @@ const FastBargainProducts = () => {
             width: 150,
             render: (text, record) => (
                 <div>
-                    <div style={{ fontWeight: 'bold' }}>{text}</div>
+                    <div style={{ fontWeight: 'bold' }}>{text || 'Chưa có thông tin'}</div>
                     <Text type="secondary" style={{ fontSize: 12 }}>
-                        ID: {record.sellerId}
+                        Store ID: {record.storeId || 'N/A'}
                     </Text>
                 </div>
             ),
         },
         {
-            title: 'Giá gốc / Đề xuất',
+            title: 'Giá gốc / Tổng giá đề xuất',
             key: 'prices',
-            width: 180,
+            width: 200,
             render: (_, record) => {
                 const latestProposal = record.proposals?.[record.proposals.length - 1];
                 const discount = latestProposal ? calculateDiscount(record.originalPrice, latestProposal.proposedPrice) : 0;
+                const totalPrice = latestProposal && record.quantity ? latestProposal.proposedPrice * record.quantity : 0;
 
                 return (
                     <div>
                         <div style={{ textDecoration: 'line-through', color: '#999', fontSize: 12 }}>
-                            {new Intl.NumberFormat('vi-VN', {
+                            Giá gốc: {new Intl.NumberFormat('vi-VN', {
                                 style: 'currency',
                                 currency: 'VND',
                             }).format(record.originalPrice)}
                         </div>
                         {latestProposal && (
                             <>
-                                <div style={{ fontWeight: 'bold', color: '#ff4d4f' }}>
-                                    {new Intl.NumberFormat('vi-VN', {
+                                <div style={{ fontWeight: 'bold', color: '#ff4d4f', fontSize: 12 }}>
+                                    Giá đề xuất: {new Intl.NumberFormat('vi-VN', {
                                         style: 'currency',
                                         currency: 'VND',
                                     }).format(latestProposal.proposedPrice)}
                                 </div>
+                                {totalPrice > 0 && (
+                                    <div style={{ fontWeight: 'bold', color: '#1890ff' }}>
+                                        Tổng: {new Intl.NumberFormat('vi-VN', {
+                                            style: 'currency',
+                                            currency: 'VND',
+                                        }).format(totalPrice)}
+                                    </div>
+                                )}
                                 <Tag color="red" size="small">
                                     -{discount}%
                                 </Tag>
@@ -250,14 +243,23 @@ const FastBargainProducts = () => {
             dataIndex: 'createdAt',
             key: 'createdAt',
             width: 120,
-            render: (date) => (
-                <div>
-                    <div>{new Date(date).toLocaleDateString('vi-VN')}</div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                        {new Date(date).toLocaleTimeString('vi-VN')}
-                    </Text>
-                </div>
-            ),
+            render: (date, record) => {
+                // Use proposedAt from the first proposal if createdAt is not available
+                const displayDate = date || (record.proposals && record.proposals.length > 0 ? record.proposals[0].proposedAt : null);
+                
+                if (!displayDate) {
+                    return <Text type="secondary">Chưa có</Text>;
+                }
+                
+                return (
+                    <div>
+                        <div>{new Date(displayDate).toLocaleDateString('vi-VN')}</div>
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                            {new Date(displayDate).toLocaleTimeString('vi-VN')}
+                        </Text>
+                    </div>
+                );
+            },
         },
         {
             title: 'Thao tác',
@@ -292,14 +294,17 @@ const FastBargainProducts = () => {
                         <Text strong>Bắt đầu thương lượng</Text>
                         <br />
                         <Text type="secondary">
-                            {new Date(bargain.createdAt).toLocaleString('vi-VN')}
+                            {bargain.createdAt 
+                                ? new Date(bargain.createdAt).toLocaleString('vi-VN')
+                                : new Date(bargain.proposals[0].proposedAt).toLocaleString('vi-VN')
+                            }
                         </Text>
                     </div>
                 </Timeline.Item>
 
                 {bargain.proposals.map((proposal, index) => (
                     <Timeline.Item
-                        key={proposal.id}
+                        key={proposal.bargainId + '_' + index}
                         dot={<DollarOutlined />}
                         color="orange"
                     >
@@ -310,24 +315,27 @@ const FastBargainProducts = () => {
                             }).format(proposal.proposedPrice)}</Text>
                             <br />
                             <Text type="secondary">
-                                Bởi: {proposal.userName} - {new Date(proposal.proposedAt).toLocaleString('vi-VN')}
+                                Bởi: User {proposal.userId} - {new Date(proposal.proposedAt).toLocaleString('vi-VN')}
                             </Text>
                         </div>
                     </Timeline.Item>
                 ))}
 
-                {bargain.status !== 'Pending' && (
+                {bargain.status?.toLowerCase() !== 'pending' && (
                     <Timeline.Item
-                        dot={bargain.status === 'Accepted' ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
-                        color={bargain.status === 'Accepted' ? 'green' : 'red'}
+                        dot={bargain.status?.toLowerCase() === 'accepted' ? <CheckCircleOutlined /> : <CloseCircleOutlined />}
+                        color={bargain.status?.toLowerCase() === 'accepted' ? 'green' : 'red'}
                     >
                         <div>
                             <Text strong>
-                                {bargain.status === 'Accepted' ? 'Đã chấp nhận' : 'Đã từ chối/hết hạn'}
+                                {bargain.status?.toLowerCase() === 'accepted' ? 'Đã chấp nhận' : 'Đã từ chối/hết hạn'}
                             </Text>
                             <br />
                             <Text type="secondary">
-                                {new Date(bargain.updatedAt).toLocaleString('vi-VN')}
+                                {bargain.updatedAt 
+                                    ? new Date(bargain.updatedAt).toLocaleString('vi-VN')
+                                    : 'Chưa có thông tin'
+                                }
                             </Text>
                         </div>
                     </Timeline.Item>
@@ -363,7 +371,7 @@ const FastBargainProducts = () => {
                         <Card size="small" style={{ textAlign: 'center' }}>
                             <Statistic
                                 title="Đang chờ"
-                                value={bargains.filter(b => b.status === 'Pending').length}
+                                value={bargains.filter(b => b.status?.toLowerCase() === 'pending').length}
                                 prefix={<ClockCircleOutlined />}
                                 valueStyle={{ color: '#faad14' }}
                             />
@@ -373,7 +381,7 @@ const FastBargainProducts = () => {
                         <Card size="small" style={{ textAlign: 'center' }}>
                             <Statistic
                                 title="Đã chấp nhận"
-                                value={bargains.filter(b => b.status === 'Accepted').length}
+                                value={bargains.filter(b => b.status?.toLowerCase() === 'accepted').length}
                                 prefix={<CheckCircleOutlined />}
                                 valueStyle={{ color: '#52c41a' }}
                             />
@@ -383,7 +391,7 @@ const FastBargainProducts = () => {
                         <Card size="small" style={{ textAlign: 'center' }}>
                             <Statistic
                                 title="Đã từ chối"
-                                value={bargains.filter(b => b.status === 'Rejected').length}
+                                value={bargains.filter(b => b.status?.toLowerCase() === 'rejected').length}
                                 prefix={<CloseCircleOutlined />}
                                 valueStyle={{ color: '#ff4d4f' }}
                             />
@@ -393,13 +401,13 @@ const FastBargainProducts = () => {
 
                 {/* Filters */}
                 <Row gutter={16} style={{ marginBottom: 16 }}>
-                    <Col span={8}>
+                    <Col span={6}>
                         <Search
                             placeholder="Tìm kiếm theo tên sản phẩm, người mua, người bán..."
                             allowClear
                         />
                     </Col>
-                    <Col span={6}>
+                    <Col span={4}>
                         <Select
                             placeholder="Lọc theo trạng thái"
                             value={statusFilter}
@@ -413,7 +421,7 @@ const FastBargainProducts = () => {
                             <Option value="Expired">Đã hết hạn</Option>
                         </Select>
                     </Col>
-                    <Col span={6}>
+                    <Col span={4}>
                         <Select
                             placeholder="Sắp xếp theo"
                             defaultValue="newest"
@@ -435,12 +443,35 @@ const FastBargainProducts = () => {
                             Làm mới
                         </Button>
                     </Col>
+                    <Col span={4}>
+                        <Button
+                            onClick={() => {
+                                console.log('Current bargains:', bargains);
+                                console.log('Status filter:', statusFilter);
+                                console.log('Loading state:', loading);
+                            }}
+                            style={{ width: '100%' }}
+                        >
+                            Debug
+                        </Button>
+                    </Col>
+                    <Col span={2}>
+                        <Button
+                            type="dashed"
+                            onClick={() => {
+                                message.info(`Tổng: ${bargains.length} thương lượng`);
+                            }}
+                            style={{ width: '100%' }}
+                        >
+                            ({bargains.length})
+                        </Button>
+                    </Col>
                 </Row>
 
                 <Table
                     columns={columns}
                     dataSource={bargains}
-                    rowKey="id"
+                    rowKey="bargainId"
                     loading={loading}
                     pagination={{
                         total: bargains.length,
@@ -482,12 +513,12 @@ const FastBargainProducts = () => {
                             <Col span={12}>
                                 <Descriptions title="Thông tin cơ bản" column={1}>
                                     <Descriptions.Item label="ID phiên">
-                                        {selectedBargain.id}
+                                        {selectedBargain.bargainId}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Sản phẩm">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                             <img
-                                                src={selectedBargain.productImage}
+                                                src={selectedBargain.productImages && selectedBargain.productImages.length > 0 ? selectedBargain.productImages[0] : '/placeholder-product.png'}
                                                 alt={selectedBargain.productName}
                                                 style={{
                                                     width: 40,
@@ -496,18 +527,24 @@ const FastBargainProducts = () => {
                                                     borderRadius: 4,
                                                     border: '1px solid #f0f0f0'
                                                 }}
+                                                onError={(e) => {
+                                                    e.target.src = '/placeholder-product.png';
+                                                }}
                                             />
                                             <div>
                                                 <div style={{ fontWeight: 'bold' }}>{selectedBargain.productName}</div>
-                                                <Text type="secondary">ID: {selectedBargain.productId}</Text>
+                                                <Text type="secondary">ID: {selectedBargain.bargainId}</Text>
                                             </div>
                                         </div>
                                     </Descriptions.Item>
+                                    <Descriptions.Item label="Số lượng">
+                                        <Text strong>{selectedBargain.quantity || 0} {selectedBargain.productUnitName || ''}</Text>
+                                    </Descriptions.Item>
                                     <Descriptions.Item label="Người mua">
-                                        <UserOutlined /> {selectedBargain.buyerName}
+                                        <UserOutlined /> {selectedBargain.buyerName || 'Chưa có thông tin'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Người bán">
-                                        <UserOutlined /> {selectedBargain.sellerName}
+                                        <UserOutlined /> {selectedBargain.sellerName || 'Chưa có thông tin'}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Trạng thái">
                                         <Tag color={getStatusColor(selectedBargain.status)}>
@@ -522,6 +559,19 @@ const FastBargainProducts = () => {
                                             }).format(selectedBargain.originalPrice)}
                                         </Text>
                                     </Descriptions.Item>
+                                    {selectedBargain.proposals && selectedBargain.proposals.length > 0 && (
+                                        <Descriptions.Item label="Tổng giá đề xuất">
+                                            <Text strong style={{ fontSize: 16, color: '#1890ff' }}>
+                                                {new Intl.NumberFormat('vi-VN', {
+                                                    style: 'currency',
+                                                    currency: 'VND',
+                                                }).format(
+                                                    selectedBargain.proposals[selectedBargain.proposals.length - 1].proposedPrice * 
+                                                    (selectedBargain.quantity || 1)
+                                                )}
+                                            </Text>
+                                        </Descriptions.Item>
+                                    )}
                                 </Descriptions>
                             </Col>
                             <Col span={12}>

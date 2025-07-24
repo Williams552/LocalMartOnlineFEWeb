@@ -244,10 +244,13 @@ const BargainHistory = () => {
                                             Sản phẩm
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                            Số lượng
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Trạng thái
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Giá cuối
+                                            Tổng giá
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Ngày tạo
@@ -268,10 +271,10 @@ const BargainHistory = () => {
                                                     <div className="flex items-center space-x-4">
                                                         {/* Product Image */}
                                                         <div className="flex-shrink-0 h-16 w-16">
-                                                            {bargain.productImage ? (
+                                                            {bargain.productImages && bargain.productImages.length > 0 ? (
                                                                 <img
                                                                     className="h-16 w-16 rounded-lg object-cover border shadow-sm"
-                                                                    src={bargain.productImage}
+                                                                    src={bargain.productImages[0]}
                                                                     alt={bargain.productName || 'Sản phẩm'}
                                                                     crossOrigin="anonymous"
                                                                     onLoad={(e) => {
@@ -286,7 +289,7 @@ const BargainHistory = () => {
                                                             ) : null}
                                                             <div
                                                                 className="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center"
-                                                                style={{ display: bargain.productImage ? 'none' : 'flex' }}
+                                                                style={{ display: (bargain.productImages && bargain.productImages.length > 0) ? 'none' : 'flex' }}
                                                             >
                                                                 <FaHandshake className="text-gray-400 text-lg" />
                                                             </div>
@@ -310,6 +313,18 @@ const BargainHistory = () => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
+                                                    <div className="text-sm">
+                                                        <span className="font-medium text-gray-900">
+                                                            {bargain.quantity || 0}
+                                                        </span>
+                                                        {bargain.productUnitName && (
+                                                            <span className="text-gray-500 ml-1">
+                                                                {bargain.productUnitName}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td className="px-6 py-4 whitespace-nowrap">
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusInfo.color}`}>
                                                         <span className="mr-1">{statusInfo.icon}</span>
                                                         {statusInfo.name}
@@ -317,18 +332,18 @@ const BargainHistory = () => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="text-sm">
-                                                        {bargain.finalPrice ? (
+                                                        {bargain.finalPrice && bargain.quantity ? (
                                                             <span className="font-medium text-green-600">
-                                                                {fastBargainService.formatCurrency(bargain.finalPrice)}
+                                                                {fastBargainService.formatCurrency(bargain.finalPrice * bargain.quantity)}
                                                             </span>
-                                                        ) : bargain.proposals && bargain.proposals.length > 0 ? (
-                                                            <span className="text-gray-600">
+                                                        ) : bargain.proposals && bargain.proposals.length > 0 && bargain.quantity ? (
+                                                            <span className="text-orange-600 font-medium">
                                                                 {fastBargainService.formatCurrency(
-                                                                    bargain.proposals[bargain.proposals.length - 1].proposedPrice
+                                                                    bargain.proposals[bargain.proposals.length - 1].proposedPrice * bargain.quantity
                                                                 )}
                                                             </span>
                                                         ) : (
-                                                            <span className="text-gray-400">Chưa có giá</span>
+                                                            <span className="text-gray-400">Chưa có tổng giá</span>
                                                         )}
                                                     </div>
                                                 </td>
