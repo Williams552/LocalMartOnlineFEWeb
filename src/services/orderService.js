@@ -1,11 +1,13 @@
 import apiService from './apiService';
+import { API_ENDPOINTS } from '../config/apiEndpoints';
 
 class OrderService {
     // Lấy danh sách đơn hàng của buyer
     async getBuyerOrders(buyerId, page = 1, pageSize = 20) {
         try {
             console.log('🔍 Fetching buyer orders for:', buyerId);
-            const response = await apiService.get(`/api/Order/buyer/${buyerId}?page=${page}&pageSize=${pageSize}`);
+            const endpoint = `${API_ENDPOINTS.ORDER.GET_BUYER_ORDERS(buyerId)}?page=${page}&pageSize=${pageSize}`;
+            const response = await apiService.get(endpoint);
             console.log('📋 Raw response:', response);
 
             // Backend trả về {success: true, data: PagedResult}
@@ -53,7 +55,7 @@ class OrderService {
     async filterBuyerOrders(filterData) {
         try {
             console.log('🔍 Filtering buyer orders with:', filterData);
-            const response = await apiService.post('/api/Order/filter', filterData);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.FILTER_ORDERS, filterData);
             console.log('📋 Filter response:', response);
 
             // Backend trả về {success: true, data: PagedResult}
@@ -93,18 +95,37 @@ class OrderService {
         }
     }
 
-    // Hủy đơn hàng
-    async cancelOrder(orderId) {
+    // Hủy đơn hàng với lý do (POST /api/order/{orderId}/cancel)
+    async cancelOrder(orderId, cancelReason) {
         try {
-            // Backend có thể có endpoint khác để hủy đơn hàng
-            const response = await apiService.put(`/api/Order/${orderId}/cancel`);
+            console.log('🚫 Cancelling order:', orderId, 'Reason:', cancelReason);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.CANCEL(orderId), {
+                cancelReason
+            });
+
             return {
                 success: true,
                 data: response.data || response,
                 message: 'Hủy đơn hàng thành công'
             };
         } catch (error) {
-            console.error('Error canceling order:', error);
+            console.error('❌ Error cancelling order:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        status: 'Cancelled',
+                        cancelReason: cancelReason,
+                        updatedAt: new Date().toISOString()
+                    },
+                    message: 'Hủy đơn hàng thành công (Mock)'
+                };
+            }
+            
             throw new Error(error.response?.data?.message || 'Không thể hủy đơn hàng');
         }
     }
@@ -112,7 +133,7 @@ class OrderService {
     // Đặt lại đơn hàng
     async reorderOrder(orderId) {
         try {
-            const response = await apiService.post(`/api/Order/${orderId}/reorder`);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.REORDER(orderId));
             return {
                 success: true,
                 data: response.data || response,
@@ -127,7 +148,7 @@ class OrderService {
     // Đánh giá đơn hàng
     async reviewOrder(orderId, reviewData) {
         try {
-            const response = await apiService.post(`/api/Order/${orderId}/review`, reviewData);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.REVIEW(orderId), reviewData);
             return {
                 success: true,
                 data: response.data || response,
@@ -151,7 +172,7 @@ class OrderService {
                 let sellerInfo = {};
                 try {
                     console.log('👤 Fetching seller info for:', order.sellerId);
-                    const sellerResponse = await apiService.get(`/api/User/${order.sellerId}`);
+                    const sellerResponse = await apiService.get(API_ENDPOINTS.USER.GET_BY_ID(order.sellerId));
                     console.log('👤 Seller response:', sellerResponse);
 
                     // Backend trả về {success: true, data: UserDTO}
@@ -175,7 +196,7 @@ class OrderService {
                 const enrichedItems = await Promise.all(order.items.map(async (item) => {
                     try {
                         console.log('📦 Fetching product info for:', item.productId);
-                        const productResponse = await apiService.get(`/api/Product/${item.productId}`);
+                        const productResponse = await apiService.get(API_ENDPOINTS.PRODUCT.GET_BY_ID(item.productId));
                         console.log('📦 Product response:', productResponse);
 
                         // Backend trả về {success: true, data: ProductDto}
@@ -205,7 +226,7 @@ class OrderService {
                     ...order,
                     ...sellerInfo,
                     items: enrichedItems,
-                    canReview: order.status === 'delivered' && !order.reviewed,
+                    canReview: order.status === 'Completed' && !order.reviewed,
                     reviewed: order.reviewed || false
                 };
 
@@ -228,7 +249,7 @@ class OrderService {
                     unit: '',
                     total: item.quantity * item.priceAtPurchase
                 })),
-                canReview: order.status === 'delivered' && !order.reviewed,
+                canReview: order.status === 'Completed' && !order.reviewed,
                 reviewed: order.reviewed || false
             }));
         }
@@ -242,7 +263,7 @@ class OrderService {
                     sellerId: "seller1",
                     totalAmount: 82500,
                     deliveryAddress: "123 Đường ABC, Quận Ninh Kiều, Cần Thơ",
-                    status: "delivered",
+                    status: "Completed",
                     paymentStatus: "paid",
                     notes: "Giao hàng sớm nhé shop",
                     createdAt: "2024-01-15T08:30:00",
@@ -278,7 +299,7 @@ class OrderService {
                     sellerId: "seller2",
                     totalAmount: 35000,
                     deliveryAddress: "456 Đường XYZ, Quận Cái Răng, Cần Thơ",
-                    status: "shipping",
+                    status: "Paid",
                     paymentStatus: "paid",
                     notes: "",
                     createdAt: "2024-01-16T14:20:00",
@@ -305,7 +326,7 @@ class OrderService {
                     sellerId: "seller3",
                     totalAmount: 57000,
                     deliveryAddress: "789 Đường DEF, Quận Ô Môn, Cần Thơ",
-                    status: "confirmed",
+                    status: "Confirmed",
                     paymentStatus: "pending",
                     notes: "Gọi trước khi giao",
                     createdAt: "2024-01-17T09:15:00",
@@ -351,7 +372,7 @@ class OrderService {
             if (params.fromDate) queryParams.append('fromDate', params.fromDate);
             if (params.toDate) queryParams.append('toDate', params.toDate);
 
-            const url = `/api/Order/seller/my${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+            const url = API_ENDPOINTS.ORDER.GET_SELLER_ORDERS + (queryParams.toString() ? '?' + queryParams.toString() : '');
             const response = await apiService.get(url);
 
             // Always return data as array for FE compatibility
@@ -384,7 +405,7 @@ class OrderService {
     // Get order by ID
     async getOrderById(orderId) {
         try {
-            const response = await apiService.get(`/api/Order/${orderId}`);
+            const response = await apiService.get(API_ENDPOINTS.ORDER.GET_BY_ID(orderId));
             return {
                 success: true,
                 data: response.data || response,
@@ -399,7 +420,7 @@ class OrderService {
     // Update order status
     async updateOrderStatus(orderId, status, notes = '') {
         try {
-            const response = await apiService.put(`/api/Order/${orderId}/status`, {
+            const response = await apiService.put(API_ENDPOINTS.ORDER.UPDATE_STATUS(orderId), {
                 status,
                 notes
             });
@@ -415,10 +436,148 @@ class OrderService {
         }
     }
 
+    // Complete payment for order - DEPRECATED (use markOrderAsPaid instead)
+    async completePayment(orderId) {
+        console.warn('⚠️ completePayment is deprecated, use markOrderAsPaid instead');
+        return this.markOrderAsPaid(orderId);
+    }
+
+    // Seller xác nhận còn hàng (POST /api/order/{orderId}/confirm)
+    async confirmOrder(orderId) {
+        try {
+            console.log('✅ Confirming order:', orderId);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.CONFIRM(orderId));
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Xác nhận đơn hàng thành công'
+            };
+        } catch (error) {
+            console.error('❌ Error confirming order:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        status: 'Confirmed',
+                        confirmedAt: new Date().toISOString()
+                    },
+                    message: 'Xác nhận đơn hàng thành công (Mock)'
+                };
+            }
+            
+            throw new Error(error.response?.data?.message || 'Không thể xác nhận đơn hàng');
+        }
+    }
+
+    // Seller xác nhận đã nhận tiền (POST /api/order/{orderId}/mark-paid)
+    async markOrderAsPaid(orderId) {
+        try {
+            console.log('💰 Marking order as paid:', orderId);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.MARK_PAID(orderId));
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Xác nhận đã nhận tiền thành công'
+            };
+        } catch (error) {
+            console.error('❌ Error marking order as paid:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        paymentStatus: 'Paid',
+                        paidAt: new Date().toISOString()
+                    },
+                    message: 'Xác nhận đã nhận tiền thành công (Mock)'
+                };
+            }
+            
+            throw new Error(error.response?.data?.message || 'Không thể xác nhận đã nhận tiền');
+        }
+    }
+
+    // Buyer xác nhận đã nhận hàng (POST /api/order/{orderId}/complete)
+    async completeOrderByBuyer(orderId) {
+        try {
+            console.log('📦 Buyer completing order:', orderId);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.COMPLETE(orderId));
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Xác nhận đã nhận hàng thành công'
+            };
+        } catch (error) {
+            console.error('❌ Error completing order by buyer:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        status: 'Completed',
+                        completedAt: new Date().toISOString()
+                    },
+                    message: 'Xác nhận đã nhận hàng thành công (Mock)'
+                };
+            }
+            
+            throw new Error(error.response?.data?.message || 'Không thể xác nhận đã nhận hàng');
+        }
+    }
+
+    // Cancel order
+    async cancelOrder(orderId, cancelReason) {
+        try {
+            console.log('🚫 Cancelling order:', orderId, 'Reason:', cancelReason);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.CANCEL(orderId), {
+                cancelReason
+            });
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Hủy đơn hàng thành công'
+            };
+        } catch (error) {
+            console.error('❌ Error cancelling order:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        status: 'Cancelled',
+                        cancelReason: cancelReason,
+                        updatedAt: new Date().toISOString()
+                    },
+                    message: 'Hủy đơn hàng thành công (Mock)'
+                };
+            }
+            
+            throw new Error(error.response?.data?.message || 'Không thể hủy đơn hàng');
+        }
+    }
+
     // Get order statistics
     async getOrderStats(sellerId, period = 'month') {
         try {
-            const response = await apiService.get(`/api/Order/seller/${sellerId}/stats?period=${period}`);
+            const endpoint = `${API_ENDPOINTS.ORDER.GET_ORDER_STATS(sellerId)}?period=${period}`;
+            const response = await apiService.get(endpoint);
             return {
                 success: true,
                 data: response.data || response,
@@ -433,7 +592,7 @@ class OrderService {
     // Complete order (for seller)
     async completeOrder(orderId) {
         try {
-            const response = await apiService.post(`/api/Order/${orderId}/complete`);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.COMPLETE(orderId));
             return {
                 success: true,
                 data: response.data || response,
@@ -454,7 +613,7 @@ class OrderService {
             // Add display properties if not present
             sellerName: order.sellerName || order.seller?.name || 'Cửa hàng',
             sellerAvatar: order.sellerAvatar || order.seller?.avatar || 'https://i.pravatar.cc/50?img=1',
-            canReview: order.canReview !== undefined ? order.canReview : (order.status === 'delivered'),
+            canReview: order.canReview !== undefined ? order.canReview : (order.status === 'Completed'),
             reviewed: order.reviewed || false,
             items: (order.items || []).map(item => ({
                 ...item,
@@ -468,22 +627,16 @@ class OrderService {
     // Utility methods for UI display
     getStatusText(status) {
         const statusMap = {
+            'Pending': 'Chờ xác nhận',        // Người mua mới đặt hàng
+            'Confirmed': 'Đã xác nhận hàng',  // Người bán xác nhận còn hàng
+            'Paid': 'Đã nhận tiền',           // Người bán xác nhận đã nhận được tiền
+            'Completed': 'Hoàn thành',        // Người mua xác nhận đã nhận đúng hàng
+            'Cancelled': 'Đã hủy',            // Đơn hàng bị hủy
+            // Legacy support (lowercase)
             'pending': 'Chờ xác nhận',
-            'confirmed': 'Đã xác nhận',
-            'preparing': 'Đang chuẩn bị',
-            'shipping': 'Đang giao hàng',
-            'delivered': 'Đã giao hàng',
-            'cancelled': 'Đã hủy'
-        };
-        return statusMap[status] || status;
-    }
-    getStatusText(status) {
-        const statusMap = {
-            'pending': 'Chờ xác nhận',
-            'confirmed': 'Đã xác nhận',
-            'preparing': 'Đang chuẩn bị',
-            'shipping': 'Đang giao hàng',
-            'delivered': 'Đã giao hàng',
+            'confirmed': 'Đã xác nhận hàng',
+            'paid': 'Đã nhận tiền',
+            'completed': 'Hoàn thành',
             'cancelled': 'Đã hủy'
         };
         return statusMap[status] || status;
@@ -491,11 +644,16 @@ class OrderService {
 
     getStatusColor(status) {
         const colorMap = {
+            'Pending': 'warning',     // Vàng - chờ xử lý
+            'Confirmed': 'info',      // Xanh dương - đã xác nhận
+            'Paid': 'primary',        // Xanh đậm - đã thanh toán
+            'Completed': 'success',   // Xanh lá - hoàn thành
+            'Cancelled': 'danger',    // Đỏ - đã hủy
+            // Legacy support (lowercase)
             'pending': 'warning',
             'confirmed': 'info',
-            'preparing': 'primary',
-            'shipping': 'secondary',
-            'delivered': 'success',
+            'paid': 'primary',
+            'completed': 'success',
             'cancelled': 'danger'
         };
         return colorMap[status] || 'secondary';
@@ -557,7 +715,7 @@ class OrderService {
                 pageSize: pageSize.toString()
             });
 
-            const response = await apiService.get(`/api/Order/admin/orders?${queryParams}`);
+            const response = await apiService.get(`${API_ENDPOINTS.ORDER.GET_ALL_ADMIN}?${queryParams}`);
             console.log('📋 Admin orders response:', response);
 
             const responseData = response.data || response;
@@ -600,7 +758,7 @@ class OrderService {
     async filterAllOrders(filterData) {
         try {
             console.log('🔍 Filtering all orders (Admin):', filterData);
-            const response = await apiService.post('/api/Order/filter', filterData);
+            const response = await apiService.post(API_ENDPOINTS.ORDER.FILTER_ORDERS, filterData);
             console.log('📋 Admin filter response:', response);
 
             const responseData = response.data || response;
@@ -639,29 +797,11 @@ class OrderService {
         }
     }
 
-    // Hủy đơn hàng (Admin/Seller)
-    async cancelOrder(orderId) {
-        try {
-            console.log('❌ Cancelling order:', orderId);
-            const response = await apiService.put(`/api/Order/${orderId}/cancel`);
-            console.log('❌ Cancel order response:', response);
-
-            return {
-                success: true,
-                data: response.data,
-                message: 'Đơn hàng đã được hủy'
-            };
-        } catch (error) {
-            console.error('❌ Error cancelling order:', error);
-            throw new Error(error.response?.data?.message || 'Không thể hủy đơn hàng');
-        }
-    }
-
     // Cập nhật trạng thái đơn hàng
     async updateOrderStatus(orderId, status) {
         try {
             console.log('🔄 Updating order status:', { orderId, status });
-            const response = await apiService.put(`/api/Order/${orderId}/status`, { status });
+            const response = await apiService.put(API_ENDPOINTS.ORDER.UPDATE_STATUS(orderId), { status });
             console.log('🔄 Update status response:', response);
 
             return {
@@ -679,7 +819,7 @@ class OrderService {
     async bulkCompleteOrders(orderIds) {
         try {
             console.log('✅ Bulk completing orders:', orderIds);
-            const response = await apiService.post('/api/Order/bulk/complete', { orderIds });
+            const response = await apiService.post(API_ENDPOINTS.ORDER.BULK_COMPLETE, { orderIds });
             console.log('✅ Bulk complete response:', response);
 
             return {
@@ -697,7 +837,7 @@ class OrderService {
     async bulkCancelOrders(orderIds) {
         try {
             console.log('❌ Bulk cancelling orders:', orderIds);
-            const response = await apiService.post('/api/Order/bulk/cancel', { orderIds });
+            const response = await apiService.post(API_ENDPOINTS.ORDER.BULK_CANCEL, { orderIds });
             console.log('❌ Bulk cancel response:', response);
 
             return {
@@ -722,7 +862,7 @@ class OrderService {
 
             const stats = {
                 totalOrders: orders.length,
-                pendingOrders: orders.filter(o => ['Pending', 'Preparing'].includes(o.status)).length,
+                pendingOrders: orders.filter(o => ['Pending', 'Confirmed'].includes(o.status)).length,
                 completedOrders: orders.filter(o => o.status === 'Completed').length,
                 cancelledOrders: orders.filter(o => o.status === 'Cancelled').length,
                 totalRevenue: orders
@@ -806,7 +946,7 @@ class OrderService {
                     sellerName: 'Cửa hàng XYZ',
                     totalAmount: 180000,
                     deliveryAddress: '456 Lê Văn Việt, Quận 9, TP.HCM',
-                    status: 'Delivered',
+                    status: 'Completed',
                     paymentStatus: 'Paid',
                     createdAt: '2024-01-14T14:20:00Z',
                     updatedAt: '2024-01-15T09:15:00Z',
@@ -860,6 +1000,122 @@ class OrderService {
             totalPages: 8,
             hasPrevious: false,
             hasNext: true
+        };
+    }
+
+    // Đặt hàng từ giỏ hàng
+    async placeOrdersFromCart(orderData) {
+        try {
+            console.log('🛒 Placing orders from cart:', orderData);
+            
+            // Validate dữ liệu đầu vào
+            if (!orderData.buyerId) {
+                throw new Error('Thiếu thông tin người mua');
+            }
+            
+            if (!orderData.cartItems || orderData.cartItems.length === 0) {
+                throw new Error('Giỏ hàng trống');
+            }
+
+            // Validate từng sản phẩm trong giỏ hàng
+            for (const item of orderData.cartItems) {
+                if (!item.quantity || item.quantity <= 0) {
+                    throw new Error(`Số lượng sản phẩm "${item.product?.name || 'Unknown'}" phải lớn hơn 0`);
+                }
+                
+                if (!item.product?.price || item.product.price <= 0) {
+                    throw new Error(`Giá sản phẩm "${item.product?.name || 'Unknown'}" không hợp lệ`);
+                }
+
+                // Kiểm tra stock quantity
+                if (item.product.stockQuantity > 0 && item.quantity > item.product.stockQuantity) {
+                    throw new Error(`Sản phẩm "${item.product.name}" chỉ còn ${item.product.stockQuantity} ${item.product.unit} trong kho`);
+                }
+
+                // Kiểm tra minimum quantity
+                if (item.product.minimumQuantity && item.quantity < item.product.minimumQuantity) {
+                    throw new Error(`Số lượng tối thiểu cho "${item.product.name}" là ${item.product.minimumQuantity} ${item.product.unit}`);
+                }
+            }
+
+            const response = await apiService.post(API_ENDPOINTS.ORDER.PLACE_FROM_CART, orderData);
+            
+            if (response.success) {
+                console.log('✅ Orders placed successfully:', response.data);
+                return {
+                    success: true,
+                    data: response.data,
+                    message: response.message || `Đã tạo thành công ${response.data.orderCount} đơn hàng`
+                };
+            } else {
+                throw new Error(response.message || 'Không thể đặt hàng');
+            }
+        } catch (error) {
+            console.error('❌ Error placing orders from cart:', error);
+            
+            // Fallback với mock data cho testing
+            if (process.env.NODE_ENV === 'development' && error.message.includes('Network Error')) {
+                console.warn('🔄 Using mock response for development');
+                return this.getMockPlaceOrderResponse(orderData);
+            }
+            
+            throw new Error(error.message || 'Có lỗi xảy ra khi đặt hàng');
+        }
+    }
+
+    // Mock response cho development
+    getMockPlaceOrderResponse(orderData) {
+        // Nhóm cart items theo store
+        const groupedByStore = orderData.cartItems.reduce((acc, item) => {
+            const storeId = item.product.storeId || 'store_1';
+            const storeName = item.product.storeName || 'Unknown Store';
+            
+            if (!acc[storeId]) {
+                acc[storeId] = {
+                    storeId,
+                    storeName,
+                    items: [],
+                    totalAmount: 0
+                };
+            }
+            
+            acc[storeId].items.push(item);
+            acc[storeId].totalAmount += item.product.price * item.quantity;
+            
+            return acc;
+        }, {});
+
+        const stores = Object.values(groupedByStore);
+        const totalAmount = stores.reduce((sum, store) => sum + store.totalAmount, 0);
+        
+        const mockOrders = stores.map((store, index) => ({
+            id: `mock_order_${Date.now()}_${index}`,
+            buyerId: orderData.buyerId,
+            sellerId: `seller_${store.storeId}`,
+            storeName: store.storeName,
+            totalAmount: store.totalAmount,
+            status: 'Pending',
+            paymentStatus: 'Pending',
+            notes: orderData.notes || '',
+            createdAt: new Date().toISOString(),
+            items: store.items.map(item => ({
+                productId: item.productId,
+                productName: item.product.name,
+                productImageUrl: item.product.images?.split(',')[0] || '',
+                productUnitName: item.product.unit,
+                quantity: item.quantity,
+                priceAtPurchase: item.product.price
+            }))
+        }));
+
+        return {
+            success: true,
+            message: `Đã tạo thành công ${stores.length} đơn hàng từ ${stores.length} cửa hàng khác nhau (Mock)`,
+            data: {
+                orderCount: stores.length,
+                totalAmount: totalAmount,
+                orders: mockOrders
+            }
         };
     }
 }

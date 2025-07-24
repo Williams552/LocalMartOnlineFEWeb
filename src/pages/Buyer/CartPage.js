@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import toastService from "../../services/toastService";
 import logo from "../../assets/image/logo.jpg";
 import cartService from "../../services/cartService";
+import orderService from "../../services/orderService";
 import { getCurrentUser, isAuthenticated } from "../../services/authService";
 
 const sellerInfoMap = {
@@ -57,6 +58,9 @@ const CartPage = () => {
     const [selectAll, setSelectAll] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
     const [showClearSellerConfirm, setShowClearSellerConfirm] = useState(null);
+    const [showOrderConfirm, setShowOrderConfirm] = useState(false);
+    const [orderNotes, setOrderNotes] = useState('');
+    const [placingOrder, setPlacingOrder] = useState(false);
 
     // Check authentication on component mount
     useEffect(() => {
@@ -370,6 +374,156 @@ const CartPage = () => {
         }
     }, [selectedItems, formattedCartItems.length]);
 
+    // Xử lý đặt hàng
+    const handlePlaceOrder = () => {
+        // Kiểm tra có sản phẩm trong giỏ hàng không
+        if (formattedCartItems.length === 0) {
+            toastService.error('Giỏ hàng trống');
+            return;
+        }
+
+        // Kiểm tra có sản phẩm nào có sẵn không
+        const availableItems = formattedCartItems.filter(item => item.isAvailable);
+        if (availableItems.length === 0) {
+            toastService.error('Không có sản phẩm nào có sẵn để đặt hàng');
+            return;
+        }
+
+        // Kiểm tra có sản phẩm nào hết hàng không
+        const outOfStockItems = formattedCartItems.filter(item => 
+            !item.isAvailable || (item.stockQuantity > 0 && item.quantity > item.stockQuantity)
+        );
+
+        if (outOfStockItems.length > 0) {
+            const outOfStockNames = outOfStockItems.map(item => item.name).join(', ');
+            toastService.warning(`Một số sản phẩm không có sẵn hoặc không đủ số lượng: ${outOfStockNames}`);
+            return;
+        }
+
+        // Hiển thị modal xác nhận
+        setShowOrderConfirm(true);
+    };
+
+    const confirmPlaceOrder = async () => {
+        try {
+            setPlacingOrder(true);
+
+            const user = getCurrentUser();
+            if (!user || !user.id) {
+                toastService.error('Không tìm thấy thông tin người dùng');
+                return;
+            }
+
+            // Chuẩn bị dữ liệu đặt hàng - chỉ lấy những sản phẩm available
+            const availableCartItems = cartItems.filter(item => 
+                item.product?.isAvailable !== false && 
+                !(item.product?.stockQuantity > 0 && item.quantity > item.product.stockQuantity)
+            );
+
+            if (availableCartItems.length === 0) {
+                toastService.error('Không có sản phẩm nào có sẵn để đặt hàng');
+                return;
+            }
+
+            const orderData = {
+                buyerId: user.id,
+                notes: orderNotes.trim(),
+                cartItems: availableCartItems.map(item => ({
+                    id: item.id,
+                    cartId: item.id, // Assuming cartId is same as id
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    product: {
+                        id: item.productId,
+                        name: item.product?.name || 'Unknown Product',
+                        price: item.product?.price || 0,
+                        images: item.product?.images || '',
+                        unit: item.product?.unit || 'item',
+                        storeId: item.product?.storeId || `store_${item.product?.sellerId || Math.random().toString(36).substr(2, 9)}`,
+                        storeName: item.product?.storeName || item.storeName || item.product?.sellerName || 'Unknown Store'
+                    }
+                }))
+            };
+
+            console.log('🛒 Placing order with data:', orderData);
+            console.log('📊 Order summary:', {
+                totalItems: availableCartItems.length,
+                stores: [...new Set(availableCartItems.map(item => 
+                    item.product?.storeName || item.storeName || item.product?.sellerName || 'Unknown'
+                ))],
+                totalAmount: availableCartItems.reduce((sum, item) => 
+                    sum + (item.product?.price || 0) * item.quantity, 0
+                )
+            });
+
+            // Gọi API đặt hàng
+            const result = await orderService.placeOrdersFromCart(orderData);
+
+            if (result.success) {
+                // Hiển thị thông báo chi tiết về đơn hàng đã tạo
+                const orderInfo = result.data;
+                toastService.success(
+                    `${result.message}\n` +
+                    `Tổng giá trị: ${orderInfo.totalAmount?.toLocaleString() || 'N/A'}đ\n` +
+                    `Các đơn hàng sẽ được xử lý trong thời gian sớm nhất.`,
+                    { autoClose: 5000 }
+                );
+                
+                // Clear cart sau khi đặt hàng thành công
+                try {
+                    await cartService.clearCart();
+                } catch (clearError) {
+                    console.warn('⚠️ Could not clear cart after order:', clearError);
+                }
+
+                // Reset local state
+                setCartItems([]);
+                setSelectedItems(new Set());
+                setShowOrderConfirm(false);
+
+                // Show success message với thông tin chi tiết
+                if (orderInfo.orders && orderInfo.orders.length > 0) {
+                    console.log('📋 Created orders:', orderInfo.orders);
+                }
+
+                // Redirect to orders page sau 3 giây
+                setTimeout(() => {
+                    navigate('/buyer/orders');
+                }, 3000);
+
+            } else {
+                toastService.error(result.message || 'Không thể đặt hàng');
+            }
+
+        } catch (error) {
+            console.error('❌ Error placing order:', error);
+            toastService.error(error.message || 'Có lỗi xảy ra khi đặt hàng');
+        } finally {
+            setPlacingOrder(false);
+        }
+    };
+
+    // Nhóm cart items theo store để hiển thị preview
+    const getOrderPreview = () => {
+        const groupedByStore = formattedCartItems.reduce((acc, item) => {
+            const storeKey = item.storeName || item.seller || 'Unknown Store';
+            if (!acc[storeKey]) {
+                acc[storeKey] = {
+                    storeName: storeKey,
+                    items: [],
+                    totalAmount: 0,
+                    itemCount: 0
+                };
+            }
+            acc[storeKey].items.push(item);
+            acc[storeKey].totalAmount += item.subTotal || (item.price * item.quantity);
+            acc[storeKey].itemCount += item.quantity;
+            return acc;
+        }, {});
+
+        return Object.values(groupedByStore);
+    };
+
     return (
         <div className="min-h-screen bg-gray-50">
             <main className="max-w-6xl mx-auto px-4 py-8">
@@ -661,10 +815,32 @@ const CartPage = () => {
                                     </span>
                                 </div>
 
-                                <button className="w-full bg-supply-primary text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center space-x-2">
-                                    <FiCheck className="w-5 h-5" />
-                                    <span>Đặt hàng ngay</span>
+                                <button className="w-full bg-supply-primary text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-supply-primary"
+                                    onClick={handlePlaceOrder}
+                                    disabled={formattedCartItems.length === 0 || placingOrder || formattedCartItems.filter(item => item.isAvailable).length === 0}
+                                >
+                                    {placingOrder ? (
+                                        <>
+                                            <FiLoader className="w-5 h-5 animate-spin" />
+                                            <span>Đang xử lý...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FiCheck className="w-5 h-5" />
+                                            <span>Đặt hàng ngay</span>
+                                        </>
+                                    )}
                                 </button>
+
+                                {/* Thông báo về sản phẩm không khả dụng */}
+                                {formattedCartItems.length > 0 && formattedCartItems.filter(item => !item.isAvailable).length > 0 && (
+                                    <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                        <p className="text-yellow-800 text-sm flex items-center">
+                                            <span className="mr-2">⚠️</span>
+                                            Có {formattedCartItems.filter(item => !item.isAvailable).length} sản phẩm không khả dụng sẽ được bỏ qua khi đặt hàng
+                                        </p>
+                                    </div>
+                                )}
 
                                 <div className="mt-4 text-center">
                                     <div className="flex items-center justify-center space-x-2 text-sm text-gray-600">
@@ -901,6 +1077,116 @@ const CartPage = () => {
                                 >
                                     Xóa tất cả
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal xác nhận đặt hàng */}
+            {showOrderConfirm && (
+                <div
+                    className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
+                    onClick={() => !placingOrder && setShowOrderConfirm(false)}
+                >
+                    <div
+                        className="bg-white p-6 rounded-xl w-[90%] max-w-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="mb-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-xl font-bold text-gray-800 flex items-center">
+                                    <FiShoppingBag className="mr-2 text-supply-primary" />
+                                    Xác nhận đặt hàng
+                                </h3>
+                                {!placingOrder && (
+                                    <button
+                                        className="text-gray-400 hover:text-gray-600 text-xl"
+                                        onClick={() => setShowOrderConfirm(false)}
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Ghi chú */}
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Ghi chú đơn hàng
+                                </label>
+                                <textarea
+                                    value={orderNotes}
+                                    onChange={(e) => setOrderNotes(e.target.value)}
+                                    placeholder="Ghi chú thêm cho đơn hàng (tùy chọn)..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-supply-primary focus:border-transparent resize-none"
+                                    rows="2"
+                                    disabled={placingOrder}
+                                />
+                            </div>
+
+                            {/* Preview đơn hàng */}
+                            <div className="mb-6">
+                                <h4 className="font-medium text-gray-700 mb-3">Đơn hàng sẽ được chia thành:</h4>
+                                <div className="space-y-3 max-h-60 overflow-y-auto">
+                                    {getOrderPreview().map((store, index) => (
+                                        <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center space-x-2">
+                                                    <FaStore className="text-supply-primary w-4 h-4" />
+                                                    <span className="font-medium text-gray-800">{store.storeName}</span>
+                                                </div>
+                                                <span className="text-supply-primary font-semibold">
+                                                    {store.totalAmount.toLocaleString()}đ
+                                                </span>
+                                            </div>
+                                            <p className="text-sm text-gray-600 mt-1">
+                                                {store.itemCount} sản phẩm • {store.items.length} loại
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Tổng kết */}
+                            <div className="border-t pt-4">
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-gray-600">Số đơn hàng sẽ tạo:</span>
+                                    <span className="font-medium">{getOrderPreview().length}</span>
+                                </div>
+                                <div className="flex justify-between items-center mb-4">
+                                    <span className="text-lg font-medium">Tổng thanh toán:</span>
+                                    <span className="text-xl font-bold text-supply-primary">
+                                        {finalTotal.toLocaleString()}đ
+                                    </span>
+                                </div>
+
+                                {/* Action buttons */}
+                                <div className="flex space-x-3">
+                                    <button
+                                        onClick={() => setShowOrderConfirm(false)}
+                                        disabled={placingOrder}
+                                        className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        onClick={confirmPlaceOrder}
+                                        disabled={placingOrder}
+                                        className="flex-1 px-4 py-3 bg-supply-primary text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                                    >
+                                        {placingOrder ? (
+                                            <>
+                                                <FiLoader className="w-5 h-5 animate-spin" />
+                                                <span>Đang đặt hàng...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FiCheck className="w-5 h-5" />
+                                                <span>Xác nhận đặt hàng</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

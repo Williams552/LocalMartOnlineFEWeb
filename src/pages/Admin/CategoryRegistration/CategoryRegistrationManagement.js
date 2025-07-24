@@ -449,7 +449,7 @@ const CategoryRegistrationManagement = () => {
                         label="Lý do từ chối"
                         rules={[
                             { required: true, message: 'Vui lòng nhập lý do từ chối' },
-                            { min: 10, message: 'Lý do phải có ít nhất 10 ký tự' }
+                            { min: 5, message: 'Lý do phải có ít nhất 5 ký tự' }
                         ]}
                     >
                         <TextArea 

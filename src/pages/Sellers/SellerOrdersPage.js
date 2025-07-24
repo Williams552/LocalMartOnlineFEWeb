@@ -15,7 +15,9 @@ import {
     FaSpinner,
     FaFilter,
     FaSearch,
-    FaSyncAlt
+    FaSyncAlt,
+    FaMoneyBillWave,
+    FaBan
 } from 'react-icons/fa';
 import SellerLayout from '../../layouts/SellerLayout';
 import orderService from '../../services/orderService';
@@ -29,6 +31,9 @@ const SellerOrdersPage = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showOrderDetail, setShowOrderDetail] = useState(false);
     const [updatingStatus, setUpdatingStatus] = useState({});
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelOrderId, setCancelOrderId] = useState(null);
+    const [cancelReason, setCancelReason] = useState('');
     const [filters, setFilters] = useState({
         status: 'all',
         search: '',
@@ -104,19 +109,14 @@ const SellerOrdersPage = () => {
 
             if (result.success) {
                 toast.success('Cập nhật trạng thái đơn hàng thành công!');
-                // Update local state
-                setOrders(prev => prev.map(order =>
-                    order.id === orderId
-                        ? { ...order, status: newStatus, updatedAt: new Date().toISOString() }
-                        : order
-                ));
-                // Update selected order if it's the one being updated
+                
+                // Reload order list để lấy dữ liệu mới nhất từ server
+                await fetchOrders();
+                
+                // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
                 if (selectedOrder?.id === orderId) {
-                    setSelectedOrder(prev => ({
-                        ...prev,
-                        status: newStatus,
-                        updatedAt: new Date().toISOString()
-                    }));
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
                 }
             } else {
                 toast.error(result.message || 'Không thể cập nhật trạng thái đơn hàng');
@@ -130,6 +130,166 @@ const SellerOrdersPage = () => {
         }
     };
 
+    // Xác nhận đơn hàng (Pending -> Confirmed)
+    const handleConfirmOrder = async (orderId) => {
+        try {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: true }));
+
+            const result = await orderService.confirmOrder(orderId);
+
+            if (result.success) {
+                toast.success('Xác nhận đơn hàng thành công!');
+                await fetchOrders();
+                
+                if (selectedOrder?.id === orderId) {
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
+                }
+            } else {
+                toast.error(result.message || 'Không thể xác nhận đơn hàng');
+            }
+
+        } catch (error) {
+            console.error('Error confirming order:', error);
+            toast.error('Có lỗi xảy ra khi xác nhận đơn hàng');
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: false }));
+        }
+    };
+
+    // Xác nhận đã nhận tiền (Confirmed -> Paid)  
+    const handleMarkAsPaid = async (orderId) => {
+        try {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: true }));
+
+            const result = await orderService.markOrderAsPaid(orderId);
+
+            if (result.success) {
+                toast.success('Xác nhận đã nhận tiền thành công!');
+                await fetchOrders();
+                
+                if (selectedOrder?.id === orderId) {
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
+                }
+            } else {
+                toast.error(result.message || 'Không thể xác nhận đã nhận tiền');
+            }
+
+        } catch (error) {
+            console.error('Error marking as paid:', error);
+            toast.error('Có lỗi xảy ra khi xác nhận thanh toán');
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: false }));
+        }
+    };
+
+    // Buyer xác nhận hoàn thành (Paid -> Completed) - chỉ dành cho buyer
+    const handleCompleteOrder = async (orderId) => {
+        try {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: true }));
+
+            const result = await orderService.completeOrderByBuyer(orderId);
+
+            if (result.success) {
+                toast.success('Xác nhận hoàn thành đơn hàng thành công!');
+                await fetchOrders();
+                
+                if (selectedOrder?.id === orderId) {
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
+                }
+            } else {
+                toast.error(result.message || 'Không thể hoàn thành đơn hàng');
+            }
+
+        } catch (error) {
+            console.error('Error completing order:', error);
+            toast.error('Có lỗi xảy ra khi hoàn thành đơn hàng');
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: false }));
+        }
+    };
+
+    const handleCompletePayment = async (orderId) => {
+        try {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: true }));
+
+            const result = await orderService.completePayment(orderId);
+
+            if (result.success) {
+                toast.success('Xác nhận thanh toán thành công!');
+                
+                // Reload order list để lấy dữ liệu mới nhất từ server
+                await fetchOrders();
+                
+                // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
+                if (selectedOrder?.id === orderId) {
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
+                }
+            } else {
+                toast.error(result.message || 'Không thể xác nhận thanh toán');
+            }
+
+        } catch (error) {
+            console.error('Error completing payment:', error);
+            toast.error('Có lỗi xảy ra khi xác nhận thanh toán');
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: false }));
+        }
+    };
+
+    const handleCancelOrder = (orderId) => {
+        setCancelOrderId(orderId);
+        setCancelReason('');
+        setShowCancelModal(true);
+    };
+
+    const submitCancelOrder = async () => {
+        if (!cancelReason.trim()) {
+            toast.error('Vui lòng nhập lý do hủy đơn hàng');
+            return;
+        }
+
+        if (cancelReason.length < 5 || cancelReason.length > 500) {
+            toast.error('Lý do hủy phải từ 5-500 ký tự');
+            return;
+        }
+
+        try {
+            setUpdatingStatus(prev => ({ ...prev, [cancelOrderId]: true }));
+
+            const result = await orderService.cancelOrder(cancelOrderId, cancelReason);
+
+            if (result.success) {
+                toast.success('Hủy đơn hàng thành công!');
+                
+                // Reload order list để lấy dữ liệu mới nhất từ server
+                await fetchOrders();
+                
+                // Đóng modal
+                setShowCancelModal(false);
+                setCancelOrderId(null);
+                setCancelReason('');
+                
+                // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
+                if (selectedOrder?.id === cancelOrderId) {
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
+                }
+            } else {
+                toast.error(result.message || 'Không thể hủy đơn hàng');
+            }
+
+        } catch (error) {
+            console.error('Error cancelling order:', error);
+            toast.error('Có lỗi xảy ra khi hủy đơn hàng');
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [cancelOrderId]: false }));
+        }
+    };
+
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({
             ...prev,
@@ -140,13 +300,17 @@ const SellerOrdersPage = () => {
 
     const getStatusBadge = (status) => {
         const statusConfig = {
+            'Pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Chờ xác nhận' },
+            'Confirmed': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Đã xác nhận hàng' },
+            'Paid': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Đã nhận tiền' },
+            'Completed': { bg: 'bg-green-100', text: 'text-green-800', label: 'Hoàn thành' },
+            'Cancelled': { bg: 'bg-red-100', text: 'text-red-800', label: 'Đã hủy' },
+            // Legacy support (lowercase)
             'pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Chờ xác nhận' },
-            'confirmed': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Đã xác nhận' },
-            'preparing': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Đang chuẩn bị' },
-            'shipping': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Đang giao hàng' },
-            'delivered': { bg: 'bg-green-100', text: 'text-green-800', label: 'Đã giao hàng' },
-            'cancelled': { bg: 'bg-red-100', text: 'text-red-800', label: 'Đã hủy' },
-            'unknown': { bg: 'bg-gray-100', text: 'text-gray-800', label: 'Không xác định' }
+            'confirmed': { bg: 'bg-blue-100', text: 'text-blue-800', label: 'Đã xác nhận hàng' },
+            'paid': { bg: 'bg-purple-100', text: 'text-purple-800', label: 'Đã nhận tiền' },
+            'completed': { bg: 'bg-green-100', text: 'text-green-800', label: 'Hoàn thành' },
+            'cancelled': { bg: 'bg-red-100', text: 'text-red-800', label: 'Đã hủy' }
         };
 
         const config = statusConfig[status] || { bg: 'bg-gray-100', text: 'text-gray-800', label: status || 'Không xác định' };
@@ -164,6 +328,7 @@ const SellerOrdersPage = () => {
 
         return (
             <div className="flex gap-1">
+                {/* Nút xem chi tiết - luôn hiển thị */}
                 <button
                     className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
                     onClick={() => handleViewOrder(order)}
@@ -172,11 +337,12 @@ const SellerOrdersPage = () => {
                     <FaEye className="w-4 h-4" />
                 </button>
 
-                {status === 'pending' && (
+                {/* Trạng thái Pending: Xác nhận hoặc Hủy */}
+                {(status === 'Pending' || status === 'pending') && (
                     <>
                         <button
                             className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded disabled:opacity-50"
-                            onClick={() => handleUpdateStatus(id, 'confirmed')}
+                            onClick={() => handleConfirmOrder(id)}
                             disabled={isUpdating}
                             title="Xác nhận đơn hàng"
                         >
@@ -184,46 +350,57 @@ const SellerOrdersPage = () => {
                         </button>
                         <button
                             className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50"
-                            onClick={() => handleUpdateStatus(id, 'cancelled')}
+                            onClick={() => handleCancelOrder(id)}
                             disabled={isUpdating}
                             title="Hủy đơn hàng"
                         >
-                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaTimes className="w-4 h-4" />}
+                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaBan className="w-4 h-4" />}
                         </button>
                     </>
                 )}
 
-                {status === 'confirmed' && (
-                    <button
-                        className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded disabled:opacity-50"
-                        onClick={() => handleUpdateStatus(id, 'preparing')}
-                        disabled={isUpdating}
-                        title="Bắt đầu chuẩn bị hàng"
-                    >
-                        {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaEdit className="w-4 h-4" />}
-                    </button>
+                {/* Trạng thái Confirmed: Xác nhận đã nhận tiền hoặc Hủy */}
+                {(status === 'Confirmed' || status === 'confirmed') && (
+                    <>
+                        <button
+                            className="p-1 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded disabled:opacity-50"
+                            onClick={() => handleMarkAsPaid(id)}
+                            disabled={isUpdating}
+                            title="Xác nhận đã nhận tiền"
+                        >
+                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaMoneyBillWave className="w-4 h-4" />}
+                        </button>
+                        <button
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50"
+                            onClick={() => handleCancelOrder(id)}
+                            disabled={isUpdating}
+                            title="Hủy đơn hàng"
+                        >
+                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaBan className="w-4 h-4" />}
+                        </button>
+                    </>
                 )}
 
-                {status === 'preparing' && (
-                    <button
-                        className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded disabled:opacity-50"
-                        onClick={() => handleUpdateStatus(id, 'shipping')}
-                        disabled={isUpdating}
-                        title="Bắt đầu giao hàng"
-                    >
-                        {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaTruck className="w-4 h-4" />}
-                    </button>
+                {/* Trạng thái Paid: Chờ buyer xác nhận hoàn thành */}
+                {(status === 'Paid' || status === 'paid') && (
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-500 italic">Chờ buyer xác nhận</span>
+                        {/* Note: Nút Complete chỉ dành cho buyer, seller không thể bấm */}
+                    </div>
                 )}
 
-                {status === 'shipping' && (
-                    <button
-                        className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded disabled:opacity-50"
-                        onClick={() => handleUpdateStatus(id, 'delivered')}
-                        disabled={isUpdating}
-                        title="Hoàn thành giao hàng"
-                    >
-                        {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaCheck className="w-4 h-4" />}
-                    </button>
+                {/* Trạng thái Completed: Đã hoàn thành - không có action */}
+                {(status === 'Completed' || status === 'completed') && (
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs text-green-600 italic">✓ Đã hoàn thành</span>
+                    </div>
+                )}
+
+                {/* Trạng thái Cancelled: Đã hủy - không có action */}
+                {(status === 'Cancelled' || status === 'cancelled') && (
+                    <div className="flex items-center gap-1">
+                        <span className="text-xs text-red-600 italic">✗ Đã hủy</span>
+                    </div>
                 )}
             </div>
         );
@@ -294,12 +471,11 @@ const SellerOrdersPage = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-supply-primary focus:border-transparent"
                             >
                                 <option value="all">Tất cả trạng thái</option>
-                                <option value="pending">Chờ xác nhận</option>
-                                <option value="confirmed">Đã xác nhận</option>
-                                <option value="preparing">Đang chuẩn bị</option>
-                                <option value="shipping">Đang giao hàng</option>
-                                <option value="delivered">Đã giao hàng</option>
-                                <option value="cancelled">Đã hủy</option>
+                                <option value="Pending">Chờ xác nhận</option>
+                                <option value="Confirmed">Đã xác nhận hàng</option>
+                                <option value="Paid">Đã nhận tiền</option>
+                                <option value="Completed">Hoàn thành</option>
+                                <option value="Cancelled">Đã hủy</option>
                             </select>
                         </div>
 
@@ -572,6 +748,80 @@ const SellerOrdersPage = () => {
                                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                                 >
                                     Đóng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Cancel Order Modal */}
+                {showCancelModal && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                                    <FaBan className="mr-2 text-red-500" />
+                                    Hủy đơn hàng
+                                </h3>
+                                <button
+                                    onClick={() => setShowCancelModal(false)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <FaTimes className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="p-6">
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Lý do hủy đơn hàng <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                                        rows="4"
+                                        value={cancelReason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        placeholder="Nhập lý do hủy đơn hàng (5-500 ký tự)..."
+                                        maxLength={500}
+                                    />
+                                    <div className="text-right text-sm text-gray-500 mt-1">
+                                        {cancelReason.length}/500 ký tự
+                                    </div>
+                                </div>
+
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                                    <div className="flex">
+                                        <FaClock className="text-yellow-400 mr-2 mt-0.5" />
+                                        <div className="text-sm text-yellow-800">
+                                            <strong>Lưu ý:</strong> Việc hủy đơn hàng không thể hoàn tác. Khách hàng sẽ được thông báo về việc hủy này.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                                <button
+                                    onClick={() => setShowCancelModal(false)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                                >
+                                    Hủy bỏ
+                                </button>
+                                <button
+                                    onClick={submitCancelOrder}
+                                    disabled={updatingStatus[cancelOrderId] || !cancelReason.trim() || cancelReason.length < 5}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                                >
+                                    {updatingStatus[cancelOrderId] ? (
+                                        <>
+                                            <FaSpinner className="animate-spin mr-2" />
+                                            Đang hủy...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaBan className="mr-2" />
+                                            Hủy đơn hàng
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>

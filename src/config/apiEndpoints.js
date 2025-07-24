@@ -92,6 +92,30 @@ export const API_ENDPOINTS = {
         GET_BY_USER: `${API_URL}/api/order/user`,
         GET_BY_SELLER: `${API_URL}/api/order/seller`,
         UPDATE_STATUS: (id) => `${API_URL}/api/order/${id}/status`,
+        
+        // 5-State Order Management APIs
+        CONFIRM: (id) => `${API_URL}/api/order/${id}/confirm`,              // Seller xác nhận còn hàng (Pending -> Confirmed)
+        MARK_PAID: (id) => `${API_URL}/api/order/${id}/mark-paid`,          // Seller xác nhận đã nhận tiền (Confirmed -> Paid)
+        COMPLETE: (id) => `${API_URL}/api/order/${id}/complete`,            // Buyer xác nhận đã nhận hàng (Paid -> Completed)
+        CANCEL: (id) => `${API_URL}/api/order/${id}/cancel`,                // Hủy đơn hàng với lý do
+        
+        // Buyer Order Management
+        GET_BUYER_ORDERS: (buyerId) => `${API_URL}/api/Order/buyer/${buyerId}`,
+        FILTER_ORDERS: `${API_URL}/api/Order/filter`,
+        REORDER: (id) => `${API_URL}/api/Order/${id}/reorder`,
+        REVIEW: (id) => `${API_URL}/api/Order/${id}/review`,
+        
+        // Seller Order Management  
+        GET_SELLER_ORDERS: `${API_URL}/api/Order/seller/my`,
+        GET_ORDER_STATS: (sellerId) => `${API_URL}/api/Order/seller/${sellerId}/stats`,
+        
+        // Admin Order Management
+        GET_ALL_ADMIN: `${API_URL}/api/Order/admin/orders`,
+        BULK_COMPLETE: `${API_URL}/api/Order/bulk/complete`,
+        BULK_CANCEL: `${API_URL}/api/Order/bulk/cancel`,
+        
+        // Cart to Orders
+        PLACE_FROM_CART: `${API_URL}/api/order/place-orders-from-cart`,
     },
 
     // Category Endpoints
