@@ -67,15 +67,22 @@ const BuyerOrders = () => {
 
     const statusOptions = {
         all: "Tất cả",
-        pending: "Chờ xác nhận",
-        confirmed: "Đã xác nhận",
-        shipping: "Đang giao",
-        delivered: "Đã giao",
-        cancelled: "Đã hủy"
+        Pending: "Chờ xác nhận", 
+        Confirmed: "Đã xác nhận hàng",
+        Paid: "Đã nhận tiền",
+        Completed: "Hoàn thành",
+        Cancelled: "Đã hủy"
     };
 
     const getStatusColor = (status) => {
         const colors = {
+            // New 5-state workflow
+            'Pending': "bg-yellow-100 text-yellow-800",
+            'Confirmed': "bg-blue-100 text-blue-800", 
+            'Paid': "bg-purple-100 text-purple-800",
+            'Completed': "bg-green-100 text-green-800",
+            'Cancelled': "bg-red-100 text-red-800",
+            // Legacy support
             pending: "bg-yellow-100 text-yellow-800",
             confirmed: "bg-blue-100 text-blue-800",
             shipping: "bg-purple-100 text-purple-800",
@@ -87,6 +94,13 @@ const BuyerOrders = () => {
 
     const getStatusIcon = (status) => {
         const icons = {
+            // New 5-state workflow
+            'Pending': <FaClock className="text-yellow-600" />,
+            'Confirmed': <FaCheckCircle className="text-blue-600" />,
+            'Paid': <FaTruck className="text-purple-600" />,
+            'Completed': <FaBox className="text-green-600" />,
+            'Cancelled': <FaTimes className="text-red-600" />,
+            // Legacy support
             pending: <FaClock className="text-yellow-600" />,
             confirmed: <FaCheckCircle className="text-blue-600" />,
             shipping: <FaTruck className="text-purple-600" />,
@@ -126,13 +140,28 @@ const BuyerOrders = () => {
     const handleCancelOrder = async (orderId) => {
         if (window.confirm("Bạn có chắc muốn hủy đơn hàng này?")) {
             try {
-                const result = await orderService.cancelOrder(orderId);
+                const result = await orderService.cancelOrder(orderId, "Buyer hủy đơn hàng");
                 if (result.success) {
                     toast.success("Hủy đơn hàng thành công!");
                     fetchOrders(); // Refresh orders list
                 }
             } catch (error) {
                 toast.error(error.message || "Lỗi khi hủy đơn hàng");
+            }
+        }
+    };
+
+    // Buyer xác nhận đã nhận hàng (Paid -> Completed)
+    const handleCompleteOrder = async (orderId) => {
+        if (window.confirm("Bạn có chắc đã nhận được hàng và muốn hoàn thành đơn hàng này?")) {
+            try {
+                const result = await orderService.completeOrderByBuyer(orderId);
+                if (result.success) {
+                    toast.success("Xác nhận hoàn thành đơn hàng thành công!");
+                    fetchOrders(); // Refresh orders list
+                }
+            } catch (error) {
+                toast.error(error.message || "Lỗi khi hoàn thành đơn hàng");
             }
         }
     };
@@ -298,7 +327,19 @@ const BuyerOrders = () => {
                                         <span>Xem chi tiết</span>
                                     </button>
 
-                                    {order.status === "delivered" && order.canReview && !order.reviewed && (
+                                    {/* Nút xác nhận hoàn thành - chỉ hiển thị khi trạng thái là Paid */}
+                                    {(order.status === "Paid" || order.status === "paid") && (
+                                        <button
+                                            onClick={() => handleCompleteOrder(order.id)}
+                                            className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
+                                        >
+                                            <FaCheckCircle />
+                                            <span>Đã nhận hàng</span>
+                                        </button>
+                                    )}
+
+                                    {/* Nút đánh giá - chỉ hiển thị khi đã hoàn thành và chưa đánh giá */}
+                                    {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && order.canReview && !order.reviewed && (
                                         <button
                                             onClick={() => handleReviewOrder(order)}
                                             className="flex items-center space-x-2 px-4 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition"
@@ -308,7 +349,8 @@ const BuyerOrders = () => {
                                         </button>
                                     )}
 
-                                    {order.status === "delivered" && (
+                                    {/* Nút mua lại - hiển thị khi đã hoàn thành */}
+                                    {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && (
                                         <button
                                             onClick={() => handleReorder(order.id)}
                                             className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
@@ -318,7 +360,9 @@ const BuyerOrders = () => {
                                         </button>
                                     )}
 
-                                    {(order.status === "pending" || order.status === "confirmed") && (
+                                    {/* Nút hủy đơn - chỉ hiển thị khi chờ xác nhận hoặc đã xác nhận */}
+                                    {((order.status === "Pending" || order.status === "pending") || 
+                                      (order.status === "Confirmed" || order.status === "confirmed")) && (
                                         <button
                                             onClick={() => handleCancelOrder(order.id)}
                                             className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
