@@ -80,8 +80,15 @@ const SellerProducts = () => {
             }
             setUserStore(store);
 
-            // Get categories for filter (this would come from category service)
-            setCategories(["all", "Rau củ", "Trái cây", "Thịt cá", "Gia vị", "Đồ khô"]);
+            // Get categories for filter from category service
+            try {
+                const categoriesResult = await categoryService.getActiveCategories();
+                const categoryNames = categoriesResult.map(cat => cat.name);
+                setCategories(["all", ...categoryNames]);
+            } catch (categoryError) {
+                console.warn('Could not load categories for filter:', categoryError);
+                setCategories(["all", "Rau củ", "Trái cây", "Thịt cá", "Gia vị", "Đồ khô"]);
+            }
         } catch (error) {
             console.error('Error loading initial data:', error);
             toastService.error('Có lỗi khi tải dữ liệu ban đầu');
@@ -142,7 +149,7 @@ const SellerProducts = () => {
     // Handler for submit add product
     const handleAddProduct = async (e) => {
         e.preventDefault();
-        if (!userStore) return; 
+        if (!userStore) return;
         setAddLoading(true);
         try {
             // Validate required fields
@@ -642,19 +649,20 @@ const SellerProducts = () => {
                                                 <span className="font-medium text-blue-600">{product.category}</span>
                                             </div>
                                         )}
+                                        {!product.category && (
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-gray-600">Danh mục:</span>
+                                                <span className="font-medium text-gray-500">Chưa phân loại</span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="flex items-center justify-between mt-4 pt-4 border-t">
-                                        <div className="flex items-center space-x-3 text-xs text-gray-500">
-                                            <div className="flex items-center space-x-1">
-                                                <FaEye />
-                                                <span>{product.viewCount || 0}</span>
+                                        {product.createdAt && (
+                                            <div className="text-xs text-gray-500">
+                                                Ngày đăng: {formatDate(product.createdAt)}
                                             </div>
-                                            <div className="flex items-center space-x-1">
-                                                <FaHeart />
-                                                <span>{product.likeCount || 0}</span>
-                                            </div>
-                                        </div>
+                                        )}
                                         <div className="flex space-x-1">
                                             <Link
                                                 to={`/seller/products/edit/${product.id}`}
@@ -681,12 +689,6 @@ const SellerProducts = () => {
                                             </button>
                                         </div>
                                     </div>
-
-                                    {product.createdAt && (
-                                        <div className="text-xs text-gray-400 mt-2">
-                                            Tạo: {formatDate(product.createdAt)}
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         ))}
@@ -700,7 +702,6 @@ const SellerProducts = () => {
                                         <th className="text-left py-3 px-4 font-medium text-gray-700">Sản phẩm</th>
                                         <th className="text-left py-3 px-4 font-medium text-gray-700">Danh mục</th>
                                         <th className="text-left py-3 px-4 font-medium text-gray-700">Giá</th>
-                                        <th className="text-left py-3 px-4 font-medium text-gray-700">Tồn kho</th>
                                         <th className="text-left py-3 px-4 font-medium text-gray-700">Đã bán</th>
                                         <th className="text-left py-3 px-4 font-medium text-gray-700">Trạng thái</th>
                                         <th className="text-left py-3 px-4 font-medium text-gray-700">Thao tác</th>
@@ -729,17 +730,11 @@ const SellerProducts = () => {
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-gray-800">{product.name}</p>
-                                                        <div className="flex items-center space-x-2 text-xs text-gray-500">
-                                                            <span>{product.viewCount || 0} lượt xem</span>
-                                                            <span>•</span>
-                                                            <span>{product.likeCount || 0} lượt thích</span>
-                                                            {product.createdAt && (
-                                                                <>
-                                                                    <span>•</span>
-                                                                    <span>{formatDate(product.createdAt)}</span>
-                                                                </>
-                                                            )}
-                                                        </div>
+                                                        {product.createdAt && (
+                                                            <div className="text-xs text-gray-500">
+                                                                Ngày đăng: {formatDate(product.createdAt)}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </td>
@@ -747,7 +742,6 @@ const SellerProducts = () => {
                                             <td className="py-3 px-4 font-medium text-supply-primary">
                                                 {formatPrice(product.price)}đ/{product.unit || 'kg'}
                                             </td>
-                                            <td className="py-3 px-4">{getStockStatus(product)}</td>
                                             <td className="py-3 px-4 font-medium">{product.soldQuantity || 0}</td>
                                             <td className="py-3 px-4">{getStatusBadge(product)}</td>
                                             <td className="py-3 px-4">
