@@ -165,9 +165,6 @@ const FastBargainProducts = () => {
             render: (text, record) => (
                 <div>
                     <div style={{ fontWeight: 'bold' }}>{text || 'Chưa có thông tin'}</div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                        User ID: {record.proposals && record.proposals.length > 0 ? record.proposals[0].userId : 'N/A'}
-                    </Text>
                 </div>
             ),
         },
@@ -179,9 +176,17 @@ const FastBargainProducts = () => {
             render: (text, record) => (
                 <div>
                     <div style={{ fontWeight: 'bold' }}>{text || 'Chưa có thông tin'}</div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                        Store ID: {record.storeId || 'N/A'}
-                    </Text>
+                </div>
+            ),
+        },
+        {
+            title: 'Cửa hàng',
+            dataIndex: 'storeName',
+            key: 'storeName',
+            width: 150,
+            render: (text, record) => (
+                <div>
+                    <div style={{ fontWeight: 'bold' }}>{text || 'Chưa có thông tin'}</div>
                 </div>
             ),
         },
