@@ -97,6 +97,158 @@ class CategoryService {
         }
     }
 
+    // Get all categories for admin (including inactive ones)
+    async getAllCategoriesAdmin(page = 1, pageSize = 20) {
+        try {
+            console.log('🔧 Admin - Fetching all categories (including inactive)...');
+            
+            const queryParams = new URLSearchParams();
+            queryParams.append('page', page);
+            queryParams.append('pageSize', pageSize);
+
+            const url = `${API_ENDPOINTS.CATEGORY.GET_ALL_ADMIN}?${queryParams}`;
+            const response = await apiClient.get(url);
+
+            console.log('🔧 Admin - Categories response:', response);
+
+            // Return the items from the API response
+            if (response.data && response.data.success && response.data.data) {
+                return {
+                    items: response.data.data.items || [],
+                    totalCount: response.data.data.totalCount || 0,
+                    page: response.data.data.page || page,
+                    pageSize: response.data.data.pageSize || pageSize
+                };
+            }
+
+            return {
+                items: [],
+                totalCount: 0,
+                page: page,
+                pageSize: pageSize
+            };
+        } catch (error) {
+            console.error('❌ Admin - Error fetching all categories:', error);
+            throw error;
+        }
+    }
+
+    // Search categories for admin (including inactive ones)
+    async searchCategoriesAdmin(searchTerm) {
+        try {
+            console.log('🔍 Admin - Searching categories:', searchTerm);
+            
+            const response = await apiClient.get(API_ENDPOINTS.CATEGORY.SEARCH_ADMIN, {
+                params: { name: searchTerm }
+            });
+            
+            if (response.data && response.data.success) {
+                return response.data.data || [];
+            }
+            
+            return [];
+        } catch (error) {
+            console.error('❌ Admin - Error searching categories:', error);
+            throw error;
+        }
+    }
+
+    // Filter categories by alphabet for admin (including inactive ones)
+    async filterCategoriesAdmin(alphabet) {
+        try {
+            console.log('🔤 Admin - Filtering categories by alphabet:', alphabet);
+            
+            const response = await apiClient.get(API_ENDPOINTS.CATEGORY.FILTER_ADMIN, {
+                params: { alphabet }
+            });
+            
+            if (response.data && response.data.success) {
+                return response.data.data || [];
+            }
+            
+            return [];
+        } catch (error) {
+            console.error('❌ Admin - Error filtering categories:', error);
+            throw error;
+        }
+    }
+
+    // Create new category (Admin only)
+    async createCategory(categoryData) {
+        try {
+            console.log('➕ Admin - Creating category:', categoryData);
+            
+            const response = await apiClient.post(API_ENDPOINTS.CATEGORY.CREATE, categoryData);
+            
+            if (response.data && response.data.success) {
+                console.log('✅ Admin - Category created successfully');
+                return response.data.data;
+            }
+            
+            throw new Error('Failed to create category');
+        } catch (error) {
+            console.error('❌ Admin - Error creating category:', error);
+            throw error;
+        }
+    }
+
+    // Update category (Admin only)
+    async updateCategory(id, categoryData) {
+        try {
+            console.log('✏️ Admin - Updating category:', id, categoryData);
+            
+            const response = await apiClient.put(API_ENDPOINTS.CATEGORY.UPDATE(id), categoryData);
+            
+            if (response.data && response.data.success) {
+                console.log('✅ Admin - Category updated successfully');
+                return response.data.data;
+            }
+            
+            throw new Error('Failed to update category');
+        } catch (error) {
+            console.error('❌ Admin - Error updating category:', error);
+            throw error;
+        }
+    }
+
+    // Delete category (Admin only)
+    async deleteCategory(id) {
+        try {
+            console.log('🗑️ Admin - Deleting category:', id);
+            
+            const response = await apiClient.delete(API_ENDPOINTS.CATEGORY.DELETE(id));
+            
+            if (response.data && response.data.success) {
+                console.log('✅ Admin - Category deleted successfully');
+                return response.data.data;
+            }
+            
+            throw new Error('Failed to delete category');
+        } catch (error) {
+            console.error('❌ Admin - Error deleting category:', error);
+            throw error;
+        }
+    }
+
+    // Toggle category status (Admin only)
+    async toggleCategoryStatus(id) {
+        try {
+            console.log('🔄 Admin - Toggling category status:', id);
+            
+            const response = await apiClient.patch(API_ENDPOINTS.CATEGORY.TOGGLE(id));
+            
+            if (response.data && response.data.success) {
+                console.log('✅ Admin - Category status toggled successfully');
+                return response.data.data;
+            }
+            
+            throw new Error('Failed to toggle category status');
+        } catch (error) {
+            console.error('❌ Admin - Error toggling category status:', error);
+            throw error;
+        }
+    }
+
     // Get category by ID
     async getCategoryById(id) {
         try {

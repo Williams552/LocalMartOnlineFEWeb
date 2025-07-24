@@ -50,13 +50,6 @@ const SellerLayout = ({ children }) => {
 
     const sidebarItems = [
         {
-            path: '/seller/dashboard',
-            icon: FaHome,
-            label: 'Dashboard',
-            color: 'text-blue-600',
-            description: 'Tổng quan kinh doanh'
-        },
-        {
             path: '/seller/products',
             icon: FaBoxOpen,
             label: 'Sản phẩm',
@@ -178,7 +171,7 @@ const SellerLayout = ({ children }) => {
                 } lg:translate-x-0`}>
                 {/* Header */}
                 <div className="p-6 border-b border-gray-200">
-                    <Link to="/seller/dashboard" className="flex items-center space-x-3">
+                    <Link to="/seller/products" className="flex items-center space-x-3">
                         <div className="w-10 h-10 bg-supply-primary rounded-lg flex items-center justify-center">
                             <FaStore className="text-white" size={20} />
                         </div>

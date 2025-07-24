@@ -17,6 +17,14 @@ const BargainHistory = () => {
 
     const currentUser = authService.getCurrentUser();
 
+    // Debug current user
+    useEffect(() => {
+        console.log('Current user in BargainHistory:', currentUser);
+        if (!currentUser || !currentUser.id) {
+            console.warn('No valid user found, using fallback ID');
+        }
+    }, [currentUser]);
+
     useEffect(() => {
         loadBargainHistory();
     }, []);
@@ -28,16 +36,26 @@ const BargainHistory = () => {
     const loadBargainHistory = async () => {
         try {
             setLoading(true);
-            const result = await fastBargainService.getBargainHistory(currentUser.id);
+            const userId = currentUser?.id || 'fallback-user-id';
+            console.log('Loading bargain history for user:', userId);
+            const result = await fastBargainService.getBargainHistory(userId);
+            console.log('Bargain history result:', result);
 
             if (result.success) {
                 setBargains(result.data || []);
+                console.log('Bargains set:', result.data);
                 setError(null);
+
+                // Show message if using sample data
+                if (result.message) {
+                    console.log('Service message:', result.message);
+                }
             } else {
                 setError(result.message);
                 setBargains([]);
             }
         } catch (error) {
+            console.error('LoadBargainHistory error:', error);
             setError('Lỗi khi tải lịch sử thương lượng');
             setBargains([]);
         } finally {
@@ -58,9 +76,8 @@ const BargainHistory = () => {
         // Filter by search term
         if (searchTerm) {
             filtered = filtered.filter(bargain =>
-                bargain.bargainId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 bargain.productName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                bargain.productId?.toLowerCase().includes(searchTerm.toLowerCase())
+                bargain.storeName?.toLowerCase().includes(searchTerm.toLowerCase())
             );
         }
 
@@ -137,7 +154,7 @@ const BargainHistory = () => {
                                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
-                                    placeholder="Tìm kiếm theo ID thương lượng, sản phẩm..."
+                                    placeholder="Tìm kiếm theo tên sản phẩm, cửa hàng..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -165,9 +182,21 @@ const BargainHistory = () => {
                         <button
                             onClick={loadBargainHistory}
                             disabled={loading}
-                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 mr-2"
                         >
                             Làm mới
+                        </button>
+
+                        {/* Test Button */}
+                        <button
+                            onClick={() => {
+                                console.log('Current bargains:', bargains);
+                                console.log('Filtered bargains:', filteredBargains);
+                                console.log('Current user:', currentUser);
+                            }}
+                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        >
+                            Debug
                         </button>
                     </div>
                 </div>
@@ -212,7 +241,7 @@ const BargainHistory = () => {
                                 <thead className="bg-gray-50">
                                     <tr>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Thương lượng
+                                            Sản phẩm
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Trạng thái
@@ -236,16 +265,48 @@ const BargainHistory = () => {
                                         return (
                                             <tr key={bargain.bargainId} className="hover:bg-gray-50">
                                                 <td className="px-6 py-4 whitespace-nowrap">
-                                                    <div>
-                                                        <p className="text-sm font-medium text-gray-900">
-                                                            {bargain.productName || `Sản phẩm ${bargain.productId}`}
-                                                        </p>
-                                                        <p className="text-sm text-gray-500">ID: {bargain.bargainId}</p>
-                                                        {bargain.status === 'Pending' && timeRemaining && (
-                                                            <p className="text-xs text-orange-600">
-                                                                Còn lại: {timeRemaining}
+                                                    <div className="flex items-center space-x-4">
+                                                        {/* Product Image */}
+                                                        <div className="flex-shrink-0 h-16 w-16">
+                                                            {bargain.productImage ? (
+                                                                <img
+                                                                    className="h-16 w-16 rounded-lg object-cover border shadow-sm"
+                                                                    src={bargain.productImage}
+                                                                    alt={bargain.productName || 'Sản phẩm'}
+                                                                    crossOrigin="anonymous"
+                                                                    onLoad={(e) => {
+                                                                        console.log('Image loaded successfully:', e.target.src);
+                                                                    }}
+                                                                    onError={(e) => {
+                                                                        console.log('Image failed to load:', e.target.src);
+                                                                        e.target.style.display = 'none';
+                                                                        e.target.nextSibling.style.display = 'flex';
+                                                                    }}
+                                                                />
+                                                            ) : null}
+                                                            <div
+                                                                className="h-16 w-16 rounded-lg bg-gray-200 flex items-center justify-center"
+                                                                style={{ display: bargain.productImage ? 'none' : 'flex' }}
+                                                            >
+                                                                <FaHandshake className="text-gray-400 text-lg" />
+                                                            </div>
+                                                        </div>
+                                                        {/* Product Info */}
+                                                        <div className="flex-1">
+                                                            <p className="text-sm font-medium text-gray-900 mb-1">
+                                                                {bargain.productName || `Sản phẩm ${bargain.productId}`}
                                                             </p>
-                                                        )}
+                                                            {bargain.storeName && (
+                                                                <p className="text-xs text-gray-500 mb-1">
+                                                                    Cửa hàng: {bargain.storeName}
+                                                                </p>
+                                                            )}
+                                                            {bargain.status === 'Pending' && timeRemaining && (
+                                                                <p className="text-xs text-orange-600 font-medium">
+                                                                    Còn lại: {timeRemaining}
+                                                                </p>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
