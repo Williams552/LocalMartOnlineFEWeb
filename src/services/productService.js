@@ -563,7 +563,24 @@ class ProductService {
             if (response.data?.success && response.data.data) {
                 console.log('✅ ProductService: Seller products fetched successfully');
 
-                const transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+                let transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+
+                // Enhance products with category information
+                try {
+                    const categoryIds = [...new Set(transformedProducts.map(p => p.categoryId).filter(Boolean))];
+                    if (categoryIds.length > 0) {
+                        const categoriesData = await this.getCategoriesByIds(categoryIds);
+                        const categoryMap = new Map(categoriesData.map(cat => [cat.id, cat]));
+
+                        transformedProducts = transformedProducts.map(product => ({
+                            ...product,
+                            category: categoryMap.get(product.categoryId)?.name || 'Chưa phân loại',
+                            categoryName: categoryMap.get(product.categoryId)?.name || null
+                        }));
+                    }
+                } catch (categoryError) {
+                    console.warn('Could not load category info for seller products:', categoryError);
+                }
 
                 return {
                     success: true,
@@ -605,7 +622,24 @@ class ProductService {
             if (response.data?.success) {
                 console.log('✅ ProductService: Seller products search successful');
 
-                const transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+                let transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+
+                // Enhance products with category information
+                try {
+                    const categoryIds = [...new Set(transformedProducts.map(p => p.categoryId).filter(Boolean))];
+                    if (categoryIds.length > 0) {
+                        const categoriesData = await this.getCategoriesByIds(categoryIds);
+                        const categoryMap = new Map(categoriesData.map(cat => [cat.id, cat]));
+
+                        transformedProducts = transformedProducts.map(product => ({
+                            ...product,
+                            category: categoryMap.get(product.categoryId)?.name || 'Chưa phân loại',
+                            categoryName: categoryMap.get(product.categoryId)?.name || null
+                        }));
+                    }
+                } catch (categoryError) {
+                    console.warn('Could not load category info for seller products search:', categoryError);
+                }
 
                 return {
                     success: true,
@@ -642,7 +676,24 @@ class ProductService {
             if (response.data?.success) {
                 console.log('✅ ProductService: Seller products filter successful');
 
-                const transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+                let transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+
+                // Enhance products with category information
+                try {
+                    const categoryIds = [...new Set(transformedProducts.map(p => p.categoryId).filter(Boolean))];
+                    if (categoryIds.length > 0) {
+                        const categoriesData = await this.getCategoriesByIds(categoryIds);
+                        const categoryMap = new Map(categoriesData.map(cat => [cat.id, cat]));
+
+                        transformedProducts = transformedProducts.map(product => ({
+                            ...product,
+                            category: categoryMap.get(product.categoryId)?.name || 'Chưa phân loại',
+                            categoryName: categoryMap.get(product.categoryId)?.name || null
+                        }));
+                    }
+                } catch (categoryError) {
+                    console.warn('Could not load category info for seller products filter:', categoryError);
+                }
 
                 return {
                     success: true,
