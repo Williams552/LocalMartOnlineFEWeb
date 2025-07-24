@@ -15,7 +15,9 @@ import {
     FaSpinner,
     FaFilter,
     FaSearch,
-    FaSyncAlt
+    FaSyncAlt,
+    FaMoneyBillWave,
+    FaBan
 } from 'react-icons/fa';
 import SellerLayout from '../../layouts/SellerLayout';
 import orderService from '../../services/orderService';
@@ -29,6 +31,9 @@ const SellerOrdersPage = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showOrderDetail, setShowOrderDetail] = useState(false);
     const [updatingStatus, setUpdatingStatus] = useState({});
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelOrderId, setCancelOrderId] = useState(null);
+    const [cancelReason, setCancelReason] = useState('');
     const [filters, setFilters] = useState({
         status: 'all',
         search: '',
@@ -97,19 +102,14 @@ const SellerOrdersPage = () => {
 
             if (result.success) {
                 toast.success('Cập nhật trạng thái đơn hàng thành công!');
-                // Update local state
-                setOrders(prev => prev.map(order =>
-                    order.id === orderId
-                        ? { ...order, status: newStatus, updatedAt: new Date().toISOString() }
-                        : order
-                ));
-                // Update selected order if it's the one being updated
+                
+                // Reload order list để lấy dữ liệu mới nhất từ server
+                await fetchOrders();
+                
+                // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
                 if (selectedOrder?.id === orderId) {
-                    setSelectedOrder(prev => ({
-                        ...prev,
-                        status: newStatus,
-                        updatedAt: new Date().toISOString()
-                    }));
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
                 }
             } else {
                 toast.error(result.message || 'Không thể cập nhật trạng thái đơn hàng');
@@ -120,6 +120,85 @@ const SellerOrdersPage = () => {
             toast.error('Có lỗi xảy ra khi cập nhật trạng thái');
         } finally {
             setUpdatingStatus(prev => ({ ...prev, [orderId]: false }));
+        }
+    };
+
+    const handleCompletePayment = async (orderId) => {
+        try {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: true }));
+
+            const result = await orderService.completePayment(orderId);
+
+            if (result.success) {
+                toast.success('Xác nhận thanh toán thành công!');
+                
+                // Reload order list để lấy dữ liệu mới nhất từ server
+                await fetchOrders();
+                
+                // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
+                if (selectedOrder?.id === orderId) {
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
+                }
+            } else {
+                toast.error(result.message || 'Không thể xác nhận thanh toán');
+            }
+
+        } catch (error) {
+            console.error('Error completing payment:', error);
+            toast.error('Có lỗi xảy ra khi xác nhận thanh toán');
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [orderId]: false }));
+        }
+    };
+
+    const handleCancelOrder = (orderId) => {
+        setCancelOrderId(orderId);
+        setCancelReason('');
+        setShowCancelModal(true);
+    };
+
+    const submitCancelOrder = async () => {
+        if (!cancelReason.trim()) {
+            toast.error('Vui lòng nhập lý do hủy đơn hàng');
+            return;
+        }
+
+        if (cancelReason.length < 10 || cancelReason.length > 500) {
+            toast.error('Lý do hủy phải từ 10-500 ký tự');
+            return;
+        }
+
+        try {
+            setUpdatingStatus(prev => ({ ...prev, [cancelOrderId]: true }));
+
+            const result = await orderService.cancelOrder(cancelOrderId, cancelReason);
+
+            if (result.success) {
+                toast.success('Hủy đơn hàng thành công!');
+                
+                // Reload order list để lấy dữ liệu mới nhất từ server
+                await fetchOrders();
+                
+                // Đóng modal
+                setShowCancelModal(false);
+                setCancelOrderId(null);
+                setCancelReason('');
+                
+                // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
+                if (selectedOrder?.id === cancelOrderId) {
+                    setShowOrderDetail(false);
+                    setSelectedOrder(null);
+                }
+            } else {
+                toast.error(result.message || 'Không thể hủy đơn hàng');
+            }
+
+        } catch (error) {
+            console.error('Error cancelling order:', error);
+            toast.error('Có lỗi xảy ra khi hủy đơn hàng');
+        } finally {
+            setUpdatingStatus(prev => ({ ...prev, [cancelOrderId]: false }));
         }
     };
 
@@ -165,7 +244,7 @@ const SellerOrdersPage = () => {
                     <FaEye className="w-4 h-4" />
                 </button>
 
-                {status === 'pending' && (
+                {status === 'Pending' && (
                     <>
                         <button
                             className="p-1 text-green-600 hover:text-green-800 hover:bg-green-50 rounded disabled:opacity-50"
@@ -177,35 +256,55 @@ const SellerOrdersPage = () => {
                         </button>
                         <button
                             className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50"
-                            onClick={() => handleUpdateStatus(id, 'cancelled')}
+                            onClick={() => handleCancelOrder(id)}
                             disabled={isUpdating}
                             title="Hủy đơn hàng"
                         >
-                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaTimes className="w-4 h-4" />}
+                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaBan className="w-4 h-4" />}
                         </button>
                     </>
                 )}
 
                 {status === 'confirmed' && (
-                    <button
-                        className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded disabled:opacity-50"
-                        onClick={() => handleUpdateStatus(id, 'preparing')}
-                        disabled={isUpdating}
-                        title="Bắt đầu chuẩn bị hàng"
-                    >
-                        {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaEdit className="w-4 h-4" />}
-                    </button>
+                    <>
+                        <button
+                            className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded disabled:opacity-50"
+                            onClick={() => handleUpdateStatus(id, 'preparing')}
+                            disabled={isUpdating}
+                            title="Bắt đầu chuẩn bị hàng"
+                        >
+                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaEdit className="w-4 h-4" />}
+                        </button>
+                        <button
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50"
+                            onClick={() => handleCancelOrder(id)}
+                            disabled={isUpdating}
+                            title="Hủy đơn hàng"
+                        >
+                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaBan className="w-4 h-4" />}
+                        </button>
+                    </>
                 )}
 
                 {status === 'preparing' && (
-                    <button
-                        className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded disabled:opacity-50"
-                        onClick={() => handleUpdateStatus(id, 'shipping')}
-                        disabled={isUpdating}
-                        title="Bắt đầu giao hàng"
-                    >
-                        {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaTruck className="w-4 h-4" />}
-                    </button>
+                    <>
+                        <button
+                            className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded disabled:opacity-50"
+                            onClick={() => handleUpdateStatus(id, 'shipping')}
+                            disabled={isUpdating}
+                            title="Bắt đầu giao hàng"
+                        >
+                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaTruck className="w-4 h-4" />}
+                        </button>
+                        <button
+                            className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded disabled:opacity-50"
+                            onClick={() => handleCancelOrder(id)}
+                            disabled={isUpdating}
+                            title="Hủy đơn hàng"
+                        >
+                            {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaBan className="w-4 h-4" />}
+                        </button>
+                    </>
                 )}
 
                 {status === 'shipping' && (
@@ -216,6 +315,18 @@ const SellerOrdersPage = () => {
                         title="Hoàn thành giao hàng"
                     >
                         {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaCheck className="w-4 h-4" />}
+                    </button>
+                )}
+
+                {/* Button xác nhận thanh toán - hiển thị khi đơn hàng đã giao và chưa thanh toán */}
+                {status === 'Pending' && order.paymentStatus !== 'Completed' && (
+                    <button
+                        className="p-1 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-50 rounded disabled:opacity-50"
+                        onClick={() => handleCompletePayment(id)}
+                        disabled={isUpdating}
+                        title="Xác nhận thanh toán"
+                    >
+                        {isUpdating ? <FaSpinner className="w-4 h-4 animate-spin" /> : <FaMoneyBillWave className="w-4 h-4" />}
                     </button>
                 )}
             </div>
@@ -364,8 +475,8 @@ const SellerOrdersPage = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div>
-                                                    <div className="font-medium text-gray-900">{order.customerName || 'Khách hàng'}</div>
-                                                    <div className="text-sm text-gray-500">{order.customerPhone || 'Chưa có SĐT'}</div>
+                                                    <div className="font-medium text-gray-900">{order.buyerName || 'Khách hàng'}</div>
+                                                    <div className="text-sm text-gray-500">{order.buyerPhone || 'Chưa có SĐT'}</div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
@@ -561,6 +672,80 @@ const SellerOrdersPage = () => {
                                     className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                                 >
                                     Đóng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Cancel Order Modal */}
+                {showCancelModal && (
+                    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                                <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                                    <FaBan className="mr-2 text-red-500" />
+                                    Hủy đơn hàng
+                                </h3>
+                                <button
+                                    onClick={() => setShowCancelModal(false)}
+                                    className="text-gray-400 hover:text-gray-600"
+                                >
+                                    <FaTimes className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="p-6">
+                                <div className="mb-4">
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Lý do hủy đơn hàng <span className="text-red-500">*</span>
+                                    </label>
+                                    <textarea
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                                        rows="4"
+                                        value={cancelReason}
+                                        onChange={(e) => setCancelReason(e.target.value)}
+                                        placeholder="Nhập lý do hủy đơn hàng (10-500 ký tự)..."
+                                        maxLength={500}
+                                    />
+                                    <div className="text-right text-sm text-gray-500 mt-1">
+                                        {cancelReason.length}/500 ký tự
+                                    </div>
+                                </div>
+
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+                                    <div className="flex">
+                                        <FaClock className="text-yellow-400 mr-2 mt-0.5" />
+                                        <div className="text-sm text-yellow-800">
+                                            <strong>Lưu ý:</strong> Việc hủy đơn hàng không thể hoàn tác. Khách hàng sẽ được thông báo về việc hủy này.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+                                <button
+                                    onClick={() => setShowCancelModal(false)}
+                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                                >
+                                    Hủy bỏ
+                                </button>
+                                <button
+                                    onClick={submitCancelOrder}
+                                    disabled={updatingStatus[cancelOrderId] || !cancelReason.trim() || cancelReason.length < 10}
+                                    className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                                >
+                                    {updatingStatus[cancelOrderId] ? (
+                                        <>
+                                            <FaSpinner className="animate-spin mr-2" />
+                                            Đang hủy...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FaBan className="mr-2" />
+                                            Hủy đơn hàng
+                                        </>
+                                    )}
                                 </button>
                             </div>
                         </div>

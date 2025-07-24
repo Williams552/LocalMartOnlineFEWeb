@@ -415,6 +415,73 @@ class OrderService {
         }
     }
 
+    // Complete payment for order
+    async completePayment(orderId) {
+        try {
+            console.log('💰 Completing payment for order:', orderId);
+            const response = await apiService.post(`/api/order/${orderId}/complete`);
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Xác nhận thanh toán thành công'
+            };
+        } catch (error) {
+            console.error('❌ Error completing payment:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        paymentStatus: 'completed',
+                        completedAt: new Date().toISOString()
+                    },
+                    message: 'Xác nhận thanh toán thành công (Mock)'
+                };
+            }
+            
+            throw new Error(error.response?.data?.message || 'Không thể xác nhận thanh toán');
+        }
+    }
+
+    // Cancel order
+    async cancelOrder(orderId, cancelReason) {
+        try {
+            console.log('🚫 Cancelling order:', orderId, 'Reason:', cancelReason);
+            const response = await apiService.post(`/api/order/${orderId}/cancel`, {
+                cancelReason
+            });
+
+            return {
+                success: true,
+                data: response.data || response,
+                message: 'Hủy đơn hàng thành công'
+            };
+        } catch (error) {
+            console.error('❌ Error cancelling order:', error);
+            
+            // Fallback với mock response cho testing
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('🔄 Using mock response for development');
+                return {
+                    success: true,
+                    data: {
+                        orderId: orderId,
+                        status: 'Cancelled',
+                        cancelReason: cancelReason,
+                        updatedAt: new Date().toISOString()
+                    },
+                    message: 'Hủy đơn hàng thành công (Mock)'
+                };
+            }
+            
+            throw new Error(error.response?.data?.message || 'Không thể hủy đơn hàng');
+        }
+    }
+
     // Get order statistics
     async getOrderStats(sellerId, period = 'month') {
         try {
@@ -643,7 +710,7 @@ class OrderService {
     async cancelOrder(orderId) {
         try {
             console.log('❌ Cancelling order:', orderId);
-            const response = await apiService.put(`/api/Order/${orderId}/cancel`);
+            const response = await apiService.post(`/api/Order/${orderId}/cancel`);
             console.log('❌ Cancel order response:', response);
 
             return {
@@ -860,6 +927,122 @@ class OrderService {
             totalPages: 8,
             hasPrevious: false,
             hasNext: true
+        };
+    }
+
+    // Đặt hàng từ giỏ hàng
+    async placeOrdersFromCart(orderData) {
+        try {
+            console.log('🛒 Placing orders from cart:', orderData);
+            
+            // Validate dữ liệu đầu vào
+            if (!orderData.buyerId) {
+                throw new Error('Thiếu thông tin người mua');
+            }
+            
+            if (!orderData.cartItems || orderData.cartItems.length === 0) {
+                throw new Error('Giỏ hàng trống');
+            }
+
+            // Validate từng sản phẩm trong giỏ hàng
+            for (const item of orderData.cartItems) {
+                if (!item.quantity || item.quantity <= 0) {
+                    throw new Error(`Số lượng sản phẩm "${item.product?.name || 'Unknown'}" phải lớn hơn 0`);
+                }
+                
+                if (!item.product?.price || item.product.price <= 0) {
+                    throw new Error(`Giá sản phẩm "${item.product?.name || 'Unknown'}" không hợp lệ`);
+                }
+
+                // Kiểm tra stock quantity
+                if (item.product.stockQuantity > 0 && item.quantity > item.product.stockQuantity) {
+                    throw new Error(`Sản phẩm "${item.product.name}" chỉ còn ${item.product.stockQuantity} ${item.product.unit} trong kho`);
+                }
+
+                // Kiểm tra minimum quantity
+                if (item.product.minimumQuantity && item.quantity < item.product.minimumQuantity) {
+                    throw new Error(`Số lượng tối thiểu cho "${item.product.name}" là ${item.product.minimumQuantity} ${item.product.unit}`);
+                }
+            }
+
+            const response = await apiService.post('/api/order/place-orders-from-cart', orderData);
+            
+            if (response.success) {
+                console.log('✅ Orders placed successfully:', response.data);
+                return {
+                    success: true,
+                    data: response.data,
+                    message: response.message || `Đã tạo thành công ${response.data.orderCount} đơn hàng`
+                };
+            } else {
+                throw new Error(response.message || 'Không thể đặt hàng');
+            }
+        } catch (error) {
+            console.error('❌ Error placing orders from cart:', error);
+            
+            // Fallback với mock data cho testing
+            if (process.env.NODE_ENV === 'development' && error.message.includes('Network Error')) {
+                console.warn('🔄 Using mock response for development');
+                return this.getMockPlaceOrderResponse(orderData);
+            }
+            
+            throw new Error(error.message || 'Có lỗi xảy ra khi đặt hàng');
+        }
+    }
+
+    // Mock response cho development
+    getMockPlaceOrderResponse(orderData) {
+        // Nhóm cart items theo store
+        const groupedByStore = orderData.cartItems.reduce((acc, item) => {
+            const storeId = item.product.storeId || 'store_1';
+            const storeName = item.product.storeName || 'Unknown Store';
+            
+            if (!acc[storeId]) {
+                acc[storeId] = {
+                    storeId,
+                    storeName,
+                    items: [],
+                    totalAmount: 0
+                };
+            }
+            
+            acc[storeId].items.push(item);
+            acc[storeId].totalAmount += item.product.price * item.quantity;
+            
+            return acc;
+        }, {});
+
+        const stores = Object.values(groupedByStore);
+        const totalAmount = stores.reduce((sum, store) => sum + store.totalAmount, 0);
+        
+        const mockOrders = stores.map((store, index) => ({
+            id: `mock_order_${Date.now()}_${index}`,
+            buyerId: orderData.buyerId,
+            sellerId: `seller_${store.storeId}`,
+            storeName: store.storeName,
+            totalAmount: store.totalAmount,
+            status: 'Pending',
+            paymentStatus: 'Pending',
+            notes: orderData.notes || '',
+            createdAt: new Date().toISOString(),
+            items: store.items.map(item => ({
+                productId: item.productId,
+                productName: item.product.name,
+                productImageUrl: item.product.images?.split(',')[0] || '',
+                productUnitName: item.product.unit,
+                quantity: item.quantity,
+                priceAtPurchase: item.product.price
+            }))
+        }));
+
+        return {
+            success: true,
+            message: `Đã tạo thành công ${stores.length} đơn hàng từ ${stores.length} cửa hàng khác nhau (Mock)`,
+            data: {
+                orderCount: stores.length,
+                totalAmount: totalAmount,
+                orders: mockOrders
+            }
         };
     }
 }

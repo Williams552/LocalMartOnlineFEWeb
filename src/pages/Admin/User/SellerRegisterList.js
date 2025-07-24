@@ -71,8 +71,6 @@ const SellerRegisterList = () => {
   const handleReject = (id) => {
     setRejectModal({ visible: true, id });
     setRejectReason('');
-    setLicenseEffectiveDate(null);
-    setLicenseExpiryDate(null);
   };
 
   const submitReject = async () => {
@@ -80,17 +78,11 @@ const SellerRegisterList = () => {
       message.warning('Vui lòng nhập lý do từ chối');
       return;
     }
-    if (!licenseEffectiveDate || !licenseExpiryDate) {
-      message.warning('Vui lòng nhập ngày hiệu lực và hết hạn');
-      return;
-    }
     try {
       await sellerRegistrationService.approve({
         RegistrationId: rejectModal.id,
         Approve: false,
-        RejectionReason: rejectReason,
-        LicenseEffectiveDate: licenseEffectiveDate,
-        LicenseExpiryDate: licenseExpiryDate
+        RejectionReason: rejectReason
       });
       message.success('Đã từ chối đăng ký');
       setRejectModal({ visible: false, id: null });
@@ -154,7 +146,7 @@ const SellerRegisterList = () => {
       </Modal>
       {/* Modal từ chối */}
       <Modal
-        title="Nhập lý do từ chối và ngày hiệu lực/hết hạn"
+        title="Nhập lý do từ chối"
         open={rejectModal.visible}
         onOk={submitReject}
         onCancel={() => setRejectModal({ visible: false, id: null })}
@@ -165,21 +157,6 @@ const SellerRegisterList = () => {
           onChange={e => setRejectReason(e.target.value)}
           rows={3}
           placeholder="Nhập lý do từ chối..."
-          style={{ marginBottom: 16 }}
-        />
-        <div style={{ marginBottom: 8 }}>Ngày hiệu lực:</div>
-        <DatePicker
-          style={{ width: '100%', marginBottom: 16 }}
-          value={licenseEffectiveDate}
-          onChange={setLicenseEffectiveDate}
-          format="DD/MM/YYYY"
-        />
-        <div style={{ marginBottom: 8 }}>Ngày hết hạn:</div>
-        <DatePicker
-          style={{ width: '100%' }}
-          value={licenseExpiryDate}
-          onChange={setLicenseExpiryDate}
-          format="DD/MM/YYYY"
         />
       </Modal>
     </div>
