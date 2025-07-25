@@ -2,15 +2,20 @@ import React, { useState, useEffect } from "react";
 import Carousel from "../../components/Carousel/Carousel";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import CategorySidebar from "../../components/Sidebar/CategorySidebar";
+import NearbyMarketsModal from "../../components/NearbyMarkets/NearbyMarketsModal";
 import productService from "../../services/productService";
 import categoryService from "../../services/categoryService";
 import marketService from "../../services/marketService";
+import { getProductsFromNearbyMarkets, getNearbyMarkets } from "../../utils/locationUtils";
 
 const HomePage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("Tất cả");
     const [selectedMarket, setSelectedMarket] = useState("Tất cả");
+    const [selectedNearbyMarket, setSelectedNearbyMarket] = useState(null);
+    const [nearbyMarketsModalVisible, setNearbyMarketsModalVisible] = useState(false);
     const [products, setProducts] = useState([]);
+    const [stores, setStores] = useState([]);
     const [categories, setCategories] = useState([]);
     const [markets, setMarkets] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -32,6 +37,14 @@ const HomePage = () => {
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
+
+    // Handle nearby market selection effect
+    useEffect(() => {
+        if (selectedNearbyMarket) {
+            console.log('📍 Nearby market selected:', selectedNearbyMarket);
+            // The market filter will automatically trigger the search effect above
+        }
+    }, [selectedNearbyMarket]);
 
     // Fetch data from API on component mount
     useEffect(() => {
@@ -105,8 +118,13 @@ const HomePage = () => {
                 }
 
                 // Add market filter if not "Tất cả"
-                if (selectedMarket !== "Tất cả") {
-                    const market = markets.find(m => m.name === selectedMarket);
+                let marketFilter = selectedMarket;
+                if (selectedNearbyMarket && selectedMarket === selectedNearbyMarket.name) {
+                    marketFilter = selectedNearbyMarket.name;
+                }
+                
+                if (marketFilter !== "Tất cả") {
+                    const market = markets.find(m => m.name === marketFilter);
                     if (market) {
                         searchParams.marketId = market.id;
                     }
@@ -117,7 +135,7 @@ const HomePage = () => {
                 let searchResult;
 
                 // If we have search criteria, use search/filter APIs
-                if (debouncedSearchTerm || selectedCategory !== "Tất cả" || selectedMarket !== "Tất cả") {
+                if (debouncedSearchTerm || selectedCategory !== "Tất cả" || marketFilter !== "Tất cả") {
                     try {
                         // Try filter API first (more comprehensive)
                         searchResult = await productService.getProductsWithFilter(searchParams);
@@ -145,7 +163,15 @@ const HomePage = () => {
 
                 const searchResults = searchResult.items || [];
                 console.log(`📦 Found ${searchResults.length} products`);
-                setProducts(searchResults);
+                
+                // Additional filtering for nearby markets if needed
+                let filteredResults = searchResults;
+                if (selectedNearbyMarket && selectedNearbyMarket.distance) {
+                    console.log(`📍 Filtering products from nearby market: ${selectedNearbyMarket.name}`);
+                    filteredResults = await getProductsFromNearbyMarkets([selectedNearbyMarket], searchResults);
+                }
+                
+                setProducts(filteredResults);
 
             } catch (err) {
                 console.error('❌ Error searching products:', err);
@@ -160,11 +186,11 @@ const HomePage = () => {
         if (categories.length > 0 && markets.length > 0) {
             searchProducts();
         }
-    }, [debouncedSearchTerm, selectedCategory, selectedMarket, categories, markets]);
+    }, [debouncedSearchTerm, selectedCategory, selectedMarket, selectedNearbyMarket, categories, markets]);
 
     // Show filtered products count
     const displayProducts = products;
-    const showingSearchResults = debouncedSearchTerm || selectedCategory !== "Tất cả" || selectedMarket !== "Tất cả";
+    const showingSearchResults = debouncedSearchTerm || selectedCategory !== "Tất cả" || selectedMarket !== "Tất cả" || selectedNearbyMarket;
 
     // Show loading state
     if (loading) {
@@ -272,6 +298,38 @@ const HomePage = () => {
                     <div className="bg-white rounded-xl shadow-sm border p-6">
                         <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center">🔍 Tìm kiếm sản phẩm</h3>
 
+                        {/* Nearby Market Indicator */}
+                        {selectedNearbyMarket && (
+                            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                        <span className="text-sm text-blue-700">
+                                            <strong>Chợ gần đây:</strong> {selectedNearbyMarket.name}
+                                            {selectedNearbyMarket.distance && (
+                                                <span className="text-blue-600 ml-1">
+                                                    (cách {selectedNearbyMarket.distance})
+                                                </span>
+                                            )}
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setSelectedNearbyMarket(null);
+                                            setSelectedMarket("Tất cả");
+                                        }}
+                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                        title="Bỏ chọn chợ gần đây"
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Category Bar */}
                         <div className="mb-6">
                             <CategorySidebar
@@ -318,6 +376,21 @@ const HomePage = () => {
                                     </select>
                                 </div>
                             </div>
+
+                            {/* Nearby Markets Button */}
+                            <div className="flex-shrink-0">
+                                <button
+                                    onClick={() => setNearbyMarketsModalVisible(true)}
+                                    className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-3 rounded-lg shadow-sm transition-all duration-200 text-sm font-medium"
+                                    title="Tìm chợ gần đây"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    <span>Chợ gần đây</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -332,7 +405,7 @@ const HomePage = () => {
                             </h3>
                             <div className="text-sm text-gray-600">
                                 {showingSearchResults
-                                    ? `Tìm thấy ${displayProducts.length} sản phẩm${debouncedSearchTerm ? ` cho "${debouncedSearchTerm}"` : ''}${selectedCategory !== "Tất cả" ? ` trong "${selectedCategory}"` : ''}${selectedMarket !== "Tất cả" ? ` tại "${selectedMarket}"` : ''}`
+                                    ? `Tìm thấy ${displayProducts.length} sản phẩm${debouncedSearchTerm ? ` cho "${debouncedSearchTerm}"` : ''}${selectedCategory !== "Tất cả" ? ` trong "${selectedCategory}"` : ''}${selectedMarket !== "Tất cả" ? ` tại "${selectedMarket}"` : ''}${selectedNearbyMarket ? ` (chợ gần đây)` : ''}`
                                     : `Hiển thị ${displayProducts.length} sản phẩm`
                                 }
                                 {searchLoading && <span className="ml-2 text-supply-primary">Đang tìm kiếm...</span>}
@@ -377,6 +450,18 @@ const HomePage = () => {
                     </div>
                 </section>
             </main>
+
+            {/* Nearby Markets Modal */}
+            <NearbyMarketsModal
+                visible={nearbyMarketsModalVisible}
+                onClose={() => setNearbyMarketsModalVisible(false)}
+                markets={markets}
+                onSelectMarket={(market) => {
+                    setSelectedNearbyMarket(market);
+                    setSelectedMarket(market.name);
+                    setNearbyMarketsModalVisible(false);
+                }}
+            />
         </div>
     );
 };
