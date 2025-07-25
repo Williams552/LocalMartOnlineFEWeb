@@ -63,12 +63,21 @@ class FastBargainService {
      */
     async proposePrice(data) {
         try {
-            const response = await this.api.post('/api/fastbargain/propose', {
+            const payload = {
                 bargainId: data.bargainId,
                 userId: data.userId,
                 proposedPrice: data.proposedPrice,
                 proposedAt: new Date().toISOString()
-            });
+            };
+
+            // Add note if provided
+            if (data.note && data.note.trim() !== '') {
+                payload.note = data.note.trim();
+            }
+
+            console.log('🔧 FastBargainService.proposePrice payload:', payload);
+
+            const response = await this.api.post('/api/fastbargain/propose', payload);
 
             return {
                 success: true,
@@ -104,6 +113,13 @@ class FastBargainService {
             if (data.action === 'Counter' && data.counterPrice) {
                 payload.counterPrice = data.counterPrice;
             }
+
+            // Add note if provided
+            if (data.note && data.note.trim() !== '') {
+                payload.note = data.note.trim();
+            }
+
+            console.log('🔧 FastBargainService.takeAction payload:', payload);
 
             const response = await this.api.post('/api/fastbargain/action', payload);
 

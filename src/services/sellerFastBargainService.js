@@ -97,6 +97,13 @@ class SellerFastBargainService {
                 payload.counterPrice = data.counterPrice;
             }
 
+            // Add note if provided
+            if (data.note && data.note.trim() !== '') {
+                payload.note = data.note.trim();
+            }
+
+            console.log('🔧 SellerFastBargainService.takeAction payload:', payload);
+
             const response = await this.api.post(API_ENDPOINTS.FAST_BARGAIN.ACTION, payload);
 
             return {
