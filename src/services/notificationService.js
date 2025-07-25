@@ -19,34 +19,40 @@ const notificationService = {
     // Get unread notification count
     getUnreadCount: async () => {
         try {
-            const response = await apiService.get(`${API_ENDPOINTS.NOTIFICATION.GET_ALL}/unread-count`);
+            console.log('🔔 Fetching unread count from:', API_ENDPOINTS.NOTIFICATION.GET_UNREAD_COUNT);
+            const response = await apiService.get(API_ENDPOINTS.NOTIFICATION.GET_UNREAD_COUNT);
+            console.log('🔔 Unread count response:', response);
             return response;
         } catch (error) {
-            console.warn('🔔 Notifications: Using mock unread count due to API error:', error.message);
-            return { count: Math.floor(Math.random() * 10) + 1 };
+            console.error('🔔 Error fetching unread count:', error);
+            // Return 0 for error cases to avoid showing false notifications
+            return { data: { count: 0 } };
         }
     },
 
     // Mark notification as read
     markAsRead: async (notificationId) => {
         try {
+            console.log('🔔 Marking notification as read:', notificationId);
             const response = await apiService.patch(API_ENDPOINTS.NOTIFICATION.MARK_READ(notificationId), {});
+            console.log('🔔 Mark as read response:', response);
             return response;
         } catch (error) {
-            console.warn('🔔 Notifications: Mock marking as read due to API error:', error.message);
-            return { success: true, id: notificationId };
+            console.error('🔔 Error marking notification as read:', error);
+            throw error;
         }
     },
 
     // Mark all notifications as read
     markAllAsRead: async () => {
         try {
+            console.log('🔔 Marking all notifications as read');
             const response = await apiService.patch(API_ENDPOINTS.NOTIFICATION.MARK_ALL_READ, {});
-            return response;
+            console.log('🔔 Mark all as read response:', response);
             return response;
         } catch (error) {
-            console.warn('🔔 Notifications: Mock marking all as read due to API error:', error.message);
-            return { success: true, count: 0 };
+            console.error('🔔 Error marking all notifications as read:', error);
+            throw error;
         }
     },
 
