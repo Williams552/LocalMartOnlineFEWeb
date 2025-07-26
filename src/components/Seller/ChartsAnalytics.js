@@ -28,14 +28,16 @@ const ChartsAnalytics = () => {
     const fetchAnalytics = async () => {
         setLoading(true);
         try {
-            const [revenueRes, ordersRes, productsRes, categoriesRes] = await Promise.all([
-                analyticsService.getRevenue(selectedPeriod),
-                analyticsService.getOrders(selectedPeriod),
-                analyticsService.getProducts(selectedPeriod),
-                analyticsService.getCategories(selectedPeriod)
+            const [revenueRes, ordersRes, categoriesRes, productsRes] = await Promise.all([
+                analyticsService.getRevenueAnalytics(selectedPeriod),
+                analyticsService.getOrderAnalytics(selectedPeriod),
+                analyticsService.getCategoryAnalytics(selectedPeriod),
+                analyticsService.getProductPerformance(selectedPeriod)
             ]);
-            setRevenue(revenueRes);
-            setOrders(ordersRes);
+            setRevenue(revenueRes.summary || revenueRes);
+            setOrders(ordersRes.summary || ordersRes);
+            console.log('orders full response:', ordersRes);
+            console.log('orders final data:', ordersRes.summary || ordersRes);
             setProducts(productsRes?.data ?? []);
             setCategories(categoriesRes?.data ?? []);
         } catch (error) {
@@ -230,8 +232,8 @@ const ChartsAnalytics = () => {
                                     key={period.value}
                                     onClick={() => setSelectedPeriod(period.value)}
                                     className={`px-3 py-2 text-sm font-medium rounded-md transition ${selectedPeriod === period.value
-                                            ? 'bg-supply-primary text-white shadow-sm'
-                                            : 'text-gray-600 hover:text-gray-800'
+                                        ? 'bg-supply-primary text-white shadow-sm'
+                                        : 'text-gray-600 hover:text-gray-800'
                                         }`}
                                 >
                                     {period.label}
@@ -266,9 +268,11 @@ const ChartsAnalytics = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatNumber(orders?.totalOrders || 0)}
+                                {formatNumber(orders?.completedOrders)}
                             </p>
-                            {/* Nếu có averageOrdersPerDay thì hiển thị, nếu không thì bỏ */}
+                            <p className="text-sm text-gray-500 mt-1">
+                                {periods.find(p => p.value === selectedPeriod)?.label}
+                            </p>
                         </div>
                         <div className="p-3 bg-blue-100 rounded-lg">
                             <FaShoppingCart className="text-blue-600 text-xl" />
@@ -323,8 +327,8 @@ const ChartsAnalytics = () => {
                             <button
                                 onClick={() => setActiveChart('revenue')}
                                 className={`px-3 py-1 text-xs font-medium rounded transition ${activeChart === 'revenue'
-                                        ? 'bg-green-500 text-white'
-                                        : 'text-gray-600 hover:text-gray-800'
+                                    ? 'bg-green-500 text-white'
+                                    : 'text-gray-600 hover:text-gray-800'
                                     }`}
                             >
                                 Doanh thu
@@ -332,8 +336,8 @@ const ChartsAnalytics = () => {
                             <button
                                 onClick={() => setActiveChart('orders')}
                                 className={`px-3 py-1 text-xs font-medium rounded transition ${activeChart === 'orders'
-                                        ? 'bg-blue-500 text-white'
-                                        : 'text-gray-600 hover:text-gray-800'
+                                    ? 'bg-blue-500 text-white'
+                                    : 'text-gray-600 hover:text-gray-800'
                                     }`}
                             >
                                 Đơn hàng
@@ -416,8 +420,8 @@ const ChartsAnalytics = () => {
                                     <td className="py-3">
                                         <div className="flex items-center space-x-3">
                                             <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white ${index === 0 ? 'bg-yellow-500' :
-                                                    index === 1 ? 'bg-gray-400' :
-                                                        index === 2 ? 'bg-orange-500' : 'bg-gray-300'
+                                                index === 1 ? 'bg-gray-400' :
+                                                    index === 2 ? 'bg-orange-500' : 'bg-gray-300'
                                                 }`}>
                                                 {index + 1}
                                             </div>
@@ -434,8 +438,8 @@ const ChartsAnalytics = () => {
                                     </td>
                                     <td className="py-3">
                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.conversionRate >= 15 ? 'bg-green-100 text-green-800' :
-                                                product.conversionRate >= 10 ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-red-100 text-red-800'
+                                            product.conversionRate >= 10 ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
                                             }`}>
                                             {product.conversionRate.toFixed(1)}%
                                         </span>
@@ -449,8 +453,8 @@ const ChartsAnalytics = () => {
                                     </td>
                                     <td className="py-3">
                                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.stock >= 50 ? 'bg-green-100 text-green-800' :
-                                                product.stock >= 20 ? 'bg-yellow-100 text-yellow-800' :
-                                                    'bg-red-100 text-red-800'
+                                            product.stock >= 20 ? 'bg-yellow-100 text-yellow-800' :
+                                                'bg-red-100 text-red-800'
                                             }`}>
                                             {formatNumber(product.stock)}
                                         </span>
