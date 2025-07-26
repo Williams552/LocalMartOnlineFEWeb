@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-    FaSearch, FaEye, FaStar, FaHeart, FaShoppingCart, FaMapMarkerAlt,
-    FaClock, FaUser, FaPhone, FaCheckCircle, FaTimes, FaTruck, FaBox
+    FaSearch, FaEye, FaStar, FaShoppingCart,
+    FaClock, FaUser, FaCheckCircle, FaTimes, FaTruck, FaBox, FaStore
 } from "react-icons/fa";
 import orderService from "../../services/orderService";
 import reviewService from "../../services/reviewService";
@@ -58,6 +58,8 @@ const BuyerOrders = () => {
 
             if (result.success && result.data) {
                 const ordersData = result.data.items || result.data || [];
+                console.log('📦 Orders data received:', ordersData);
+                console.log('📦 Sample order structure:', ordersData[0]);
                 setOrders(ordersData);
                 setTotalPages(result.data.totalPages || 1);
 
@@ -158,6 +160,22 @@ const BuyerOrders = () => {
 
     const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN');
     const formatCurrency = (amount) => amount.toLocaleString('vi-VN') + 'đ';
+
+    // Helper function to extract seller information from order
+    const getSellerInfo = (order) => {
+        const sellerName = order.sellerName ||
+            order.seller?.name ||
+            order.store?.name ||
+            order.storeName ||
+            "Cửa hàng";
+
+        const sellerAvatar = order.sellerAvatar ||
+            order.seller?.avatar ||
+            order.store?.avatar ||
+            "https://i.pravatar.cc/50?img=1";
+
+        return { sellerName, sellerAvatar };
+    };
 
     const filteredOrders = orders.filter(order => {
         const matchesSearch = order.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -305,19 +323,26 @@ const BuyerOrders = () => {
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
             <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 py-6">
+                <div className="max-w-7xl mx-auto px-4 py-8">
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Đơn hàng của tôi</h1>
-                            <p className="text-gray-600">Theo dõi và quản lý các đơn hàng đã đặt</p>
+                        <div className="flex items-center space-x-4">
+                            <div className="w-12 h-12 bg-supply-primary rounded-xl flex items-center justify-center">
+                                <FaBox className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-800">Đơn hàng của tôi</h1>
+                                <p className="text-gray-600 mt-1">Theo dõi và quản lý các đơn hàng đã đặt</p>
+                            </div>
                         </div>
-                        <Link
-                            to="/"
-                            className="flex items-center space-x-2 bg-supply-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
-                        >
-                            <FaShoppingCart />
-                            <span>Tiếp tục mua sắm</span>
-                        </Link>
+                        <div className="flex items-center space-x-3">
+                            <Link
+                                to="/"
+                                className="flex items-center space-x-2 bg-white text-gray-700 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all"
+                            >
+                                <FaShoppingCart className="w-4 h-4" />
+                                <span>Tiếp tục mua sắm</span>
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -325,27 +350,29 @@ const BuyerOrders = () => {
             {/* Content */}
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Filters */}
-                <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-4">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
+                        {/* Search */}
                         <div className="relative flex-1 max-w-md">
-                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                             <input
                                 type="text"
                                 placeholder="Tìm theo mã đơn hàng hoặc tên cửa hàng..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-supply-primary"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent transition-all"
                             />
                         </div>
 
-                        <div className="flex space-x-2">
+                        {/* Status Filters */}
+                        <div className="flex flex-wrap gap-2">
                             {Object.entries(statusOptions).map(([value, label]) => (
                                 <button
                                     key={value}
                                     onClick={() => handleFilterStatusChange(value)}
-                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === value
-                                        ? 'bg-supply-primary text-white'
-                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${filterStatus === value
+                                        ? 'bg-supply-primary text-white shadow-md'
+                                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm'
                                         }`}
                                 >
                                     {label}
@@ -353,6 +380,25 @@ const BuyerOrders = () => {
                             ))}
                         </div>
                     </div>
+
+                    {/* Filter Results Summary */}
+                    {!loading && (
+                        <div className="mt-4 pt-4 border-t border-gray-100">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-gray-600">
+                                    {filteredOrders.length > 0
+                                        ? `Hiển thị ${filteredOrders.length} đơn hàng ${filterStatus !== 'all' ? `với trạng thái "${statusOptions[filterStatus]}"` : ''}`
+                                        : 'Không tìm thấy đơn hàng nào'
+                                    }
+                                </span>
+                                {searchTerm && (
+                                    <span className="text-gray-500">
+                                        Kết quả tìm kiếm: "{searchTerm}"
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Orders List */}
@@ -363,153 +409,245 @@ const BuyerOrders = () => {
                             <p className="text-gray-600">Đang tải danh sách đơn hàng...</p>
                         </div>
                     ) : filteredOrders.length > 0 ? (
-                        filteredOrders.map((order) => (
-                            <div key={order.id} className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition">
-                                <div className="flex items-center justify-between mb-4">
-                                    <div className="flex items-center space-x-4">
-                                        <img
-                                            src={order.sellerAvatar || "https://i.pravatar.cc/50?img=1"}
-                                            alt={order.sellerName || "Seller"}
-                                            className="w-12 h-12 rounded-full border-2 border-gray-200"
-                                        />
-                                        <div>
-                                            <h3 className="text-lg font-bold text-gray-800">#{order.id}</h3>
-                                            <p className="text-sm text-gray-600">{order.sellerName || "Cửa hàng"}</p>
+                        filteredOrders.map((order) => {
+                            console.log('🏪 Order seller info:', {
+                                orderId: order.id,
+                                sellerName: order.sellerName,
+                                sellerAvatar: order.sellerAvatar,
+                                sellerId: order.sellerId,
+                                seller: order.seller,
+                                store: order.store,
+                                storeName: order.storeName,
+                                allKeys: Object.keys(order)
+                            });
+
+                            // Extract seller information using helper function
+                            const { sellerName, sellerAvatar } = getSellerInfo(order);
+
+                            return (
+                                <div key={order.id} className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md hover:border-gray-200 transition-all duration-200">
+                                    {/* Header: Order ID, Status, Date */}
+                                    <div className="border-b border-gray-100 px-6 py-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-3">
+                                                <h3 className="text-lg font-bold text-gray-800">Đơn hàng #{order.id}</h3>
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(order.status)}`}>
+                                                    {getStatusIcon(order.status)}
+                                                    <span>{statusOptions[order.status] || order.status}</span>
+                                                </span>
+                                            </div>
+                                            <div className="text-sm text-gray-500 flex items-center space-x-1">
+                                                <FaClock className="w-3 h-3" />
+                                                <span>{formatDate(order.createdAt || order.orderDate)}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="flex items-center space-x-3">
-                                        <span className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${getStatusColor(order.status)}`}>
-                                            {getStatusIcon(order.status)}
-                                            <span>{statusOptions[order.status] || order.status}</span>
-                                        </span>
-                                        <span className="text-sm text-gray-500">
-                                            {formatDate(order.createdAt || order.orderDate)}
-                                        </span>
-                                    </div>
-                                </div>
 
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <div>
-                                        <h4 className="font-medium text-gray-800 mb-2">Sản phẩm:</h4>
-                                        <div className="space-y-2">
-                                            {order.items && order.items.length > 0 ? (
-                                                order.items.map((item, index) => (
-                                                    <div key={item.productId || index} className="flex justify-between items-center">
-                                                        <span className="text-gray-700">
-                                                            {item.name || `Sản phẩm ${item.productId}`} x {item.quantity}{item.unit || ""}
-                                                        </span>
-                                                        <span className="font-medium text-gray-800">
-                                                            {formatCurrency(item.total || (item.quantity * item.priceAtPurchase))}
-                                                        </span>
+                                    {/* Seller Info */}
+                                    <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center space-x-3">
+                                                <img
+                                                    src={sellerAvatar}
+                                                    alt={sellerName}
+                                                    className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+                                                />
+                                                <div>
+                                                    <div className="flex items-center space-x-2">
+                                                        <FaStore className="w-4 h-4 text-gray-400" />
+                                                        <span className="font-medium text-gray-800">{sellerName}</span>
                                                     </div>
-                                                ))
-                                            ) : (
-                                                <p className="text-gray-500 text-sm">Không có thông tin sản phẩm</p>
-                                            )}
+                                                    <p className="text-xs text-gray-500 mt-1">Người bán</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="text-sm font-medium text-gray-800">{sellerName}</p>
+                                                <p className="text-xs text-gray-500">Cửa hàng</p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-2">
-                                            <FaMapMarkerAlt />
-                                            <span>Giao đến: {order.deliveryAddress}</span>
-                                        </div>
-                                        {order.notes && (
-                                            <div className="text-sm text-gray-600 mb-2">
-                                                <span className="font-medium">Ghi chú:</span> {order.notes}
+                                    {/* Order Content */}
+                                    <div className="px-6 py-4">
+                                        <div className="grid lg:grid-cols-3 gap-6">
+                                            {/* Products List */}
+                                            <div className="lg:col-span-2">
+                                                <h4 className="font-semibold text-gray-800 mb-3 flex items-center space-x-2">
+                                                    <FaBox className="w-4 h-4 text-gray-400" />
+                                                    <span>Sản phẩm đã đặt</span>
+                                                </h4>
+                                                <div className="space-y-3">
+                                                    {order.items && order.items.length > 0 ? (
+                                                        order.items.map((item, index) => (
+                                                            <div key={item.productId || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                                <div className="flex-1">
+                                                                    <h5 className="font-medium text-gray-800 text-sm">
+                                                                        {item.name || `Sản phẩm ${item.productId}`}
+                                                                    </h5>
+                                                                    <p className="text-xs text-gray-500 mt-1">
+                                                                        Số lượng: {item.quantity}{item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
+                                                                    </p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <span className="font-semibold text-gray-800">
+                                                                        {formatCurrency(item.total || (item.quantity * item.priceAtPurchase))}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="text-center py-4 text-gray-500 text-sm bg-gray-50 rounded-lg">
+                                                            Không có thông tin sản phẩm
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
-                                        )}
-                                        <div className="text-right">
-                                            <div className="text-xl font-bold text-supply-primary">
-                                                Tổng: {formatCurrency(order.totalAmount)}
+
+                                            {/* Order Summary */}
+                                            <div className="lg:col-span-1">
+                                                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                                                    {/* Buyer Info */}
+                                                    <div>
+                                                        <h5 className="font-semibold text-gray-800 text-sm mb-2 flex items-center space-x-2">
+                                                            <FaUser className="w-3 h-3 text-gray-400" />
+                                                            <span>Thông tin người mua</span>
+                                                        </h5>
+                                                        <p className="text-sm text-gray-600 leading-relaxed">
+                                                            {order.deliveryAddress}
+                                                        </p>
+                                                    </div>
+
+                                                    {/* Notes */}
+                                                    {order.notes && (
+                                                        <div>
+                                                            <h5 className="font-semibold text-gray-800 text-sm mb-2">Ghi chú</h5>
+                                                            <p className="text-sm text-gray-600 leading-relaxed">
+                                                                {order.notes}
+                                                            </p>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Total Amount */}
+                                                    <div className="pt-3 border-t border-gray-200">
+                                                        <div className="flex justify-between items-center">
+                                                            <span className="font-semibold text-gray-700">Tổng thanh toán</span>
+                                                            <span className="text-xl font-bold text-supply-primary">
+                                                                {formatCurrency(order.totalAmount)}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="border-t border-gray-100 px-6 py-4 bg-gray-50">
+                                        <div className="flex flex-wrap items-center justify-between gap-3">
+                                            {/* Left side - Secondary actions */}
+                                            <div className="flex items-center space-x-3">
+                                                <button
+                                                    onClick={() => handleViewOrderDetail(order)}
+                                                    className="flex items-center space-x-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-colors text-sm"
+                                                >
+                                                    <FaEye className="w-4 h-4" />
+                                                    <span>Chi tiết</span>
+                                                </button>
+                                            </div>
+
+                                            {/* Right side - Primary actions */}
+                                            <div className="flex items-center space-x-3">
+                                                {/* Review Status/Action */}
+                                                {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && (
+                                                    <>
+                                                        {orderReviewStatus[order.id] ? (
+                                                            <div className="flex items-center space-x-2 px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm">
+                                                                <FaStar className="w-4 h-4" />
+                                                                <span>Đã đánh giá</span>
+                                                            </div>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedOrderForOrderReview(order);
+                                                                    setShowOrderReviewModal(true);
+                                                                }}
+                                                                className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+                                                            >
+                                                                <FaStar className="w-4 h-4" />
+                                                                <span>Đánh giá</span>
+                                                            </button>
+                                                        )}
+                                                    </>
+                                                )}
+
+                                                {/* Complete Order Action */}
+                                                {(order.status === "Paid" || order.status === "paid") && (
+                                                    <button
+                                                        onClick={() => handleCompleteOrder(order.id)}
+                                                        className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                                                    >
+                                                        <FaCheckCircle className="w-4 h-4" />
+                                                        <span>Đã nhận hàng</span>
+                                                    </button>
+                                                )}
+
+                                                {/* Cancel Order Action */}
+                                                {((order.status === "Pending" || order.status === "pending") ||
+                                                    (order.status === "Confirmed" || order.status === "confirmed")) && (
+                                                        <button
+                                                            onClick={() => handleCancelOrder(order.id)}
+                                                            className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-sm font-medium"
+                                                        >
+                                                            <FaTimes className="w-4 h-4" />
+                                                            <span>Hủy đơn</span>
+                                                        </button>
+                                                    )}
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-
-                                <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
-                                    <button
-                                        onClick={() => handleViewOrderDetail(order)}
-                                        className="flex items-center space-x-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition"
+                            )
+                        })
+                    ) : (
+                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 text-center py-16">
+                            <div className="max-w-md mx-auto">
+                                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <FaBox className="w-12 h-12 text-gray-400" />
+                                </div>
+                                <h3 className="text-2xl font-semibold text-gray-800 mb-3">
+                                    {searchTerm || filterStatus !== 'all'
+                                        ? 'Không tìm thấy đơn hàng'
+                                        : 'Chưa có đơn hàng nào'
+                                    }
+                                </h3>
+                                <p className="text-gray-500 mb-8 leading-relaxed">
+                                    {searchTerm || filterStatus !== 'all'
+                                        ? 'Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc'
+                                        : 'Hãy khám phá và đặt hàng những sản phẩm tươi ngon từ các cửa hàng địa phương'
+                                    }
+                                </p>
+                                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                                    {(searchTerm || filterStatus !== 'all') && (
+                                        <button
+                                            onClick={() => {
+                                                setSearchTerm('');
+                                                setFilterStatus('all');
+                                            }}
+                                            className="inline-flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-all"
+                                        >
+                                            <FaTimes className="w-4 h-4" />
+                                            <span>Xóa bộ lọc</span>
+                                        </button>
+                                    )}
+                                    <Link
+                                        to="/"
+                                        className="inline-flex items-center justify-center space-x-2 bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-all shadow-md"
                                     >
-                                        <FaEye />
-                                        <span>Xem chi tiết</span>
-                                    </button>
-
-                                    {/* Nút đánh giá - hiển thị cho đơn hàng đã hoàn thành */}
-                                    {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && (
-                                        <>
-                                            {orderReviewStatus[order.id] ? (
-                                                <div className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg">
-                                                    <FaStar />
-                                                    <span>Đã đánh giá</span>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedOrderForOrderReview(order);
-                                                        setShowOrderReviewModal(true);
-                                                    }}
-                                                    className="flex items-center space-x-2 px-4 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition"
-                                                >
-                                                    <FaStar />
-                                                    <span>Đánh giá</span>
-                                                </button>
-                                            )}
-                                        </>
-                                    )}
-
-                                    {/* Nút xác nhận hoàn thành - chỉ hiển thị khi trạng thái là Paid */}
-                                    {(order.status === "Paid" || order.status === "paid") && (
-                                        <button
-                                            onClick={() => handleCompleteOrder(order.id)}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
-                                        >
-                                            <FaCheckCircle />
-                                            <span>Đã nhận hàng</span>
-                                        </button>
-                                    )}
-
-                                    {/* Nút đánh giá cũ đã được thay thế bằng modal tự động hiện sau khi hoàn thành đơn hàng */}
-                                    {/* Nút đánh giá hiện đã được di chuyển lên trên, kế bên nút "Xem chi tiết" */}
-
-                                    {/* Nút mua lại - hiển thị khi đã hoàn thành */}
-                                    {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && (
-                                        <button
-                                            onClick={() => handleReorder(order.id)}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
-                                        >
-                                            <FaShoppingCart />
-                                            <span>Mua lại</span>
-                                        </button>
-                                    )}
-
-                                    {/* Nút hủy đơn - chỉ hiển thị khi chờ xác nhận hoặc đã xác nhận */}
-                                    {((order.status === "Pending" || order.status === "pending") ||
-                                        (order.status === "Confirmed" || order.status === "confirmed")) && (
-                                            <button
-                                                onClick={() => handleCancelOrder(order.id)}
-                                                className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
-                                            >
-                                                <FaTimes />
-                                                <span>Hủy đơn</span>
-                                            </button>
-                                        )}
+                                        <FaShoppingCart className="w-4 h-4" />
+                                        <span>Bắt đầu mua sắm</span>
+                                    </Link>
                                 </div>
                             </div>
-                        ))
-                    ) : (
-                        <div className="text-center py-12">
-                            <div className="text-6xl mb-4">🛍️</div>
-                            <h3 className="text-xl font-semibold text-gray-700 mb-2">Chưa có đơn hàng nào</h3>
-                            <p className="text-gray-500 mb-4">Hãy khám phá và đặt hàng những sản phẩm tươi ngon</p>
-                            <Link
-                                to="/"
-                                className="inline-flex items-center space-x-2 bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition"
-                            >
-                                <FaShoppingCart />
-                                <span>Bắt đầu mua sắm</span>
-                            </Link>
                         </div>
                     )}
                 </div>
@@ -586,14 +724,18 @@ const BuyerOrders = () => {
                                     <h3 className="font-bold text-gray-800 mb-3">Thông tin cửa hàng</h3>
                                     <div className="flex items-center space-x-3 mb-4">
                                         <img
-                                            src={selectedOrder.sellerAvatar || "https://i.pravatar.cc/50?img=1"}
-                                            alt={selectedOrder.sellerName || "Seller"}
+                                            src={getSellerInfo(selectedOrder).sellerAvatar}
+                                            alt={getSellerInfo(selectedOrder).sellerName}
                                             className="w-12 h-12 rounded-full"
                                         />
                                         <div>
-                                            <p className="font-medium">{selectedOrder.sellerName || "Cửa hàng"}</p>
+                                            <p className="font-medium">
+                                                {getSellerInfo(selectedOrder).sellerName}
+                                            </p>
                                             <Link
-                                                to={`/seller/${encodeURIComponent(selectedOrder.sellerName || selectedOrder.sellerId)}`}
+                                                to={`/seller/${encodeURIComponent(
+                                                    getSellerInfo(selectedOrder).sellerName
+                                                )}`}
                                                 className="text-supply-primary hover:underline text-sm"
                                             >
                                                 Xem cửa hàng
@@ -662,10 +804,10 @@ const BuyerOrders = () => {
                             </div>
 
                             <div className="mt-6">
-                                <h3 className="font-bold text-gray-800 mb-3">Thông tin giao hàng</h3>
+                                <h3 className="font-bold text-gray-800 mb-3">Thông tin người mua</h3>
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <div className="flex items-start space-x-2">
-                                        <FaMapMarkerAlt className="text-gray-400 mt-1" />
+                                        <FaUser className="text-gray-400 mt-1" />
                                         <span>{selectedOrder.deliveryAddress}</span>
                                     </div>
                                     {selectedOrder.expectedDeliveryTime && (
