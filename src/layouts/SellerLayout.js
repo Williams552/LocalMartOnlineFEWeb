@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
     FaStore, FaBoxOpen, FaShoppingCart, FaChartLine,
     FaUser, FaHome, FaBell, FaCog, FaSignOutAlt,
-    FaUsers, FaAccessibleIcon, FaCreditCard, FaComments,
+    FaUsers, FaCertificate, FaCreditCard, FaComments,
     FaQuestionCircle, FaBars, FaTimes, FaChevronDown, FaShoppingBag,
     FaExclamationTriangle, FaHandshake
 } from "react-icons/fa";
@@ -112,13 +112,6 @@ const SellerLayout = ({ children }) => {
             description: 'Thông báo & cập nhật'
         },
         {
-            path: '/seller/priority-actions',
-            icon: FaExclamationTriangle,
-            label: 'Hành động ưu tiên',
-            color: 'text-red-600',
-            description: 'Vấn đề cần xử lý ngay'
-        },
-        {
             path: '/seller/payments',
             icon: FaCreditCard,
             label: 'Thanh toán',
@@ -127,7 +120,7 @@ const SellerLayout = ({ children }) => {
         },
         {
             path: '/seller/licenses',
-            icon: FaAccessibleIcon,
+            icon: FaCertificate,
             label: 'Giấy phép',
             color: 'text-yellow-600',
             description: 'Quản lý giấy phép'

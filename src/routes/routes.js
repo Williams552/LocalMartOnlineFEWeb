@@ -65,7 +65,7 @@ import PersonalShopping from "../pages/Sellers/PersonalShopping";
 import QuickActionsPage from "../pages/Sellers/QuickActionsPage";
 import ChartsAnalyticsPage from "../pages/Sellers/ChartsAnalyticsPage";
 import NotificationsPage from "../pages/Sellers/NotificationsPage";
-import PriorityActionsPage from "../pages/Sellers/PriorityActionsPage";
+import SellerLicenses from "../pages/Sellers/SellerLicenses";
 
 const AppRoutes = () => {
     return (
@@ -127,9 +127,8 @@ const AppRoutes = () => {
                 <Route path="/seller/personal-shopping" element={<ProtectedRoute allowedRoles={['Seller']}><PersonalShopping /></ProtectedRoute>} />
                 <Route path="/seller/quick-actions" element={<ProtectedRoute allowedRoles={['Seller']}><QuickActionsPage /></ProtectedRoute>} />
                 <Route path="/seller/notifications" element={<ProtectedRoute allowedRoles={['Seller']}><NotificationsPage /></ProtectedRoute>} />
-                <Route path="/seller/priority-actions" element={<ProtectedRoute allowedRoles={['Seller']}><PriorityActionsPage /></ProtectedRoute>} />
                 <Route path="/seller/payments" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
-                <Route path="/seller/licenses" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
+                <Route path="/seller/licenses" element={<ProtectedRoute allowedRoles={['Seller']}><SellerLicenses /></ProtectedRoute>} />
                 <Route path="/seller/store" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
             </Route>
 
