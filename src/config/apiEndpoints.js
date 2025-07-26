@@ -36,6 +36,8 @@ export const API_ENDPOINTS = {
         UPDATE: (id) => `${API_URL}/api/product/${id}`,
         DELETE: (id) => `${API_URL}/api/product/${id}`,
         TOGGLE: (id) => `${API_URL}/api/product/${id}/toggle`,
+        // Update product status (for admin)
+        UPDATE_STATUS: (id) => `${API_URL}/api/product/${id}/status`,
         // Toggle product status for my-store
         TOGGLE_STATUS_MY_STORE: (productId, enable) => `${API_URL}/api/Store/my-store/products/${productId}/toggle?enable=${enable}`,
 

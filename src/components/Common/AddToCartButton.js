@@ -57,7 +57,7 @@ const AddToCartButton = ({
 
                 // Reset quantity if needed
                 if (onQuantityChange) {
-                    onQuantityChange(0.5); // Reset to minimum quantity
+                    onQuantityChange(product?.minimumQuantity || 0.5); // Reset to minimum quantity
                 }
             } else {
                 console.error('🛒 Add to cart failed:', result.message);
@@ -72,16 +72,20 @@ const AddToCartButton = ({
     };
 
     const handleQuantityDecrease = () => {
-        if (onQuantityChange && quantity > 0.5) {
-            onQuantityChange(quantity - 0.5);
+        const minQuantity = product?.minimumQuantity || 0.5;
+        if (onQuantityChange && quantity > minQuantity) {
+            const newQuantity = Math.round((quantity - minQuantity) * 100) / 100; // Fix floating point precision
+            onQuantityChange(newQuantity);
         }
     };
 
     const handleQuantityIncrease = () => {
         if (onQuantityChange) {
             const maxQuantity = product?.stock || 999;
+            const minQuantity = product?.minimumQuantity || 0.5;
             if (quantity < maxQuantity) {
-                onQuantityChange(quantity + 0.5);
+                const newQuantity = Math.round((quantity + minQuantity) * 100) / 100; // Fix floating point precision
+                onQuantityChange(newQuantity);
             } else {
                 toastService.warning(`Chỉ còn ${maxQuantity} ${product?.unit || 'kg'} trong kho`);
             }
@@ -123,13 +127,13 @@ const AddToCartButton = ({
                     <div className="flex items-center space-x-2">
                         <button
                             onClick={handleQuantityDecrease}
-                            disabled={quantity <= 0.5}
+                            disabled={quantity <= (product?.minimumQuantity || 0.5)}
                             className={`${currentSize.quantityButton} rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition`}
                         >
                             <FaMinus className={currentSize.icon} />
                         </button>
                         <span className={`w-16 text-center font-medium ${currentSize.text}`}>
-                            {quantity} {product?.unit || 'kg'}
+                            {quantity.toFixed(2).replace(/\.?0+$/, '')} {product?.unit || 'kg'}
                         </span>
                         <button
                             onClick={handleQuantityIncrease}
@@ -174,7 +178,7 @@ const AddToCartButton = ({
                 <div className="text-center">
                     <p className={`text-gray-600 ${currentSize.text}`}>
                         Giá: <span className="font-semibold text-supply-primary">
-                            {(product.price * quantity).toLocaleString()}đ
+                            {(Math.round((product.price * quantity) * 100) / 100).toLocaleString()}đ
                         </span>
                     </p>
                     {product.stock && (
