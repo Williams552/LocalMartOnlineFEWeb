@@ -5,6 +5,7 @@ import {
     FaClock, FaUser, FaPhone, FaCheckCircle, FaTimes, FaTruck, FaBox
 } from "react-icons/fa";
 import orderService from "../../services/orderService";
+import reviewService from "../../services/reviewService";
 import ReviewModal from "../../components/ReviewModal";
 import OrderReviewModal from "../../components/Order/OrderReviewModal";
 import OrderCompletionNotification from "../../components/Order/OrderCompletionNotification";
@@ -19,6 +20,7 @@ const BuyerOrders = () => {
     const [loading, setLoading] = useState(true);
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [orderReviewStatus, setOrderReviewStatus] = useState({}); // Track review status per order
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [selectedOrderForReview, setSelectedOrderForReview] = useState(null);
     const [showOrderReviewModal, setShowOrderReviewModal] = useState(false);
@@ -58,6 +60,9 @@ const BuyerOrders = () => {
                 const ordersData = result.data.items || result.data || [];
                 setOrders(ordersData);
                 setTotalPages(result.data.totalPages || 1);
+
+                // Check review status for completed orders
+                await checkOrdersReviewStatus(ordersData);
             } else {
                 setOrders([]);
                 toast.error(result.message || "Không thể tải danh sách đơn hàng");
@@ -68,6 +73,41 @@ const BuyerOrders = () => {
             setOrders([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Check review status for orders
+    const checkOrdersReviewStatus = async (ordersData) => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            const userId = user.id || user._id;
+
+            if (!userId || !ordersData.length) return;
+
+            // Only check completed orders
+            const completedOrders = ordersData.filter(order =>
+                order.status === "Completed" || order.status === "completed" || order.status === "delivered"
+            );
+
+            const statusPromises = completedOrders.map(async (order) => {
+                const result = await reviewService.isOrderReviewed(order.id, userId);
+                return {
+                    orderId: order.id,
+                    isReviewed: result.success ? result.isReviewed : false
+                };
+            });
+
+            const results = await Promise.all(statusPromises);
+
+            // Update review status state
+            const statusMap = {};
+            results.forEach(({ orderId, isReviewed }) => {
+                statusMap[orderId] = isReviewed;
+            });
+
+            setOrderReviewStatus(statusMap);
+        } catch (error) {
+            console.error('Error checking orders review status:', error);
         }
     };
 
@@ -231,19 +271,18 @@ const BuyerOrders = () => {
     };
 
     const handleOrderReviewSubmitSuccess = (reviewResults) => {
-        // Update orders list to reflect that reviews have been submitted
-        setOrders(prev => prev.map(order =>
-            order.id === selectedOrderForOrderReview?.id
-                ? { ...order, reviewed: true, canReview: false }
-                : order
-        ));
+        // Update review status for the order that was just reviewed
+        if (selectedOrderForOrderReview?.id) {
+            setOrderReviewStatus(prev => ({
+                ...prev,
+                [selectedOrderForOrderReview.id]: true
+            }));
+        }
 
         // Reset modal state
         setSelectedOrderForOrderReview(null);
         setShowOrderReviewModal(false);
-    };
-
-    // Handlers for completion notification
+    };    // Handlers for completion notification
     const handleReviewNow = () => {
         setShowCompletionNotification(false);
         if (completedOrderInfo) {
@@ -400,7 +439,12 @@ const BuyerOrders = () => {
                                     {/* Nút đánh giá - hiển thị cho đơn hàng đã hoàn thành */}
                                     {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && (
                                         <>
-                                            {!order.reviewed ? (
+                                            {orderReviewStatus[order.id] ? (
+                                                <div className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg">
+                                                    <FaStar />
+                                                    <span>Đã đánh giá</span>
+                                                </div>
+                                            ) : (
                                                 <button
                                                     onClick={() => {
                                                         setSelectedOrderForOrderReview(order);
@@ -411,11 +455,6 @@ const BuyerOrders = () => {
                                                     <FaStar />
                                                     <span>Đánh giá</span>
                                                 </button>
-                                            ) : (
-                                                <div className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg">
-                                                    <FaStar />
-                                                    <span>Đã đánh giá</span>
-                                                </div>
                                             )}
                                         </>
                                     )}

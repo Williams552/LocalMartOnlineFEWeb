@@ -72,11 +72,12 @@ const OrderReviewModal = ({ order, isOpen, onClose, onSubmitSuccess }) => {
                 const reviewData = {
                     targetType: 'Product',
                     targetId: item.productId,
+                    orderId: order.id, // Thêm orderId để track review per order
                     rating: ratings[item.productId],
                     comment: comments[item.productId] || ''
                 };
 
-                console.log(`Submitting review for product ${item.productId}:`, reviewData);
+                console.log(`Submitting review for product ${item.productId} from order ${order.id}:`, reviewData);
                 return await reviewService.createReview(userId, reviewData);
             });
 
@@ -171,9 +172,12 @@ const OrderReviewModal = ({ order, isOpen, onClose, onSubmitSuccess }) => {
                                         {order.sellerName || "Cửa hàng"}
                                     </p>
                                     <p className="text-sm text-gray-600">
-                                        Tổng tiền: {order.totalAmount?.toLocaleString('vi-VN')}đ
+                                        Đơn hàng #{order.id} - Tổng tiền: {order.totalAmount?.toLocaleString('vi-VN')}đ
                                     </p>
                                 </div>
+                            </div>
+                            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+                                💡 Bạn có thể đánh giá lại các sản phẩm này nếu mua trong đơn hàng khác
                             </div>
                         </div>
 
