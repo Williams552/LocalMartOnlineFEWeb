@@ -57,14 +57,14 @@ const BargainDetail = () => {
                     userId: authService.getCurrentUser()?.id,
                     proposedPrice: price
                 };
-                
+
                 // Chỉ thêm note nếu có nội dung
                 if (message && message.trim() !== '') {
                     proposalData.note = message.trim();
                 }
-                
+
                 console.log('Sending proposal with data:', proposalData);
-                
+
                 const result = await fastBargainService.proposePrice(proposalData);
 
                 if (result.success) {
@@ -215,8 +215,8 @@ const BargainDetail = () => {
                                 <div>
                                     <p className="text-sm text-gray-500">Giá đề xuất</p>
                                     <p className="text-lg font-semibold text-blue-600">
-                                        {bargain.proposals && bargain.proposals.length > 0 
-                                            ? formatPrice(bargain.proposals[bargain.proposals.length - 1].proposedPrice) 
+                                        {bargain.proposals && bargain.proposals.length > 0
+                                            ? formatPrice(bargain.proposals[bargain.proposals.length - 1].proposedPrice)
                                             : 'Chưa có'}
                                     </p>
                                 </div>
@@ -229,7 +229,7 @@ const BargainDetail = () => {
                                 <div>
                                     <p className="text-sm text-gray-500">Tổng giá</p>
                                     <p className="text-lg font-semibold text-orange-600">
-                                        {bargain.proposals && bargain.proposals.length > 0 && bargain.quantity 
+                                        {bargain.proposals && bargain.proposals.length > 0 && bargain.quantity
                                             ? formatPrice(bargain.proposals[bargain.proposals.length - 1].proposedPrice * bargain.quantity)
                                             : 'Chưa có'}
                                     </p>
@@ -238,9 +238,9 @@ const BargainDetail = () => {
 
                             <div className="mt-4">
                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${bargain.status?.toLowerCase() === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                                        bargain.status?.toLowerCase() === 'accepted' ? 'bg-green-100 text-green-800' :
-                                            bargain.status?.toLowerCase() === 'rejected' ? 'bg-red-100 text-red-800' :
-                                                'bg-gray-100 text-gray-800'
+                                    bargain.status?.toLowerCase() === 'accepted' ? 'bg-green-100 text-green-800' :
+                                        bargain.status?.toLowerCase() === 'rejected' ? 'bg-red-100 text-red-800' :
+                                            'bg-gray-100 text-gray-800'
                                     }`}>
                                     Trạng thái: {
                                         bargain.status?.toLowerCase() === 'pending' ? 'Đang chờ' :
@@ -257,7 +257,7 @@ const BargainDetail = () => {
                 {/* Bargain History */}
                 <div className="bg-white rounded-lg shadow-sm border p-6 mb-6">
                     <h2 className="text-xl font-semibold text-gray-800 mb-4">Lịch sử thương lượng</h2>
-                    
+
                     <div className="space-y-4">
                         {bargain.proposals?.length > 0 ? (
                             bargain.proposals.map((proposal, index) => {
@@ -286,7 +286,7 @@ const BargainDetail = () => {
                                                     </p>
                                                     <p className="text-sm text-gray-600 mt-1">
                                                         Tổng tiền hiện tại: <span className="font-semibold">
-                                                                {formatPrice(bargain.proposals[bargain.proposals.length - 1].proposedPrice * bargain.quantity)}
+                                                            {formatPrice(bargain.proposals[bargain.proposals.length - 1].proposedPrice * bargain.quantity)}
                                                         </span>
                                                     </p>
                                                     {proposal.note && proposal.note.trim() !== '' && (
@@ -315,7 +315,7 @@ const BargainDetail = () => {
                                                     )}
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Action buttons for seller's latest proposal */}
                                             {isSeller && isLastProposal && isPending && (
                                                 <div className="mt-4 pt-3 border-t border-gray-200">
@@ -328,7 +328,7 @@ const BargainDetail = () => {
                                                             {actionLoading ? <FaSpinner className="animate-spin mr-2" /> : null}
                                                             Chấp nhận
                                                         </button>
-                                                        
+
                                                         <button
                                                             onClick={() => setShowCounterModal(true)}
                                                             disabled={actionLoading}
@@ -336,7 +336,7 @@ const BargainDetail = () => {
                                                         >
                                                             Phản hồi
                                                         </button>
-                                                        
+
                                                         <button
                                                             onClick={() => handleAction('reject')}
                                                             disabled={actionLoading}
@@ -368,7 +368,7 @@ const BargainDetail = () => {
                             <div>
                                 <h3 className="text-green-800 font-bold text-lg">Thương lượng thành công!</h3>
                                 <p className="text-green-700">
-                                    Giá cuối cùng: {formatPrice(bargain.finalPrice * bargain.quantity|| (bargain.proposals && bargain.proposals.length > 0 ? bargain.proposals[bargain.proposals.length - 1].proposedPrice : bargain.originalPrice))}
+                                    Giá cuối cùng: {formatPrice(bargain.finalPrice * bargain.quantity || (bargain.proposals && bargain.proposals.length > 0 ? bargain.proposals[bargain.proposals.length - 1].proposedPrice : bargain.originalPrice))}
                                 </p>
                                 <p className="text-sm text-green-600 mt-2">
                                     Bạn có thể tiến hành đặt hàng với giá này.
@@ -376,10 +376,11 @@ const BargainDetail = () => {
                             </div>
                         </div>
                         <button
-                            onClick={() => navigate(`/product/${bargain.productId}`)}
-                            className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                            onClick={() => navigate('/cart')}
+                            className="mt-4 px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 flex items-center space-x-2"
                         >
-                            Xem sản phẩm
+                            <FaShoppingCart className="w-4 h-4" />
+                            <span>Xem giỏ hàng</span>
                         </button>
                     </div>
                 )}
@@ -426,7 +427,7 @@ const BargainDetail = () => {
                                 </h4>
                                 <div className="space-y-2 text-sm">
                                     <p><strong>Sản phẩm:</strong> {bargain.productName}</p>
-                                    <p><strong>Số lượng yêu cầu:</strong> 
+                                    <p><strong>Số lượng yêu cầu:</strong>
                                         <span className="text-lg font-bold text-blue-600 ml-2">
                                             {bargain.quantity} {bargain.productUnitName}
                                         </span>
@@ -463,7 +464,7 @@ const BargainDetail = () => {
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                                     min="0"
                                 />
-                                
+
                                 {/* Total price calculation */}
                                 {proposedPrice && (
                                     <p className="text-sm text-gray-600 mt-2">
@@ -472,7 +473,7 @@ const BargainDetail = () => {
                                         </span>
                                     </p>
                                 )}
-                                
+
                                 {/* Price Suggestions */}
                                 {bargain.proposals && bargain.proposals.length > 0 && (
                                     <div className="mt-2 flex flex-wrap gap-2">
@@ -506,7 +507,7 @@ const BargainDetail = () => {
                                         </button>
                                     </div>
                                 )}
-                                
+
                                 {/* Price Comparison */}
                                 {proposedPrice && bargain.proposals && bargain.proposals.length > 0 && (
                                     <div className="mt-2 text-xs text-gray-600">
