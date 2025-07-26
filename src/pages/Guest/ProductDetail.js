@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingCart, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaShieldAlt, FaLeaf, FaClock, FaUsers, FaBox, FaEye, FaCalendarAlt, FaEdit, FaComments, FaHandshake, FaFlag } from "react-icons/fa";
 import { FiMinus, FiPlus, FiTruck, FiShield, FiClock, FiInfo } from "react-icons/fi";
@@ -14,9 +14,11 @@ import storeService from "../../services/storeService";
 import userService from "../../services/userService";
 import reviewService from "../../services/reviewService";
 import authService from "../../services/authService";
+import eventService from "../../services/eventService";
 
 const ProductDetail = () => {
     const { id } = useParams();
+    const reviewListRef = useRef();
 
     const [product, setProduct] = useState(null);
     const [store, setStore] = useState(null);
@@ -177,6 +179,22 @@ const ProductDetail = () => {
         }
     }, [id]);
 
+    // Listen for review events
+    useEffect(() => {
+        const unsubscribe = eventService.on(eventService.EVENTS.REVIEWS_REFRESH, (data) => {
+            // Check if the event is for the current product
+            if (data && data.productId === id) {
+                handleReviewUpdate();
+            } else if (!data) {
+                // General refresh event
+                handleReviewUpdate();
+            }
+        });
+
+        // Cleanup listener on unmount
+        return unsubscribe;
+    }, [id, product]);
+
     // Check for current user and their review
     useEffect(() => {
         const checkCurrentUser = async () => {
@@ -270,6 +288,11 @@ const ProductDetail = () => {
                             totalReviews: result.totalCount || 0,
                             ratingBreakdown: reviewService.calculateRatingBreakdown(result.reviews || [])
                         });
+
+                        // Also refresh the ReviewList component
+                        if (reviewListRef.current) {
+                            reviewListRef.current.refresh();
+                        }
                     } else {
                         console.error('Failed to refresh reviews:', result.message);
                         // Keep existing stats or set defaults
@@ -845,8 +868,8 @@ const ProductDetail = () => {
                                 onReviewSubmitted={(newReview) => {
                                     setUserReview(newReview);
                                     setShowReviewForm(false);
-                                    // Refresh review stats
-                                    window.location.reload();
+                                    // Refresh reviews using the new handler
+                                    handleReviewUpdate();
                                 }}
                                 onCancel={() => setShowReviewForm(false)}
                             />
@@ -856,6 +879,7 @@ const ProductDetail = () => {
 
                 {/* Reviews List */}
                 <ReviewList
+                    ref={reviewListRef}
                     targetType="Product"
                     targetId={product.id}
                     showFilters={true}

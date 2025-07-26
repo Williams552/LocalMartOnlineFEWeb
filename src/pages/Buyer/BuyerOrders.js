@@ -6,6 +6,8 @@ import {
 } from "react-icons/fa";
 import orderService from "../../services/orderService";
 import ReviewModal from "../../components/ReviewModal";
+import OrderReviewModal from "../../components/Order/OrderReviewModal";
+import OrderCompletionNotification from "../../components/Order/OrderCompletionNotification";
 import { toast } from "react-toastify";
 
 const BuyerOrders = () => {
@@ -19,6 +21,10 @@ const BuyerOrders = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [selectedOrderForReview, setSelectedOrderForReview] = useState(null);
+    const [showOrderReviewModal, setShowOrderReviewModal] = useState(false);
+    const [selectedOrderForOrderReview, setSelectedOrderForOrderReview] = useState(null);
+    const [showCompletionNotification, setShowCompletionNotification] = useState(false);
+    const [completedOrderInfo, setCompletedOrderInfo] = useState(null);
 
     // Fetch orders from API
     useEffect(() => {
@@ -67,7 +73,7 @@ const BuyerOrders = () => {
 
     const statusOptions = {
         all: "Tất cả",
-        Pending: "Chờ xác nhận", 
+        Pending: "Chờ xác nhận",
         Confirmed: "Đã xác nhận hàng",
         Paid: "Đã nhận tiền",
         Completed: "Hoàn thành",
@@ -78,7 +84,7 @@ const BuyerOrders = () => {
         const colors = {
             // New 5-state workflow
             'Pending': "bg-yellow-100 text-yellow-800",
-            'Confirmed': "bg-blue-100 text-blue-800", 
+            'Confirmed': "bg-blue-100 text-blue-800",
             'Paid': "bg-purple-100 text-purple-800",
             'Completed': "bg-green-100 text-green-800",
             'Cancelled': "bg-red-100 text-red-800",
@@ -128,7 +134,7 @@ const BuyerOrders = () => {
     const handleReorder = async (orderId) => {
         try {
             const result = await orderService.reorderOrder(orderId);
-            
+
             if (result && result.success) {
                 toast.success(result.message || "Đặt lại đơn hàng thành công!");
                 fetchOrders(); // Refresh orders list
@@ -145,7 +151,7 @@ const BuyerOrders = () => {
         if (window.confirm("Bạn có chắc muốn hủy đơn hàng này?")) {
             try {
                 const result = await orderService.cancelOrder(orderId, "Buyer hủy đơn hàng");
-                
+
                 if (result && result.success) {
                     toast.success(result.message || "Hủy đơn hàng thành công!");
                     fetchOrders(); // Refresh orders list
@@ -164,9 +170,24 @@ const BuyerOrders = () => {
         if (window.confirm("Bạn có chắc đã nhận được hàng và muốn hoàn thành đơn hàng này?")) {
             try {
                 const result = await orderService.completeOrderByBuyer(orderId);
-                
+
                 // Kiểm tra kết quả trả về
                 if (result && result.success) {
+                    // Tìm order vừa hoàn thành
+                    const completedOrder = orders.find(order => order.id === orderId);
+                    if (completedOrder) {
+                        // Hiện notification thành công trước
+                        setCompletedOrderInfo(completedOrder);
+                        setShowCompletionNotification(true);
+
+                        // Auto hide notification sau 8 giây và hiện review modal
+                        setTimeout(() => {
+                            setShowCompletionNotification(false);
+                            setSelectedOrderForOrderReview(completedOrder);
+                            setShowOrderReviewModal(true);
+                        }, 8000);
+                    }
+
                     toast.success(result.message || "Xác nhận hoàn thành đơn hàng thành công!");
                     fetchOrders(); // Refresh orders list
                 } else {
@@ -207,6 +228,38 @@ const BuyerOrders = () => {
             console.error('Error in handleSubmitReview:', error);
             toast.error(error.message || 'Lỗi khi gửi đánh giá');
         }
+    };
+
+    const handleOrderReviewSubmitSuccess = (reviewResults) => {
+        // Update orders list to reflect that reviews have been submitted
+        setOrders(prev => prev.map(order =>
+            order.id === selectedOrderForOrderReview?.id
+                ? { ...order, reviewed: true, canReview: false }
+                : order
+        ));
+
+        // Reset modal state
+        setSelectedOrderForOrderReview(null);
+        setShowOrderReviewModal(false);
+    };
+
+    // Handlers for completion notification
+    const handleReviewNow = () => {
+        setShowCompletionNotification(false);
+        if (completedOrderInfo) {
+            setSelectedOrderForOrderReview(completedOrderInfo);
+            setShowOrderReviewModal(true);
+        }
+    };
+
+    const handleReviewLater = () => {
+        setShowCompletionNotification(false);
+        setCompletedOrderInfo(null);
+    };
+
+    const handleCloseNotification = () => {
+        setShowCompletionNotification(false);
+        setCompletedOrderInfo(null);
     };
 
     return (
@@ -344,6 +397,29 @@ const BuyerOrders = () => {
                                         <span>Xem chi tiết</span>
                                     </button>
 
+                                    {/* Nút đánh giá - hiển thị cho đơn hàng đã hoàn thành */}
+                                    {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && (
+                                        <>
+                                            {!order.reviewed ? (
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedOrderForOrderReview(order);
+                                                        setShowOrderReviewModal(true);
+                                                    }}
+                                                    className="flex items-center space-x-2 px-4 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition"
+                                                >
+                                                    <FaStar />
+                                                    <span>Đánh giá</span>
+                                                </button>
+                                            ) : (
+                                                <div className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-600 rounded-lg">
+                                                    <FaStar />
+                                                    <span>Đã đánh giá</span>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+
                                     {/* Nút xác nhận hoàn thành - chỉ hiển thị khi trạng thái là Paid */}
                                     {(order.status === "Paid" || order.status === "paid") && (
                                         <button
@@ -355,16 +431,8 @@ const BuyerOrders = () => {
                                         </button>
                                     )}
 
-                                    {/* Nút đánh giá - chỉ hiển thị khi đã hoàn thành và chưa đánh giá */}
-                                    {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && order.canReview && !order.reviewed && (
-                                        <button
-                                            onClick={() => handleReviewOrder(order)}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-yellow-50 text-yellow-600 rounded-lg hover:bg-yellow-100 transition"
-                                        >
-                                            <FaStar />
-                                            <span>Đánh giá</span>
-                                        </button>
-                                    )}
+                                    {/* Nút đánh giá cũ đã được thay thế bằng modal tự động hiện sau khi hoàn thành đơn hàng */}
+                                    {/* Nút đánh giá hiện đã được di chuyển lên trên, kế bên nút "Xem chi tiết" */}
 
                                     {/* Nút mua lại - hiển thị khi đã hoàn thành */}
                                     {(order.status === "Completed" || order.status === "completed" || order.status === "delivered") && (
@@ -378,16 +446,16 @@ const BuyerOrders = () => {
                                     )}
 
                                     {/* Nút hủy đơn - chỉ hiển thị khi chờ xác nhận hoặc đã xác nhận */}
-                                    {((order.status === "Pending" || order.status === "pending") || 
-                                      (order.status === "Confirmed" || order.status === "confirmed")) && (
-                                        <button
-                                            onClick={() => handleCancelOrder(order.id)}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
-                                        >
-                                            <FaTimes />
-                                            <span>Hủy đơn</span>
-                                        </button>
-                                    )}
+                                    {((order.status === "Pending" || order.status === "pending") ||
+                                        (order.status === "Confirmed" || order.status === "confirmed")) && (
+                                            <button
+                                                onClick={() => handleCancelOrder(order.id)}
+                                                className="flex items-center space-x-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                                            >
+                                                <FaTimes />
+                                                <span>Hủy đơn</span>
+                                            </button>
+                                        )}
                                 </div>
                             </div>
                         ))
@@ -594,6 +662,26 @@ const BuyerOrders = () => {
                     setSelectedOrderForReview(null);
                 }}
                 onSubmit={handleSubmitReview}
+            />
+
+            {/* Order Review Modal - hiện sau khi hoàn thành đơn hàng */}
+            <OrderReviewModal
+                order={selectedOrderForOrderReview}
+                isOpen={showOrderReviewModal}
+                onClose={() => {
+                    setShowOrderReviewModal(false);
+                    setSelectedOrderForOrderReview(null);
+                }}
+                onSubmitSuccess={handleOrderReviewSubmitSuccess}
+            />
+
+            {/* Order Completion Notification */}
+            <OrderCompletionNotification
+                isOpen={showCompletionNotification}
+                onClose={handleCloseNotification}
+                onReviewNow={handleReviewNow}
+                onReviewLater={handleReviewLater}
+                orderInfo={completedOrderInfo}
             />
         </div>
     );
