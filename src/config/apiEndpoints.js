@@ -218,8 +218,8 @@ export const API_ENDPOINTS = {
     CART: {
         GET_ITEMS: (userId) => `${API_URL}/api/Cart/${userId}`,
         ADD_ITEM: (userId) => `${API_URL}/api/Cart/${userId}/items`,
-        UPDATE_ITEM: (userId, productId) => `${API_URL}/api/Cart/${userId}/items/${productId}`,
-        REMOVE_ITEM: (userId, productId) => `${API_URL}/api/Cart/${userId}/items/${productId}`,
+        UPDATE_ITEM: (userId, cartItemId) => `${API_URL}/api/Cart/${userId}/items/${cartItemId}`,
+        REMOVE_ITEM: (userId, cartItemId) => `${API_URL}/api/Cart/${userId}/items/${cartItemId}`,
         CLEAR_CART: (userId) => `${API_URL}/api/Cart/${userId}`,
         GET_SUMMARY: (userId) => `${API_URL}/api/Cart/${userId}/summary`,
     },

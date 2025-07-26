@@ -123,14 +123,8 @@ const CartPage = () => {
             console.log('🗑️ CartPage: Removing item:', cartItemId);
             setUpdating(prev => ({ ...prev, [cartItemId]: true }));
 
-            // Find the cart item to get productId
-            const cartItem = cartItems.find(item => item.id === cartItemId);
-            if (!cartItem) {
-                toastService.error('Không tìm thấy sản phẩm trong giỏ hàng');
-                return;
-            }
-
-            const result = await cartService.removeFromCart(cartItem.productId);
+            // Now we pass cartItemId directly to the service
+            const result = await cartService.removeFromCart(cartItemId);
             if (result.success) {
                 toastService.success(`Đã xóa ${productName || 'sản phẩm'} khỏi giỏ hàng`);
                 // Remove from local state
@@ -176,7 +170,7 @@ const CartPage = () => {
         setSelectAll(!selectAll);
     };
 
-    const updateQuantity = async (cartItemId, productId, newQuantity) => {
+    const updateQuantity = async (cartItemId, newQuantity) => {
         try {
             // Check minimum quantity
             const item = cartItems.find(item => item.id === cartItemId);
@@ -199,10 +193,18 @@ const CartPage = () => {
                 return;
             }
 
-            console.log('📝 CartPage: Updating quantity:', { cartItemId, productId, newQuantity });
+            console.log('📝 CartPage: Updating quantity:', { cartItemId, newQuantity });
+            console.log('🔍 Debug - Current item being updated:', item);
+            console.log('🔍 Debug - All cart items:', cartItems.map(i => ({ 
+                id: i.id, 
+                productId: i.productId, 
+                quantity: i.quantity, 
+                isBargainProduct: i.isBargainProduct,
+                bargainId: i.bargainId 
+            })));
             setUpdating(prev => ({ ...prev, [cartItemId]: true }));
 
-            const result = await cartService.updateCartItem(productId, newQuantity);
+            const result = await cartService.updateCartItem(cartItemId, newQuantity);
             if (result.success) {
                 // Update local state
                 setCartItems(items =>
@@ -278,7 +280,7 @@ const CartPage = () => {
 
             // Remove all items from this seller
             const removePromises = sellerItems.map(item =>
-                cartService.removeFromCart(item.productId)
+                cartService.removeFromCart(item.id)
             );
 
             const results = await Promise.all(removePromises);
@@ -335,7 +337,7 @@ const CartPage = () => {
             });
 
             const removePromises = itemsToRemove.map(item =>
-                cartService.removeFromCart(item.productId)
+                cartService.removeFromCart(item.id)
             );
 
             const results = await Promise.all(removePromises);
@@ -727,7 +729,7 @@ const CartPage = () => {
                                                     </div>
                                                     <div className="flex items-center space-x-2">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.productId, item.quantity - 0.5)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity - 0.5)}
                                                             disabled={updating[item.id] || item.quantity <= item.minimumQuantity || item.isBargainProduct}
                                                             className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title={item.isBargainProduct ? "Không thể thay đổi số lượng sản phẩm thương lượng" : "Giảm số lượng"}
@@ -747,7 +749,7 @@ const CartPage = () => {
                                                             )}
                                                         </div>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.productId, item.quantity + 0.5)}
+                                                            onClick={() => updateQuantity(item.id, item.quantity + 0.5)}
                                                             disabled={updating[item.id] || !item.isAvailable || (item.stockQuantity > 0 && item.quantity >= item.stockQuantity) || item.isBargainProduct}
                                                             className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title={item.isBargainProduct ? "Không thể thay đổi số lượng sản phẩm thương lượng" : "Tăng số lượng"}

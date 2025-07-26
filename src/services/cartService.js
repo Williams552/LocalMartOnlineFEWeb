@@ -212,14 +212,16 @@ class CartService {
     }
 
     // Update cart item quantity
-    async updateCartItem(productId, quantity) {
+    async updateCartItem(cartItemId, quantity) {
         try {
             const userId = this.getCurrentUserId();
             if (!userId) {
                 throw new Error('User not authenticated');
             }
 
-            const response = await apiClient.put(API_ENDPOINTS.CART.UPDATE_ITEM(userId, productId), {
+            console.log('🔧 CartService.updateCartItem:', { userId, cartItemId, quantity });
+
+            const response = await apiClient.put(API_ENDPOINTS.CART.UPDATE_ITEM(userId, cartItemId), {
                 quantity
             });
 
@@ -236,7 +238,7 @@ class CartService {
                 message: 'Không thể cập nhật số lượng'
             };
         } catch (error) {
-            console.error('Error updating cart item:', error);
+            console.error('❌ Error updating cart item:', error);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Không thể cập nhật số lượng'
@@ -245,14 +247,16 @@ class CartService {
     }
 
     // Remove item from cart
-    async removeFromCart(productId) {
+    async removeFromCart(cartItemId) {
         try {
             const userId = this.getCurrentUserId();
             if (!userId) {
                 throw new Error('User not authenticated');
             }
 
-            const response = await apiClient.delete(API_ENDPOINTS.CART.REMOVE_ITEM(userId, productId));
+            console.log('🗑️ CartService.removeFromCart:', { userId, cartItemId });
+
+            const response = await apiClient.delete(API_ENDPOINTS.CART.REMOVE_ITEM(userId, cartItemId));
 
             if (response.data) {
                 return {
@@ -267,7 +271,7 @@ class CartService {
                 message: 'Không thể xóa sản phẩm khỏi giỏ hàng'
             };
         } catch (error) {
-            console.error('Error removing from cart:', error);
+            console.error('❌ Error removing from cart:', error);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Không thể xóa sản phẩm khỏi giỏ hàng'
