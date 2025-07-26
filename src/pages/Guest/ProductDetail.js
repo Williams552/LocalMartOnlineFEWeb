@@ -41,6 +41,26 @@ const ProductDetail = () => {
         ratingBreakdown: null
     });
 
+    // Utility function to get time ago
+    const getTimeAgo = (dateString) => {
+        if (!dateString) return 'Chưa xác định';
+
+        const now = new Date();
+        const date = new Date(dateString);
+        const diffTime = Math.abs(now - date);
+        const diffMinutes = Math.floor(diffTime / (1000 * 60));
+        const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffMinutes < 60) return `${diffMinutes} phút trước`;
+        if (diffHours < 24) return `${diffHours} giờ trước`;
+        if (diffDays === 1) return 'Hôm qua';
+        if (diffDays <= 7) return `${diffDays} ngày trước`;
+        if (diffDays <= 30) return `${Math.floor(diffDays / 7)} tuần trước`;
+        if (diffDays <= 365) return `${Math.floor(diffDays / 30)} tháng trước`;
+        return `${Math.floor(diffDays / 365)} năm trước`;
+    };
+
     // Fetch product data from API
     useEffect(() => {
         const fetchProductData = async () => {
@@ -360,6 +380,13 @@ const ProductDetail = () => {
                             </div>
                                 <span>•</span>
                                 <span>Đã bán {product.soldCount || 0}</span>
+                                <span>•</span>
+                                <div className="flex items-center space-x-1">
+                                    <FaCalendarAlt className="text-supply-primary" />
+                                    <span className="text-supply-primary font-medium">
+                                        {getTimeAgo(product.createdAt)}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <FavoriteButton
@@ -406,6 +433,23 @@ const ProductDetail = () => {
                             <div>
                                 <span className="text-gray-600">Phân loại:</span>
                                 <span className="ml-2 font-medium">{product.category || 'Thực phẩm'}</span>
+                            </div>
+                            <div>
+                                <span className="text-gray-600">Ngày đăng:</span>
+                                <span className="ml-2 font-medium text-blue-600">
+                                    {product.createdAt ? new Date(product.createdAt).toLocaleDateString('vi-VN') + ' ' +
+                                        new Date(product.createdAt).toLocaleTimeString('vi-VN', {
+                                            hour: '2-digit',
+                                            minute: '2-digit',
+                                            hour12: false
+                                        }) : 'Chưa xác định'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="text-gray-600">Đăng:</span>
+                                <span className="ml-2 font-medium text-green-600">
+                                    {getTimeAgo(product.createdAt)}
+                                </span>
                             </div>
                         </div>
 
