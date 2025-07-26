@@ -149,90 +149,91 @@ const SellerDashboard = () => {
     return (
         <SellerLayout>
             {/* Header */}
-            <div className="bg-white shadow-sm border-b">
-                <div className="max-w-7xl mx-auto px-4 py-4">
-                    <div className="flex items-center justify-between">
+            <div className="bg-white shadow-sm border-b sticky top-0 z-10">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
                         <div>
-                            <h1 className="text-2xl font-bold text-gray-800">Dashboard Người Bán</h1>
-                            <p className="text-gray-600">Quản lý cửa hàng và theo dõi hiệu suất kinh doanh</p>
+                            <h1 className="text-xl sm:text-2xl font-bold text-gray-800">Dashboard Người Bán</h1>
+                            <p className="text-sm sm:text-base text-gray-600 mt-1">Quản lý cửa hàng và theo dõi hiệu suất kinh doanh</p>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={refreshDashboard}
                                 disabled={refreshing}
-                                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition disabled:opacity-50 text-sm"
                             >
                                 <FaSyncAlt className={refreshing ? 'animate-spin' : ''} />
-                                Làm mới
+                                <span className="hidden sm:inline">Làm mới</span>
+                                <span className="sm:hidden">Refresh</span>
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-7xl mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
                 {/* Stats Overview */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
                     {/* Total Products */}
-                    <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
                         <div className="flex items-center justify-between">
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium text-gray-600">Tổng sản phẩm</p>
-                                <p className="text-3xl font-bold text-gray-900">{formatNumber(stats?.totalProducts || 0)}</p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{formatNumber(stats?.totalProducts || 0)}</p>
+                                <p className="text-xs sm:text-sm text-gray-500 truncate">
                                     Hoạt động: {formatNumber(stats?.activeProducts || 0)}
                                 </p>
                             </div>
-                            <div className="p-3 bg-blue-100 rounded-lg">
-                                <FaBox className="text-blue-600 text-xl" />
+                            <div className="p-3 bg-blue-100 rounded-lg flex-shrink-0">
+                                <FaBox className="text-blue-600 text-lg sm:text-xl" />
                             </div>
                         </div>
                     </div>
 
                     {/* Total Orders */}
-                    <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
                         <div className="flex items-center justify-between">
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
-                                <p className="text-3xl font-bold text-gray-900">{formatNumber(stats?.totalOrders || 0)}</p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{formatNumber(stats?.totalOrders || 0)}</p>
+                                <p className="text-xs sm:text-sm text-gray-500 truncate">
                                     Chờ xử lý: {formatNumber(stats?.pendingOrders || 0)}
                                 </p>
                             </div>
-                            <div className="p-3 bg-green-100 rounded-lg">
-                                <FaShoppingCart className="text-green-600 text-xl" />
+                            <div className="p-3 bg-green-100 rounded-lg flex-shrink-0">
+                                <FaShoppingCart className="text-green-600 text-lg sm:text-xl" />
                             </div>
                         </div>
                     </div>
 
                     {/* Total Revenue */}
-                    <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
                         <div className="flex items-center justify-between">
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
-                                <p className="text-3xl font-bold text-gray-900">{formatCurrency(stats?.totalRevenue || 0)}</p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 truncate">{formatCurrency(stats?.totalRevenue || 0)}</p>
+                                <p className="text-xs sm:text-sm text-gray-500 truncate">
                                     Tháng này: {formatCurrency(stats?.revenueThisMonth || 0)}
                                 </p>
                             </div>
-                            <div className="p-3 bg-yellow-100 rounded-lg">
-                                <FaDollarSign className="text-yellow-600 text-xl" />
+                            <div className="p-3 bg-yellow-100 rounded-lg flex-shrink-0">
+                                <FaDollarSign className="text-yellow-600 text-lg sm:text-xl" />
                             </div>
                         </div>
                     </div>
 
                     {/* Total Followers */}
-                    <div className="bg-white rounded-lg shadow-sm p-6">
+                    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
                         <div className="flex items-center justify-between">
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm font-medium text-gray-600">Người theo dõi</p>
-                                <p className="text-3xl font-bold text-gray-900">{formatNumber(stats?.totalFollowers || 0)}</p>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-2xl sm:text-3xl font-bold text-gray-900 truncate">{formatNumber(stats?.totalFollowers || 0)}</p>
+                                <p className="text-xs sm:text-sm text-gray-500 truncate">
                                     Mới: +{formatNumber(stats?.newFollowers || 0)}
                                 </p>
                             </div>
-                            <div className="p-3 bg-purple-100 rounded-lg">
-                                <FaUsers className="text-purple-600 text-xl" />
+                            <div className="p-3 bg-purple-100 rounded-lg flex-shrink-0">
+                                <FaUsers className="text-purple-600 text-lg sm:text-xl" />
                             </div>
                         </div>
                     </div>
@@ -242,15 +243,15 @@ const SellerDashboard = () => {
                 <PriorityActionWidgets />
 
                 {/* Quick Actions */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                            <FaRocket className="mr-3 text-supply-primary" />
+                <div className="mb-6 sm:mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center">
+                            <FaRocket className="mr-2 sm:mr-3 text-supply-primary" />
                             Thao tác nhanh
                         </h2>
                         <Link
                             to="/seller/quick-actions"
-                            className="text-supply-primary hover:text-green-700 transition text-sm font-medium"
+                            className="text-supply-primary hover:text-green-700 transition text-sm font-medium self-start sm:self-auto"
                         >
                             Xem tất cả →
                         </Link>
@@ -259,52 +260,52 @@ const SellerDashboard = () => {
                 </div>
 
                 {/* Recent Notifications */}
-                <div className="mb-8">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                            <FaBell className="mr-3 text-supply-primary" />
+                <div className="mb-6 sm:mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center">
+                            <FaBell className="mr-2 sm:mr-3 text-supply-primary" />
                             Thông báo mới nhất
                             {unreadCount > 0 && (
-                                <span className="ml-2 bg-red-500 text-white text-sm rounded-full px-2 py-1">
+                                <span className="ml-2 bg-red-500 text-white text-xs sm:text-sm rounded-full px-2 py-1">
                                     {unreadCount}
                                 </span>
                             )}
                         </h2>
                         <Link
                             to="/seller/notifications"
-                            className="text-supply-primary hover:text-green-700 transition text-sm font-medium"
+                            className="text-supply-primary hover:text-green-700 transition text-sm font-medium self-start sm:self-auto"
                         >
                             Xem tất cả →
                         </Link>
                     </div>
 
                     {recentNotifications.length > 0 ? (
-                        <div className="bg-white rounded-lg shadow-sm">
+                        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                             {recentNotifications.map((notification, index) => (
                                 <div
                                     key={notification.id}
-                                    className={`p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition ${!notification.isRead ? 'bg-blue-50' : ''
+                                    className={`p-3 sm:p-4 border-b border-gray-200 last:border-b-0 hover:bg-gray-50 transition ${!notification.isRead ? 'bg-blue-50' : ''
                                         }`}
                                 >
-                                    <div className="flex items-start space-x-3">
+                                    <div className="flex items-start space-x-2 sm:space-x-3">
                                         <div className={`p-2 rounded-full ${notification.color} flex-shrink-0`}>
-                                            <span className="text-sm">{notification.icon}</span>
+                                            <span className="text-xs sm:text-sm">{notification.icon}</span>
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="flex items-center justify-between">
+                                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-1 sm:space-y-0">
                                                 <h4 className={`font-medium text-sm ${notification.isRead ? 'text-gray-700' : 'text-gray-900'
-                                                    }`}>
-                                                    {notification.title}
+                                                    } flex items-center`}>
+                                                    <span className="truncate">{notification.title}</span>
                                                     {!notification.isRead && (
-                                                        <span className="ml-2 w-2 h-2 bg-blue-500 rounded-full inline-block"></span>
+                                                        <span className="ml-2 w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
                                                     )}
                                                 </h4>
-                                                <span className="text-xs text-gray-500">
+                                                <span className="text-xs text-gray-500 flex-shrink-0">
                                                     {formatTimeAgo(notification.createdAt)}
                                                 </span>
                                             </div>
                                             <p className={`text-sm mt-1 ${notification.isRead ? 'text-gray-500' : 'text-gray-700'
-                                                }`}>
+                                                } line-clamp-2`}>
                                                 {notification.message}
                                             </p>
                                         </div>
@@ -313,46 +314,46 @@ const SellerDashboard = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-white rounded-lg shadow-sm p-8 text-center">
-                            <FaBell className="text-3xl text-gray-300 mx-auto mb-3" />
-                            <p className="text-gray-500">Không có thông báo mới</p>
+                        <div className="bg-white rounded-lg shadow-sm p-6 sm:p-8 text-center">
+                            <FaBell className="text-2xl sm:text-3xl text-gray-300 mx-auto mb-3" />
+                            <p className="text-gray-500 text-sm sm:text-base">Không có thông báo mới</p>
                         </div>
                     )}
                 </div>
 
                 {/* Additional Information */}
-                <div className="mb-8">
+                <div className="mb-6 sm:mb-8">
                     <RecentOrders limit={10} />
                 </div>
 
                 {/* Top Products Section */}
-                <div className="mb-8">
-                    <h2 className="text-xl font-bold text-gray-800 mb-6">🏆 Sản phẩm bán chạy</h2>
+                <div className="mb-6 sm:mb-8">
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4 sm:mb-6">🏆 Sản phẩm bán chạy</h2>
                     <TopProducts limit={5} />
                 </div>
 
                 {stats && (
-                    <div className="grid lg:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
                         {/* Performance Metrics */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h3 className="text-lg font-bold text-gray-800 mb-4">Hiệu suất</h3>
-                            <div className="space-y-4">
+                        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                            <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4">Hiệu suất</h3>
+                            <div className="space-y-3 sm:space-y-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Đánh giá trung bình</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Đánh giá trung bình</span>
                                     <div className="flex items-center gap-1">
-                                        <FaStar className="text-yellow-500" />
-                                        <span className="font-medium">{(stats.averageRating || 0).toFixed(1)}</span>
+                                        <FaStar className="text-yellow-500 text-sm" />
+                                        <span className="font-medium text-sm sm:text-base">{(stats.averageRating || 0).toFixed(1)}</span>
                                     </div>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Lượt xem tuần này</span>
-                                    <span className="font-medium">{formatNumber(stats.viewsThisWeek || 0)}</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Lượt xem tuần này</span>
+                                    <span className="font-medium text-sm sm:text-base">{formatNumber(stats.viewsThisWeek || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Khách hàng thân thiết</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Khách hàng thân thiết</span>
                                     <Link
                                         to="/seller/customers"
-                                        className="font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                                        className="font-medium text-blue-600 hover:text-blue-800 transition-colors text-sm sm:text-base"
                                     >
                                         {formatNumber(stats.loyalCustomers || 0)}
                                     </Link>
@@ -361,39 +362,39 @@ const SellerDashboard = () => {
                         </div>
 
                         {/* Stock Status */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h3 className="text-lg font-bold text-gray-800 mb-4">Tình trạng kho</h3>
-                            <div className="space-y-4">
+                        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                            <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4">Tình trạng kho</h3>
+                            <div className="space-y-3 sm:space-y-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Sản phẩm hoạt động</span>
-                                    <span className="font-medium text-green-600">{formatNumber(stats.activeProducts || 0)}</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Sản phẩm hoạt động</span>
+                                    <span className="font-medium text-green-600 text-sm sm:text-base">{formatNumber(stats.activeProducts || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Hết hàng</span>
-                                    <span className="font-medium text-red-600">{formatNumber(stats.outOfStockProducts || 0)}</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Hết hàng</span>
+                                    <span className="font-medium text-red-600 text-sm sm:text-base">{formatNumber(stats.outOfStockProducts || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Tổng sản phẩm</span>
-                                    <span className="font-medium">{formatNumber(stats.totalProducts || 0)}</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Tổng sản phẩm</span>
+                                    <span className="font-medium text-sm sm:text-base">{formatNumber(stats.totalProducts || 0)}</span>
                                 </div>
                             </div>
                         </div>
 
                         {/* Order Status */}
-                        <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h3 className="text-lg font-bold text-gray-800 mb-4">Trạng thái đơn hàng</h3>
-                            <div className="space-y-4">
+                        <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6">
+                            <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-4">Trạng thái đơn hàng</h3>
+                            <div className="space-y-3 sm:space-y-4">
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Hoàn thành</span>
-                                    <span className="font-medium text-green-600">{formatNumber(stats.completedOrders || 0)}</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Hoàn thành</span>
+                                    <span className="font-medium text-green-600 text-sm sm:text-base">{formatNumber(stats.completedOrders || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Chờ xử lý</span>
-                                    <span className="font-medium text-yellow-600">{formatNumber(stats.pendingOrders || 0)}</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Chờ xử lý</span>
+                                    <span className="font-medium text-yellow-600 text-sm sm:text-base">{formatNumber(stats.pendingOrders || 0)}</span>
                                 </div>
                                 <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Tổng đơn hàng</span>
-                                    <span className="font-medium">{formatNumber(stats.totalOrders || 0)}</span>
+                                    <span className="text-sm sm:text-base text-gray-600">Tổng đơn hàng</span>
+                                    <span className="font-medium text-sm sm:text-base">{formatNumber(stats.totalOrders || 0)}</span>
                                 </div>
                             </div>
                         </div>
@@ -401,15 +402,15 @@ const SellerDashboard = () => {
                 )}
 
                 {/* Charts & Visual Analytics */}
-                <div className="mt-8">
-                    <div className="flex items-center justify-between mb-6">
-                        <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                            <FaChartLine className="mr-3 text-supply-primary" />
+                <div className="mt-6 sm:mt-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center">
+                            <FaChartLine className="mr-2 sm:mr-3 text-supply-primary" />
                             Biểu đồ & Thống kê trực quan
                         </h2>
                         <Link
                             to="/seller/analytics"
-                            className="text-supply-primary hover:text-green-700 transition text-sm font-medium"
+                            className="text-supply-primary hover:text-green-700 transition text-sm font-medium self-start sm:self-auto"
                         >
                             Xem chi tiết →
                         </Link>
