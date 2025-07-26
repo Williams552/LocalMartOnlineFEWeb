@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingCart, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaShieldAlt, FaLeaf, FaClock, FaUsers, FaBox, FaEye, FaCalendarAlt, FaEdit, FaComments, FaHandshake } from "react-icons/fa";
+import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingCart, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaShieldAlt, FaLeaf, FaClock, FaUsers, FaBox, FaEye, FaCalendarAlt, FaEdit, FaComments, FaHandshake, FaFlag } from "react-icons/fa";
 import { FiMinus, FiPlus, FiTruck, FiShield, FiClock, FiInfo } from "react-icons/fi";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import AddToCartButton from "../../components/Common/AddToCartButton";
 import FavoriteButton from "../../components/Common/FavoriteButton";
 import { ReviewList, ReviewForm, ReviewSummary } from "../../components/Review";
 import StartBargainModal from "../../components/FastBargain/StartBargainModal";
+import ReportModal from "../../components/Report/ReportModal";
 import logo from "../../assets/image/logo.jpg";
 import productService from "../../services/productService";
 import storeService from "../../services/storeService";
@@ -30,6 +31,9 @@ const ProductDetail = () => {
 
     // Fast Bargain states
     const [showBargainModal, setShowBargainModal] = useState(false);
+
+    // Report states
+    const [showReportModal, setShowReportModal] = useState(false);
 
     // Review states
     const [showReviewForm, setShowReviewForm] = useState(false);
@@ -206,6 +210,13 @@ const ProductDetail = () => {
         setShowBargainModal(false);
         // Hiển thị thông báo thành công hoặc navigate tới bargain detail
         console.log('Bargain started successfully:', bargainData);
+    };
+
+    const handleReportSuccess = (reportData) => {
+        setShowReportModal(false);
+        // Hiển thị thông báo thành công
+        alert('Báo cáo đã được gửi thành công. Chúng tôi sẽ xem xét trong 24-48 giờ.');
+        console.log('Report submitted successfully:', reportData);
     };
 
     const renderStars = (rating) => {
@@ -395,6 +406,19 @@ const ProductDetail = () => {
                             className="rounded-full bg-white shadow-sm"
                         />
                     </div>
+
+                    {/* Report Button */}
+                    {authService.isAuthenticated() && (
+                        <div className="flex justify-end mb-4">
+                            <button
+                                onClick={() => setShowReportModal(true)}
+                                className="flex items-center space-x-2 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors text-sm"
+                            >
+                                <FaFlag className="w-4 h-4" />
+                                <span>Báo cáo sản phẩm</span>
+                            </button>
+                        </div>
+                    )}
 
                     {/* Status Badge */}
                     <div className="mb-4">
@@ -872,6 +896,14 @@ const ProductDetail = () => {
                 onClose={() => setShowBargainModal(false)}
                 product={product}
                 onSuccess={handleBargainSuccess}
+            />
+
+            {/* Report Modal */}
+            <ReportModal
+                isOpen={showReportModal}
+                onClose={() => setShowReportModal(false)}
+                product={product}
+                onSuccess={handleReportSuccess}
             />
         </main>
     );
