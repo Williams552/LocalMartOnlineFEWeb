@@ -38,20 +38,21 @@ const ProductCard = ({
             switch (statusValue) {
                 case 0: return 'Còn hàng';
                 case 1: return 'Hết hàng';
+                case 2: return 'Tạm ngừng';
                 default: return 'Không xác định';
             }
         }
 
         if (typeof statusValue === 'string') {
             // If it's already a display text, return as is
-            if (['Còn hàng', 'Hết hàng', 'Đã xóa', 'Sắp hết'].includes(statusValue)) {
+            if (['Còn hàng', 'Hết hàng', 'Đã xóa', 'Sắp hết', 'Tạm ngừng'].includes(statusValue)) {
                 return statusValue;
             }
             // Convert backend status to display text
             switch (statusValue) {
                 case 'Active': return 'Còn hàng';
                 case 'OutOfStock': return 'Hết hàng';
-                case 'Inactive': return 'Đã xóa';
+                case 'Inactive': return 'Tạm ngừng';
                 default: return statusValue || 'Không xác định';
             }
         }
@@ -84,11 +85,27 @@ const ProductCard = ({
                 return "bg-red-500";
             case "Sắp hết":
                 return "bg-yellow-500";
+            case "Tạm ngừng":
+                return "bg-orange-500";
             case "Đã xóa":
                 return "bg-gray-500";
             default:
                 return "bg-gray-500"; // For undefined/unknown status
         }
+    };
+
+    // Check if product is available for purchase (only Active status)
+    const isAvailableForPurchase = () => {
+        // Check numeric status (0 = Active)
+        if (typeof status === 'number') {
+            return status === 0;
+        }
+        // Check string status
+        if (typeof status === 'string') {
+            return status === 'Active';
+        }
+        // Check final display status
+        return finalStatus === 'Còn hàng';
     };
 
     const handleBargainClick = (e) => {
@@ -172,24 +189,27 @@ const ProductCard = ({
                     </span>
                 </div>
                 <div className="mt-3 space-y-2">
-                    <AddToCartButton
-                        product={{
-                            id,
-                            name,
-                            price,
-                            image: getDisplayImage(),
-                            unit: unitName,
-                            minimumQuantity: minimumQuantity
-                        }}
-                        quantity={minimumQuantity}
-                        className="text-sm font-medium w-full"
-                        size="small"
-                        showQuantityControls={false}
-                        onClick={(e) => e.stopPropagation()}
-                    />
+                    {/* Add to Cart Button - Only show if product is available */}
+                    {isAvailableForPurchase() && (
+                        <AddToCartButton
+                            product={{
+                                id,
+                                name,
+                                price,
+                                image: getDisplayImage(),
+                                unit: unitName,
+                                minimumQuantity: minimumQuantity
+                            }}
+                            quantity={minimumQuantity}
+                            className="text-sm font-medium w-full"
+                            size="small"
+                            showQuantityControls={false}
+                            onClick={(e) => e.stopPropagation()}
+                        />
+                    )}
 
-                    {/* Bargain Button */}
-                    {isAuthenticated && finalStatus === "Còn hàng" && (
+                    {/* Bargain Button - Only show if authenticated and product is available */}
+                    {isAuthenticated && isAvailableForPurchase() && (
                         <button
                             onClick={handleBargainClick}
                             className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
@@ -197,6 +217,15 @@ const ProductCard = ({
                             <FaHandshake size={14} />
                             <span>Thương lượng</span>
                         </button>
+                    )}
+
+                    {/* Show message for unavailable products */}
+                    {!isAvailableForPurchase() && (
+                        <div className="w-full text-center py-2 px-3 bg-gray-100 text-gray-600 text-sm rounded-lg">
+                            {finalStatus === 'Hết hàng' && 'Sản phẩm đã hết hàng'}
+                            {finalStatus === 'Tạm ngừng' && 'Sản phẩm tạm ngừng bán'}
+                            {(finalStatus !== 'Hết hàng' && finalStatus !== 'Tạm ngừng') && 'Sản phẩm không khả dụng'}
+                        </div>
                     )}
                 </div>
             </div>

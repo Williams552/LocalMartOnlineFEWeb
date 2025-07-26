@@ -26,7 +26,7 @@ const ProductDetail = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const [quantity, setQuantity] = useState(0.5); // Changed to use 0.5 as minimum
+    const [quantity, setQuantity] = useState(0.5); // Will be updated to minimumQuantity when product loads
     const [isFavorited, setIsFavorited] = useState(false);
     const [selectedImage, setSelectedImage] = useState(0);
 
@@ -42,6 +42,69 @@ const ProductDetail = () => {
         totalReviews: 0,
         ratingBreakdown: null
     });
+
+    // Helper function to convert backend status to display text
+    const getStatusDisplayText = (statusValue) => {
+        // Handle numeric status values
+        if (typeof statusValue === 'number') {
+            switch (statusValue) {
+                case 0: return 'Còn hàng';
+                case 1: return 'Hết hàng';
+                case 2: return 'Tạm ngừng';
+                default: return 'Không xác định';
+            }
+        }
+
+        if (typeof statusValue === 'string') {
+            // If it's already a display text, return as is
+            if (['Còn hàng', 'Hết hàng', 'Đã xóa', 'Sắp hết', 'Tạm ngừng', 'Bị đình chỉ'].includes(statusValue)) {
+                return statusValue;
+            }
+            // Convert backend status to display text
+            switch (statusValue) {
+                case 'Active': return 'Còn hàng';
+                case 'OutOfStock': return 'Hết hàng';
+                case 'Inactive': return 'Đã xóa';
+                case 'Suspended': return 'Bị đình chỉ';
+                default: return statusValue || 'Không xác định';
+            }
+        }
+        return 'Không xác định';
+    };
+
+    // Helper function to get status color
+    const getStatusColor = (status) => {
+        const displayText = getStatusDisplayText(status);
+        switch (displayText) {
+            case "Còn hàng":
+                return "bg-green-100 text-green-800";
+            case "Hết hàng":
+                return "bg-red-100 text-red-800";
+            case "Đã xóa":
+                return "bg-gray-100 text-gray-800";
+            case "Bị đình chỉ":
+                return "bg-purple-100 text-purple-800";
+            default:
+                return "bg-gray-100 text-gray-800";
+        }
+    };
+
+    // Check if product is available for purchase (only Active status)
+    const isAvailableForPurchase = () => {
+        if (!product) return false;
+        
+        // Check numeric status (0 = Active)
+        if (typeof product.status === 'number') {
+            return product.status === 0;
+        }
+        // Check string status
+        if (typeof product.status === 'string') {
+            return product.status === 'Active';
+        }
+        // Check final display status
+        const displayText = getStatusDisplayText(product.status);
+        return displayText === 'Còn hàng';
+    };
 
     // Utility function to get time ago
     const getTimeAgo = (dateString) => {
@@ -79,6 +142,22 @@ const ProductDetail = () => {
 
                 const productData = productResponse.data;
                 console.log('Product data loaded:', productData);
+                
+                // Check if product is Inactive (status = 2) or Suspended (status = 3)
+                const isInactive = (typeof productData.status === 'number' && productData.status === 2) ||
+                                 (typeof productData.status === 'string' && productData.status === 'Inactive');
+                
+                const isSuspended = (typeof productData.status === 'number' && productData.status === 3) ||
+                                  (typeof productData.status === 'string' && productData.status === 'Suspended');
+                
+                if (isInactive) {
+                    console.log('Product is Inactive, showing special message');
+                }
+                
+                if (isSuspended) {
+                    console.log('Product is Suspended, showing special message');
+                }
+                
                 setProduct(productData);
 
                 // Set initial quantity to product's minimum quantity
@@ -357,11 +436,8 @@ const ProductDetail = () => {
 
                     {/* Status Badge */}
                     <div className="mb-4">
-                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${product.status === 'Available'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                            }`}>
-                            {product.statusDisplay || product.status}
+                        <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(product.status)}`}>
+                            {getStatusDisplayText(product.status)}
                         </span>
                     </div>
 
@@ -420,20 +496,22 @@ const ProductDetail = () => {
                         )}
                     </div>
 
-                    {/* Add to Cart Section */}
-                    <div className="border rounded-lg p-4 mb-6">
-                        <h3 className="font-medium mb-3">Thêm vào giỏ hàng</h3>
-                        <AddToCartButton
-                            product={product}
-                            quantity={quantity}
-                            onQuantityChange={setQuantity}
-                            showQuantityControls={true}
-                            size="default"
-                        />
-                    </div>
+                    {/* Add to Cart Section - Only show if product is available */}
+                    {isAvailableForPurchase() && (
+                        <div className="border rounded-lg p-4 mb-6">
+                            <h3 className="font-medium mb-3">Thêm vào giỏ hàng</h3>
+                            <AddToCartButton
+                                product={product}
+                                quantity={quantity}
+                                onQuantityChange={setQuantity}
+                                showQuantityControls={true}
+                                size="default"
+                            />
+                        </div>
+                    )}
 
-                    {/* Fast Bargain Section */}
-                    {authService.isAuthenticated() && (
+                    {/* Fast Bargain Section - Only show if authenticated and product is available */}
+                    {authService.isAuthenticated() && isAvailableForPurchase() && (
                         <div className="border rounded-lg p-4 mb-6">
                             <h3 className="font-medium mb-3">Thương lượng giá</h3>
                             <button
@@ -446,6 +524,25 @@ const ProductDetail = () => {
                             <p className="text-sm text-gray-500 mt-2 text-center">
                                 Đề xuất giá tốt hơn với người bán
                             </p>
+                        </div>
+                    )}
+
+                    {/* Unavailable Product Message */}
+                    {!isAvailableForPurchase() && (
+                        <div className="border rounded-lg p-4 mb-6 bg-gray-50">
+                            <div className="text-center text-gray-600">
+                                <FaBox className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                                <h3 className="font-medium mb-2">Sản phẩm không khả dụng</h3>
+                                <p className="text-sm">
+                                    {getStatusDisplayText(product.status) === 'Hết hàng' && 'Sản phẩm đã hết hàng, vui lòng quay lại sau'}
+                                    {getStatusDisplayText(product.status) === 'Đã xóa' && 'Sản phẩm đã ngừng bán và không còn hiển thị trong gian hàng'}
+                                    {getStatusDisplayText(product.status) === 'Bị đình chỉ' && 'Sản phẩm tạm thời bị đình chỉ do vi phạm quy định'}
+                                    {!['Hết hàng', 'Đã xóa', 'Bị đình chỉ'].includes(getStatusDisplayText(product.status)) && 'Sản phẩm hiện không có sẵn'}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                    Vui lòng quay lại sau hoặc chọn sản phẩm khác
+                                </p>
+                            </div>
                         </div>
                     )}
 
@@ -750,17 +847,17 @@ const ProductDetail = () => {
                                 key={relatedProduct.id}
                                 id={relatedProduct.id}
                                 name={relatedProduct.name}
-                                seller={relatedProduct.seller}
+                                seller={relatedProduct.seller?.name || relatedProduct.sellerName}
                                 sellerId={relatedProduct.sellerId}
-                                market={relatedProduct.market}
+                                market={relatedProduct.marketName || relatedProduct.market}
                                 storeId={relatedProduct.storeId}
                                 storeName={relatedProduct.storeName}
                                 price={relatedProduct.price}
-                                image={relatedProduct.image}
+                                image={relatedProduct.imageUrls && relatedProduct.imageUrls.length > 0 ? relatedProduct.imageUrls[0] : relatedProduct.image}
                                 description={relatedProduct.description}
-                                rating={relatedProduct.rating}
-                                status={relatedProduct.statusDisplay}
-                                minimumQuantity={relatedProduct.minimumQuantity || 0.5}
+                                status={relatedProduct.status}
+                                minimumQuantity={relatedProduct.minimumQuantity || 1}
+                                unitName={relatedProduct.unitName || 'kg'}
                             />
                         ))}
                     </div>

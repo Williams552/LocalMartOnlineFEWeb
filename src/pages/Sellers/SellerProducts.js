@@ -266,39 +266,60 @@ const SellerProducts = () => {
             const product = products.find(p => p.id === productId);
             if (!product) return;
 
-            const newStatus = !product.isAvailable;
-            const result = await productService.toggleProductStatus(productId, newStatus);
+            // Seller cannot toggle status of Suspended products
+            // Cannot toggle if product is suspended
+            if (product.status === 'Suspended' || product.status === 3) {
+                toastService.warning('Sản phẩm đã bị đình chỉ bởi Admin. Không thể thay đổi trạng thái.');
+                return;
+            }
+
+            // For seller: Active <-> OutOfStock
+            let newStatus;
+            if (product.status === 'Active' || product.status === 0) { 
+                newStatus = 'OutOfStock'; // Change to OutOfStock
+            } else if (product.status === 'OutOfStock' || product.status === 1) { 
+                newStatus = 'Active'; // Change to Active
+            } else {
+                toastService.warning('Không thể thay đổi trạng thái sản phẩm này.');
+                return;
+            }
+
+            console.log('🔄 Seller updating product status:', { productId, currentStatus: product.status, newStatus });
+
+            // Use the new dedicated status endpoint
+            const result = await productService.updateProductStatus(productId, newStatus);
 
             if (result.success) {
-                toastService.success(result.message);
-                // Update local state
+                toastService.success('Đã cập nhật trạng thái sản phẩm');
+                // Update local state with the correct status
                 setProducts(prev => prev.map(p =>
-                    p.id === productId ? { ...p, isAvailable: newStatus } : p
+                    p.id === productId ? { ...p, status: newStatus } : p
                 ));
             } else {
-                toastService.error(result.message);
+                toastService.error(result.message || 'Có lỗi khi cập nhật trạng thái sản phẩm');
             }
         } catch (error) {
-            console.error('Error toggling product status:', error);
+            console.error('Error updating product status:', error);
             toastService.error('Có lỗi khi thay đổi trạng thái sản phẩm');
         }
     };
 
     const handleDeleteProduct = async (productId) => {
-        if (!window.confirm("Bạn có chắc muốn xóa sản phẩm này? Hành động này không thể hoàn tác.")) {
+        if (!window.confirm("Bạn có chắc muốn xóa sản phẩm này? Sản phẩm sẽ không còn hiển thị trong gian hàng của bạn.")) {
             return;
         }
 
         try {
-            const result = await productService.deleteProduct(productId);
+            // Change status to Inactive instead of permanent deletion
+            const result = await productService.updateProductStatus(productId, 'Inactive');
 
             if (result.success) {
-                toastService.success(result.message);
-                // Remove from local state
+                toastService.success('Đã xóa sản phẩm khỏi gian hàng');
+                // Remove from local state since Inactive products are not shown to seller
                 setProducts(prev => prev.filter(p => p.id !== productId));
                 setTotalItems(prev => prev - 1);
             } else {
-                toastService.error(result.message);
+                toastService.error(result.message || 'Có lỗi khi xóa sản phẩm');
             }
         } catch (error) {
             console.error('Error deleting product:', error);
@@ -334,6 +355,36 @@ const SellerProducts = () => {
     };
 
     const getStatusBadge = (product) => {
+        // Handle status values
+        if (typeof product.status === 'string') {
+            switch (product.status) {
+                case 'Active': 
+                    return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Đang bán</span>;
+                case 'OutOfStock': 
+                    return <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Hết hàng</span>;
+                case 'Inactive': 
+                    return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Đã xóa</span>;
+                case 'Suspended': 
+                    return <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">Bị đình chỉ</span>;
+                default: 
+                    return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Không xác định</span>;
+            }
+        } else if (typeof product.status === 'number') {
+            switch (product.status) {
+                case 0: 
+                    return <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Đang bán</span>;
+                case 1: 
+                    return <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full text-xs font-medium">Hết hàng</span>;
+                case 2: 
+                    return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Đã xóa</span>;
+                case 3: 
+                    return <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">Bị đình chỉ</span>;
+                default: 
+                    return <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">Không xác định</span>;
+            }
+        }
+        
+        // Fallback to isAvailable for backward compatibility
         const isActive = product.isAvailable;
         return isActive
             ? <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">Đang bán</span>
@@ -377,85 +428,6 @@ const SellerProducts = () => {
 
     return (
         <SellerLayout>
-            {/* Modal thêm sản phẩm */}
-            {showAddModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                    <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg relative">
-                        <button onClick={handleCloseAddModal} className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-xl">×</button>
-                        <h2 className="text-xl font-bold mb-4">Thêm sản phẩm mới</h2>
-                        <form onSubmit={handleAddProduct} className="space-y-3">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Tên sản phẩm *</label>
-                                <input name="name" value={addForm.name} onChange={handleAddFormChange} className="w-full border rounded px-3 py-2" required />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Mô tả</label>
-                                <textarea name="description" value={addForm.description} onChange={handleAddFormChange} className="w-full border rounded px-3 py-2" rows={2} />
-                            </div>
-                            <div className="flex space-x-2">
-                                <div className="flex-1">
-                                    <label className="block text-sm font-medium mb-1">Giá *</label>
-                                    <input name="price" type="number" min="0.01" step="0.01" value={addForm.price} onChange={handleAddFormChange} className="w-full border rounded px-3 py-2" required />
-                                </div>
-                                <div className="flex-1">
-                                    <label className="block text-sm font-medium mb-1">Số lượng tối thiểu</label>
-                                    <input name="minimumQuantity" type="number" min="0.01" step="0.01" value={addForm.minimumQuantity} onChange={handleAddFormChange} className="w-full border rounded px-3 py-2" />
-                                </div>
-                            </div>
-                            <div className="flex space-x-2">
-                                <div className="flex-1">
-                                    <label className="block text-sm font-medium mb-1">Danh mục *</label>
-                                    <select
-                                        name="categoryId"
-                                        value={addForm.categoryId}
-                                        onChange={handleAddFormChange}
-                                        className="w-full border rounded px-3 py-2"
-                                        required
-                                    >
-                                        <option value="">Chọn danh mục</option>
-                                        {categoryOptions.map(cat => (
-                                            <option key={cat.id} value={cat.id}>{cat.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div className="flex-1">
-                                    <label className="block text-sm font-medium mb-1">Đơn vị *</label>
-                                    <select
-                                        name="unitId"
-                                        value={addForm.unitId}
-                                        onChange={handleAddFormChange}
-                                        className="w-full border rounded px-3 py-2"
-                                        required
-                                    >
-                                        <option value="">Chọn đơn vị</option>
-                                        {unitOptions.map(unit => (
-                                            <option key={unit.id} value={unit.id}>{unit.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Ảnh sản phẩm (URL)</label>
-                                {addForm.imageUrls.map((url, idx) => (
-                                    <div key={idx} className="flex space-x-2 mb-1">
-                                        <input value={url} onChange={e => handleImageUrlChange(idx, e.target.value)} className="w-full border rounded px-3 py-2" placeholder="https://..." />
-                                        {idx === addForm.imageUrls.length - 1 && (
-                                            <button type="button" onClick={handleAddImageField} className="px-2 py-1 bg-gray-200 rounded">+</button>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                            <div className="flex justify-end space-x-2 mt-4">
-                                <button type="button" onClick={handleCloseAddModal} className="px-4 py-2 rounded bg-gray-200 text-gray-700">Hủy</button>
-                                <button type="submit" disabled={addLoading} className="px-4 py-2 rounded bg-supply-primary text-white hover:bg-green-600 disabled:opacity-50">
-                                    {addLoading ? 'Đang thêm...' : 'Thêm sản phẩm'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
             <div className="bg-white shadow-sm border-b">
                 <div className="max-w-7xl mx-auto px-4 py-4">
                     <div className="flex items-center justify-between">
@@ -558,18 +530,18 @@ const SellerProducts = () => {
                         </div>
                         <div className="text-sm text-gray-600">
                             <span className="font-medium text-green-600">
-                                {products.filter(p => p.isAvailable).length}
+                                {products.filter(p => p.status === 'Active' || p.status === 0).length}
                             </span> đang bán
                         </div>
                         <div className="text-sm text-gray-600">
-                            <span className="font-medium text-gray-500">
-                                {products.filter(p => !p.isAvailable).length}
-                            </span> tạm ngưng
+                            <span className="font-medium text-red-600">
+                                {products.filter(p => p.status === 'OutOfStock' || p.status === 1).length}
+                            </span> hết hàng
                         </div>
                         <div className="text-sm text-gray-600">
-                            <span className="font-medium text-red-600">
-                                {products.filter(p => (p.stockQuantity || 0) === 0).length}
-                            </span> hết hàng
+                            <span className="font-medium text-purple-600">
+                                {products.filter(p => p.status === 'Suspended' || p.status === 3).length}
+                            </span> bị đình chỉ
                         </div>
                         {refreshing && (
                             <div className="text-sm text-blue-600 flex items-center space-x-1">
@@ -609,28 +581,44 @@ const SellerProducts = () => {
                                         <button
                                             onClick={() => handleToggleStatus(product.id)}
                                             className="bg-white/90 p-1 rounded"
-                                            disabled={refreshing}
-                                        >
-                                            {product.isAvailable ?
-                                                <FaToggleOn className="text-green-600" /> :
-                                                <FaToggleOff className="text-gray-400" />
+                                            disabled={refreshing || product.status === 'Suspended' || product.status === 3}
+                                            title={
+                                                (product.status === 'Suspended' || product.status === 3) ? "Sản phẩm bị đình chỉ bởi Admin" :
+                                                (product.status === 'Active' || product.status === 0) ? "Nhấn để chuyển sang Hết hàng" : "Nhấn để chuyển sang Đang bán"
                                             }
+                                        >
+                                            {(product.status === 'Suspended' || product.status === 3) ? (
+                                                <FaToggleOff className="text-purple-400" />
+                                            ) : (product.status === 'Active' || product.status === 0) ? (
+                                                <FaToggleOn className="text-green-600" />
+                                            ) : (
+                                                <FaToggleOff className="text-gray-400" />
+                                            )}
                                         </button>
                                     </div>
                                 </div>
 
                                 <div className="p-4">
                                     <h3 className="font-medium text-gray-800 mb-2 line-clamp-2">{product.name}</h3>
+                                    
+                                    {/* Suspended warning banner */}
+                                    {(product.status === 'Suspended' || product.status === 3) && (
+                                        <div className="mb-3 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                                            <div className="flex items-center">
+                                                <div className="w-2 h-2 bg-purple-500 rounded-full mr-2"></div>
+                                                <span className="text-xs text-purple-700 font-medium">
+                                                    Sản phẩm bị đình chỉ bởi Admin
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
                                     <div className="space-y-2 text-sm">
                                         <div className="flex items-center justify-between">
                                             <span className="text-gray-600">Giá:</span>
                                             <span className="font-bold text-supply-primary">
                                                 {formatPrice(product.price)}đ/{product.unit || 'kg'}
                                             </span>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-gray-600">Tồn kho:</span>
-                                            {getStockStatus(product)}
                                         </div>
                                         <div className="flex items-center justify-between">
                                             <span className="text-gray-600">Đã bán:</span>
@@ -657,21 +645,6 @@ const SellerProducts = () => {
                                             </div>
                                         )}
                                         <div className="flex space-x-1">
-                                            <Link
-                                                to={`/seller/products/edit/${product.id}`}
-                                                className="text-blue-600 hover:bg-blue-50 p-1 rounded"
-                                                title="Chỉnh sửa"
-                                            >
-                                                <FaEdit size={14} />
-                                            </Link>
-                                            <button
-                                                onClick={() => handleDuplicateProduct(product.id)}
-                                                className="text-green-600 hover:bg-green-50 p-1 rounded"
-                                                disabled={refreshing}
-                                                title="Sao chép"
-                                            >
-                                                <FaCopy size={14} />
-                                            </button>
                                             <button
                                                 onClick={() => handleDeleteProduct(product.id)}
                                                 className="text-red-600 hover:bg-red-50 p-1 rounded"
@@ -739,26 +712,30 @@ const SellerProducts = () => {
                                             <td className="py-3 px-4">{getStatusBadge(product)}</td>
                                             <td className="py-3 px-4">
                                                 <div className="flex space-x-2">
-                                                    <Link
-                                                        to={`/seller/products/edit/${product.id}`}
-                                                        className="text-blue-600 hover:bg-blue-50 p-1 rounded"
-                                                        title="Chỉnh sửa"
-                                                    >
-                                                        <FaEdit size={14} />
-                                                    </Link>
+                                                    {/* Toggle Status Button */}
                                                     <button
-                                                        onClick={() => handleDuplicateProduct(product.id)}
-                                                        className="text-green-600 hover:bg-green-50 p-1 rounded"
-                                                        disabled={refreshing}
-                                                        title="Sao chép"
+                                                        onClick={() => handleToggleStatus(product.id)}
+                                                        className="hover:bg-gray-50 p-1 rounded"
+                                                        disabled={refreshing || product.status === 'Suspended' || product.status === 3}
+                                                        title={
+                                                            (product.status === 'Suspended' || product.status === 3) ? "Sản phẩm bị đình chỉ bởi Admin" :
+                                                            (product.status === 'Active' || product.status === 0) ? "Nhấn để chuyển sang Hết hàng" : "Nhấn để chuyển sang Đang bán"
+                                                        }
                                                     >
-                                                        <FaCopy size={14} />
+                                                        {(product.status === 'Suspended' || product.status === 3) ? (
+                                                            <FaToggleOff className="text-purple-400" size={16} />
+                                                        ) : (product.status === 'Active' || product.status === 0) ? (
+                                                            <FaToggleOn className="text-green-600" size={16} />
+                                                        ) : (
+                                                            <FaToggleOff className="text-gray-400" size={16} />
+                                                        )}
                                                     </button>
+                                                    {/* Delete Button */}
                                                     <button
                                                         onClick={() => handleDeleteProduct(product.id)}
                                                         className="text-red-600 hover:bg-red-50 p-1 rounded"
                                                         disabled={refreshing}
-                                                        title="Xóa"
+                                                        title="Xóa sản phẩm"
                                                     >
                                                         <FaTrash size={14} />
                                                     </button>

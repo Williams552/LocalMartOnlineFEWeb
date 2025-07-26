@@ -70,6 +70,71 @@ class ProductService {
             };
         }
     }
+    // Get all products for Admin (including Inactive products)
+    async getAdminProducts(params = {}) {
+        try {
+            const queryParams = new URLSearchParams();
+
+            // Add pagination parameters if provided
+            if (params.page) queryParams.append('page', params.page);
+            if (params.pageSize) queryParams.append('pageSize', params.pageSize);
+            if (params.search) queryParams.append('search', params.search);
+            if (params.categoryId) queryParams.append('categoryId', params.categoryId);
+            if (params.storeId) queryParams.append('storeId', params.storeId);
+            if (params.marketId) queryParams.append('marketId', params.marketId);
+            if (params.status) queryParams.append('status', params.status);
+
+            console.log('Admin products query params:', queryParams.toString());
+
+            const url = queryParams.toString()
+                ? `${API_ENDPOINTS.PRODUCT.GET_ALL}?${queryParams}`
+                : API_ENDPOINTS.PRODUCT.GET_ALL;
+
+            console.log('Requesting admin products from URL:', url);
+
+            const response = await apiClient.get(url);
+
+            console.log('Admin products API response:', response.data);
+
+            // Return ALL items for Admin (no filtering)
+            if (response.data && response.data.success && response.data.data) {
+                const items = response.data.data.items || [];
+                
+                return {
+                    items: items,
+                    totalCount: response.data.data.totalCount || 0,
+                    page: response.data.data.page || 1,
+                    pageSize: response.data.data.pageSize || 20
+                };
+            }
+
+            return {
+                items: [],
+                totalCount: 0,
+                page: 1,
+                pageSize: 20
+            };
+        } catch (error) {
+            console.error('Error fetching admin products:', error);
+            throw error;
+        }
+    }
+
+    // Filter products for public display (exclude Inactive and Suspended products)
+    filterPublicProducts(products) {
+        return products.filter(product => {
+            // Show only Active(0) and OutOfStock(1) for public
+            // Exclude Inactive(2) and Suspended(3) products from public display
+            if (typeof product.status === 'number') {
+                return product.status === 0 || product.status === 1; // Active or OutOfStock only
+            }
+            if (typeof product.status === 'string') {
+                return product.status === 'Active' || product.status === 'OutOfStock'; // Active or OutOfStock only
+            }
+            return true; // Show if status is unknown (backward compatibility)
+        });
+    }
+
     // Get all products
     async getAllProducts(params = {}) {
         try {
@@ -91,9 +156,13 @@ class ProductService {
 
             // Return the items from the API response
             if (response.data && response.data.success && response.data.data) {
+                const items = response.data.data.items || [];
+                // Filter out Inactive products for public display
+                const filteredItems = this.filterPublicProducts(items);
+                
                 return {
-                    items: response.data.data.items || [],
-                    totalCount: response.data.data.totalCount || 0,
+                    items: filteredItems,
+                    totalCount: filteredItems.length, // Update count after filtering
                     page: response.data.data.page || 1,
                     pageSize: response.data.data.pageSize || 20
                 };
@@ -117,9 +186,25 @@ class ProductService {
             const response = await apiClient.get(API_ENDPOINTS.PRODUCT.GET_BY_ID(id));
 
             if (response.data && response.data.success && response.data.data) {
+                const product = this.formatProductForFrontend(response.data.data);
+                
+                // Check if product should be visible to public
+                // Block access to Inactive and Suspended products for public users
+                const isInactive = (typeof product.status === 'string' && product.status === 'Inactive') ||
+                                 (typeof product.status === 'number' && product.status === 2);
+                const isSuspended = (typeof product.status === 'string' && product.status === 'Suspended') ||
+                                  (typeof product.status === 'number' && product.status === 3);
+                
+                if (isInactive || isSuspended) {
+                    return {
+                        success: false,
+                        message: 'Sản phẩm không khả dụng'
+                    };
+                }
+                
                 return {
                     success: true,
-                    data: this.formatProductForFrontend(response.data.data)
+                    data: product
                 };
             }
 
@@ -180,9 +265,13 @@ class ProductService {
             const response = await apiClient.get(url);
 
             if (response.data && response.data.success && response.data.data) {
+                const items = (response.data.data.items || []).map(item => this.formatProductForFrontend(item));
+                // Filter out Inactive products for public store display
+                const filteredItems = this.filterPublicProducts(items);
+                
                 return {
-                    items: (response.data.data.items || []).map(item => this.formatProductForFrontend(item)),
-                    totalCount: response.data.data.totalCount || 0,
+                    items: filteredItems,
+                    totalCount: filteredItems.length, // Update count after filtering
                     page: response.data.data.page || 1,
                     pageSize: response.data.data.pageSize || 20
                 };
@@ -551,7 +640,7 @@ class ProductService {
 
     // ========== SELLER METHODS ==========
 
-    // Get all products for seller (including inactive)
+    // Get all products for seller (excluding Inactive products)
     async getSellerProducts(page = 1, pageSize = 20) {
         try {
             console.log('🛍️ ProductService: Getting seller products (my-store)...', { page, pageSize });
@@ -560,10 +649,42 @@ class ProductService {
                 params: { page, pageSize }
             });
 
+            console.log('📊 Seller products API response:', response.data);
+
             if (response.data?.success && response.data.data) {
                 console.log('✅ ProductService: Seller products fetched successfully');
 
                 let transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+
+                console.log('📋 Raw seller products before filtering:', transformedProducts.map(p => ({ 
+                    id: p.id, 
+                    name: p.name, 
+                    status: p.status,
+                    statusType: typeof p.status 
+                })));
+
+                // Filter out only Inactive products for seller interface
+                // Seller can see: Active, OutOfStock, and Suspended products (not Inactive)
+                transformedProducts = transformedProducts.filter(product => {
+                    // Handle both string and numeric status values
+                    const status = product.status;
+                    const shouldKeep = status !== 'Inactive' && status !== 2;
+                    console.log(`🔍 Product ${product.name}: status=${status}, keeping=${shouldKeep}`);
+                    return shouldKeep;
+                });
+
+                console.log('✅ Seller products after filtering (excluding Inactive):', transformedProducts.map(p => ({ 
+                    id: p.id, 
+                    name: p.name, 
+                    status: p.status 
+                })));
+
+                console.log('📈 Status breakdown:', {
+                    active: transformedProducts.filter(p => p.status === 'Active' || p.status === 0).length,
+                    outOfStock: transformedProducts.filter(p => p.status === 'OutOfStock' || p.status === 1).length,
+                    suspended: transformedProducts.filter(p => p.status === 'Suspended' || p.status === 3).length,
+                    total: transformedProducts.length
+                });
 
                 // Enhance products with category information
                 try {
@@ -623,6 +744,23 @@ class ProductService {
                 console.log('✅ ProductService: Seller products search successful');
 
                 let transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
+
+                // Filter out only Inactive products for seller interface (same as getSellerProducts)
+                // Seller can see: Active, OutOfStock, and Suspended products (not Inactive)
+                transformedProducts = transformedProducts.filter(product => {
+                    // Handle both string and numeric status values
+                    const status = product.status;
+                    const shouldKeep = status !== 'Inactive' && status !== 2;
+                    console.log(`🔍 Search result ${product.name}: status=${status}, keeping=${shouldKeep}`);
+                    return shouldKeep;
+                });
+
+                console.log('📈 Search status breakdown:', {
+                    active: transformedProducts.filter(p => p.status === 'Active' || p.status === 0).length,
+                    outOfStock: transformedProducts.filter(p => p.status === 'OutOfStock' || p.status === 1).length,
+                    suspended: transformedProducts.filter(p => p.status === 'Suspended' || p.status === 3).length,
+                    total: transformedProducts.length
+                });
 
                 // Enhance products with category information
                 try {
@@ -769,6 +907,36 @@ class ProductService {
                 error.message ||
                 'Có lỗi xảy ra khi thay đổi trạng thái sản phẩm'
             );
+        }
+    }
+
+    // Update product status with numeric value (0=Active, 1=OutOfStock, 2=Inactive)
+    async updateProductStatus(productId, status) {
+        try {
+            console.log('🔄 ProductService: Updating product status...', { productId, status });
+            
+            // Use the new dedicated status endpoint from backend
+            const response = await apiClient.patch(API_ENDPOINTS.PRODUCT.UPDATE_STATUS(productId), {
+                status: status
+            });
+            
+            if (response.data?.success !== false) {
+                console.log('✅ ProductService: Product status updated successfully');
+                return {
+                    success: true,
+                    message: 'Cập nhật trạng thái sản phẩm thành công'
+                };
+            } else {
+                throw new Error(response.data?.message || 'Failed to update product status');
+            }
+        } catch (error) {
+            console.error('❌ ProductService: Error updating product status:', error);
+            return {
+                success: false,
+                message: error.response?.data?.message ||
+                    error.message ||
+                    'Có lỗi xảy ra khi cập nhật trạng thái sản phẩm'
+            };
         }
     }
 

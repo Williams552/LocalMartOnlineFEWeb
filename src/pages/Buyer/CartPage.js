@@ -560,7 +560,10 @@ const CartPage = () => {
 
     // Nhóm cart items theo store để hiển thị preview
     const getOrderPreview = () => {
-        const groupedByStore = formattedCartItems.reduce((acc, item) => {
+        // Chỉ lấy những items được chọn
+        const selectedCartItems = formattedCartItems.filter(item => selectedItems.has(item.id));
+        
+        const groupedByStore = selectedCartItems.reduce((acc, item) => {
             const storeKey = item.storeName || item.seller || 'Unknown Store';
             if (!acc[storeKey]) {
                 acc[storeKey] = {
@@ -572,7 +575,7 @@ const CartPage = () => {
             }
             acc[storeKey].items.push(item);
             acc[storeKey].totalAmount += item.subTotal; // Đã tính toán đúng trong formattedCartItems
-            acc[storeKey].itemCount += item.quantity;
+            acc[storeKey].itemCount += item.quantity;   
             return acc;
         }, {});
 
@@ -729,7 +732,11 @@ const CartPage = () => {
                                                     </div>
                                                     <div className="flex items-center space-x-2">
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity - 0.5)}
+                                                            onClick={() => {
+                                                                const minQuantity = item.minimumQuantity || 0.5;
+                                                                const newQuantity = Math.round((item.quantity - minQuantity) * 100) / 100;
+                                                                updateQuantity(item.id, newQuantity);
+                                                            }}
                                                             disabled={updating[item.id] || item.quantity <= item.minimumQuantity || item.isBargainProduct}
                                                             className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title={item.isBargainProduct ? "Không thể thay đổi số lượng sản phẩm thương lượng" : "Giảm số lượng"}
@@ -741,7 +748,7 @@ const CartPage = () => {
                                                                 <FiLoader className="animate-spin mx-auto" />
                                                             ) : (
                                                                 <div>
-                                                                    <span className="font-medium">{item.quantity} {item.unit}</span>
+                                                                    <span className="font-medium">{item.quantity.toFixed(2).replace(/\.?0+$/, '')} {item.unit}</span>
                                                                     {item.isBargainProduct && (
                                                                         <div className="text-xs text-orange-600 font-medium">Thương lượng</div>
                                                                     )}
@@ -749,7 +756,11 @@ const CartPage = () => {
                                                             )}
                                                         </div>
                                                         <button
-                                                            onClick={() => updateQuantity(item.id, item.quantity + 0.5)}
+                                                            onClick={() => {
+                                                                const minQuantity = item.minimumQuantity || 0.5;
+                                                                const newQuantity = Math.round((item.quantity + minQuantity) * 100) / 100;
+                                                                updateQuantity(item.id, newQuantity);
+                                                            }}
                                                             disabled={updating[item.id] || !item.isAvailable || (item.stockQuantity > 0 && item.quantity >= item.stockQuantity) || item.isBargainProduct}
                                                             className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title={item.isBargainProduct ? "Không thể thay đổi số lượng sản phẩm thương lượng" : "Tăng số lượng"}
@@ -1265,9 +1276,6 @@ const CartPage = () => {
                                                     {store.totalAmount.toLocaleString()}đ
                                                 </span>
                                             </div>
-                                            <p className="text-sm text-gray-600 mt-1">
-                                                {store.itemCount} sản phẩm • {store.items.length} loại
-                                            </p>
                                         </div>
                                     ))}
                                 </div>

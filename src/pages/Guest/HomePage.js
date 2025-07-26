@@ -171,7 +171,21 @@ const HomePage = () => {
                     filteredResults = await getProductsFromNearbyMarkets([selectedNearbyMarket], searchResults);
                 }
                 
-                setProducts(filteredResults);
+                // Sort products to prioritize Active products first
+                const sortedResults = filteredResults.sort((a, b) => {
+                    // Priority order: Active (0) > OutOfStock (1) > Inactive (2)
+                    const statusPriorityA = a.status === 0 ? 0 : a.status === 1 ? 1 : 2;
+                    const statusPriorityB = b.status === 0 ? 0 : b.status === 1 ? 1 : 2;
+                    
+                    if (statusPriorityA !== statusPriorityB) {
+                        return statusPriorityA - statusPriorityB;
+                    }
+                    
+                    // If same status, sort by newest first
+                    return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+                });
+                
+                setProducts(sortedResults);
 
             } catch (err) {
                 console.error('❌ Error searching products:', err);
@@ -418,15 +432,17 @@ const HomePage = () => {
                                         key={p.id}
                                         id={p.id}
                                         name={p.name}
-                                        seller={p.seller}
+                                        seller={p.seller?.name || p.sellerName}
                                         sellerId={p.sellerId}
-                                        market={p.market}
+                                        market={p.marketName || p.market}
                                         storeId={p.storeId}
                                         storeName={p.storeName}
                                         price={p.price}
-                                        image={p.image}
+                                        image={p.imageUrls && p.imageUrls.length > 0 ? p.imageUrls[0] : p.image}
                                         description={p.description}
-                                        status={p.statusDisplay}
+                                        status={p.status}
+                                        minimumQuantity={p.minimumQuantity || 1}
+                                        unitName={p.unitName || 'kg'}
                                     />
                                 ))}
                             </div>
