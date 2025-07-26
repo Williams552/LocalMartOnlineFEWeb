@@ -147,7 +147,7 @@ class ReportService {
                 ...filters
             });
 
-            const response = await fetch(`${API_ENDPOINTS.API_URL}/api/report?${queryParams}`, {
+            const response = await fetch(`${API_ENDPOINTS.API_BASE}/api/report?${queryParams}`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -188,7 +188,7 @@ class ReportService {
                 };
             }
 
-            const response = await fetch(`${API_ENDPOINTS.API_URL}/api/report/${reportId}/status`, {
+            const response = await fetch(`${API_ENDPOINTS.API_BASE}/api/report/${reportId}/status`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -231,7 +231,7 @@ class ReportService {
                 };
             }
 
-            const response = await fetch(`${API_ENDPOINTS.API_URL}/api/report/statistics`, {
+            const response = await fetch(`${API_ENDPOINTS.API_BASE}/api/report/statistics`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`

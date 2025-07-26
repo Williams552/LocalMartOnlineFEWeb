@@ -30,7 +30,7 @@ const ReportManagement = () => {
         try {
             setLoading(true);
             const result = await reportService.getAllReports(page, pagination.pageSize, filters);
-            
+
             if (result.success) {
                 setReports(result.data.reports);
                 setPagination(result.data.pagination);
@@ -61,7 +61,7 @@ const ReportManagement = () => {
     const updateReportStatus = async (reportId, status) => {
         try {
             const result = await reportService.updateReportStatus(reportId, status);
-            
+
             if (result.success) {
                 // Refresh reports and statistics
                 await Promise.all([loadReports(pagination.currentPage), loadStatistics()]);
@@ -448,11 +448,10 @@ const ReportManagement = () => {
                                                 <button
                                                     key={page}
                                                     onClick={() => loadReports(page)}
-                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
-                                                        page === pagination.currentPage
+                                                    className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${page === pagination.currentPage
                                                             ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
                                                             : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                    }`}
+                                                        }`}
                                                 >
                                                     {page}
                                                 </button>
