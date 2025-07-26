@@ -112,13 +112,6 @@ const SellerLayout = ({ children }) => {
             description: 'Thông báo & cập nhật'
         },
         {
-            path: '/seller/priority-actions',
-            icon: FaExclamationTriangle,
-            label: 'Hành động ưu tiên',
-            color: 'text-red-600',
-            description: 'Vấn đề cần xử lý ngay'
-        },
-        {
             path: '/seller/payments',
             icon: FaCreditCard,
             label: 'Thanh toán',
