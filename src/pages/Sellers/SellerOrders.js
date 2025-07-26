@@ -386,10 +386,6 @@ const SellerOrders = () => {
                                                 <span>{formatDate(selectedOrder.requiredDate)}</span>
                                             </div>
                                             <div className="flex items-center space-x-2">
-                                                <span className="font-medium text-gray-600">Thanh toán:</span>
-                                                <span>{getPaymentMethodText(selectedOrder.paymentMethod)}</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
                                                 <span className="font-medium text-gray-600">Giao hàng:</span>
                                                 <span>{getDeliveryMethodText(selectedOrder.deliveryMethod)}</span>
                                             </div>

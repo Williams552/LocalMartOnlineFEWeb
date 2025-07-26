@@ -10,6 +10,7 @@ import ReviewModal from "../../components/ReviewModal";
 import OrderReviewModal from "../../components/Order/OrderReviewModal";
 import OrderCompletionNotification from "../../components/Order/OrderCompletionNotification";
 import { toast } from "react-toastify";
+import logo from "../../assets/image/logo.jpg";
 
 const BuyerOrders = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -443,26 +444,26 @@ const BuyerOrders = () => {
                                         </div>
                                     </div>
 
-                                    {/* Seller Info */}
+                                    {/* Store Info */}
                                     <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
                                         <div className="flex items-center justify-between">
                                             <div className="flex items-center space-x-3">
                                                 <img
                                                     src={sellerAvatar}
-                                                    alt={sellerName}
+                                                    alt={order.storeName || sellerName}
                                                     className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
                                                 />
                                                 <div>
                                                     <div className="flex items-center space-x-2">
                                                         <FaStore className="w-4 h-4 text-gray-400" />
-                                                        <span className="font-medium text-gray-800">{sellerName}</span>
+                                                        <span className="font-medium text-gray-800">{order.storeName || sellerName}</span>
                                                     </div>
-                                                    <p className="text-xs text-gray-500 mt-1">Người bán</p>
+                                                    <p className="text-xs text-gray-500 mt-1">Cửa hàng</p>
                                                 </div>
                                             </div>
                                             <div className="text-right">
-                                                <p className="text-sm font-medium text-gray-800">{sellerName}</p>
-                                                <p className="text-xs text-gray-500">Cửa hàng</p>
+                                                <p className="text-sm font-medium text-gray-800">{order.storeName || sellerName}</p>
+                                                <p className="text-xs text-gray-500">Người bán</p>
                                             </div>
                                         </div>
                                     </div>
@@ -479,15 +480,28 @@ const BuyerOrders = () => {
                                                 <div className="space-y-3">
                                                     {order.items && order.items.length > 0 ? (
                                                         order.items.map((item, index) => (
-                                                            <div key={item.productId || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                                            <div key={item.productId || index} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                                                                {/* Product Image */}
+                                                                <img
+                                                                    src={item.productImageUrl || logo}
+                                                                    alt={item.productName || item.name || 'Sản phẩm'}
+                                                                    className="w-16 h-16 rounded-lg object-cover border border-gray-200"
+                                                                    onError={(e) => {
+                                                                        e.target.src = logo;
+                                                                    }}
+                                                                />
+                                                                
+                                                                {/* Product Info */}
                                                                 <div className="flex-1">
                                                                     <h5 className="font-medium text-gray-800 text-sm">
-                                                                        {item.name || `Sản phẩm ${item.productId}`}
+                                                                        {item.productName || item.name || `Sản phẩm ${item.productId}`}
                                                                     </h5>
                                                                     <p className="text-xs text-gray-500 mt-1">
-                                                                        Số lượng: {item.quantity}{item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
+                                                                        Số lượng: {item.quantity} {item.productUnitName || item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
                                                                     </p>
                                                                 </div>
+                                                                
+                                                                {/* Total Price */}
                                                                 <div className="text-right">
                                                                     <span className="font-semibold text-gray-800">
                                                                         {formatCurrency(item.total || (item.quantity * item.priceAtPurchase))}
@@ -515,6 +529,17 @@ const BuyerOrders = () => {
                                                         <p className="text-sm text-gray-600 leading-relaxed">
                                                             {order.deliveryAddress}
                                                         </p>
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="text-sm font-medium text-gray-800">
+                                                            {order.buyerName || 'Người mua'}
+                                                        </span>
+                                                        {order.buyerPhone && (
+                                                            <span className="text-sm text-gray-600">
+                                                                {order.buyerPhone}
+                                                            </span>
+                                                        )}
                                                     </div>
 
                                                     {/* Notes */}
@@ -725,16 +750,16 @@ const BuyerOrders = () => {
                                     <div className="flex items-center space-x-3 mb-4">
                                         <img
                                             src={getSellerInfo(selectedOrder).sellerAvatar}
-                                            alt={getSellerInfo(selectedOrder).sellerName}
+                                            alt={selectedOrder.storeName || getSellerInfo(selectedOrder).sellerName}
                                             className="w-12 h-12 rounded-full"
                                         />
                                         <div>
                                             <p className="font-medium">
-                                                {getSellerInfo(selectedOrder).sellerName}
+                                                {selectedOrder.storeName || getSellerInfo(selectedOrder).sellerName}
                                             </p>
                                             <Link
                                                 to={`/seller/${encodeURIComponent(
-                                                    getSellerInfo(selectedOrder).sellerName
+                                                    selectedOrder.storeName || getSellerInfo(selectedOrder).sellerName
                                                 )}`}
                                                 className="text-supply-primary hover:underline text-sm"
                                             >
@@ -757,15 +782,6 @@ const BuyerOrders = () => {
                                                 {statusOptions[selectedOrder.status] || selectedOrder.status}
                                             </span>
                                         </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-gray-600">Thanh toán:</span>
-                                            <span className={`px-2 py-1 rounded text-xs ${selectedOrder.paymentStatus === 'paid'
-                                                ? 'bg-green-100 text-green-800'
-                                                : 'bg-yellow-100 text-yellow-800'
-                                                }`}>
-                                                {selectedOrder.paymentStatus === 'paid' ? 'Đã thanh toán' : 'Chưa thanh toán'}
-                                            </span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -775,15 +791,28 @@ const BuyerOrders = () => {
                                 <div className="space-y-3">
                                     {selectedOrder.items && selectedOrder.items.length > 0 ? (
                                         selectedOrder.items.map((item, index) => (
-                                            <div key={item.productId || index} className="flex justify-between items-center py-3 border-b">
-                                                <div>
+                                            <div key={item.productId || index} className="flex items-center space-x-3 py-3 border-b">
+                                                {/* Product Image */}
+                                                <img
+                                                    src={item.productImageUrl || logo}
+                                                    alt={item.productName || item.name || 'Sản phẩm'}
+                                                    className="w-20 h-20 rounded-lg object-cover border border-gray-200"
+                                                    onError={(e) => {
+                                                        e.target.src = logo;
+                                                    }}
+                                                />
+                                                
+                                                {/* Product Details */}
+                                                <div className="flex-1">
                                                     <p className="font-medium text-gray-800">
-                                                        {item.name || `Sản phẩm ${item.productId}`}
+                                                        {item.productName || item.name || `Sản phẩm ${item.productId}`}
                                                     </p>
-                                                    <p className="text-sm text-gray-600">
-                                                        {item.quantity} {item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
+                                                    <p className="text-sm text-gray-600 mt-1">
+                                                        {item.quantity} {item.productUnitName || item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
                                                     </p>
                                                 </div>
+                                                
+                                                {/* Price */}
                                                 <div className="text-right">
                                                     <p className="font-medium text-gray-800">
                                                         {formatCurrency(item.total || (item.quantity * item.priceAtPurchase))}
@@ -804,12 +833,29 @@ const BuyerOrders = () => {
                             </div>
 
                             <div className="mt-6">
-                                <h3 className="font-bold text-gray-800 mb-3">Thông tin người mua</h3>
+                                <h3 className="font-bold text-gray-800 mb-3">Thông tin giao hàng</h3>
                                 <div className="bg-gray-50 rounded-lg p-4">
-                                    <div className="flex items-start space-x-2">
-                                        <FaUser className="text-gray-400 mt-1" />
-                                        <span>{selectedOrder.deliveryAddress}</span>
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                                    <div className="flex items-center space-x-2">
+                                                        <FaUser className="text-blue-500" />
+                                                        <div>
+                                                            <p className="text-sm text-gray-600">Họ tên</p>
+                                                            <p className="font-medium text-gray-800">
+                                                                {selectedOrder.buyerName || 'Chưa có thông tin'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    {selectedOrder.buyerPhone && (
+                                                        <div className="flex items-center space-x-2">
+                                                            <FaUser className="text-blue-500" />
+                                                            <div>
+                                                                <p className="text-sm text-gray-600">Số điện thoại</p>
+                                                                <p className="font-medium text-gray-800">{selectedOrder.buyerPhone}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                     </div>
+
                                     {selectedOrder.expectedDeliveryTime && (
                                         <div className="mt-3 pt-3 border-t">
                                             <div className="flex items-center space-x-2">
