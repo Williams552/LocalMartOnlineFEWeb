@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
-import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingCart, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaShieldAlt, FaLeaf, FaClock, FaUsers, FaBox, FaEye, FaCalendarAlt, FaEdit, FaComments, FaHandshake, FaFlag } from "react-icons/fa";
+import { FaStar, FaRegStar, FaHeart, FaRegHeart, FaShoppingCart, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaShieldAlt, FaLeaf, FaClock, FaUsers, FaBox, FaEye, FaCalendarAlt, FaComments, FaHandshake, FaFlag } from "react-icons/fa";
 import { FiMinus, FiPlus, FiTruck, FiShield, FiClock, FiInfo } from "react-icons/fi";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import AddToCartButton from "../../components/Common/AddToCartButton";
 import FavoriteButton from "../../components/Common/FavoriteButton";
-import { ReviewList, ReviewForm, ReviewSummary } from "../../components/Review";
+import { ReviewList, ReviewSummary } from "../../components/Review";
 import StartBargainModal from "../../components/FastBargain/StartBargainModal";
 import ReportModal from "../../components/Report/ReportModal";
 import logo from "../../assets/image/logo.jpg";
@@ -17,6 +17,7 @@ import authService from "../../services/authService";
 
 const ProductDetail = () => {
     const { id } = useParams();
+    const reviewListRef = useRef();
 
     const [product, setProduct] = useState(null);
     const [store, setStore] = useState(null);
@@ -36,9 +37,6 @@ const ProductDetail = () => {
     const [showReportModal, setShowReportModal] = useState(false);
 
     // Review states
-    const [showReviewForm, setShowReviewForm] = useState(false);
-    const [currentUser, setCurrentUser] = useState(null);
-    const [userReview, setUserReview] = useState(null);
     const [reviewStats, setReviewStats] = useState({
         averageRating: 0,
         totalReviews: 0,
@@ -177,35 +175,6 @@ const ProductDetail = () => {
         }
     }, [id]);
 
-    // Check for current user and their review
-    useEffect(() => {
-        const checkCurrentUser = async () => {
-            try {
-                // Get current user from localStorage or auth service
-                const userData = localStorage.getItem('user');
-                if (userData) {
-                    const user = JSON.parse(userData);
-                    setCurrentUser(user);
-
-                    // Check if user has already reviewed this product
-                    if (product) {
-                        const userReviews = await reviewService.getUserReviews(user.id);
-                        if (userReviews.success) {
-                            const existingReview = userReviews.reviews.find(
-                                review => review.targetType === 'Product' && review.targetId === product.id
-                            );
-                            setUserReview(existingReview || null);
-                        }
-                    }
-                }
-            } catch (error) {
-                console.error('Error checking current user:', error);
-            }
-        };
-
-        checkCurrentUser();
-    }, [product]);
-
     const handleBargainSuccess = (bargainData) => {
         setShowBargainModal(false);
         // Hiển thị thông báo thành công hoặc navigate tới bargain detail
@@ -256,40 +225,6 @@ const ProductDetail = () => {
             nutritions: ["Vitamin A", "Vitamin C", "Sắt", "Canxi", "Chất xơ"],
             stock: 50 // Mock stock
         };
-    };
-
-    const handleReviewUpdate = () => {
-        // Refresh review data when a review is updated
-        if (product) {
-            reviewService.getReviewsForTarget('Product', product.id, { pageSize: 5 })
-                .then(result => {
-                    console.log('Refreshing review stats:', result);
-                    if (result.success) {
-                        setReviewStats({
-                            averageRating: result.averageRating || 0,
-                            totalReviews: result.totalCount || 0,
-                            ratingBreakdown: reviewService.calculateRatingBreakdown(result.reviews || [])
-                        });
-                    } else {
-                        console.error('Failed to refresh reviews:', result.message);
-                        // Keep existing stats or set defaults
-                        setReviewStats(prev => prev || {
-                            averageRating: 0,
-                            totalReviews: 0,
-                            ratingBreakdown: reviewService.calculateRatingBreakdown([])
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error refreshing reviews:', error);
-                    // Keep existing stats on error
-                    setReviewStats(prev => prev || {
-                        averageRating: 0,
-                        totalReviews: 0,
-                        ratingBreakdown: reviewService.calculateRatingBreakdown([])
-                    });
-                });
-        }
     };
 
     // Loading state
@@ -795,67 +730,9 @@ const ProductDetail = () => {
                     showDetailed={true}
                 />
 
-                {/* Write Review Section */}
-                {currentUser && (
-                    <div className="bg-white rounded-xl shadow-lg p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-gray-800">
-                                {userReview ? 'Đánh giá của bạn' : 'Đánh giá sản phẩm'}
-                            </h3>
-                            {userReview && (
-                                <button
-                                    onClick={() => setShowReviewForm(true)}
-                                    className="flex items-center space-x-2 text-supply-primary hover:text-supply-primary-dark transition-colors"
-                                >
-                                    <FaEdit />
-                                    <span>Chỉnh sửa</span>
-                                </button>
-                            )}
-                        </div>
-
-                        {userReview ? (
-                            <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                                <div className="flex items-center space-x-2 mb-2">
-                                    {renderStars(userReview.rating)}
-                                    <span className="text-sm text-gray-600">
-                                        {new Date(userReview.createdAt).toLocaleDateString('vi-VN')}
-                                    </span>
-                                </div>
-                                {userReview.comment && (
-                                    <p className="text-gray-700">{userReview.comment}</p>
-                                )}
-                            </div>
-                        ) : !showReviewForm ? (
-                            <button
-                                onClick={() => setShowReviewForm(true)}
-                                className="w-full border-2 border-dashed border-gray-300 rounded-lg py-6 text-center hover:border-supply-primary hover:bg-supply-primary/5 transition-colors"
-                            >
-                                <div className="text-gray-400 text-2xl mb-2">⭐</div>
-                                <p className="text-gray-600 font-medium">Viết đánh giá cho sản phẩm này</p>
-                                <p className="text-gray-500 text-sm">Chia sẻ trải nghiệm của bạn với cộng đồng</p>
-                            </button>
-                        ) : null}
-
-                        {showReviewForm && (
-                            <ReviewForm
-                                targetType="Product"
-                                targetId={product.id}
-                                userId={currentUser.id}
-                                existingReview={userReview}
-                                onReviewSubmitted={(newReview) => {
-                                    setUserReview(newReview);
-                                    setShowReviewForm(false);
-                                    // Refresh review stats
-                                    window.location.reload();
-                                }}
-                                onCancel={() => setShowReviewForm(false)}
-                            />
-                        )}
-                    </div>
-                )}
-
                 {/* Reviews List */}
                 <ReviewList
+                    ref={reviewListRef}
                     targetType="Product"
                     targetId={product.id}
                     showFilters={true}

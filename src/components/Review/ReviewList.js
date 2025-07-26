@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { FaStar, FaRegStar, FaThumbsUp, FaUser, FaCheckCircle, FaFilter, FaSort } from 'react-icons/fa';
 import { FiMoreVertical } from 'react-icons/fi';
 import reviewService from '../../services/reviewService';
 
-const ReviewList = ({ targetType, targetId, showFilters = true, maxHeight = "600px" }) => {
+const ReviewList = forwardRef(({ targetType, targetId, showFilters = true, maxHeight = "600px" }, ref) => {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -20,6 +20,13 @@ const ReviewList = ({ targetType, targetId, showFilters = true, maxHeight = "600
     });
 
     const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+
+    // Expose refresh function through ref
+    useImperativeHandle(ref, () => ({
+        refresh: () => {
+            fetchReviews();
+        }
+    }), []);
 
     useEffect(() => {
         if (targetType && targetId) {
@@ -402,6 +409,8 @@ const ReviewList = ({ targetType, targetId, showFilters = true, maxHeight = "600
             )}
         </div>
     );
-};
+});
+
+ReviewList.displayName = 'ReviewList';
 
 export default ReviewList;

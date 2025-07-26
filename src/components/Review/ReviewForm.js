@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FaStar, FaRegStar, FaPaperPlane, FaTimes } from 'react-icons/fa';
 import reviewService from '../../services/reviewService';
+import eventService from '../../services/eventService';
 import { toast } from 'react-toastify';
 
 const ReviewForm = ({
@@ -63,6 +64,11 @@ const ReviewForm = ({
                 if (onReviewSubmitted) {
                     onReviewSubmitted(result.data);
                 }
+
+                // Emit event to refresh reviews
+                eventService.emit(eventService.EVENTS.REVIEWS_REFRESH, {
+                    productId: targetId
+                });
 
                 // Reset form if creating new review
                 if (!existingReview) {

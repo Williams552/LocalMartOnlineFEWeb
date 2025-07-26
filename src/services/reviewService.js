@@ -77,6 +77,24 @@ class ReviewService {
         }
     }
 
+    // Kiểm tra xem đơn hàng đã được đánh giá chưa
+    async isOrderReviewed(orderId, userId) {
+        try {
+            const response = await apiService.get(`${this.baseURL}/order/${orderId}/reviewed?userId=${userId}`);
+            return {
+                success: true,
+                isReviewed: response.data?.isReviewed || response.isReviewed || false
+            };
+        } catch (error) {
+            console.error('Error checking order review status:', error);
+            return {
+                success: false,
+                isReviewed: false,
+                message: error.response?.data?.message || 'Không thể kiểm tra trạng thái đánh giá'
+            };
+        }
+    }
+
     // Lấy reviews cho target (Product, Seller, ProxyShopper)
     async getReviewsForTarget(targetType, targetId, filters = {}) {
         try {
