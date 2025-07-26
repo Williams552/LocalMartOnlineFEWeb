@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, Tag, Button, Space, Modal, Input, DatePicker, message } from 'antd';
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons';
 import sellerRegistrationService from '../../../services/sellerRegistrationService';
+import dayjs from 'dayjs';
 
 const SellerRegisterList = () => {
   const [data, setData] = useState([]);
@@ -33,24 +34,19 @@ const SellerRegisterList = () => {
     const threeYearsLater = new Date(today);
     threeYearsLater.setFullYear(today.getFullYear() + 3);
     setApproveModal({ visible: true, id });
-    setLicenseEffectiveDate(today);
-    setLicenseExpiryDate(threeYearsLater);
+    setLicenseEffectiveDate(dayjs(today));
+    setLicenseExpiryDate(dayjs(threeYearsLater));
   };
 
   const submitApprove = async () => {
     let effective = licenseEffectiveDate;
     let expiry = licenseExpiryDate;
-    if (!effective) {
-      effective = new Date();
-    } else if (effective.$d) {
-      effective = effective.$d;
-    }
-    if (!expiry) {
-      expiry = new Date(effective);
-      expiry.setFullYear(expiry.getFullYear() + 3);
-    } else if (expiry.$d) {
-      expiry = expiry.$d;
-    }
+    // Chuyển về kiểu Date nếu là dayjs
+    if (effective && effective.$d) effective = effective.$d;
+    if (expiry && expiry.$d) expiry = expiry.$d;
+    // Chuyển về ISO string
+    if (effective) effective = new Date(effective).toISOString();
+    if (expiry) expiry = new Date(expiry).toISOString();
     try {
       await sellerRegistrationService.approve({
         RegistrationId: approveModal.id,

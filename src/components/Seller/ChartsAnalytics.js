@@ -8,7 +8,10 @@ import analyticsService from '../../services/analyticsService';
 
 const ChartsAnalytics = () => {
     const [selectedPeriod, setSelectedPeriod] = useState('30d');
-    const [analytics, setAnalytics] = useState(null);
+    const [revenue, setRevenue] = useState(null);
+    const [orders, setOrders] = useState(null);
+    const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [activeChart, setActiveChart] = useState('revenue');
 
@@ -23,10 +26,18 @@ const ChartsAnalytics = () => {
     }, [selectedPeriod]);
 
     const fetchAnalytics = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const data = await analyticsService.getDashboardAnalytics(selectedPeriod);
-            setAnalytics(data);
+            const [revenueRes, ordersRes, productsRes, categoriesRes] = await Promise.all([
+                analyticsService.getRevenue(selectedPeriod),
+                analyticsService.getOrders(selectedPeriod),
+                analyticsService.getProducts(selectedPeriod),
+                analyticsService.getCategories(selectedPeriod)
+            ]);
+            setRevenue(revenueRes);
+            setOrders(ordersRes);
+            setProducts(productsRes?.data ?? []);
+            setCategories(categoriesRes?.data ?? []);
         } catch (error) {
             console.error('Error fetching analytics:', error);
         } finally {
@@ -70,7 +81,7 @@ const ChartsAnalytics = () => {
         );
     }
 
-    if (!analytics) {
+    if (!revenue || !orders) {
         return (
             <div className="bg-white rounded-lg shadow-sm p-8 text-center">
                 <FaChartLine className="text-4xl text-gray-400 mx-auto mb-4" />
@@ -239,13 +250,9 @@ const ChartsAnalytics = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Tổng doanh thu</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatCurrency(analytics?.revenue?.summary?.totalRevenue || 0)}
+                                {formatCurrency(revenue?.totalRevenue || 0)}
                             </p>
-                            <p className={`text-sm flex items-center mt-1 ${((analytics?.revenue?.summary?.growthRate ?? 0) >= 0) ? 'text-green-600' : 'text-red-600'
-                                }`}>
-                                {(analytics?.revenue?.summary?.growthRate ?? 0) >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
-                                {formatPercentage(analytics?.revenue?.summary?.growthRate ?? 0)}
-                            </p>
+                            {/* Nếu có growthRate thì hiển thị, nếu không thì bỏ */}
                         </div>
                         <div className="p-3 bg-green-100 rounded-lg">
                             <FaChartLine className="text-green-600 text-xl" />
@@ -259,11 +266,9 @@ const ChartsAnalytics = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatNumber(analytics?.orders?.summary?.totalOrders || 0)}
+                                {formatNumber(orders?.totalOrders || 0)}
                             </p>
-                            <p className="text-sm text-gray-500 mt-1">
-                                {formatNumber(analytics?.orders?.summary?.averageOrdersPerDay || 0)} đơn/ngày
-                            </p>
+                            {/* Nếu có averageOrdersPerDay thì hiển thị, nếu không thì bỏ */}
                         </div>
                         <div className="p-3 bg-blue-100 rounded-lg">
                             <FaShoppingCart className="text-blue-600 text-xl" />
@@ -277,10 +282,10 @@ const ChartsAnalytics = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Giá trị TB/đơn</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {formatCurrency(analytics?.revenue?.summary?.averageOrderValue || 0)}
+                                {formatCurrency(revenue?.averageOrderValue || 0)}
                             </p>
                             <p className="text-sm text-gray-500 mt-1">
-                                Từ {formatNumber(analytics?.orders?.summary?.totalOrders || 0)} đơn
+                                Từ {formatNumber(orders?.totalOrders || 0)} đơn
                             </p>
                         </div>
                         <div className="p-3 bg-purple-100 rounded-lg">
@@ -295,10 +300,10 @@ const ChartsAnalytics = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Tỷ lệ hoàn thành</p>
                             <p className="text-2xl font-bold text-gray-900">
-                                {analytics.orders.summary.completionRate.toFixed(1)}%
+                                {(orders?.completionRate ?? 0).toFixed(1)}%
                             </p>
                             <p className="text-sm text-gray-500 mt-1">
-                                {formatNumber(analytics.orders.summary.completedOrders)} đơn thành công
+                                {formatNumber(orders?.completedOrders || 0)} đơn thành công
                             </p>
                         </div>
                         <div className="p-3 bg-orange-100 rounded-lg">
@@ -338,14 +343,14 @@ const ChartsAnalytics = () => {
 
                     {activeChart === 'revenue' ? (
                         <SimpleLineChart
-                            data={analytics.revenue.data}
+                            data={revenue?.data || []}
                             dataKey="revenue"
                             color="#10B981"
                             height={250}
                         />
                     ) : (
                         <SimpleLineChart
-                            data={analytics.orders.data}
+                            data={orders?.data || []}
                             dataKey="totalOrders"
                             color="#3B82F6"
                             height={250}
@@ -357,8 +362,8 @@ const ChartsAnalytics = () => {
                             <p className="text-gray-600">Cao nhất</p>
                             <p className="font-bold text-gray-900">
                                 {activeChart === 'revenue'
-                                    ? formatCurrency(Math.max(...analytics.revenue.data.map(d => d.revenue)))
-                                    : formatNumber(Math.max(...analytics.orders.data.map(d => d.totalOrders))) + ' đơn'
+                                    ? formatCurrency(Math.max(...(revenue?.data || []).map(d => d.revenue || 0)))
+                                    : formatNumber(Math.max(...(orders?.data || []).map(d => d.totalOrders || 0))) + ' đơn'
                                 }
                             </p>
                         </div>
@@ -366,8 +371,8 @@ const ChartsAnalytics = () => {
                             <p className="text-gray-600">Trung bình</p>
                             <p className="font-bold text-gray-900">
                                 {activeChart === 'revenue'
-                                    ? formatCurrency(analytics.revenue.data.reduce((sum, d) => sum + d.revenue, 0) / analytics.revenue.data.length)
-                                    : formatNumber(Math.floor(analytics.orders.data.reduce((sum, d) => sum + d.totalOrders, 0) / analytics.orders.data.length)) + ' đơn'
+                                    ? formatCurrency((revenue?.data || []).reduce((sum, d) => sum + (d.revenue || 0), 0) / Math.max((revenue?.data || []).length, 1))
+                                    : formatNumber(Math.floor((orders?.data || []).reduce((sum, d) => sum + (d.totalOrders || 0), 0) / Math.max((orders?.data || []).length, 1))) + ' đơn'
                                 }
                             </p>
                         </div>
@@ -381,7 +386,7 @@ const ChartsAnalytics = () => {
                         <FaChartBar className="text-gray-400" />
                     </div>
 
-                    <SimpleBarChart data={analytics.categories.data} height={300} />
+                    <SimpleBarChart data={categories} height={300} />
                 </div>
             </div>
 
@@ -406,7 +411,7 @@ const ChartsAnalytics = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {(analytics?.products?.data ?? []).slice(0, 8).map((product, index) => (
+                            {(products ?? []).slice(0, 8).map((product, index) => (
                                 <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
                                     <td className="py-3">
                                         <div className="flex items-center space-x-3">
@@ -464,25 +469,25 @@ const ChartsAnalytics = () => {
                     <div className="bg-white rounded-lg p-4">
                         <h4 className="font-semibold text-gray-700 mb-2">📈 Xu hướng doanh thu</h4>
                         <p className="text-sm text-gray-600">
-                            Doanh thu {analytics.revenue.summary.growthRate >= 0 ? 'tăng' : 'giảm'} {formatPercentage(Math.abs(analytics.revenue.summary.growthRate))}
-                            so với kỳ trước. {analytics.revenue.summary.growthRate >= 0 ? 'Đang có xu hướng tích cực!' : 'Cần xem xét chiến lược kinh doanh.'}
+                            Doanh thu {(revenue?.growthRate ?? 0) >= 0 ? 'tăng' : 'giảm'} {formatPercentage(Math.abs(revenue?.growthRate ?? 0))}
+                            so với kỳ trước. {(revenue?.growthRate ?? 0) >= 0 ? 'Đang có xu hướng tích cực!' : 'Cần xem xét chiến lược kinh doanh.'}
                         </p>
                     </div>
                     <div className="bg-white rounded-lg p-4">
                         <h4 className="font-semibold text-gray-700 mb-2">🏆 Danh mục nổi bật</h4>
                         <p className="text-sm text-gray-600">
-                            {(analytics?.categories?.data?.[0]?.name || 'Không có dữ liệu')} đang dẫn đầu với {formatCurrency(analytics?.categories?.data?.[0]?.revenue || 0)} doanh thu.
+                            {(categories?.[0]?.name || 'Không có dữ liệu')} đang dẫn đầu với {formatCurrency(categories?.[0]?.revenue || 0)} doanh thu.
                             Nên tập trung phát triển danh mục này.
                         </p>
                     </div>
                     <div className="bg-white rounded-lg p-4">
                         <h4 className="font-semibold text-gray-700 mb-2">⚡ Hiệu suất đơn hàng</h4>
                         <p className="text-sm text-gray-600">
-                            Tỷ lệ hoàn thành {analytics.orders.summary.completionRate.toFixed(1)}% là {
-                                analytics.orders.summary.completionRate >= 90 ? 'rất tốt' :
-                                    analytics.orders.summary.completionRate >= 80 ? 'tốt' : 'cần cải thiện'
+                            Tỷ lệ hoàn thành {(orders?.completionRate ?? 0).toFixed(1)}% là {
+                                (orders?.completionRate ?? 0) >= 90 ? 'rất tốt' :
+                                    (orders?.completionRate ?? 0) >= 80 ? 'tốt' : 'cần cải thiện'
                             }.
-                            {analytics.orders.summary.completionRate < 90 && ' Nên tối ưu quy trình xử lý đơn hàng.'}
+                            {(orders?.completionRate ?? 0) < 90 && ' Nên tối ưu quy trình xử lý đơn hàng.'}
                         </p>
                     </div>
                 </div>

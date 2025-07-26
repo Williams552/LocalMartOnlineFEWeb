@@ -753,14 +753,7 @@ const SellerProducts = () => {
                     <div className="text-center py-12">
                         <div className="text-6xl mb-4">📦</div>
                         <h3 className="text-xl font-semibold text-gray-700 mb-2">Không tìm thấy sản phẩm</h3>
-                        <p className="text-gray-500 mb-4">Thử thay đổi bộ lọc hoặc thêm sản phẩm mới</p>
-                        <button
-                            onClick={handleOpenAddModal}
-                            className="inline-flex items-center space-x-2 bg-supply-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
-                        >
-                            <FaPlus />
-                            <span>Thêm sản phẩm đầu tiên</span>
-                        </button>
+                        <p className="text-gray-500 mb-4">Thử thay đổi bộ lọc để tìm sản phẩm</p>
                     </div>
                 )}
 
@@ -834,16 +827,9 @@ const SellerProducts = () => {
                         <p className="text-gray-500 mb-4">
                             {searchTerm || filterCategory !== 'all'
                                 ? 'Không tìm thấy sản phẩm nào phù hợp với điều kiện lọc'
-                                : 'Bạn chưa có sản phẩm nào. Hãy thêm sản phẩm đầu tiên!'
+                                : 'Bạn chưa có sản phẩm nào.'
                             }
                         </p>
-                        <Link
-                            to="/seller/products/new"
-                            className="inline-flex items-center px-4 py-2 bg-supply-primary text-white rounded-lg hover:bg-supply-primary-dark"
-                        >
-                            <FaPlus className="mr-2" size={14} />
-                            Thêm sản phẩm mới
-                        </Link>
                     </div>
                 )}
             </div>
