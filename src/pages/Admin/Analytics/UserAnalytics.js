@@ -105,7 +105,7 @@ const UserAnalytics = () => {
             case 'Admin': return 'geekblue';
             case 'Seller': return 'volcano';
             case 'Buyer': return 'green';
-            case 'ProxyShopper': return 'orange';
+            case 'Proxy Shopper': return 'orange';
             default: return 'gray';
         }
     };
@@ -257,12 +257,12 @@ const UserAnalytics = () => {
                                             {item.count} ({item.percentage}%)
                                         </span>
                                     </div>
-                                    <Progress 
-                                        percent={parseFloat(item.percentage)} 
+                                    <Progress
+                                        percent={parseFloat(item.percentage)}
                                         strokeColor={
                                             item.role === 'Admin' ? '#1890ff' :
-                                            item.role === 'Seller' ? '#52c41a' :
-                                            item.role === 'Buyer' ? '#722ed1' : '#fa8c16'
+                                                item.role === 'Seller' ? '#52c41a' :
+                                                    item.role === 'Buyer' ? '#722ed1' : '#fa8c16'
                                         }
                                         showInfo={false}
                                     />
@@ -274,12 +274,12 @@ const UserAnalytics = () => {
 
                 {/* Recent Users */}
                 <Col xs={24} lg={12}>
-                    <Card 
-                        title="Người dùng mới nhất" 
+                    <Card
+                        title="Người dùng mới nhất"
                         loading={loading}
                         extra={
-                            <Button 
-                                type="link" 
+                            <Button
+                                type="link"
                                 icon={<EyeOutlined />}
                                 onClick={() => window.location.href = '/admin/users'}
                             >

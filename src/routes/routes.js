@@ -45,6 +45,11 @@ import FavoritesPage from "../pages/Buyer/FavoritesPage";
 import FollowingStoresPage from "../pages/Buyer/FollowingStores";
 import ProxyShopperList from "../pages/ProxyShopper/ProxyShopperList";
 import RegisterProxyShopper from "../pages/ProxyShopper/RegisterProxyShopper";
+import ProxyShopperDashboard from "../pages/ProxyShopper/ProxyShopperDashboard";
+import ProxyShopperOrders from "../pages/ProxyShopper/ProxyShopperOrders";
+import AvailableOrders from "../pages/ProxyShopper/AvailableOrders";
+import ProxyShopperProfile from "../pages/ProxyShopper/ProxyShopperProfile";
+import ProxyShopperWelcome from "../pages/ProxyShopper/ProxyShopperWelcome";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
 import RegisterSeller from "../pages/Buyer/RegisterSeller";
 import UserProfile from "../pages/User/UserProfile";
@@ -93,6 +98,11 @@ const AppRoutes = () => {
                 <Route path="/proxy-shopper" element={<ProxyShopperList />} />
                 <Route path="/register-seller" element={<ProtectedRoute><RegisterSeller /></ProtectedRoute>} />
                 <Route path="/proxy-shopper/register" element={<ProtectedRoute><RegisterProxyShopper /></ProtectedRoute>} />
+                <Route path="/proxy-shopper/dashboard" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperDashboard /></ProtectedRoute>} />
+                <Route path="/proxy-shopper/welcome" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperWelcome /></ProtectedRoute>} />
+                <Route path="/proxy-shopper/orders" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperOrders /></ProtectedRoute>} />
+                <Route path="/proxy-shopper/available-orders" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><AvailableOrders /></ProtectedRoute>} />
+                <Route path="/proxy-shopper/profile" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperProfile /></ProtectedRoute>} />
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
                 <Route path="/buyer/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
                 <Route path="/buyer/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />

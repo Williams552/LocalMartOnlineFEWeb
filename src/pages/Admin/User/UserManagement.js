@@ -41,7 +41,7 @@ const getRoleColor = (role) => {
         case 'Admin': return 'geekblue';
         case 'Seller': return 'volcano';
         case 'Buyer': return 'green';
-        case 'ProxyShopper': return 'orange';
+        case 'Proxy Shopper': return 'orange';
         default: return 'gray';
     }
 };
@@ -163,9 +163,9 @@ const UserManagement = () => {
     // Handle search functionality
     const handleSearch = (value) => {
         setSearchText(value);
-        loadUsers({ 
-            pageNumber: 1, 
-            pageSize: paginationConfig.pageSize, 
+        loadUsers({
+            pageNumber: 1,
+            pageSize: paginationConfig.pageSize,
             search: value,
             role: filterRole
         });
@@ -174,9 +174,9 @@ const UserManagement = () => {
     // Handle role filter
     const handleRoleFilter = (value) => {
         setFilterRole(value);
-        loadUsers({ 
-            pageNumber: 1, 
-            pageSize: paginationConfig.pageSize, 
+        loadUsers({
+            pageNumber: 1,
+            pageSize: paginationConfig.pageSize,
             search: searchText,
             role: value
         });
@@ -186,9 +186,9 @@ const UserManagement = () => {
     const handleStatusFilter = (value) => {
         setFilterStatus(value);
         // Reload users and then filter client-side
-        loadUsers({ 
-            pageNumber: 1, 
-            pageSize: paginationConfig.pageSize, 
+        loadUsers({
+            pageNumber: 1,
+            pageSize: paginationConfig.pageSize,
             search: searchText,
             role: filterRole
         });
@@ -326,7 +326,7 @@ const UserManagement = () => {
                 { text: 'Admin', value: 'Admin' },
                 { text: 'Seller', value: 'Seller' },
                 { text: 'Buyer', value: 'Buyer' },
-                { text: 'ProxyShopper', value: 'ProxyShopper' }
+                { text: 'Proxy Shopper', value: 'Proxy Shopper' }
             ],
             onFilter: (value, record) => record.role === value
         },
@@ -462,7 +462,7 @@ const UserManagement = () => {
                             <Option value="Admin">Admin</Option>
                             <Option value="Seller">Người bán</Option>
                             <Option value="Buyer">Người mua</Option>
-                            <Option value="ProxyShopper">Mua hộ</Option>
+                            <Option value="Proxy Shopper">Mua hộ</Option>
                         </Select>
                         <Select
                             value={filterStatus}
@@ -502,13 +502,13 @@ const UserManagement = () => {
                         total: paginationConfig.total,
                         showQuickJumper: true,
                         showSizeChanger: true,
-                        showTotal: (total, range) => 
+                        showTotal: (total, range) =>
                             `${range[0]}-${range[1]} của ${total} người dùng`,
                         onChange: (page, pageSize) => {
                             console.log('📌 Chuyển trang:', page, 'pageSize:', pageSize);
                             setPaginationConfig({ current: page, pageSize });
-                            loadUsers({ 
-                                pageNumber: page, 
+                            loadUsers({
+                                pageNumber: page,
                                 pageSize,
                                 search: searchText,
                                 role: filterRole
@@ -602,7 +602,7 @@ const UserManagement = () => {
                                     <Option value="Admin">Admin</Option>
                                     <Option value="Seller">Người bán</Option>
                                     <Option value="Buyer">Người mua</Option>
-                                    <Option value="ProxyShopper">Mua hộ</Option>
+                                    <Option value="Proxy Shopper">Mua hộ</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
@@ -722,7 +722,7 @@ const UserManagement = () => {
                                     <Option value="Admin">Admin</Option>
                                     <Option value="Seller">Người bán</Option>
                                     <Option value="Buyer">Người mua</Option>
-                                    <Option value="ProxyShopper">Mua hộ</Option>
+                                    <Option value="Proxy Shopper">Mua hộ</Option>
                                 </Select>
                             </Form.Item>
                         </Col>

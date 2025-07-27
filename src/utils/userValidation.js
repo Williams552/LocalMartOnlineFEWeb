@@ -43,7 +43,7 @@ export const USER_ROLES = [
     { value: 'Admin', label: 'Quản trị viên' },
     { value: 'Buyer', label: 'Người mua' },
     { value: 'Seller', label: 'Người bán' },
-    { value: 'ProxyShopper', label: 'Người mua hộ' }
+    { value: 'Proxy Shopper', label: 'Người mua hộ' }
 ];
 
 // Available statuses based on BE User model
@@ -100,7 +100,7 @@ export const validateUserData = (userData, isUpdate = false) => {
     }
 
     // Role validation
-    const validRoles = ['Admin', 'Buyer', 'Seller', 'ProxyShopper'];
+    const validRoles = ['Admin', 'Buyer', 'Seller', 'Proxy Shopper'];
     if (userData.role && !validRoles.includes(userData.role)) {
         errors.push('Vai trò không hợp lệ');
     }
@@ -144,7 +144,7 @@ export const getRoleLabel = (role) => {
         Admin: 'Quản trị viên',
         Buyer: 'Người mua',
         Seller: 'Người bán',
-        ProxyShopper: 'Người mua hộ'
+        'Proxy Shopper': 'Người mua hộ'
     };
     return roleLabels[role] || role;
 };
@@ -166,7 +166,7 @@ export const getRoleColor = (role) => {
         Admin: 'red',
         Buyer: 'blue',
         Seller: 'orange',
-        ProxyShopper: 'purple'
+        'Proxy Shopper': 'purple'
     };
     return roleColors[role] || 'default';
 };

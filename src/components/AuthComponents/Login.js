@@ -113,6 +113,8 @@ const Login = () => {
                         navigate("/admin");
                     } else if (user?.role === 'Seller') {
                         navigate("/seller/dashboard");
+                    } else if (user?.role === 'Proxy Shopper') {
+                        navigate("/proxy-shopper/dashboard");
                     } else {
                         navigate("/");
                     }
@@ -160,6 +162,8 @@ const Login = () => {
                         navigate("/admin");
                     } else if (user?.role === 'Seller') {
                         navigate("/seller/dashboard");
+                    } else if (user?.role === 'Proxy Shopper') {
+                        navigate("/proxy-shopper/dashboard");
                     } else {
                         navigate("/");
                     }

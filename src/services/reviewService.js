@@ -95,7 +95,7 @@ class ReviewService {
         }
     }
 
-    // Lấy reviews cho target (Product, Seller, ProxyShopper)
+    // Lấy reviews cho target (Product, Seller, Proxy Shopper)
     async getReviewsForTarget(targetType, targetId, filters = {}) {
         try {
             // Filter out null, undefined, and empty values

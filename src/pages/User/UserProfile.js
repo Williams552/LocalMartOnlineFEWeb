@@ -98,7 +98,7 @@ const UserProfile = () => {
         switch (role) {
             case 'Admin': return <FaShieldAlt className="text-blue-600" />;
             case 'Seller': return <FaStore className="text-green-600" />;
-            case 'ProxyShopper': return <FiTruck className="text-purple-600" />;
+            case 'Proxy Shopper': return <FiTruck className="text-purple-600" />;
             default: return <FaUserCircle className="text-gray-600" />;
         }
     };
@@ -390,7 +390,7 @@ const UserProfile = () => {
                                 </div>
                             )}
 
-                            {profileData.role === 'ProxyShopper' && (
+                            {profileData.role === 'Proxy Shopper' && (
                                 <div>
                                     <h3 className="flex items-center space-x-2 mb-3">
                                         <FiTruck className="text-gray-500" />
@@ -498,7 +498,7 @@ const UserProfile = () => {
                             </div>
 
                             {/* Role-specific fields */}
-                            {profileData.role === 'ProxyShopper' && (
+                            {profileData.role === 'Proxy Shopper' && (
                                 <div className="md:col-span-2">
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
                                         Khu vực hoạt động

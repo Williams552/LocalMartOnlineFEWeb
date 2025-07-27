@@ -41,7 +41,7 @@ class UserService {
 
             console.log('🔄 Gọi API để lấy users với endpoint:', endpoint);
             console.log('🔄 Query params:', queryParams);
-            
+
             const response = await apiService.get(endpoint);
 
             if (!response || typeof response !== 'object') {
@@ -162,7 +162,7 @@ class UserService {
                     totalAdmins: users.filter(u => u.role === 'Admin').length,
                     totalBuyers: users.filter(u => u.role === 'Buyer').length,
                     totalSellers: users.filter(u => u.role === 'Seller').length,
-                    totalProxyShoppers: users.filter(u => u.role === 'ProxyShopper').length,
+                    totalProxyShoppers: users.filter(u => u.role === 'Proxy Shopper').length,
                     activeUsers: users.filter(u => u.status === 'Active').length,
                     blockedUsers: users.filter(u => u.status !== 'Active').length
                 };
