@@ -29,7 +29,8 @@ import {
     DollarOutlined,
     StockOutlined,
     ReloadOutlined,
-    BankOutlined
+    BankOutlined,
+    UndoOutlined
 } from '@ant-design/icons';
 import productService from '../../../services/productService';
 import storeService from '../../../services/storeService';
@@ -53,6 +54,7 @@ const ProductManagement = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedStore, setSelectedStore] = useState(null);
     const [selectedMarket, setSelectedMarket] = useState(null);
+    const [selectedStatus, setSelectedStatus] = useState(null);
     const [detailModalVisible, setDetailModalVisible] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
@@ -60,6 +62,13 @@ const ProductManagement = () => {
     const [stores, setStores] = useState([]);
     const [markets, setMarkets] = useState([]);
     const [toggleLoading, setToggleLoading] = useState({});
+    const [statistics, setStatistics] = useState({
+        total: 0,
+        active: 0,
+        outOfStock: 0,
+        inactive: 0,
+        suspended: 0
+    });
 
     // Load initial data
     useEffect(() => {
@@ -67,6 +76,7 @@ const ProductManagement = () => {
         loadCategories();
         loadStores();
         loadMarkets();
+        loadStatistics(); // Load statistics from database
     }, []);
 
     // Debug categories state
@@ -79,29 +89,32 @@ const ProductManagement = () => {
             search: searchKeyword,
             categoryId: selectedCategory,
             storeId: selectedStore,
-            marketId: selectedMarket
+            marketId: selectedMarket,
+            status: selectedStatus
         });
     };
 
     const loadProductsWithFilters = async (page = 1, pageSize = 20, filters = {}) => {
         try {
             setLoading(true);
-            console.log('Loading products with params:', {
+            console.log('Loading admin products with params:', {
                 page,
                 pageSize,
                 ...filters
             });
 
-            const response = await productService.getAllProducts({
+            // Use getAdminProducts to get ALL products including Inactive ones
+            const response = await productService.getAdminProducts({
                 page,
                 pageSize,
                 search: filters.search,
                 categoryId: filters.categoryId,
                 storeId: filters.storeId,
-                marketId: filters.marketId
+                marketId: filters.marketId,
+                status: filters.status
             });
 
-            console.log('Products response:', response);
+            console.log('Admin products response:', response);
 
             if (response && response.items) {
                 console.log('Sample product data:', response.items[0]);
@@ -112,6 +125,7 @@ const ProductManagement = () => {
                     total: response.totalCount || 0,
                 });
             } else {
+                console.log('Service response not as expected, trying direct API call...');
                 // Fallback - try direct API call if service response is not as expected
                 const queryParams = new URLSearchParams({
                     page: page.toString(),
@@ -122,6 +136,9 @@ const ProductManagement = () => {
                 if (filters.categoryId) queryParams.append('categoryId', filters.categoryId);
                 if (filters.storeId) queryParams.append('storeId', filters.storeId);
                 if (filters.marketId) queryParams.append('marketId', filters.marketId);
+                if (filters.status !== null && filters.status !== undefined) queryParams.append('status', filters.status);
+
+                console.log('Direct API call with query params:', queryParams.toString());
 
                 const directResponse = await fetch(`http://localhost:5183/api/Product?${queryParams.toString()}`, {
                     method: 'GET',
@@ -142,6 +159,14 @@ const ProductManagement = () => {
                         current: page,
                         pageSize,
                         total: result.data.totalCount || 0,
+                    });
+                } else {
+                    console.error('Direct API call also failed:', result);
+                    setProducts([]);
+                    setPagination({
+                        current: page,
+                        pageSize,
+                        total: 0,
                     });
                 }
             }
@@ -245,28 +270,52 @@ const ProductManagement = () => {
             const response = await storeService.getAllStores();
             console.log('Stores response:', response);
 
-            if (response && response.success) {
-                const storeList = response.data.stores || response.data || [];
-                setStores(Array.isArray(storeList) ? storeList : []);
-            } else if (response && Array.isArray(response)) {
-                setStores(response);
+            if (response && response.items) {
+                // Handle the correct response format from storeService.getAllStores()
+                setStores(Array.isArray(response.items) ? response.items : []);
+                console.log('✅ Stores loaded successfully:', response.items.length, 'stores');
             } else {
-                // Fallback - direct API call
-                const directResponse = await fetch(`http://localhost:5183/api/Store/admin`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json',
-                    },
-                });
-                const result = await directResponse.json();
-                if (result.success) {
-                    const storeList = result.data.stores || result.data || [];
-                    setStores(Array.isArray(storeList) ? storeList : []);
-                }
+                console.warn('⚠️ No stores found in response');
+                setStores([]);
             }
         } catch (error) {
-            console.error('Error loading stores:', error);
+            console.error('❌ Error loading stores:', error);
+            setStores([]);
+        }
+    };
+
+    const loadStatistics = async () => {
+        try {
+            console.log('Loading product statistics...');
+            
+            // Get statistics for all statuses from database
+            const [activeResponse, outOfStockResponse, inactiveResponse, suspendedResponse] = await Promise.all([
+                productService.getAdminProducts({ pageSize: 1, status: 'Active' }),
+                productService.getAdminProducts({ pageSize: 1, status: 'OutOfStock' }),
+                productService.getAdminProducts({ pageSize: 1, status: 'Inactive' }),
+                productService.getAdminProducts({ pageSize: 1, status: 'Suspended' })
+            ]);
+
+            // Also get total count without status filter
+            const totalResponse = await productService.getAdminProducts({ pageSize: 1 });
+
+            setStatistics({
+                total: totalResponse?.totalCount || 0,
+                active: activeResponse?.totalCount || 0,
+                outOfStock: outOfStockResponse?.totalCount || 0,
+                inactive: inactiveResponse?.totalCount || 0,
+                suspended: suspendedResponse?.totalCount || 0
+            });
+
+            console.log('✅ Statistics loaded:', {
+                total: totalResponse?.totalCount || 0,
+                active: activeResponse?.totalCount || 0,
+                outOfStock: outOfStockResponse?.totalCount || 0,
+                inactive: inactiveResponse?.totalCount || 0,
+                suspended: suspendedResponse?.totalCount || 0
+            });
+        } catch (error) {
+            console.error('❌ Error loading statistics:', error);
         }
     };
 
@@ -277,7 +326,8 @@ const ProductManagement = () => {
             search: value,
             categoryId: selectedCategory,
             storeId: selectedStore,
-            marketId: selectedMarket
+            marketId: selectedMarket,
+            status: selectedStatus
         });
     };
 
@@ -289,7 +339,8 @@ const ProductManagement = () => {
             search: searchKeyword,
             categoryId: value,
             storeId: selectedStore,
-            marketId: selectedMarket
+            marketId: selectedMarket,
+            status: selectedStatus
         });
     };
 
@@ -301,7 +352,8 @@ const ProductManagement = () => {
             search: searchKeyword,
             categoryId: selectedCategory,
             storeId: value,
-            marketId: selectedMarket
+            marketId: selectedMarket,
+            status: selectedStatus
         });
     };
 
@@ -314,7 +366,21 @@ const ProductManagement = () => {
             search: searchKeyword,
             categoryId: selectedCategory,
             storeId: selectedStore,
-            marketId: value // Use the new value directly
+            marketId: value, // Use the new value directly
+            status: selectedStatus
+        });
+    };
+
+    const handleStatusChange = (value) => {
+        console.log('Status changed to:', value);
+        setSelectedStatus(value);
+        setPagination(prev => ({ ...prev, current: 1 }));
+        loadProductsWithFilters(1, pagination.pageSize, {
+            search: searchKeyword,
+            categoryId: selectedCategory,
+            storeId: selectedStore,
+            marketId: selectedMarket,
+            status: value
         });
     };
 
@@ -322,9 +388,56 @@ const ProductManagement = () => {
         loadProducts(paginationConfig.current, paginationConfig.pageSize);
     };
 
+    const handleReactiveProduct = async (productId, productName) => {
+        Modal.confirm({
+            title: 'Xác nhận kích hoạt lại sản phẩm',
+            content: `Bạn có chắc chắn muốn kích hoạt lại sản phẩm "${productName}"? Sản phẩm sẽ được chuyển về trạng thái Hoạt động.`,
+            okText: 'Kích hoạt',
+            cancelText: 'Hủy',
+            onOk: async () => {
+                try {
+                    setToggleLoading(prev => ({ ...prev, [productId]: true }));
+
+                    const result = await productService.updateProductStatus(productId, 'Active'); // Set to Active
+
+                    if (result.success) {
+                        message.success('Kích hoạt lại sản phẩm thành công');
+                        loadProducts(pagination.current, pagination.pageSize);
+                        loadStatistics(); // Reload statistics after status change
+                    } else {
+                        message.error('Không thể kích hoạt lại sản phẩm');
+                    }
+                } catch (error) {
+                    console.error('Error reactivating product:', error);
+                    message.error('Không thể kích hoạt lại sản phẩm');
+                } finally {
+                    setToggleLoading(prev => {
+                        const newState = { ...prev };
+                        delete newState[productId];
+                        return newState;
+                    });
+                }
+            }
+        });
+    };
+
     const handleToggleStatus = async (productId, currentStatus) => {
-        const enable = currentStatus !== 'Active';
-        const action = enable ? 'kích hoạt' : 'vô hiệu hóa';
+        // For admin: 
+        // - Switch is ON when status is NOT Suspended 
+        // - Switch is OFF when status is Suspended
+        // - Toggle between current status and Suspended
+        let newStatus;
+        let action;
+        
+        if (currentStatus === 'Suspended' || currentStatus === 3) {
+            // If currently Suspended, reactivate to Active
+            newStatus = 'Active'; 
+            action = 'kích hoạt lại';
+        } else {
+            // If not Suspended, suspend the product
+            newStatus = 'Suspended'; 
+            action = 'đình chỉ';
+        }
 
         Modal.confirm({
             title: `Xác nhận ${action} sản phẩm`,
@@ -336,28 +449,21 @@ const ProductManagement = () => {
                     // Set loading for this specific product
                     setToggleLoading(prev => ({ ...prev, [productId]: true }));
 
-                    console.log('Toggling product status:', { productId, currentStatus, enable });
+                    console.log('Updating product status:', { productId, currentStatus, newStatus });
 
-                    const response = await fetch(`http://localhost:5183/api/Product/${productId}/toggle?enable=${enable}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                            'Content-Type': 'application/json',
-                        },
-                    });
-
-                    const result = await response.json();
-                    console.log('Toggle response:', result);
+                    // Use the new updateProductStatus method
+                    const result = await productService.updateProductStatus(productId, newStatus);
 
                     if (result.success) {
-                        message.success(result.message);
+                        message.success(result.message || 'Cập nhật trạng thái sản phẩm thành công');
                         // Reload products to get updated data
                         loadProducts(pagination.current, pagination.pageSize);
+                        loadStatistics(); // Reload statistics after status change
                     } else {
                         message.error(result.message || 'Không thể thay đổi trạng thái sản phẩm');
                     }
                 } catch (error) {
-                    console.error('Error toggling product status:', error);
+                    console.error('Error updating product status:', error);
                     message.error('Không thể thay đổi trạng thái sản phẩm');
                 } finally {
                     // Remove loading for this specific product
@@ -423,22 +529,25 @@ const ProductManagement = () => {
         setSelectedCategory(null);
         setSelectedStore(null);
         setSelectedMarket(null);
+        setSelectedStatus(null);
         setPagination(prev => ({ ...prev, current: 1 }));
         loadProducts(1, pagination.pageSize);
     };
 
     const getStatusColor = (status) => {
-        // status: 0=Active, 1=OutOfStock, 2=Inactive or string
-        if (status === 0 || status === 'Active') return 'green';
-        if (status === 1 || status === 'OutOfStock') return 'orange';
-        if (status === 2 || status === 'Inactive') return 'red';
+        // status: Active, OutOfStock, Inactive, Suspended
+        if (status === 'Active' || status === 0) return 'green';
+        if (status === 'OutOfStock' || status === 1) return 'orange';
+        if (status === 'Inactive' || status === 2) return 'red';
+        if (status === 'Suspended' || status === 3) return 'purple';
         return 'default';
     };
 
     const getStatusText = (status) => {
-        if (status === 0 || status === 'Active') return 'Còn hàng';
-        if (status === 1 || status === 'OutOfStock') return 'Hết hàng';
-        if (status === 2 || status === 'Inactive') return 'Đã xóa';
+        if (status === 'Active' || status === 0) return 'Hoạt động';
+        if (status === 'OutOfStock' || status === 1) return 'Hết hàng';
+        if (status === 'Inactive' || status === 2) return 'Đã xóa';
+        if (status === 'Suspended' || status === 3) return 'Đình chỉ';
         return 'Không xác định';
     };
 
@@ -529,7 +638,7 @@ const ProductManagement = () => {
                     <div>
                         <Switch
                             size="small"
-                            checked={status === 'Active'}
+                            checked={status !== 'Suspended' && status !== 3}
                             onChange={() => handleToggleStatus(record.id, status)}
                             checkedChildren="Bật"
                             unCheckedChildren="Tắt"
@@ -557,7 +666,7 @@ const ProductManagement = () => {
         {
             title: 'Thao tác',
             key: 'actions',
-            width: 100,
+            width: 150,
             render: (_, record) => (
                 <Space>
                     <Tooltip title="Xem chi tiết">
@@ -568,6 +677,18 @@ const ProductManagement = () => {
                             onClick={() => handleViewDetails(record.id)}
                         />
                     </Tooltip>
+                    {(record.status === 'Inactive' || record.status === 2) && (
+                        <Tooltip title="Kích hoạt lại sản phẩm">
+                            <Button
+                                type="default"
+                                icon={<UndoOutlined />}
+                                size="small"
+                                loading={toggleLoading[record.id] || false}
+                                onClick={() => handleReactiveProduct(record.id, record.name)}
+                                style={{ color: '#52c41a', borderColor: '#52c41a' }}
+                            />
+                        </Tooltip>
+                    )}
                 </Space>
             ),
         },
@@ -587,7 +708,7 @@ const ProductManagement = () => {
 
                 {/* Filters */}
                 <Row gutter={16} style={{ marginBottom: 16 }}>
-                    <Col span={6}>
+                    <Col span={5}>
                         <Search
                             placeholder="Tìm kiếm sản phẩm..."
                             value={searchKeyword}
@@ -619,7 +740,7 @@ const ProductManagement = () => {
                             }
                         </Select>
                     </Col>
-                    <Col span={4}>
+                    <Col span={3}>
                         <Select
                             placeholder="Chọn chợ"
                             value={selectedMarket}
@@ -634,7 +755,7 @@ const ProductManagement = () => {
                             ))}
                         </Select>
                     </Col>
-                    <Col span={4}>
+                    <Col span={3}>
                         <Select
                             placeholder="Chọn cửa hàng"
                             value={selectedStore}
@@ -649,7 +770,21 @@ const ProductManagement = () => {
                             ))}
                         </Select>
                     </Col>
-                    <Col span={2}>
+                    <Col span={3}>
+                        <Select
+                            placeholder="Lọc trạng thái"
+                            value={selectedStatus}
+                            onChange={handleStatusChange}
+                            allowClear
+                            style={{ width: '100%' }}
+                        >
+                            <Option value="Active">Hoạt động</Option>
+                            <Option value="OutOfStock">Hết hàng</Option>
+                            <Option value="Inactive">Đã xóa</Option>
+                            <Option value="Suspended">Đình chỉ</Option>
+                        </Select>
+                    </Col>
+                    <Col span={3}>
                         <Button
                             icon={<ReloadOutlined />}
                             onClick={handleRefresh}
@@ -661,7 +796,7 @@ const ProductManagement = () => {
                 </Row>
 
                 {/* Filter Status */}
-                {(searchKeyword || selectedCategory || selectedStore || selectedMarket) && (
+                {(searchKeyword || selectedCategory || selectedStore || selectedMarket || selectedStatus !== null) && (
                     <Row style={{ marginBottom: 16 }}>
                         <Col span={24}>
                             <div style={{
@@ -675,6 +810,16 @@ const ProductManagement = () => {
                                 {selectedCategory && <Tag color="green">Danh mục: {categories.find(c => c.id === selectedCategory)?.name}</Tag>}
                                 {selectedMarket && <Tag color="orange">Chợ: {markets.find(m => m.id === selectedMarket)?.name}</Tag>}
                                 {selectedStore && <Tag color="purple">Cửa hàng: {stores.find(s => s.id === selectedStore)?.name}</Tag>}
+                                {selectedStatus !== null && (
+                                    <Tag color="cyan">
+                                        Trạng thái: {
+                                            selectedStatus === 'Active' ? 'Hoạt động' :
+                                            selectedStatus === 'OutOfStock' ? 'Hết hàng' :
+                                            selectedStatus === 'Inactive' ? 'Đã xóa' :
+                                            selectedStatus === 'Suspended' ? 'Đình chỉ' : 'Không xác định'
+                                        }
+                                    </Tag>
+                                )}
                                 <Button
                                     type="link"
                                     size="small"
@@ -693,33 +838,41 @@ const ProductManagement = () => {
                     <Col span={6}>
                         <Card size="small" style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: 20, fontWeight: 'bold', color: '#1890ff' }}>
-                                {pagination.total}
+                                {statistics.total}
                             </div>
                             <div>Tổng sản phẩm</div>
                         </Card>
                     </Col>
-                    <Col span={6}>
+                    <Col span={4}>
                         <Card size="small" style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#52c41a' }}>
-                                {Array.isArray(products) ? products.filter(p => p.status === 'Active').length : 0}
+                            <div style={{ fontSize: 16, fontWeight: 'bold', color: '#52c41a' }}>
+                                {statistics.active}
                             </div>
-                            <div>Đang hoạt động</div>
+                            <div>Hoạt động</div>
                         </Card>
                     </Col>
-                    <Col span={6}>
+                    <Col span={4}>
                         <Card size="small" style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#faad14' }}>
-                                {Array.isArray(products) ? products.filter(p => p.status === 'OutOfStock').length : 0}
+                            <div style={{ fontSize: 16, fontWeight: 'bold', color: '#faad14' }}>
+                                {statistics.outOfStock}
                             </div>
                             <div>Hết hàng</div>
                         </Card>
                     </Col>
-                    <Col span={6}>
+                    <Col span={5}>
                         <Card size="small" style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: 20, fontWeight: 'bold', color: '#ff4d4f' }}>
-                                {Array.isArray(products) ? products.filter(p => p.status === 'Inactive').length : 0}
+                            <div style={{ fontSize: 16, fontWeight: 'bold', color: '#ff4d4f' }}>
+                                {statistics.inactive}
                             </div>
-                            <div>Đã vô hiệu hóa</div>
+                            <div>Đã xóa</div>
+                        </Card>
+                    </Col>
+                    <Col span={5}>
+                        <Card size="small" style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: 16, fontWeight: 'bold', color: '#722ed1' }}>
+                                {statistics.suspended}
+                            </div>
+                            <div>Đình chỉ</div>
                         </Card>
                     </Col>
                 </Row>

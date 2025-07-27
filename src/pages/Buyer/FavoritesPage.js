@@ -252,11 +252,26 @@ const FavoritesPage = () => {
                                         {/* Stock Status Badge */}
                                         {favorite.status && (
                                             <div className="absolute bottom-3 left-3">
-                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${favorite.status === 'Available'
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'
+                                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                    favorite.status === 'Active' || favorite.status === 'Available'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : favorite.status === 'OutOfStock'
+                                                        ? 'bg-yellow-100 text-yellow-800'
+                                                        : favorite.status === 'Inactive'
+                                                        ? 'bg-gray-100 text-gray-800'
+                                                        : favorite.status === 'Suspended'
+                                                        ? 'bg-red-100 text-red-800'
+                                                        : 'bg-red-100 text-red-800'
                                                     }`}>
-                                                    {favorite.status === 'Available' ? 'Còn hàng' : 'Hết hàng'}
+                                                    {favorite.status === 'Active' || favorite.status === 'Available'
+                                                        ? 'Còn hàng'
+                                                        : favorite.status === 'OutOfStock'
+                                                        ? 'Hết hàng'
+                                                        : favorite.status === 'Inactive'
+                                                        ? 'Không hoạt động'
+                                                        : favorite.status === 'Suspended'
+                                                        ? 'Đình chỉ'
+                                                        : 'Không xác định'}
                                                 </span>
                                             </div>
                                         )}

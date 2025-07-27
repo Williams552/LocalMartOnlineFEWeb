@@ -653,7 +653,6 @@ const SellerOrdersPage = () => {
                                         <div className="space-y-2">
                                             <p><strong>Ngày đặt:</strong> {orderService.formatDate(selectedOrder.orderDate)}</p>
                                             <p><strong>Trạng thái:</strong> {getStatusBadge(selectedOrder.status || 'unknown')}</p>
-                                            <p><strong>Thanh toán:</strong> {orderService.getPaymentMethodText(selectedOrder.paymentMethod)}</p>
                                             <p><strong>Ghi chú:</strong> {selectedOrder.notes || 'Không có'}</p>
                                         </div>
                                     </div>

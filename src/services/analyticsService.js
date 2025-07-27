@@ -38,9 +38,9 @@ const analyticsService = {
             let averageOrdersPerDay = 0;
             let periodValue = period;
             if (response && typeof response === 'object') {
-                totalOrders = response.orderCount ?? 0;
-                completedOrders = response.completedCount ?? 0;
-                cancelledOrders = response.cancelledCount ?? 0;
+                totalOrders = response.totalOrders ?? response.orderCount ?? 0;
+                completedOrders = response.completedOrders ?? response.completedCount ?? 0;
+                cancelledOrders = response.cancelledOrders ?? response.cancelledCount ?? 0;
                 periodValue = response.period || period;
                 completionRate = totalOrders > 0 ? (completedOrders / totalOrders * 100) : 0;
                 // If BE provides averageOrdersPerDay, use it
@@ -77,6 +77,43 @@ const analyticsService = {
     getCategoryAnalytics: async (period = '30d') => {
         try {
             const response = await apiService.get(`/api/seller/analytics/categories?period=${period}`);
+            console.log('Category API response:', response);
+            
+            // Normalize real API response to FE-expected structure
+            if (response && Array.isArray(response)) {
+                return {
+                    data: response.map((category, index) => ({
+                        name: category.categoryName || category.name || `Danh mục ${index + 1}`,
+                        revenue: category.revenue || 0,
+                        orders: category.productCount || 0, // Use productCount as orders for display
+                        products: category.productCount || 0,
+                        growthRate: category.growthRate || 0,
+                        color: getCategoryColor(index),
+                        icon: getCategoryIcon(category.categoryName || category.name)
+                    })).sort((a, b) => b.products - a.products), // Sort by product count
+                    period
+                };
+            } else if (response && typeof response === 'object' && response.data) {
+                return {
+                    data: response.data.map((category, index) => ({
+                        name: category.categoryName || category.name || `Danh mục ${index + 1}`,
+                        revenue: category.revenue || 0,
+                        orders: category.productCount || 0, // Use productCount as orders for display
+                        products: category.productCount || 0,
+                        growthRate: category.growthRate || 0,
+                        color: getCategoryColor(index),
+                        icon: getCategoryIcon(category.categoryName || category.name)
+                    })).sort((a, b) => b.products - a.products),
+                    period: response.period || period
+                };
+            } else if (response && typeof response === 'object') {
+                // Handle single object response or direct response format
+                console.log('Single category response format detected');
+                return {
+                    data: [],
+                    period
+                };
+            }
             return response;
         } catch (error) {
             console.warn('📊 Analytics: Using mock category data due to API error:', error.message);
@@ -88,9 +125,41 @@ const analyticsService = {
     getProductPerformance: async (period = '30d') => {
         try {
             const response = await apiService.get(`/api/seller/analytics/products?period=${period}`);
+            // Chuẩn hóa dữ liệu trả về từ API cho Top sản phẩm bán chạy
+            if (response && Array.isArray(response)) {
+                return {
+                    data: response.map((product, index) => ({
+                        id: product.productId || product.id || index + 1,
+                        name: product.productName || product.name || `Sản phẩm ${index + 1}`,
+                        revenue: product.revenue || 0,
+                        orders: product.orderCount || product.orders || 0,
+                        views: product.viewCount || product.views || 0,
+                        conversionRate: product.conversionRate || 0,
+                        stock: product.stock || 0,
+                        rating: product.rating || 0,
+                        reviews: product.reviews || 0
+                    })).sort((a, b) => b.revenue - a.revenue),
+                    period
+                };
+            } else if (response && typeof response === 'object' && response.data) {
+                return {
+                    data: response.data.map((product, index) => ({
+                        id: product.productId || product.id || index + 1,
+                        name: product.productName || product.name || `Sản phẩm ${index + 1}`,
+                        revenue: product.revenue || 0,
+                        orders: product.orderCount || product.orders || 0,
+                        views: product.viewCount || product.views || 0,
+                        conversionRate: product.conversionRate || 0,
+                        stock: product.stock || 0,
+                        rating: product.rating || 0,
+                        reviews: product.reviews || 0
+                    })).sort((a, b) => b.revenue - a.revenue),
+                    period: response.period || period
+                };
+            }
             return response;
         } catch (error) {
-            console.warn('📊 Analytics: Using mock product data due to API error:', error.message);
+            console.warn('📊 Analytics: Using mock product data do to API error:', error.message);
             return getMockProductData(period);
         }
     },
@@ -117,6 +186,61 @@ const analyticsService = {
             throw error;
         }
     }
+};
+
+// Helper functions for category styling
+const getCategoryColor = (index) => {
+    const colors = [
+        '#10B981', '#3B82F6', '#F59E0B', '#EF4444', 
+        '#8B5CF6', '#6B7280', '#EC4899', '#14B8A6'
+    ];
+    return colors[index % colors.length];
+};
+
+const getCategoryIcon = (categoryName) => {
+    const iconMap = {
+        'rau': '🥬',
+        'củ': '🥕', 
+        'quả': '🍎',
+        'rau củ quả': '🥬',
+        'gạo': '🌾',
+        'ngũ cốc': '🌾',
+        'gạo và ngũ cốc': '🌾',
+        'thực phẩm': '🥬',
+        'đồ uống': '🥤',
+        'nước': '💧',
+        'snack': '🍪',
+        'bánh kẹo': '🍪',
+        'bánh': '🍰',
+        'kẹo': '🍬',
+        'gia vị': '🧂',
+        'đồ khô': '🧂',
+        'gia đình': '🧴',
+        'sản phẩm gia đình': '🧴',
+        'chăm sóc': '🧴',
+        'vệ sinh': '🧽',
+        'điện tử': '📱',
+        'thời trang': '👕',
+        'sách': '📚',
+        'đồ chơi': '🧸',
+        'thịt': '🥩',
+        'cá': '🐟',
+        'hải sản': '🦐',
+        'sữa': '🥛',
+        'trứng': '🥚',
+        'bánh mì': '🍞',
+        'kem': '🍦'
+    };
+    
+    if (!categoryName) return '📦';
+    
+    const lowerName = categoryName.toLowerCase();
+    for (const [key, icon] of Object.entries(iconMap)) {
+        if (lowerName.includes(key)) {
+            return icon;
+        }
+    }
+    return '📦';
 };
 
 // Mock data generators
