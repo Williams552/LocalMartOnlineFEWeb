@@ -78,46 +78,46 @@ const analyticsService = {
         try {
             const response = await apiService.get(`/api/seller/analytics/categories?period=${period}`);
             console.log('Category API response:', response);
-            
             // Normalize real API response to FE-expected structure
             if (response && Array.isArray(response)) {
                 return {
-                    data: response.map((category, index) => ({
-                        name: category.categoryName || category.name || `Danh mục ${index + 1}`,
-                        revenue: category.revenue || 0,
-                        orders: category.productCount || 0, // Use productCount as orders for display
-                        products: category.productCount || 0,
-                        growthRate: category.growthRate || 0,
-                        color: getCategoryColor(index),
-                        icon: getCategoryIcon(category.categoryName || category.name)
-                    })).sort((a, b) => b.products - a.products), // Sort by product count
+                    data: response.map((product, index) => ({
+                        id: product.ProductId || product.productId || product.id || index + 1,
+                        name: product.ProductName || product.productName || product.name || `Sản phẩm ${index + 1}`,
+                        revenue: product.Revenue || product.revenue || 0,
+                        orders: product.OrderCount || product.orderCount || 0,
+                        rating: product.AverageRating || product.averageRating || 0,
+                        growthRate: typeof product.growthRate === 'number' ? product.growthRate : 0
+                    })).sort((a, b) => b.revenue - a.revenue),
                     period
                 };
             } else if (response && typeof response === 'object' && response.data) {
                 return {
-                    data: response.data.map((category, index) => ({
-                        name: category.categoryName || category.name || `Danh mục ${index + 1}`,
-                        revenue: category.revenue || 0,
-                        orders: category.productCount || 0, // Use productCount as orders for display
-                        products: category.productCount || 0,
-                        growthRate: category.growthRate || 0,
-                        color: getCategoryColor(index),
-                        icon: getCategoryIcon(category.categoryName || category.name)
-                    })).sort((a, b) => b.products - a.products),
+                    data: response.data.map((product, index) => ({
+                        id: product.ProductId || product.productId || product.id || index + 1,
+                        name: product.ProductName || product.productName || product.name || `Sản phẩm ${index + 1}`,
+                        revenue: product.Revenue || product.revenue || 0,
+                        orders: product.OrderCount || product.orderCount || 0,
+                        rating: product.AverageRating || product.averageRating || 0,
+                        growthRate: typeof product.growthRate === 'number' ? product.growthRate : 0
+                    })).sort((a, b) => b.revenue - a.revenue),
                     period: response.period || period
                 };
             } else if (response && typeof response === 'object') {
                 // Handle single object response or direct response format
                 console.log('Single category response format detected');
                 return {
-                    data: [],
+                    data: [response],
                     period
                 };
             }
-            return response;
         } catch (error) {
             console.warn('📊 Analytics: Using mock category data due to API error:', error.message);
-            return getMockCategoryData(period);
+            // Return mock data or empty array if error
+            return {
+                data: [],
+                period
+            };
         }
     },
 
@@ -132,11 +132,11 @@ const analyticsService = {
                         id: product.productId || product.id || index + 1,
                         name: product.productName || product.name || `Sản phẩm ${index + 1}`,
                         revenue: product.revenue || 0,
-                        orders: product.orderCount || product.orders || 0,
-                        views: product.viewCount || product.views || 0,
-                        conversionRate: product.conversionRate || 0,
-                        stock: product.stock || 0,
-                        rating: product.rating || 0,
+                        orders: product.orderCount || product.OrderCount || product.orders || 0,
+                        views: product.viewCount || product.ViewCount || product.views || 0,
+                        conversionRate: product.conversionRate || product.ConversionRate || 0,
+                        stock: product.stock || product.Stock || 0,
+                        rating: product.averageRating || product.AverageRating || product.rating || 0,
                         reviews: product.reviews || 0
                     })).sort((a, b) => b.revenue - a.revenue),
                     period
@@ -147,11 +147,11 @@ const analyticsService = {
                         id: product.productId || product.id || index + 1,
                         name: product.productName || product.name || `Sản phẩm ${index + 1}`,
                         revenue: product.revenue || 0,
-                        orders: product.orderCount || product.orders || 0,
-                        views: product.viewCount || product.views || 0,
-                        conversionRate: product.conversionRate || 0,
-                        stock: product.stock || 0,
-                        rating: product.rating || 0,
+                        orders: product.orderCount || product.OrderCount || product.orders || 0,
+                        views: product.viewCount || product.ViewCount || product.views || 0,
+                        conversionRate: product.conversionRate || product.ConversionRate || 0,
+                        stock: product.stock || product.Stock || 0,
+                        rating: product.averageRating || product.AverageRating || product.rating || 0,
                         reviews: product.reviews || 0
                     })).sort((a, b) => b.revenue - a.revenue),
                     period: response.period || period

@@ -408,15 +408,12 @@ const ChartsAnalytics = () => {
                                 <th className="pb-3 text-sm font-medium text-gray-600">Sản phẩm</th>
                                 <th className="pb-3 text-sm font-medium text-gray-600">Doanh thu</th>
                                 <th className="pb-3 text-sm font-medium text-gray-600">Đơn hàng</th>
-                                <th className="pb-3 text-sm font-medium text-gray-600">Lượt xem</th>
-                                <th className="pb-3 text-sm font-medium text-gray-600">Tỷ lệ chuyển đổi</th>
-                                <th className="pb-3 text-sm font-medium text-gray-600">Đánh giá</th>
-                                <th className="pb-3 text-sm font-medium text-gray-600">Tồn kho</th>
+                                <th className="pb-3 text-sm font-medium text-gray-600">Đánh giá TB</th>
                             </tr>
                         </thead>
                         <tbody>
                             {(products ?? []).slice(0, 8).map((product, index) => (
-                                <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                                <tr key={product.ProductId || product.id} className="border-b border-gray-100 hover:bg-gray-50">
                                     <td className="py-3">
                                         <div className="flex items-center space-x-3">
                                             <div className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold text-white ${index === 0 ? 'bg-yellow-500' :
@@ -425,39 +422,16 @@ const ChartsAnalytics = () => {
                                                 }`}>
                                                 {index + 1}
                                             </div>
-                                            <span className="font-medium text-gray-900">{product.name}</span>
+                                            <span className="font-medium text-gray-900">{product.ProductName || product.name}</span>
                                         </div>
                                     </td>
-                                    <td className="py-3 text-gray-700">{formatCurrency(product.revenue)}</td>
-                                    <td className="py-3 text-gray-700">{formatNumber(product.orders)}</td>
+                                    <td className="py-3 text-gray-700">{formatCurrency(product.Revenue ?? product.revenue)}</td>
+                                    <td className="py-3 text-gray-700">{formatNumber(product.OrderCount ?? product.orders)}</td>
                                     <td className="py-3 text-gray-700">
                                         <div className="flex items-center">
-                                            <FaEye className="text-gray-400 mr-1" />
-                                            {formatNumber(product.views)}
-                                        </div>
-                                    </td>
-                                    <td className="py-3">
-                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.conversionRate >= 15 ? 'bg-green-100 text-green-800' :
-                                            product.conversionRate >= 10 ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'
-                                            }`}>
-                                            {product.conversionRate.toFixed(1)}%
-                                        </span>
-                                    </td>
-                                    <td className="py-3">
-                                        <div className="flex items-center">
                                             <FaStar className="text-yellow-400 mr-1" />
-                                            <span className="text-gray-700">{product.rating.toFixed(1)}</span>
-                                            <span className="text-gray-500 ml-1">({product.reviews})</span>
+                                            <span className="text-gray-700">{(product.AverageRating ?? product.rating)?.toFixed(1)}</span>
                                         </div>
-                                    </td>
-                                    <td className="py-3">
-                                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${product.stock >= 50 ? 'bg-green-100 text-green-800' :
-                                            product.stock >= 20 ? 'bg-yellow-100 text-yellow-800' :
-                                                'bg-red-100 text-red-800'
-                                            }`}>
-                                            {formatNumber(product.stock)}
-                                        </span>
                                     </td>
                                 </tr>
                             ))}
