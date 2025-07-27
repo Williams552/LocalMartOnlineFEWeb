@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
-import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox } from "react-icons/fi";
+import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox, FiPackage } from "react-icons/fi";
 import { FaUserCircle, FaStore, FaHandshake, FaHeadset } from "react-icons/fa";
 import { useCart } from "../../contexts/CartContext";
 import { useFavorites } from "../../contexts/FavoriteContext";
@@ -18,12 +18,12 @@ const Header = () => {
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    
+
     // Notification states
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
-    
+
     // Message states
     const [messages, setMessages] = useState([]);
     const [messagesLoading, setMessagesLoading] = useState(false);
@@ -110,23 +110,23 @@ const Header = () => {
     const handleNotificationClick = async (notification) => {
         try {
             console.log('🔔 Notification clicked:', notification);
-            
+
             // Mark as read if unread
             if (!notification.isRead) {
                 console.log('🔔 Marking notification as read:', notification.id);
                 await notificationService.markAsRead(notification.id);
-                
+
                 // Update local state immediately for better UX
-                setNotifications(prev => prev.map(n => 
+                setNotifications(prev => prev.map(n =>
                     n.id === notification.id ? { ...n, isRead: true } : n
                 ));
-                
+
                 // Update unread count
                 setUnreadCount(prev => Math.max(0, prev - 1));
-                
+
                 console.log('🔔 Notification marked as read successfully');
             }
-            
+
             // Navigate based on notification type if needed
             if (notification.actionUrl) {
                 navigate(notification.actionUrl);
@@ -150,11 +150,11 @@ const Header = () => {
         try {
             console.log('🔔 Marking all notifications as read');
             await notificationService.markAllAsRead();
-            
+
             // Update local state immediately
             setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
             setUnreadCount(0);
-            
+
             console.log('🔔 All notifications marked as read successfully');
         } catch (error) {
             console.error('🔔 Error marking all notifications as read:', error);
@@ -164,13 +164,13 @@ const Header = () => {
     // Format time display for notifications
     const formatNotificationTime = (dateString) => {
         if (!dateString) return 'Vừa xong';
-        
+
         try {
             // Handle the API date format "2025-07-24 12:21:35"
             const notificationDate = new Date(dateString.replace(' ', 'T'));
             const now = new Date();
             const diffInMinutes = Math.floor((now - notificationDate) / (1000 * 60));
-            
+
             if (diffInMinutes < 1) return 'Vừa xong';
             if (diffInMinutes < 60) return `${diffInMinutes} phút trước`;
             if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)} giờ trước`;
@@ -184,23 +184,23 @@ const Header = () => {
     // Fetch notifications from API
     const fetchNotifications = async () => {
         if (!isAuthenticated) return;
-        
+
         try {
             setNotificationsLoading(true);
             console.log('🔔 Fetching notifications from API...');
-            
+
             const response = await notificationService.getNotifications(1, 5);
             console.log('🔔 Notifications response:', response);
-            
+
             if (response && response.data) {
                 const notificationData = Array.isArray(response.data) ? response.data : response.data.items || [];
                 console.log('🔔 Setting notifications state with:', notificationData);
                 setNotifications(notificationData);
-                
+
                 // Count unread notifications from the data
                 const unreadCountFromData = notificationData.filter(n => !n.isRead).length;
                 setUnreadCount(unreadCountFromData);
-                
+
                 console.log('🔔 Loaded notifications:', notificationData.length, 'Unread:', unreadCountFromData);
                 console.log('🔔 First notification:', notificationData[0]);
             } else {
@@ -221,12 +221,12 @@ const Header = () => {
     // Fetch unread count from API
     const fetchUnreadCount = async () => {
         if (!isAuthenticated) return;
-        
+
         try {
             console.log('🔔 Fetching unread count from API...');
             const response = await notificationService.getUnreadCount();
             console.log('🔔 Unread count response:', response);
-            
+
             if (response && response.data) {
                 const count = response.data.count || 0;
                 setUnreadCount(count);
@@ -240,20 +240,20 @@ const Header = () => {
     // Fetch messages from API
     const fetchMessages = async () => {
         if (!isAuthenticated || !user?.id) return;
-        
+
         try {
             setMessagesLoading(true);
             console.log('💬 Fetching messages from API for user:', user.id);
-            
+
             const response = await chatService.getChatHistory(user.id);
             console.log('💬 Messages response:', response);
-            
+
             if (response && response.data) {
                 const messageData = Array.isArray(response.data) ? response.data : response.data.items || [];
                 console.log('💬 Setting messages state with:', messageData);
                 setMessages(messageData);
                 setMessageCount(messageData.length);
-                
+
                 console.log('💬 Loaded messages:', messageData.length);
             } else {
                 console.warn('💬 No message data received');
@@ -276,14 +276,14 @@ const Header = () => {
             fetchNotifications();
             fetchMessages();
             fetchUnreadCount(); // Fetch accurate unread count
-            
+
             // Set up auto-refresh every 30 seconds
             const interval = setInterval(() => {
                 fetchNotifications();
                 fetchMessages();
                 fetchUnreadCount();
             }, 30000);
-            
+
             return () => clearInterval(interval);
         } else {
             setNotifications([]);
@@ -434,11 +434,10 @@ const Header = () => {
                                                     </div>
                                                 ) : notifications.length > 0 ? (
                                                     notifications.map((notification) => (
-                                                        <div 
-                                                            key={notification.id} 
-                                                            className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${
-                                                                !notification.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
-                                                            }`}
+                                                        <div
+                                                            key={notification.id}
+                                                            className={`p-4 border-b hover:bg-gray-50 cursor-pointer ${!notification.isRead ? 'bg-blue-50 border-l-4 border-l-blue-500' : ''
+                                                                }`}
                                                             onClick={() => handleNotificationClick(notification)}
                                                         >
                                                             <div className="flex items-start space-x-2">
@@ -469,8 +468,8 @@ const Header = () => {
                                                 )}
                                             </div>
                                             <div className="p-3 text-center border-t">
-                                                <Link 
-                                                    to="/notifications" 
+                                                <Link
+                                                    to="/notifications"
                                                     className="text-supply-primary text-sm hover:underline"
                                                     onClick={() => setShowNotifications(false)}
                                                 >
@@ -540,8 +539,8 @@ const Header = () => {
                                                 )}
                                             </div>
                                             <div className="p-3 text-center border-t">
-                                                <Link 
-                                                    to="/messages" 
+                                                <Link
+                                                    to="/messages"
                                                     className="text-supply-primary text-sm hover:underline"
                                                     onClick={() => setShowMessages(false)}
                                                 >
@@ -581,7 +580,8 @@ const Header = () => {
                                                 <p className="font-semibold text-gray-800">{user?.fullName || user?.username || "Người dùng"}</p>
                                                 <p className="text-sm text-gray-600">
                                                     {user?.role === 'Seller' ? 'Người bán' :
-                                                        user?.role === 'Admin' ? 'Quản trị viên' : 'Khách hàng'}
+                                                        user?.role === 'Admin' ? 'Quản trị viên' :
+                                                            user?.role === 'Proxy Shopper' ? 'Proxy Shopper' : 'Khách hàng'}
                                                 </p>
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
@@ -656,6 +656,32 @@ const Header = () => {
                                                         <Link to="/admin" className="flex items-center space-x-3 px-4 py-2 hover:bg-blue-50 text-sm text-blue-600">
                                                             <FaStore size={16} />
                                                             <span>Admin Dashboard</span>
+                                                        </Link>
+                                                    </>
+                                                )}
+
+                                                {/* Proxy Shopper Navigation */}
+                                                {user?.role === 'Proxy Shopper' && (
+                                                    <>
+                                                        <div className="border-t my-2"></div>
+                                                        <div className="px-4 py-2 text-xs text-gray-500 font-semibold uppercase">
+                                                            Proxy Shopper
+                                                        </div>
+                                                        <Link to="/proxy-shopper/dashboard" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm text-purple-600">
+                                                            <FiBox size={16} />
+                                                            <span>Dashboard</span>
+                                                        </Link>
+                                                        <Link to="/proxy-shopper/available-orders" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm">
+                                                            <FiPackage size={16} />
+                                                            <span>Đơn hàng khả dụng</span>
+                                                        </Link>
+                                                        <Link to="/proxy-shopper/orders" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm">
+                                                            <FiShoppingCart size={16} />
+                                                            <span>Đơn hàng của tôi</span>
+                                                        </Link>
+                                                        <Link to="/proxy-shopper/profile" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm">
+                                                            <FaUserCircle size={16} />
+                                                            <span>Hồ sơ Proxy Shopper</span>
                                                         </Link>
                                                     </>
                                                 )}
