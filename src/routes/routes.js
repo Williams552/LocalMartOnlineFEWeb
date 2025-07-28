@@ -1,10 +1,11 @@
 import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
+import ChangePassword from "../pages/User/ChangePassword";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
 import Register from "../components/AuthComponents/Register";
 import ForgotPassword from "../components/AuthComponents/ForgotPassword";
-import ResetPassword from "../components/AuthComponents/ResetPassWord";
+import ResetPassword from "../components/AuthComponents/ResetPassword";
 import EmailVerification from "../components/AuthComponents/EmailVerification";
 import AuthLayout from "../layouts/AuthLayout";
 import PublicRoute from "../components/AuthComponents/PublicRoute";
@@ -112,6 +113,7 @@ const AppRoutes = () => {
                 <Route path="/buyer/chat" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                 <Route path="/buyer/chat/:sellerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
                 <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
                 <Route path="/buyer/bargains" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
