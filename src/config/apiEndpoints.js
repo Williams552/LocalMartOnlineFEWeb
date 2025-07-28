@@ -3,6 +3,45 @@ const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5183";
 
 // API Endpoints cho LocalMart
 export const API_ENDPOINTS = {
+    // Proxy Shopper Endpoints
+    PROXY_SHOPPER: {
+        // Dashboard analytics
+        ANALYTICS: (period = '30d') => `${API_URL}/api/proxyshopper/analytics?period=${period}`,
+        // My stats
+        MY_STATS: `${API_URL}/api/ProxyShopper/my-stats`,
+        // My orders
+        MY_ORDERS: `${API_URL}/api/ProxyShopper/my-orders`,
+        // Order detail
+        ORDER_DETAIL: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/detail`,
+        // Available orders
+        AVAILABLE_ORDERS: `${API_URL}/api/ProxyShopper/orders`,
+        // Accept order
+        ACCEPT_ORDER: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/accept`,
+        // Confirm order
+        CONFIRM_ORDER: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/confirm`,
+        // Upload bought items
+        UPLOAD_BOUGHT_ITEMS: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/upload`,
+        // Confirm final price
+        CONFIRM_FINAL_PRICE: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/final-price`,
+        // Confirm delivery
+        CONFIRM_DELIVERY: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/delivery`,
+        // Replace/remove product
+        REPLACE_OR_REMOVE_PRODUCT: (orderId, productId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/items/${productId}`,
+        // Smart search products
+        SMART_SEARCH_PRODUCTS: `${API_URL}/api/ProxyShopper/products/smart-search`,
+        // Order history
+        ORDER_HISTORY: `${API_URL}/api/ProxyShopper/order-history`,
+        // Cancel order
+        CANCEL_ORDER: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/cancel`,
+        // Registration
+        REGISTRATION: `${API_URL}/api/proxyshopperregistration`,
+        GET_MY_REGISTRATION: `${API_URL}/api/proxyshopperregistration/my`,
+        GET_ALL_REGISTRATION: `${API_URL}/api/proxyshopperregistration`,
+        APPROVE_REGISTRATION: `${API_URL}/api/proxyshopperregistration/approve`,
+        // Profile
+        PROFILE: `${API_URL}/api/ProxyShopper/profile`,
+        UPDATE_PROFILE: `${API_URL}/api/ProxyShopper/profile`,
+    },
     // Base API URL
     API_BASE: API_URL,
 
