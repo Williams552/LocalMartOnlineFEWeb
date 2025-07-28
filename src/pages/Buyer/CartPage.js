@@ -7,6 +7,7 @@ import toastService from "../../services/toastService";
 import logo from "../../assets/image/logo.jpg";
 import cartService from "../../services/cartService";
 import orderService from "../../services/orderService";
+import storeService from "../../services/storeService";
 import { getCurrentUser, isAuthenticated } from "../../services/authService";
 
 const sellerInfoMap = {
@@ -61,6 +62,7 @@ const CartPage = () => {
     const [showOrderConfirm, setShowOrderConfirm] = useState(false);
     const [orderNotes, setOrderNotes] = useState('');
     const [placingOrder, setPlacingOrder] = useState(false);
+    const [storeStatuses, setStoreStatuses] = useState({}); // Track store statuses
 
     // Check authentication on component mount
     useEffect(() => {
@@ -110,11 +112,50 @@ const CartPage = () => {
             const cartItemsWithDetails = cartResult.data;
             setCartItems(cartItemsWithDetails);
 
+            // Fetch store statuses for all stores in cart
+            await fetchStoreStatuses(cartItemsWithDetails);
+
         } catch (error) {
             console.error('❌ CartPage: Error fetching cart data:', error);
             toastService.error('Có lỗi khi tải giỏ hàng. Vui lòng thử lại.');
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Fetch store statuses for cart items
+    const fetchStoreStatuses = async (cartItems) => {
+        try {
+            const storeIds = [...new Set(cartItems
+                .map(item => item.product?.storeId)
+                .filter(Boolean)
+            )];
+
+            console.log('🏪 CartPage: Fetching store statuses for stores:', storeIds);
+            
+            const statusPromises = storeIds.map(async (storeId) => {
+                try {
+                    const result = await storeService.getStoreById(storeId);
+                    return {
+                        storeId,
+                        status: result.success ? result.data.status : 'Unknown'
+                    };
+                } catch (error) {
+                    console.error(`❌ Error fetching store ${storeId}:`, error);
+                    return { storeId, status: 'Unknown' };
+                }
+            });
+
+            const storeStatusResults = await Promise.all(statusPromises);
+            const statusMap = {};
+            storeStatusResults.forEach(({ storeId, status }) => {
+                statusMap[storeId] = status;
+            });
+
+            console.log('🏪 CartPage: Store statuses:', statusMap);
+            setStoreStatuses(statusMap);
+        } catch (error) {
+            console.error('❌ CartPage: Error fetching store statuses:', error);
         }
     };
 
@@ -251,9 +292,11 @@ const CartPage = () => {
             image: item.product?.images ? item.product.images.split(',')[0] : logo,
             unit: item.product?.unit || 'item',
             subTotal: calculatedSubTotal, // Tính lại subTotal với giá đúng
-            isAvailable: item.product?.isAvailable || false,
+            isAvailable: (item.product?.isAvailable || false) && (storeStatuses[item.product?.storeId] === 'Open'),
             stockQuantity: item.product?.stockQuantity || 0,
             minimumQuantity: item.product?.minimumQuantity || 0,
+            storeId: item.product?.storeId,
+            storeStatus: storeStatuses[item.product?.storeId] || 'Unknown',
             // Thêm các trường bargain
             bargainPrice: item.bargainPrice || null,
             bargainId: item.bargainId || null,
@@ -430,11 +473,19 @@ const CartPage = () => {
             return;
         }
 
-        // Kiểm tra có sản phẩm nào hết hàng không trong các sản phẩm được chọn
+        // Kiểm tra có sản phẩm nào hết hàng hoặc cửa hàng đóng không trong các sản phẩm được chọn
         const selectedItems_array = formattedCartItems.filter(item => selectedItems.has(item.id));
         const outOfStockItems = selectedItems_array.filter(item => 
             !item.isAvailable || (item.stockQuantity > 0 && item.quantity > item.stockQuantity)
         );
+
+        // Kiểm tra cửa hàng đóng
+        const closedStoreItems = selectedItems_array.filter(item => item.storeStatus !== 'Open');
+        if (closedStoreItems.length > 0) {
+            const closedStoreNames = [...new Set(closedStoreItems.map(item => item.storeName))].join(', ');
+            toastService.warning(`Một số cửa hàng đã đóng cửa, không thể đặt hàng: ${closedStoreNames}`);
+            return;
+        }
 
         if (outOfStockItems.length > 0) {
             const outOfStockNames = outOfStockItems.map(item => item.name).join(', ');
@@ -721,7 +772,9 @@ const CartPage = () => {
                                                             )}
                                                         </div>
                                                         {!item.isAvailable && (
-                                                            <p className="text-red-500 text-xs">Hết hàng</p>
+                                                            <p className="text-red-500 text-xs">
+                                                                {item.storeStatus !== 'Open' ? 'Cửa hàng đã đóng' : 'Hết hàng'}
+                                                            </p>
                                                         )}
                                                         {item.stockQuantity > 0 && (
                                                             <p className="text-gray-500 text-xs">Còn: {item.stockQuantity} {item.unit}</p>
@@ -975,6 +1028,9 @@ const CartPage = () => {
                                         <p className="text-yellow-800 text-sm flex items-center">
                                             <span className="mr-2">⚠️</span>
                                             Có {formattedCartItems.filter(item => !item.isAvailable).length} sản phẩm không khả dụng sẽ được bỏ qua khi đặt hàng
+                                            {formattedCartItems.filter(item => item.storeStatus !== 'Open').length > 0 && (
+                                                <span> (bao gồm {formattedCartItems.filter(item => item.storeStatus !== 'Open').length} từ cửa hàng đã đóng)</span>
+                                            )}
                                         </p>
                                     </div>
                                 )}

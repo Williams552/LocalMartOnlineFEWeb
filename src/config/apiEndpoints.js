@@ -200,6 +200,7 @@ export const API_ENDPOINTS = {
         DELETE: (id) => `${API_URL}/api/store/${id}`,
         SUSPEND: (id) => `${API_URL}/api/store/${id}/suspend`,
         REACTIVATE: (id) => `${API_URL}/api/store/${id}/reactivate`,
+        TOGGLE_STATUS: (storeId) => `${API_URL}/api/Store/${storeId}/toggle`,
         SEARCH: `${API_URL}/api/store/search`,
         SEARCH_ADMIN: `${API_URL}/api/store/admin/search`,
         NEARBY: `${API_URL}/api/store/nearby`,

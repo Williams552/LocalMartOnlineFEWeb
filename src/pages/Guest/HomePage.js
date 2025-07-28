@@ -6,7 +6,9 @@ import NearbyMarketsModal from "../../components/NearbyMarkets/NearbyMarketsModa
 import productService from "../../services/productService";
 import categoryService from "../../services/categoryService";
 import marketService from "../../services/marketService";
+import storeService from "../../services/storeService";
 import { getProductsFromNearbyMarkets, getNearbyMarkets } from "../../utils/locationUtils";
+import { FaExclamationTriangle, FaTimes, FaPhone, FaEnvelope } from "react-icons/fa";
 
 const HomePage = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -21,6 +23,10 @@ const HomePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchLoading, setSearchLoading] = useState(false);
+    
+    // Store suspension alert state
+    const [showSuspensionAlert, setShowSuspensionAlert] = useState(false);
+    const [suspensionInfo, setSuspensionInfo] = useState(null);
 
     // Debounce search to avoid too many API calls
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -36,7 +42,24 @@ const HomePage = () => {
     // Scroll to top when component mounts (page loads)
     useEffect(() => {
         window.scrollTo(0, 0);
+        checkForSuspendedStore();
     }, []);
+
+    // Check if current user is a suspended seller
+    const checkForSuspendedStore = async () => {
+        try {
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            if (user.role === 'Seller') {
+                const result = await storeService.getMyStore();
+                if (result.success && result.data && result.data.status === 'Suspended') {
+                    setSuspensionInfo(result.data);
+                    setShowSuspensionAlert(true);
+                }
+            }
+        } catch (error) {
+            console.error('Error checking store status:', error);
+        }
+    };
 
     // Handle nearby market selection effect
     useEffect(() => {
@@ -246,6 +269,40 @@ const HomePage = () => {
         <div className="homepage bg-gray-50 min-h-screen pb-12">
             {/* Carousel Banner */}
             <Carousel />
+
+            {/* Suspension Alert */}
+            {showSuspensionAlert && (
+                <div className="bg-red-600 text-white px-4 py-3 shadow-lg relative">
+                    <div className="max-w-7xl mx-auto flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                            <FaExclamationTriangle className="text-yellow-300 text-xl" />
+                            <div>
+                                <p className="font-semibold text-lg">Cửa hàng của bạn đã bị đình chỉ</p>
+                                <p className="text-sm opacity-90">
+                                    Vui lòng liên hệ với admin để biết thêm chi tiết:
+                                </p>
+                                <div className="flex items-center space-x-4 mt-1">
+                                    <span className="flex items-center space-x-1">
+                                        <FaPhone className="text-xs" />
+                                        <span className="text-sm">Hotline: 1900-xxxx</span>
+                                    </span>
+                                    <span className="flex items-center space-x-1">
+                                        <FaEnvelope className="text-xs" />
+                                        <span className="text-sm">admin@localmart.com</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <button
+                            onClick={() => setShowSuspensionAlert(false)}
+                            className="text-white hover:bg-red-700 rounded-full p-2 transition-colors"
+                            title="Đóng thông báo"
+                        >
+                            <FaTimes className="text-lg" />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <main className="mt-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
                 {/* Title & Subtitle */}
