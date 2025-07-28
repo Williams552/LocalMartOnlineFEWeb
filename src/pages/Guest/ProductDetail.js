@@ -89,10 +89,16 @@ const ProductDetail = () => {
         }
     };
 
-    // Check if product is available for purchase (only Active status)
+    // Check if product is available for purchase (only Active status and store is Open)
     const isAvailableForPurchase = () => {
         if (!product) return false;
         
+        // First check if store is open
+        if (store && store.status !== 'Open') {
+            return false;
+        }
+        
+        // Then check product status
         // Check numeric status (0 = Active)
         if (typeof product.status === 'number') {
             return product.status === 0;
@@ -101,7 +107,7 @@ const ProductDetail = () => {
         if (typeof product.status === 'string') {
             return product.status === 'Active';
         }
-        // Check final display status
+        // Check final display status   
         const displayText = getStatusDisplayText(product.status);
         return displayText === 'Còn hàng';
     };
@@ -532,15 +538,18 @@ const ProductDetail = () => {
                         <div className="border rounded-lg p-4 mb-6 bg-gray-50">
                             <div className="text-center text-gray-600">
                                 <FaBox className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                                <h3 className="font-medium mb-2">Sản phẩm không khả dụng</h3>
+                                <h3 className="font-medium mb-2">
+                                    {store && store.status !== 'Open' ? 'Cửa hàng đã đóng' : 'Sản phẩm không khả dụng'}
+                                </h3>
                                 <p className="text-sm">
-                                    {getStatusDisplayText(product.status) === 'Hết hàng' && 'Sản phẩm đã hết hàng, vui lòng quay lại sau'}
-                                    {getStatusDisplayText(product.status) === 'Đã xóa' && 'Sản phẩm đã ngừng bán và không còn hiển thị trong gian hàng'}
-                                    {getStatusDisplayText(product.status) === 'Bị đình chỉ' && 'Sản phẩm tạm thời bị đình chỉ do vi phạm quy định'}
-                                    {!['Hết hàng', 'Đã xóa', 'Bị đình chỉ'].includes(getStatusDisplayText(product.status)) && 'Sản phẩm hiện không có sẵn'}
+                                    {store && store.status !== 'Open' && 'Cửa hàng hiện đang đóng cửa, không thể thêm sản phẩm vào giỏ hàng'}
+                                    {store && store.status === 'Open' && getStatusDisplayText(product.status) === 'Hết hàng' && 'Sản phẩm đã hết hàng, vui lòng quay lại sau'}
+                                    {store && store.status === 'Open' && getStatusDisplayText(product.status) === 'Đã xóa' && 'Sản phẩm đã ngừng bán và không còn hiển thị trong gian hàng'}
+                                    {store && store.status === 'Open' && getStatusDisplayText(product.status) === 'Bị đình chỉ' && 'Sản phẩm tạm thời bị đình chỉ do vi phạm quy định'}
+                                    {store && store.status === 'Open' && !['Hết hàng', 'Đã xóa', 'Bị đình chỉ'].includes(getStatusDisplayText(product.status)) && 'Sản phẩm hiện không có sẵn'}
                                 </p>
                                 <p className="text-xs text-gray-500 mt-1">
-                                    Vui lòng quay lại sau hoặc chọn sản phẩm khác
+                                    {store && store.status !== 'Open' ? 'Vui lòng chờ cửa hàng mở cửa trở lại' : 'Vui lòng quay lại sau hoặc chọn sản phẩm khác'}
                                 </p>
                             </div>
                         </div>

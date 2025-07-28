@@ -9,6 +9,7 @@ import EmailVerification from "../components/AuthComponents/EmailVerification";
 import AuthLayout from "../layouts/AuthLayout";
 import PublicRoute from "../components/AuthComponents/PublicRoute";
 import ProtectedRoute from "../components/ProtectedRoute";
+import ProtectedSellerRoute from "../components/ProtectedSellerRoute";
 import Unauthorized from "../components/Unauthorized";
 import ApiRedirectHandler from "../components/ApiRedirectHandler";
 import HomePage from "../pages/Guest/HomePage";
@@ -127,19 +128,97 @@ const AppRoutes = () => {
             <Route element={<SellerApp />}>
                 <Route path="/seller" element={<Navigate to="/seller/products" replace />} />
                 <Route path="/seller/dashboard" element={<Navigate to="/seller/products" replace />} />
-                <Route path="/seller/products" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
-                <Route path="/seller/products/add" element={<ProtectedRoute allowedRoles={['Seller']}><SellerProducts /></ProtectedRoute>} />
-                <Route path="/seller/orders" element={<ProtectedRoute allowedRoles={['Seller']}><SellerOrdersPage /></ProtectedRoute>} />
-                <Route path="/seller/fast-bargains" element={<ProtectedRoute allowedRoles={['Seller']}><SellerFastBargainPage /></ProtectedRoute>} />
-                <Route path="/seller/profile" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
-                <Route path="/seller/analytics" element={<ProtectedRoute allowedRoles={['Seller']}><ChartsAnalyticsPage /></ProtectedRoute>} />
-                <Route path="/seller/customers" element={<ProtectedRoute allowedRoles={['Seller']}><CustomerManagement /></ProtectedRoute>} />
-                <Route path="/seller/personal-shopping" element={<ProtectedRoute allowedRoles={['Seller']}><PersonalShopping /></ProtectedRoute>} />
-                <Route path="/seller/quick-actions" element={<ProtectedRoute allowedRoles={['Seller']}><QuickActionsPage /></ProtectedRoute>} />
-                <Route path="/seller/notifications" element={<ProtectedRoute allowedRoles={['Seller']}><NotificationsPage /></ProtectedRoute>} />
-                <Route path="/seller/payments" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
-                <Route path="/seller/licenses" element={<ProtectedRoute allowedRoles={['Seller']}><SellerLicenses /></ProtectedRoute>} />
-                <Route path="/seller/store" element={<ProtectedRoute allowedRoles={['Seller']}><StoreProfile /></ProtectedRoute>} />
+                <Route path="/seller/products" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <SellerProducts />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/products/add" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <SellerProducts />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/orders" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <SellerOrdersPage />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/fast-bargains" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <SellerFastBargainPage />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/profile" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <StoreProfile />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/analytics" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <ChartsAnalyticsPage />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/customers" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <CustomerManagement />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/personal-shopping" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <PersonalShopping />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/quick-actions" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <QuickActionsPage />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/notifications" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <NotificationsPage />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/payments" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <StoreProfile />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/licenses" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <SellerLicenses />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/store" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <StoreProfile />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
             </Route>
 
             {/* Admin Routes - Protected with admin role */}

@@ -5,10 +5,14 @@ import {
     FaUser, FaHome, FaBell, FaCog, FaSignOutAlt,
     FaUsers, FaCertificate, FaCreditCard, FaComments,
     FaQuestionCircle, FaBars, FaTimes, FaChevronDown, FaShoppingBag,
-    FaExclamationTriangle, FaHandshake
+    FaExclamationTriangle, FaHandshake, FaSpinner, FaLock, FaMapMarkerAlt, FaClock
 } from "react-icons/fa";
+import { toast } from 'react-toastify';
 import { useAuth } from "../hooks/useAuth";
+import useStoreStatus from "../hooks/useStoreStatus";
 import NotificationBell from "../components/Seller/NotificationBell";
+import storeService from "../services/storeService";
+import marketService from "../services/marketService";
 
 const SellerLayout = ({ children }) => {
     const location = useLocation();
@@ -16,11 +20,19 @@ const SellerLayout = ({ children }) => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [userInfo, setUserInfo] = useState(null);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isStoreOpen, setIsStoreOpen] = useState(false);
+    const [toggleLoading, setToggleLoading] = useState(false);
+    const [storeInfoData, setStoreInfo] = useState(null);
+    const [marketInfo, setMarketInfo] = useState(null);
+    const [marketLoading, setMarketLoading] = useState(true);
     const dropdownRef = useRef(null);
     const sidebarRef = useRef(null);
 
     // Use authentication context like in Header
     const { logout } = useAuth();
+    
+    // Use store status hook to check if store is suspended
+    const { storeStatus, storeInfo, isLoading: storeLoading, isStoreSuspended } = useStoreStatus();
 
     useEffect(() => {
         // Get user info from localStorage
@@ -33,7 +45,111 @@ const SellerLayout = ({ children }) => {
                 console.error('Error parsing user data:', error);
             }
         }
+
+        // Fetch store status
+        fetchStoreStatus();
     }, []);
+
+    // Fetch store status
+    const fetchStoreStatus = async () => {
+        try {
+            const result = await storeService.getMyStore();
+            
+            if (result.success && result.data) {
+                // Check status - backend returns "Open" or "Closed"
+                const storeIsOpen = result.data.status === 'Open';
+                setIsStoreOpen(storeIsOpen);
+                
+                // Store the storeInfo for later use in toggle
+                setStoreInfo(result.data);
+
+                // Fetch market info if marketId exists
+                if (result.data.marketId) {
+                    await fetchMarketInfo(result.data.marketId);
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error fetching store status:', error);
+        } finally {
+            setMarketLoading(false);
+        }
+    };
+
+    // Fetch market information
+    const fetchMarketInfo = async (marketId) => {
+        try {
+            const result = await marketService.getMarketById(marketId);
+            
+            if (result) {
+                setMarketInfo(result);
+            }
+        } catch (error) {
+            console.error('❌ Error fetching market info:', error);
+        }
+    };
+
+    // Handle toggle store status
+    const handleToggleStore = async () => {
+        
+        let storeId;
+        
+        if (!storeInfoData || !storeInfoData.id) {
+            // Try to get storeId from store info
+            try {
+                const result = await storeService.getMyStore();
+                
+                if (!result.success || !result.data) {
+                    console.error('❌ SellerLayout - No data in API response');
+                    toast.error('Không tìm thấy thông tin cửa hàng');
+                    return;
+                }
+                
+                // Use storeId (id field in response)
+                storeId = result.data.id;
+                
+                if (!storeId) {
+                    console.error('❌ SellerLayout - No storeId found in API response, available fields:', Object.keys(result.data));
+                    toast.error('Không tìm thấy Store ID trong thông tin cửa hàng');
+                    return;
+                }
+            } catch (error) {
+                console.error('❌ SellerLayout - Error fetching store info:', error);
+                toast.error('Không thể lấy thông tin cửa hàng');
+                return;
+            }
+        } else {
+            storeId = storeInfoData.id;
+        }
+
+        setToggleLoading(true);
+        try {
+            const result = await storeService.toggleStoreStatus(storeId);
+            
+            if (result.success) {
+                // Toggle local state
+                const newStoreStatus = !isStoreOpen;
+                setIsStoreOpen(newStoreStatus);
+                
+                // Update storeInfoData with new status
+                if (storeInfoData) {
+                    setStoreInfo({
+                        ...storeInfoData,
+                        status: newStoreStatus ? 'Open' : 'Closed'
+                    });
+                }
+                
+                toast.success(result.message || `Cửa hàng đã được ${newStoreStatus ? 'mở' : 'đóng'}`);
+            } else {
+                console.error('❌ SellerLayout - Toggle failed:', result.message);
+                toast.error(result.message || 'Không thể thay đổi trạng thái cửa hàng');
+            }
+        } catch (error) {
+            console.error('❌ SellerLayout - Exception during toggle:', error);
+            toast.error('Có lỗi xảy ra khi thay đổi trạng thái cửa hàng');
+        } finally {
+            setToggleLoading(false);
+        }
+    };
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -69,6 +185,15 @@ const SellerLayout = ({ children }) => {
     }, [isSidebarOpen]);
 
     const sidebarItems = [
+        {
+            type: 'toggle',
+            icon: isStoreOpen ? FaLock : FaStore,
+            label: isStoreOpen ? 'Đóng cửa hàng' : 'Mở cửa hàng',
+            color: isStoreOpen ? 'text-red-600' : 'text-green-600',
+            description: 'Đóng mở cửa hàng',
+            action: handleToggleStore,
+            loading: toggleLoading
+        },
         {
             path: '/seller/products',
             icon: FaBoxOpen,
@@ -176,6 +301,23 @@ const SellerLayout = ({ children }) => {
         }
     ];
 
+    // Show loading state while checking store status
+    if (storeLoading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <FaSpinner className="animate-spin text-4xl text-supply-primary mx-auto mb-4" />
+                    <p className="text-gray-600">Đang kiểm tra trạng thái cửa hàng...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // If store is suspended, don't render anything (redirect happens in hook)
+    if (isStoreSuspended) {
+        return null;
+    }
+
     return (
         <div className="min-h-screen bg-gray-50 flex">
 
@@ -198,13 +340,99 @@ const SellerLayout = ({ children }) => {
                     </Link>
                 </div>
 
+                {/* Market Information */}
+                {marketInfo && (
+                    <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 bg-gray-50">
+                        <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                                <FaMapMarkerAlt className="text-blue-600 flex-shrink-0" size={12} />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs font-medium text-gray-800 truncate">
+                                        {marketInfo.name}
+                                    </p>
+                                    <p className="text-xs text-gray-600 truncate">
+                                        {marketInfo.address}
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                                <FaClock className="text-green-600 flex-shrink-0" size={12} />
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-xs text-gray-700">
+                                        {marketInfo.operatingHours || marketInfo.openingHours || 'Chưa cập nhật giờ hoạt động'}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div className="flex items-center justify-between">
+                                <span className="text-xs text-gray-600">Trạng thái chợ:</span>
+                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                                    marketInfo.status === 'Active' 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : 'bg-red-100 text-red-800'
+                                }`}>
+                                    {marketInfo.status === 'Active' ? 'Hoạt động' : 'Tạm ngưng'}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Loading Market Info */}
+                {marketLoading && (
+                    <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 bg-gray-50">
+                        <div className="flex items-center space-x-2">
+                            <FaSpinner className="animate-spin text-gray-400" size={12} />
+                            <p className="text-xs text-gray-600">Đang tải thông tin chợ...</p>
+                        </div>
+                    </div>
+                )}
+
                 {/* Navigation Menu */}
                 <nav className="flex-1 p-3 sm:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                     <ul className="space-y-1 sm:space-y-2">
-                        {sidebarItems.map((item) => {
+                        {sidebarItems.map((item, index) => {
                             const Icon = item.icon;
+                            const key = item.path || `action-${index}`;
+                            
+                            // Render toggle button
+                            if (item.type === 'toggle') {
+                                return (
+                                    <li key={key}>
+                                        <button
+                                            onClick={item.action}
+                                            disabled={item.loading}
+                                            className={`w-full flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all group ${
+                                                item.loading 
+                                                    ? 'opacity-50 cursor-not-allowed' 
+                                                    : 'text-gray-700 hover:bg-gray-100'
+                                            }`}
+                                        >
+                                            {item.loading ? (
+                                                <FaSpinner className="animate-spin flex-shrink-0" size={16} />
+                                            ) : (
+                                                <Icon
+                                                    size={16}
+                                                    className={`flex-shrink-0 ${item.color}`}
+                                                />
+                                            )}
+                                            <div className="flex-1 min-w-0 text-left">
+                                                <span className="text-sm sm:text-base font-medium truncate block">
+                                                    {item.loading ? 'Đang xử lý...' : item.label}
+                                                </span>
+                                                <p className="text-xs text-gray-500 mt-0.5 truncate hidden sm:block">
+                                                    {item.description}
+                                                </p>
+                                            </div>
+                                        </button>
+                                    </li>
+                                );
+                            }
+                            
+                            // Render normal navigation link
                             return (
-                                <li key={item.path}>
+                                <li key={key}>
                                     <Link
                                         to={item.path}
                                         onClick={() => setIsSidebarOpen(false)}

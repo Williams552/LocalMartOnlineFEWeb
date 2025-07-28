@@ -13,6 +13,7 @@ import QuickActions from "../../components/Seller/QuickActions";
 import ChartsAnalytics from "../../components/Seller/ChartsAnalytics";
 import PriorityActionWidgets from "../../components/Seller/PriorityActionWidgets";
 import notificationService from "../../services/notificationService";
+import useStoreStatus from "../../hooks/useStoreStatus";
 import { toast } from "react-toastify";
 
 const SellerDashboard = () => {
@@ -22,6 +23,9 @@ const SellerDashboard = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [recentNotifications, setRecentNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
+
+    // Check store status - this will handle suspension automatically
+    const { isStoreSuspended, storeInfo } = useStoreStatus();
 
     // Load dashboard data on component mount
     useEffect(() => {

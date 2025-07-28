@@ -47,21 +47,35 @@ class StoreService {
     async getMyStore() {
         try {
             const url = API_ENDPOINTS.STORE.MY_STORE;
+            console.log('🏪 StoreService - Getting my store from:', url);
+            
             const response = await apiClient.get(url);
+            console.log('🏪 StoreService - My store response:', response);
+            console.log('🏪 StoreService - Response data:', response.data);
+            
             if (response.data && response.data.success && response.data.data) {
+                console.log('🏪 StoreService - Store data details:', response.data.data);
+                console.log('🏪 StoreService - MarketId:', response.data.data.marketId);
+                console.log('🏪 StoreService - Store ID:', response.data.data.id);
+                console.log('🏪 StoreService - Available fields:', Object.keys(response.data.data));
+                
                 return {
                     success: true,
                     data: response.data.data,
                     message: response.data.message || ''
                 };
             }
+            
+            console.log('❌ StoreService - No valid data in response');
             return {
                 success: false,
                 message: response.data?.message || 'Không tìm thấy thông tin gian hàng',
                 data: null
             };
         } catch (error) {
-            console.error('Error fetching my store:', error);
+            console.error('❌ StoreService - Error fetching my store:', error);
+            console.error('❌ Error response:', error.response);
+            console.error('❌ Error data:', error.response?.data);
             return {
                 success: false,
                 message: error.response?.data?.message || 'Có lỗi xảy ra khi lấy thông tin gian hàng',
@@ -311,6 +325,31 @@ class StoreService {
             return {
                 success: false,
                 message: error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật gian hàng'
+            };
+        }
+    }
+
+    // Toggle store status (open/close)
+    async toggleStoreStatus(storeId) {
+        try {
+            const url = API_ENDPOINTS.STORE.TOGGLE_STATUS(storeId);
+            const response = await apiClient.patch(url);
+
+            if (response.data && response.data.success) {
+                return {
+                    success: true,
+                    data: response.data.data,
+                    message: response.data.message || 'Trạng thái cửa hàng đã được cập nhật'
+                };
+            }
+            return {
+                success: false,
+                message: response.data?.message || 'Không thể thay đổi trạng thái cửa hàng'
+            };
+        } catch (error) {
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || 'Có lỗi xảy ra khi thay đổi trạng thái cửa hàng'
             };
         }
     }
