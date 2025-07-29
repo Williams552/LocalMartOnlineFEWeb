@@ -364,6 +364,15 @@ const UserProfile = () => {
                                         <span className="text-gray-600">Cập nhật lần cuối:</span>
                                         <span className="text-gray-800">{profileData.updatedAt}</span>
                                     </div>
+                                    <div className="flex justify-end mt-2">
+                                        <button
+                                            type="button"
+                                            className="px-4 py-2 bg-supply-primary text-white rounded-lg hover:bg-green-600 transition"
+                                            onClick={() => window.location.href = '/change-password'}
+                                        >
+                                            Đổi mật khẩu
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 

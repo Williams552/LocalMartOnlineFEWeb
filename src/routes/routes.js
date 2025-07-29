@@ -1,4 +1,5 @@
 import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
+import ChangePassword from "../pages/User/ChangePassword";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
@@ -117,7 +118,9 @@ const AppRoutes = () => {
                 <Route path="/buyer/chat" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                 <Route path="/buyer/chat/:sellerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+                <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
                 <Route path="/my-reports" element={<ProtectedRoute><MyReports /></ProtectedRoute>} />
+
                 <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
                 <Route path="/buyer/bargains" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />

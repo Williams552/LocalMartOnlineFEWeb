@@ -16,13 +16,14 @@ const ProxyShopperDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             setLoading(true);
-            const [statsResponse, ordersResponse] = await Promise.all([
-                proxyShopperService.getMyStats(),
+
+            const [analyticsResponse, ordersResponse] = await Promise.all([
+                proxyShopperService.getAnalytics('30d'),
                 proxyShopperService.getMyOrders()
             ]);
 
-            if (statsResponse.success) {
-                setStats(statsResponse.data);
+            if (analyticsResponse.success) {
+                setStats(analyticsResponse.data);
             }
 
             if (ordersResponse.success) {
@@ -88,7 +89,7 @@ const ProxyShopperDashboard = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-600">Tổng đơn hàng</p>
-                            <p className="text-2xl font-bold text-gray-900">{stats?.totalOrders || 0}</p>
+                            <p className="text-2xl font-bold text-gray-900">{stats?.totalOrders ?? 0}</p>
                         </div>
                         <div className="p-3 bg-blue-100 rounded-lg">
                             <FiPackage className="text-blue-600" size={24} />
@@ -100,7 +101,7 @@ const ProxyShopperDashboard = () => {
                     <div className="flex items-center justify-between">
                         <div>
                             <p className="text-sm font-medium text-gray-600">Hoàn thành</p>
-                            <p className="text-2xl font-bold text-green-600">{stats?.completedOrders || 0}</p>
+                            <p className="text-2xl font-bold text-green-600">{stats?.completedOrders ?? 0}</p>
                         </div>
                         <div className="p-3 bg-green-100 rounded-lg">
                             <FiCheckCircle className="text-green-600" size={24} />
@@ -111,8 +112,8 @@ const ProxyShopperDashboard = () => {
                 <div className="bg-white rounded-lg shadow-sm border p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-sm font-medium text-gray-600">Tổng thu nhập</p>
-                            <p className="text-2xl font-bold text-supply-primary">{formatCurrency(stats?.totalEarnings)}</p>
+                            <p className="text-sm font-medium text-gray-600">Tổng chi tiêu</p>
+                            <p className="text-2xl font-bold text-supply-primary">{formatCurrency(stats?.totalSpent ?? 0)}</p>
                         </div>
                         <div className="p-3 bg-green-100 rounded-lg">
                             <FiDollarSign className="text-supply-primary" size={24} />
@@ -125,7 +126,7 @@ const ProxyShopperDashboard = () => {
                         <div>
                             <p className="text-sm font-medium text-gray-600">Đánh giá TB</p>
                             <div className="flex items-center space-x-2">
-                                <p className="text-2xl font-bold text-yellow-500">{stats?.averageRating || 0}</p>
+                                <p className="text-2xl font-bold text-yellow-500">{stats?.averageRating ?? 0}</p>
                                 <FaStar className="text-yellow-500" size={16} />
                             </div>
                         </div>
