@@ -110,10 +110,10 @@ const SellerOrdersPage = () => {
 
             if (result.success) {
                 toast.success('Cập nhật trạng thái đơn hàng thành công!');
-                
+
                 // Reload order list để lấy dữ liệu mới nhất từ server
                 await fetchOrders();
-                
+
                 // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
                 if (selectedOrder?.id === orderId) {
                     setShowOrderDetail(false);
@@ -141,7 +141,7 @@ const SellerOrdersPage = () => {
             if (result.success) {
                 toast.success('Xác nhận đơn hàng thành công!');
                 await fetchOrders();
-                
+
                 if (selectedOrder?.id === orderId) {
                     setShowOrderDetail(false);
                     setSelectedOrder(null);
@@ -168,7 +168,7 @@ const SellerOrdersPage = () => {
             if (result.success) {
                 toast.success('Xác nhận đã nhận tiền thành công!');
                 await fetchOrders();
-                
+
                 if (selectedOrder?.id === orderId) {
                     setShowOrderDetail(false);
                     setSelectedOrder(null);
@@ -195,7 +195,7 @@ const SellerOrdersPage = () => {
             if (result.success) {
                 toast.success('Xác nhận hoàn thành đơn hàng thành công!');
                 await fetchOrders();
-                
+
                 if (selectedOrder?.id === orderId) {
                     setShowOrderDetail(false);
                     setSelectedOrder(null);
@@ -220,10 +220,10 @@ const SellerOrdersPage = () => {
 
             if (result.success) {
                 toast.success('Xác nhận thanh toán thành công!');
-                
+
                 // Reload order list để lấy dữ liệu mới nhất từ server
                 await fetchOrders();
-                
+
                 // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
                 if (selectedOrder?.id === orderId) {
                     setShowOrderDetail(false);
@@ -265,15 +265,15 @@ const SellerOrdersPage = () => {
 
             if (result.success) {
                 toast.success('Hủy đơn hàng thành công!');
-                
+
                 // Reload order list để lấy dữ liệu mới nhất từ server
                 await fetchOrders();
-                
+
                 // Đóng modal
                 setShowCancelModal(false);
                 setCancelOrderId(null);
                 setCancelReason('');
-                
+
                 // Nếu đang xem chi tiết đơn hàng này, đóng modal để user thấy thay đổi
                 if (selectedOrder?.id === cancelOrderId) {
                     setShowOrderDetail(false);
@@ -649,10 +649,6 @@ const SellerOrdersPage = () => {
                                                 <FaPhone className="mr-2 text-gray-400" />
                                                 {selectedOrder.customerPhone || selectedOrder.customer?.phone || selectedOrder.user?.phone || selectedOrder.buyerPhone || 'Chưa có số điện thoại'}
                                             </p>
-                                            <p className="flex items-start">
-                                                <FaMapMarkerAlt className="mr-2 mt-1 text-gray-400 flex-shrink-0" />
-                                                <span>{selectedOrder.customerAddress || selectedOrder.customer?.address || selectedOrder.user?.address || selectedOrder.deliveryAddress || selectedOrder.shippingAddress || 'Chưa có địa chỉ'}</span>
-                                            </p>
                                         </div>
                                     </div>
 
@@ -663,7 +659,7 @@ const SellerOrdersPage = () => {
                                             Thông tin đơn hàng
                                         </h4>
                                         <div className="space-y-2">
-                                            <p><strong>Ngày đặt:</strong> {orderService.formatDate(selectedOrder.orderDate)}</p>
+                                            <p><strong>Ngày đặt:</strong> {orderService.formatDate(selectedOrder.createdAt || selectedOrder.orderDate)}</p>
                                             <p><strong>Trạng thái:</strong> {getStatusBadge(selectedOrder.status || 'unknown')}</p>
                                             <p><strong>Ghi chú:</strong> {selectedOrder.notes || 'Không có'}</p>
                                         </div>
@@ -734,7 +730,6 @@ const SellerOrdersPage = () => {
                                     <div className="border-t border-gray-200 pt-4 mt-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <p><strong>Tạm tính:</strong> {orderService.formatCurrency(selectedOrder.subtotal || 0)}</p>
                                                 <p><strong>Phí vận chuyển:</strong> {orderService.formatCurrency(selectedOrder.shippingFee || 0)}</p>
                                                 {(selectedOrder.discount || 0) > 0 && (
                                                     <p><strong>Giảm giá:</strong> -{orderService.formatCurrency(selectedOrder.discount)}</p>
