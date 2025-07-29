@@ -734,11 +734,11 @@ const SellerOrdersPage = () => {
                                     <div className="border-t border-gray-200 pt-4 mt-4">
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                {/* <p><strong>Tạm tính:</strong> {orderService.formatCurrency(selectedOrder.subtotal || 0)}</p>
+                                                <p><strong>Tạm tính:</strong> {orderService.formatCurrency(selectedOrder.subtotal || 0)}</p>
                                                 <p><strong>Phí vận chuyển:</strong> {orderService.formatCurrency(selectedOrder.shippingFee || 0)}</p>
                                                 {(selectedOrder.discount || 0) > 0 && (
                                                     <p><strong>Giảm giá:</strong> -{orderService.formatCurrency(selectedOrder.discount)}</p>
-                                                )} */}
+                                                )}
                                             </div>
                                             <div className="text-right">
                                                 <h5 className="text-xl font-bold text-green-600">
