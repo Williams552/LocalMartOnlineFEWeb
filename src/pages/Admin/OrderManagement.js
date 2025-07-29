@@ -75,7 +75,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
     const [filters, setFilters] = useState({
         search: '',
         status: defaultStatus || '',
-        paymentStatus: '',
         dateRange: null
     });
     const [selectedOrder, setSelectedOrder] = useState(null);
@@ -93,12 +92,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
         { value: 'Cancelled', label: 'Đã hủy', color: 'red' }
     ];
 
-    const paymentStatuses = [
-        { value: 'Pending', label: 'Chờ thanh toán', color: 'orange' },
-        { value: 'Completed', label: 'Đã thanh toán', color: 'green' },
-        { value: 'Failed', label: 'Thanh toán thất bại', color: 'red' }
-    ];
-
     useEffect(() => {
         loadOrders();
         loadStatistics();
@@ -107,7 +100,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
     useEffect(() => {
         // Reload when filters change
         const timer = setTimeout(() => {
-            if (filters.search || filters.status || filters.paymentStatus || filters.dateRange) {
+            if (filters.search || filters.status || filters.dateRange) {
                 handleFilter();
             } else {
                 loadOrders();
@@ -158,7 +151,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
     };
 
     const handleFilter = async () => {
-        if (!filters.search && !filters.status && !filters.paymentStatus && !filters.dateRange) {
+        if (!filters.search && !filters.status && !filters.dateRange) {
             loadOrders();
             return;
         }
@@ -169,7 +162,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                 page: 1,
                 pageSize: pagination.pageSize,
                 status: filters.status || undefined,
-                paymentStatus: filters.paymentStatus || undefined,
                 search: filters.search || undefined,
                 fromDate: filters.dateRange?.[0]?.format('YYYY-MM-DD') || undefined,
                 toDate: filters.dateRange?.[1]?.format('YYYY-MM-DD') || undefined
@@ -297,7 +289,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
             'Người bán': order.sellerName || 'Không xác định',
             'Tổng tiền': `${(order.totalAmount || 0).toLocaleString('vi-VN')} VNĐ`,
             'Trạng thái': getStatusLabel(order.status, 'order'),
-            'Thanh toán': getStatusLabel(order.paymentStatus, 'payment'),
             'Ngày đặt': new Date(order.createdAt).toLocaleDateString('vi-VN'),
             'Địa chỉ giao hàng': order.deliveryAddress || 'Chưa có thông tin'
         }));
@@ -333,7 +324,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
             'Người bán': order.sellerName || 'Không xác định',
             'Tổng tiền': `${(order.totalAmount || 0).toLocaleString('vi-VN')} VNĐ`,
             'Trạng thái': getStatusLabel(order.status, 'order'),
-            'Thanh toán': getStatusLabel(order.paymentStatus, 'payment'),
             'Ngày đặt': new Date(order.createdAt).toLocaleDateString('vi-VN')
         }));
 
@@ -415,14 +405,12 @@ const OrderManagement = ({ defaultStatus = null }) => {
     };
 
     const getStatusColor = (status, type = 'order') => {
-        const statuses = type === 'order' ? orderStatuses : paymentStatuses;
-        const statusObj = statuses.find(s => s.value === status);
+        const statusObj = orderStatuses.find(s => s.value === status);
         return statusObj?.color || 'default';
     };
 
     const getStatusLabel = (status, type = 'order') => {
-        const statuses = type === 'order' ? orderStatuses : paymentStatuses;
-        const statusObj = statuses.find(s => s.value === status);
+        const statusObj = orderStatuses.find(s => s.value === status);
         return statusObj?.label || status;
     };
 
@@ -561,14 +549,9 @@ const OrderManagement = ({ defaultStatus = null }) => {
             key: 'status',
             width: 160,
             render: (_, record) => (
-                <Space direction="vertical" size="small">
-                    <Tag color={getStatusColor(record.status, 'order')}>
-                        {getStatusLabel(record.status, 'order')}
-                    </Tag>
-                    <Tag color={getStatusColor(record.paymentStatus, 'payment')} size="small">
-                        {getStatusLabel(record.paymentStatus, 'payment')}
-                    </Tag>
-                </Space>
+                <Tag color={getStatusColor(record.status, 'order')}>
+                    {getStatusLabel(record.status, 'order')}
+                </Tag>
             ),
             filters: orderStatuses.map(status => ({
                 text: status.label,
@@ -743,23 +726,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                             ))}
                         </Select>
                     </Col>
-                    <Col span={3}>
-                        <Select
-                            placeholder="Trạng thái thanh toán"
-                            allowClear
-                            style={{ width: '100%' }}
-                            value={filters.paymentStatus}
-                            onChange={(value) => setFilters(prev => ({ ...prev, paymentStatus: value }))}
-                        >
-                            {paymentStatuses.map(status => (
-                                <Option key={status.value} value={status.value}>
-                                    <Tag color={status.color} style={{ margin: 0 }}>
-                                        {status.label}
-                                    </Tag>
-                                </Option>
-                            ))}
-                        </Select>
-                    </Col>
                     <Col span={4}>
                         <RangePicker
                             style={{ width: '100%' }}
@@ -773,7 +739,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
                         <Button
                             icon={<FilterOutlined />}
                             onClick={() => {
-                                setFilters({ search: '', status: '', paymentStatus: '', dateRange: null });
+                                setFilters({ search: '', status: '', dateRange: null });
                                 loadOrders();
                             }}
                             style={{ width: '100%' }}
@@ -857,9 +823,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                             <Space>
                                 <Tag color={getStatusColor(selectedOrder.status, 'order')}>
                                     {getStatusLabel(selectedOrder.status, 'order')}
-                                </Tag>
-                                <Tag color={getStatusColor(selectedOrder.paymentStatus, 'payment')}>
-                                    {getStatusLabel(selectedOrder.paymentStatus, 'payment')}
                                 </Tag>
                             </Space>
                         </div>
