@@ -5,7 +5,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
 import Register from "../components/AuthComponents/Register";
 import ForgotPassword from "../components/AuthComponents/ForgotPassword";
-import ResetPassword from "../components/AuthComponents/ResetPassword";
+import ResetPassword from "../components/AuthComponents/ResetPassWord";
 import EmailVerification from "../components/AuthComponents/EmailVerification";
 import AuthLayout from "../layouts/AuthLayout";
 import PublicRoute from "../components/AuthComponents/PublicRoute";
