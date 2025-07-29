@@ -16,13 +16,20 @@ const AvailableOrders = () => {
     const fetchAvailableOrders = async () => {
         try {
             setLoading(true);
-            const response = await proxyShopperService.getAvailableOrders();
-
-            if (response.success) {
-                setOrders(response.data);
-            }
+            // Lấy access token từ localStorage giống các service khác
+            const token = localStorage.getItem("token");
+            const res = await fetch("http://localhost:5183/api/ProxyShopper/requests/available", {
+                headers: {
+                    "Authorization": token ? `Bearer ${token}` : undefined,
+                    "Content-Type": "application/json"
+                },
+            });
+            if (!res.ok) throw new Error("Không thể lấy danh sách đơn hàng khả dụng");
+            const data = await res.json();
+            setOrders(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching available orders:', error);
+            setOrders([]);
         } finally {
             setLoading(false);
         }
@@ -31,15 +38,23 @@ const AvailableOrders = () => {
     const handleAcceptOrder = async (orderId) => {
         try {
             setAcceptingOrder(orderId);
-            const response = await proxyShopperService.acceptOrder(orderId);
-
-            if (response.success) {
-                // Remove the accepted order from the list
-                setOrders(orders.filter(order => order.id !== orderId));
-                alert('Đã nhận đơn hàng thành công!');
-            } else {
-                alert(response.error || 'Có lỗi xảy ra khi nhận đơn hàng');
+            // Lấy token giống fetchAvailableOrders
+            const token = localStorage.getItem("token");
+            const res = await fetch(`http://localhost:5183/api/ProxyShopper/requests/${orderId}/accept`, {
+                method: "POST",
+                headers: {
+                    "Authorization": token ? `Bearer ${token}` : undefined,
+                    "Content-Type": "application/json"
+                },
+            });
+            if (!res.ok) {
+                const errMsg = res.status === 401 ? "Bạn không có quyền nhận đơn hàng này." : "Có lỗi xảy ra khi nhận đơn hàng";
+                alert(errMsg);
+                return;
             }
+            // Remove the accepted order from the list
+            setOrders(orders.filter(order => order.id !== orderId));
+            alert('Đã nhận đơn hàng thành công!');
         } catch (error) {
             console.error('Error accepting order:', error);
             alert('Có lỗi xảy ra khi nhận đơn hàng');
