@@ -20,6 +20,7 @@ import {
     FaBan
 } from 'react-icons/fa';
 import SellerLayout from '../../layouts/SellerLayout';
+import { ReportButton } from '../../components/Report';
 import orderService from '../../services/orderService';
 import authService from '../../services/authService';
 import { toast } from 'react-toastify';
@@ -402,6 +403,17 @@ const SellerOrdersPage = () => {
                         <span className="text-xs text-red-600 italic">✗ Đã hủy</span>
                     </div>
                 )}
+
+                {/* Report Buyer Button - Available for all orders */}
+                <ReportButton
+                    targetType="Buyer"
+                    targetId={order.customerId || order.customer?.id || order.user?.id || order.buyerId}
+                    targetName={order.customerName || order.customer?.name || order.user?.name || order.buyerName || 'Khách hàng'}
+                    variant="icon"
+                    size="sm"
+                    tooltip="Báo cáo người mua"
+                    className="p-1 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded"
+                />
             </div>
         );
     };

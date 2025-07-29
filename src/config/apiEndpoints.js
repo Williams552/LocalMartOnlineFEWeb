@@ -383,6 +383,16 @@ export const API_ENDPOINTS = {
         GET_BY_SELLER: (sellerId) => `${API_URL}/api/fastbargain/seller/${sellerId}`,
         GET_ADMIN: `${API_URL}/api/fastbargain/admin`,
     },
+
+    // Report Endpoints
+    REPORT: {
+        GET_ALL: `${API_URL}/api/report`,
+        GET_BY_ID: (reportId) => `${API_URL}/api/report/${reportId}`,
+        GET_MY_REPORTS: `${API_URL}/api/report/my-reports`,
+        CREATE: `${API_URL}/api/report`,
+        GET_STATISTICS: `${API_URL}/api/report/statistics`,
+        UPDATE_STATUS: (reportId) => `${API_URL}/api/report/${reportId}/status`,
+    },
 };
 
 export default API_ENDPOINTS;

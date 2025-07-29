@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import FollowStoreButton from "../../components/FollowStoreButton";
+import { ReportButton } from "../../components/Report";
 import {
     FaStar, FaRegStar, FaMapMarkerAlt, FaUsers, FaShoppingBag,
     FaCertificate, FaPhone, FaComments, FaStore, FaAward,
@@ -320,6 +321,17 @@ const StorePage = () => {
                                 <FaComments />
                                 Liên lạc với gian hàng
                             </button>
+                            
+                            {/* Report Store Button */}
+                            <ReportButton
+                                targetType="Store"
+                                targetId={storeId}
+                                targetName={store.storeName || store.name}
+                                variant="default"
+                                size="md"
+                                buttonText="Báo cáo cửa hàng"
+                                className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all font-medium"
+                            />
                         </div>
                     </div>
                 </div>

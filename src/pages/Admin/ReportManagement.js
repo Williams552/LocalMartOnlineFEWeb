@@ -29,17 +29,47 @@ const ReportManagement = () => {
     const loadReports = async (page = 1) => {
         try {
             setLoading(true);
-            const result = await reportService.getAllReports(page, pagination.pageSize, filters);
+            
+            // Build params for getReports
+            const params = {
+                page: page,
+                pageSize: pagination.pageSize,
+                ...filters
+            };
+            
+            const result = await reportService.getReports(params);
 
             if (result.success) {
-                setReports(result.data.reports);
-                setPagination(result.data.pagination);
+                // Handle different response structures
+                if (Array.isArray(result.data)) {
+                    setReports(result.data);
+                    setPagination(prev => ({
+                        ...prev,
+                        currentPage: page,
+                        totalCount: result.data.length
+                    }));
+                } else if (result.data && Array.isArray(result.data.reports)) {
+                    setReports(result.data.reports);
+                    setPagination(result.data.pagination || {
+                        currentPage: page,
+                        pageSize: pagination.pageSize,
+                        totalCount: result.data.reports.length,
+                        totalPages: Math.ceil(result.data.reports.length / pagination.pageSize)
+                    });
+                } else {
+                    // Fallback for unknown structure
+                    setReports([]);
+                    console.warn('Unexpected response structure:', result.data);
+                }
                 setError('');
             } else {
                 setError(result.message);
+                setReports([]); // Ensure reports is always an array
             }
         } catch (err) {
+            console.error('Error loading reports:', err);
             setError('Có lỗi xảy ra khi tải dữ liệu');
+            setReports([]); // Ensure reports is always an array
         } finally {
             setLoading(false);
         }
@@ -338,7 +368,7 @@ const ReportManagement = () => {
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {reports.map((report) => (
+                                {Array.isArray(reports) && reports.length > 0 ? reports.map((report) => (
                                     <tr key={report.id} className="hover:bg-gray-50">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
@@ -388,7 +418,13 @@ const ReportManagement = () => {
                                             </button>
                                         </td>
                                     </tr>
-                                ))}
+                                )) : (
+                                    <tr>
+                                        <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                                            {loading ? 'Đang tải...' : 'Không có báo cáo nào'}
+                                        </td>
+                                    </tr>
+                                )}
                             </tbody>
                         </table>
                     </div>

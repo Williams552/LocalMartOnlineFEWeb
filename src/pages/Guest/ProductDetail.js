@@ -7,7 +7,7 @@ import AddToCartButton from "../../components/Common/AddToCartButton";
 import FavoriteButton from "../../components/Common/FavoriteButton";
 import { ReviewList, ReviewSummary } from "../../components/Review";
 import StartBargainModal from "../../components/FastBargain/StartBargainModal";
-import ReportModal from "../../components/Report/ReportModal";
+import { ReportButton } from "../../components/Report";
 import logo from "../../assets/image/logo.jpg";
 import productService from "../../services/productService";
 import storeService from "../../services/storeService";
@@ -32,9 +32,6 @@ const ProductDetail = () => {
 
     // Fast Bargain states
     const [showBargainModal, setShowBargainModal] = useState(false);
-
-    // Report states
-    const [showReportModal, setShowReportModal] = useState(false);
 
     // Review states
     const [reviewStats, setReviewStats] = useState({
@@ -266,13 +263,6 @@ const ProductDetail = () => {
         console.log('Bargain started successfully:', bargainData);
     };
 
-    const handleReportSuccess = (reportData) => {
-        setShowReportModal(false);
-        // Hiển thị thông báo thành công
-        alert('Báo cáo đã được gửi thành công. Chúng tôi sẽ xem xét trong 24-48 giờ.');
-        console.log('Report submitted successfully:', reportData);
-    };
-
     const renderStars = (rating) => {
         return Array.from({ length: 5 }, (_, i) =>
             i < Math.round(rating) ? (
@@ -430,13 +420,15 @@ const ProductDetail = () => {
                     {/* Report Button */}
                     {authService.isAuthenticated() && (
                         <div className="flex justify-end mb-4">
-                            <button
-                                onClick={() => setShowReportModal(true)}
+                            <ReportButton
+                                targetType="Product"
+                                targetId={product.id}
+                                targetName={product.name}
+                                variant="default"
+                                size="md"
+                                buttonText="Báo cáo sản phẩm"
                                 className="flex items-center space-x-2 text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg transition-colors text-sm"
-                            >
-                                <FaFlag className="w-4 h-4" />
-                                <span>Báo cáo sản phẩm</span>
-                            </button>
+                            />
                         </div>
                     )}
 
@@ -881,13 +873,7 @@ const ProductDetail = () => {
                 onSuccess={handleBargainSuccess}
             />
 
-            {/* Report Modal */}
-            <ReportModal
-                isOpen={showReportModal}
-                onClose={() => setShowReportModal(false)}
-                product={product}
-                onSuccess={handleReportSuccess}
-            />
+
         </main>
     );
 };

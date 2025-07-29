@@ -4,6 +4,7 @@ import logo from "../../assets/image/logo.jpg";
 import AddToCartButton from "../Common/AddToCartButton";
 import FavoriteButton from "../Common/FavoriteButton";
 import FollowStoreButton from "../FollowStoreButton";
+import ReportButton from "../Report/ReportButton";
 import { FaHandshake } from "react-icons/fa";
 import StartBargainModal from "../FastBargain/StartBargainModal";
 import authService from "../../services/authService";
@@ -169,15 +170,25 @@ const ProductCard = ({
                                 {storeName || market || 'Gian hàng'}
                             </Link>
                         </p>
-                        {/* Follow Store Button */}
-                        {storeId && (
-                            <FollowStoreButton
-                                storeId={storeId}
-                                variant="icon-only"
+                        <div className="flex items-center space-x-2">
+                            {/* Report Button */}
+                            <ReportButton
+                                targetType="Product"
+                                targetId={id}
+                                targetName={name}
+                                variant="icon"
                                 size="sm"
-                                className="ml-2"
+                                tooltip="Báo cáo sản phẩm"
                             />
-                        )}
+                            {/* Follow Store Button */}
+                            {storeId && (
+                                <FollowStoreButton
+                                    storeId={storeId}
+                                    variant="icon-only"
+                                    size="sm"
+                                />
+                            )}
+                        </div>
                     </div>
                 </div>
                 <div className="flex items-center justify-between">

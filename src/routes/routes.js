@@ -42,6 +42,7 @@ import ContentManagement from "../pages/Admin/ContentManagement";
 import { FAQManagement } from "../pages/Admin/FAQ";
 import Analytics from "../pages/Admin/Analytics";
 import SupportManagement from "../pages/Admin/SupportManagement";
+import ReportManagement from "../pages/Admin/Reports/ReportManagement";
 import CartPage from "../pages/Buyer/CartPage";
 import FavoritesPage from "../pages/Buyer/FavoritesPage";
 import FollowingStoresPage from "../pages/Buyer/FollowingStores";
@@ -55,6 +56,7 @@ import ProxyShopperWelcome from "../pages/ProxyShopper/ProxyShopperWelcome";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
 import RegisterSeller from "../pages/Buyer/RegisterSeller";
 import UserProfile from "../pages/User/UserProfile";
+import MyReports from "../pages/User/MyReports";
 import ChatListPage from "../pages/Buyer/ChatListPage";
 import ChatPage from "../pages/Buyer/ChatPage";
 import FastBargainPage from "../pages/FastBargain/FastBargainPage";
@@ -73,6 +75,9 @@ import QuickActionsPage from "../pages/Sellers/QuickActionsPage";
 import ChartsAnalyticsPage from "../pages/Sellers/ChartsAnalyticsPage";
 import NotificationsPage from "../pages/Sellers/NotificationsPage";
 import SellerLicenses from "../pages/Sellers/SellerLicenses";
+
+// Test pages
+import ReportSystemTest from "../pages/Test/ReportSystemTest";
 
 const AppRoutes = () => {
     return (
@@ -114,6 +119,8 @@ const AppRoutes = () => {
                 <Route path="/buyer/chat/:sellerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
                 <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+                <Route path="/my-reports" element={<ProtectedRoute><MyReports /></ProtectedRoute>} />
+
                 <Route path="/fast-bargain" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
                 <Route path="/fast-bargain/:id" element={<ProtectedRoute><BargainDetail /></ProtectedRoute>} />
                 <Route path="/buyer/bargains" element={<ProtectedRoute><FastBargainPage /></ProtectedRoute>} />
@@ -123,6 +130,9 @@ const AppRoutes = () => {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/faq" element={<FAQPage />} />
+                
+                {/* Test Routes - Development only */}
+                <Route path="/test/report-system" element={<ReportSystemTest />} />
             </Route>
 
             {/* Seller Routes - Separate layout without Header/Footer */}
@@ -286,7 +296,7 @@ const AppRoutes = () => {
                 {/* Support */}
                 <Route path="support-requests" element={<SupportManagement />} />
                 <Route path="chat" element={<SupportManagement />} />
-                <Route path="reports" element={<SupportManagement />} />
+                <Route path="reports" element={<ReportManagement />} />
 
                 {/* Analytics */}
                 <Route path="analytics/users" element={<UserAnalytics />} />

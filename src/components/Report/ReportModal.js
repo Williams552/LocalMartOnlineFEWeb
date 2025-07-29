@@ -1,211 +1,359 @@
-import React, { useState } from 'react';
-import { FaFlag, FaTimes, FaExclamationTriangle } from 'react-icons/fa';
+import React, { useState, useCallback, useMemo } from 'react';
+import { FaTimes, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import reportService from '../../services/reportService';
 
-const ReportModal = ({ isOpen, onClose, product, onSuccess }) => {
-    const [selectedReason, setSelectedReason] = useState('');
-    const [customReason, setCustomReason] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [error, setError] = useState('');
+// Constants
+const FORM_VALIDATION = {
+    EVIDENCE_MAX_LENGTH: 300,
+    CUSTOM_TITLE_MIN_LENGTH: 10,
+    CUSTOM_TITLE_MAX_LENGTH: 100,
+    REASON_MIN_LENGTH: 20,
+    REASON_MAX_LENGTH: 500
+};
 
-    const reportReasons = reportService.getReportReasons();
+const INITIAL_FORM_STATE = {
+    reason: '',
+    customTitle: '',
+    reasonContent: '',
+    evidence: ''
+};
 
-    const handleSubmit = async (e) => {
+const ReportModal = ({ 
+    isOpen,
+    onClose,
+    targetType = 'Product',
+    targetId,
+    targetName,
+    targetInfo = null,
+    onSuccess
+}) => {
+    // State management
+    const [formData, setFormData] = useState(INITIAL_FORM_STATE);
+    const [loading, setLoading] = useState(false);
+    const [errors, setErrors] = useState({});
+
+    // Memoized values
+    const reasons = useMemo(() => reportService.getReportReasons(), []);
+    const targetTypeLabel = useMemo(() => 
+        reportService.getTargetTypeLabel(targetType), [targetType]
+    );
+
+    // Form validation
+    const validateForm = useCallback(() => {
+        const newErrors = {};
+        
+        if (!formData.reason) {
+            newErrors.reason = 'Vui lòng chọn lý do báo cáo';
+        }
+        
+        // Validate custom title if "other" reason is selected
+        if (formData.reason === 'other') {
+            const customTitle = formData.customTitle.trim();
+            if (!customTitle) {
+                newErrors.customTitle = 'Vui lòng nhập tiêu đề báo cáo';
+            } else if (customTitle.length < FORM_VALIDATION.CUSTOM_TITLE_MIN_LENGTH) {
+                newErrors.customTitle = `Tiêu đề phải có ít nhất ${FORM_VALIDATION.CUSTOM_TITLE_MIN_LENGTH} ký tự`;
+            } else if (customTitle.length > FORM_VALIDATION.CUSTOM_TITLE_MAX_LENGTH) {
+                newErrors.customTitle = `Tiêu đề không được vượt quá ${FORM_VALIDATION.CUSTOM_TITLE_MAX_LENGTH} ký tự`;
+            }
+        }
+        
+        // Validate reason content
+        const reasonContent = formData.reasonContent.trim();
+        if (!reasonContent) {
+            newErrors.reasonContent = 'Vui lòng mô tả nội dung báo cáo';
+        } else if (reasonContent.length < FORM_VALIDATION.REASON_MIN_LENGTH) {
+            newErrors.reasonContent = `Nội dung phải có ít nhất ${FORM_VALIDATION.REASON_MIN_LENGTH} ký tự`;
+        } else if (reasonContent.length > FORM_VALIDATION.REASON_MAX_LENGTH) {
+            newErrors.reasonContent = `Nội dung không được vượt quá ${FORM_VALIDATION.REASON_MAX_LENGTH} ký tự`;
+        }
+        
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    }, [formData]);
+
+    // Input change handler
+    const handleInputChange = useCallback((e) => {
+        const { name, value } = e.target;
+        
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        
+        // Clear error when user starts typing
+        if (errors[name]) {
+            setErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    }, [errors]);
+
+    // Reset form
+    const resetForm = useCallback(() => {
+        setFormData(INITIAL_FORM_STATE);
+        setErrors({});
+    }, []);
+
+    // Form submission
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
-
-        if (!selectedReason) {
-            setError('Vui lòng chọn lý do báo cáo');
+        
+        if (!validateForm()) {
             return;
         }
 
-        if (selectedReason === 'other' && !customReason.trim()) {
-            setError('Vui lòng nhập lý do cụ thể');
-            return;
-        }
-
-        setIsSubmitting(true);
-        setError('');
-
+        setLoading(true);
+        
         try {
+            console.log('📋 ReportModal - Submitting report:', {
+                targetType,
+                targetId,
+                ...formData
+            });
+
+            // Build report data matching CreateReportDto
             const reportData = {
-                targetType: 'Product',
-                targetId: product.id,
-                reason: selectedReason === 'other' ? customReason : selectedReason
+                targetType,
+                targetId,
+                title: formData.reason === 'other' 
+                    ? formData.customTitle.trim()
+                    : reasons.find(r => r.value === formData.reason)?.label || `Báo cáo ${targetTypeLabel}: ${targetName}`,
+                reason: formData.reasonContent.trim(),
+                evidenceImage: formData.evidence.trim() || null
             };
 
             const result = await reportService.createReport(reportData);
-
+            
             if (result.success) {
-                onSuccess && onSuccess(result.data);
+                toast.success(result.message || 'Báo cáo đã được gửi thành công');
+                onSuccess?.(result.data);
                 onClose();
-                // Reset form
-                setSelectedReason('');
-                setCustomReason('');
+                resetForm();
             } else {
-                setError(result.message);
+                toast.error(result.message || 'Có lỗi xảy ra khi gửi báo cáo');
             }
-        } catch (err) {
-            setError('Có lỗi xảy ra. Vui lòng thử lại sau.');
+        } catch (error) {
+            console.error('❌ ReportModal - Error submitting report:', error);
+            toast.error('Có lỗi xảy ra khi gửi báo cáo');
         } finally {
-            setIsSubmitting(false);
+            setLoading(false);
         }
-    };
+    }, [formData, targetType, targetId, targetName, targetTypeLabel, reasons, validateForm, onSuccess, onClose, resetForm]);
 
-    const handleClose = () => {
-        if (isSubmitting) return;
-        setSelectedReason('');
-        setCustomReason('');
-        setError('');
+    // Close handler
+    const handleClose = useCallback(() => {
+        if (loading) return;
         onClose();
-    };
+        resetForm();
+    }, [loading, onClose, resetForm]);
 
+    // Render form field with error handling
+    const renderFormField = useCallback(({ 
+        label, 
+        name, 
+        type = 'text', 
+        required = false, 
+        placeholder = '', 
+        rows = null,
+        maxLength = null,
+        children = null 
+    }) => (
+        <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+                {label} {required && <span className="text-red-500">*</span>}
+            </label>
+            {type === 'select' ? (
+                <select
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleInputChange}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 relative z-10 bg-white text-gray-900 ${
+                        errors[name] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    disabled={loading}
+                    style={{ zIndex: 60, color: '#374151', backgroundColor: 'white' }}
+                >
+                    {children}
+                </select>
+            ) : type === 'textarea' ? (
+                <textarea
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleInputChange}
+                    rows={rows}
+                    maxLength={maxLength}
+                    placeholder={placeholder}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none bg-white text-gray-900 placeholder-gray-500 ${
+                        errors[name] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    disabled={loading}
+                    style={{ color: '#374151', backgroundColor: 'white' }}
+                />
+            ) : (
+                <input
+                    type={type}
+                    name={name}
+                    value={formData[name]}
+                    onChange={handleInputChange}
+                    placeholder={placeholder}
+                    maxLength={maxLength}
+                    className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-900 placeholder-gray-500 ${
+                        errors[name] ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    disabled={loading}
+                    style={{ color: '#374151', backgroundColor: 'white' }}
+                />
+            )}
+            {errors[name] && (
+                <p className="text-red-500 text-sm mt-1">{errors[name]}</p>
+            )}
+            {maxLength && type === 'textarea' && (
+                <p className="text-gray-500 text-sm mt-1 text-right">
+                    {formData[name].length}/{maxLength}
+                </p>
+            )}
+        </div>
+    ), [formData, errors, handleInputChange, loading]);
+
+    // Early return if not open
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                     <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                            <FaFlag className="text-red-600" />
-                        </div>
+                        <FaExclamationTriangle className="text-red-500" size={24} />
                         <div>
-                            <h3 className="text-lg font-semibold text-gray-900">Báo cáo sản phẩm</h3>
-                            <p className="text-sm text-gray-500">Báo cáo vấn đề với sản phẩm này</p>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                Báo cáo {targetTypeLabel.toLowerCase()}
+                            </h3>
+                            <p className="text-sm text-gray-600">{targetName}</p>
                         </div>
                     </div>
                     <button
                         onClick={handleClose}
-                        disabled={isSubmitting}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
+                        disabled={loading}
+                        className="text-gray-400 hover:text-gray-600 p-1 disabled:opacity-50"
+                        aria-label="Đóng"
                     >
-                        <FaTimes className="text-gray-400" />
+                        <FaTimes size={20} />
                     </button>
                 </div>
 
-                {/* Product Info */}
-                <div className="p-6 bg-gray-50 border-b border-gray-200">
-                    <div className="flex items-center space-x-3">
-                        <img
-                            src={product.image || '/default-product.jpg'}
-                            alt={product.name}
-                            className="w-12 h-12 object-cover rounded-lg"
-                        />
-                        <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 truncate">{product.name}</h4>
-                            <p className="text-sm text-gray-500">
-                                Giá: {product.price?.toLocaleString('vi-VN')}đ
-                            </p>
+                {/* Content */}
+                <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                    {/* Target Info */}
+                    {targetInfo && (
+                        <div className="bg-gray-50 rounded-lg p-4">
+                            <h4 className="font-medium text-gray-900 mb-2">
+                                Thông tin đối tượng báo cáo:
+                            </h4>
+                            <div className="text-sm text-gray-600 space-y-1">
+                                <p><span className="font-medium">Loại:</span> {targetTypeLabel}</p>
+                                <p><span className="font-medium">Tên:</span> {targetName}</p>
+                                {targetInfo.id && (
+                                    <p><span className="font-medium">ID:</span> {targetInfo.id}</p>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </div>
+                    )}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="p-6">
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
-                                Chọn lý do báo cáo <span className="text-red-500">*</span>
-                            </label>
-                            <div className="space-y-2">
-                                {reportReasons.map((reason) => (
-                                    <label
-                                        key={reason.value}
-                                        className={`flex items-center p-3 border rounded-lg cursor-pointer transition-colors ${selectedReason === reason.value
-                                                ? 'border-red-500 bg-red-50'
-                                                : 'border-gray-200 hover:border-gray-300'
-                                            }`}
-                                    >
-                                        <input
-                                            type="radio"
-                                            name="reason"
-                                            value={reason.value}
-                                            checked={selectedReason === reason.value}
-                                            onChange={(e) => setSelectedReason(e.target.value)}
-                                            className="text-red-600 focus:ring-red-500"
-                                            disabled={isSubmitting}
-                                        />
-                                        <span className="ml-3 text-sm text-gray-700">{reason.label}</span>
-                                    </label>
+                    {/* Reason Selection */}
+                    {renderFormField({
+                        label: 'Lý do báo cáo',
+                        name: 'reason',
+                        type: 'select',
+                        required: true,
+                        children: (
+                            <>
+                                <option value="" style={{ color: '#6B7280', backgroundColor: 'white' }}>Chọn lý do báo cáo</option>
+                                {reasons.map((reason) => (
+                                    <option key={reason.value} value={reason.value} style={{ color: '#374151', backgroundColor: 'white' }}>
+                                        {reason.label}
+                                    </option>
                                 ))}
-                            </div>
-                        </div>
+                            </>
+                        )
+                    })}
 
-                        {/* Custom reason input */}
-                        {selectedReason === 'other' && (
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Mô tả chi tiết <span className="text-red-500">*</span>
-                                </label>
-                                <textarea
-                                    value={customReason}
-                                    onChange={(e) => setCustomReason(e.target.value)}
-                                    placeholder="Vui lòng mô tả cụ thể vấn đề..."
-                                    rows={3}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
-                                    disabled={isSubmitting}
-                                    maxLength={500}
-                                />
-                                <p className="text-xs text-gray-500 mt-1">
-                                    {customReason.length}/500 ký tự
-                                </p>
-                            </div>
-                        )}
+                    {/* Custom Title - Only show if "other" is selected */}
+                    {formData.reason === 'other' && renderFormField({
+                        label: 'Tiêu đề báo cáo',
+                        name: 'customTitle',
+                        type: 'text',
+                        required: true,
+                        maxLength: FORM_VALIDATION.CUSTOM_TITLE_MAX_LENGTH,
+                        placeholder: 'Nhập tiêu đề cụ thể cho báo cáo của bạn...'
+                    })}
 
-                        {/* Error message */}
-                        {error && (
-                            <div className="flex items-center space-x-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <FaExclamationTriangle className="text-red-500 flex-shrink-0" />
-                                <span className="text-sm text-red-700">{error}</span>
-                            </div>
-                        )}
+                    {/* Reason Content */}
+                    {renderFormField({
+                        label: 'Nội dung báo cáo',
+                        name: 'reasonContent',
+                        type: 'textarea',
+                        required: true,
+                        rows: 4,
+                        maxLength: FORM_VALIDATION.REASON_MAX_LENGTH,
+                        placeholder: 'Mô tả chi tiết vấn đề bạn gặp phải...'
+                    })}
 
-                        {/* Warning note */}
-                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                            <div className="flex items-start space-x-2">
-                                <FaExclamationTriangle className="text-yellow-500 flex-shrink-0 mt-0.5" />
-                                <div className="text-sm text-yellow-700">
-                                    <p className="font-medium mb-1">Lưu ý quan trọng:</p>
-                                    <ul className="space-y-1 text-xs">
-                                        <li>• Báo cáo sai sự thật có thể bị xử lý</li>
-                                        <li>• Chúng tôi sẽ xem xét báo cáo trong 24-48 giờ</li>
-                                        <li>• Thông tin báo cáo được bảo mật</li>
-                                    </ul>
-                                </div>
+                    {/* Evidence Image URL */}
+                    {renderFormField({
+                        label: 'Bằng chứng hình ảnh (tùy chọn)',
+                        name: 'evidence',
+                        type: 'url',
+                        maxLength: FORM_VALIDATION.EVIDENCE_MAX_LENGTH,
+                        placeholder: 'Nhập URL hình ảnh bằng chứng (nếu có)...'
+                    })}
+
+                    {/* Warning */}
+                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-start space-x-2">
+                            <FaExclamationTriangle className="text-yellow-500 mt-0.5" size={16} />
+                            <div className="text-sm text-yellow-800">
+                                <p className="font-medium mb-1">Lưu ý quan trọng:</p>
+                                <ul className="list-disc list-inside space-y-1">
+                                    <li>Báo cáo sai sự thật có thể dẫn đến việc bị khóa tài khoản</li>
+                                    <li>Chúng tôi sẽ xem xét và phản hồi trong vòng 24-48 giờ</li>
+                                    <li>Thông tin cá nhân của bạn sẽ được bảo mật</li>
+                                </ul>
                             </div>
                         </div>
                     </div>
 
-                    {/* Action buttons */}
-                    <div className="flex space-x-3 mt-6">
+                    {/* Actions */}
+                    <div className="flex space-x-3">
                         <button
                             type="button"
                             onClick={handleClose}
-                            disabled={isSubmitting}
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            disabled={loading}
+                            className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             Hủy
                         </button>
                         <button
                             type="submit"
-                            disabled={isSubmitting}
-                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={loading}
+                            className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                         >
-                            {isSubmitting ? (
-                                <div className="flex items-center justify-center space-x-2">
-                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            {loading ? (
+                                <>
+                                    <FaSpinner className="animate-spin" />
                                     <span>Đang gửi...</span>
-                                </div>
+                                </>
                             ) : (
-                                'Gửi báo cáo'
+                                <span>Gửi báo cáo</span>
                             )}
                         </button>
                     </div>
                 </form>
             </div>
         </div>
-    );
-};
+    );};
 
 export default ReportModal;
