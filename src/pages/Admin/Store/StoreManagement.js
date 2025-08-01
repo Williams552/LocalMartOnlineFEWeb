@@ -33,6 +33,7 @@ import {
 import storeService from '../../../services/storeService';
 import marketService from '../../../services/marketService';
 import userService from '../../../services/userService';
+import reviewService from '../../../services/reviewService';
 import StoreNavigation from './StoreNavigation';
 
 const { Search } = Input;
@@ -42,6 +43,7 @@ const StoreManagement = () => {
     const [stores, setStores] = useState([]);
     const [markets, setMarkets] = useState([]);
     const [sellers, setSellers] = useState({}); // Cache for seller information
+    const [storeRatings, setStoreRatings] = useState({}); // Cache for store ratings
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
         current: 1,
@@ -83,6 +85,49 @@ const StoreManagement = () => {
         // Only reload if no filters are active and pagination changed
         loadInitialStores();
     }, [pagination.current, pagination.pageSize]);
+
+    // Load store ratings information for stores
+    const loadStoreRatings = async (storesData) => {
+        try {
+            console.log('📊 Loading store ratings for stores:', storesData.length);
+            const uniqueStoreIds = [...new Set(storesData.map(store => store.id))];
+            
+            const ratingPromises = uniqueStoreIds.map(async (storeId) => {
+                if (storeRatings[storeId]) {
+                    return { storeId, rating: storeRatings[storeId] };
+                }
+                try {
+                    const response = await reviewService.getReviewsForTarget('Store', storeId);
+                    const ratingData = {
+                        averageRating: response.averageRating || 0,
+                        reviewCount: response.totalCount || 0
+                    };
+                    console.log(`📊 Store ${storeId} rating:`, ratingData);
+                    return { storeId, rating: ratingData };
+                } catch (error) {
+                    console.error(`Error loading rating for store ${storeId}:`, error);
+                    return { 
+                        storeId, 
+                        rating: { averageRating: 0, reviewCount: 0 } 
+                    };
+                }
+            });
+
+            const ratingResults = await Promise.all(ratingPromises);
+            const newStoreRatings = { ...storeRatings };
+            
+            ratingResults.forEach(({ storeId, rating }) => {
+                if (rating) {
+                    newStoreRatings[storeId] = rating;
+                }
+            });
+
+            console.log('📊 Updated store ratings cache:', newStoreRatings);
+            setStoreRatings(newStoreRatings);
+        } catch (error) {
+            console.error('Error loading store ratings:', error);
+        }
+    };
 
     // Load seller information for stores
     const loadSellersInfo = async (storesData) => {
@@ -207,6 +252,7 @@ const StoreManagement = () => {
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
+                await loadStoreRatings(storesData);
             }
         } catch (error) {
             console.error('❌ StoreManagement - Error loading stores:', error);
@@ -270,6 +316,7 @@ const StoreManagement = () => {
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
+                await loadStoreRatings(storesData);
             }
         } catch (error) {
             console.error('❌ StoreManagement - Error refreshing stores:', error);
@@ -356,6 +403,7 @@ const StoreManagement = () => {
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
+                await loadStoreRatings(storesData);
             }
 
             // Removed success message for search as requested
@@ -413,6 +461,7 @@ const StoreManagement = () => {
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
+                await loadStoreRatings(storesData);
             }
         } catch (error) {
             console.error('❌ Error filtering stores:', error);
@@ -545,6 +594,7 @@ const StoreManagement = () => {
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
+                await loadStoreRatings(storesData);
             }
 
             // Removed success message for nearby search as requested
@@ -582,6 +632,11 @@ const StoreManagement = () => {
     const getSellerName = (sellerId) => {
         const seller = sellers[sellerId];
         return seller ? (seller.fullName || seller.username || 'Không xác định') : 'Đang tải...';
+    };
+
+    const getStoreRating = (storeId) => {
+        const ratingData = storeRatings[storeId];
+        return ratingData || { averageRating: 0, reviewCount: 0 };
     };
 
     const columns = [
@@ -674,21 +729,24 @@ const StoreManagement = () => {
             title: 'Đánh giá',
             dataIndex: 'rating',
             key: 'rating',
-            width: 90,
+            width: 110,
             align: 'center',
-            render: (rating) => (
-                <div style={{ textAlign: 'center' }}>
-                    <Rate
-                        disabled
-                        allowHalf
-                        value={rating || 0}
-                        style={{ fontSize: '12px' }}
-                    />
-                    <div style={{ fontSize: '12px', color: '#666' }}>
-                        {(rating || 0).toFixed(1)}
+            render: (rating, record) => {
+                const storeRating = getStoreRating(record.id);
+                return (
+                    <div style={{ textAlign: 'center' }}>
+                        <Rate
+                            disabled
+                            allowHalf
+                            value={storeRating.averageRating || 0}
+                            style={{ fontSize: '12px' }}
+                        />
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: 2 }}>
+                            {(storeRating.averageRating || 0).toFixed(1)} ({storeRating.reviewCount || 0})
+                        </div>
                     </div>
-                </div>
-            ),
+                );
+            },
         },
         {
             title: 'Trạng thái',
