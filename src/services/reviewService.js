@@ -380,6 +380,30 @@ class ReviewService {
             };
         }
     }
+
+    // Phản hồi review
+    async respondToReview(reviewId, userId, responseText) {
+        try {
+            console.log('Responding to review:', { reviewId, userId, responseText });
+            const response = await apiService.put(`${this.baseURL}/${reviewId}/response?userId=${userId}`, {
+                response: responseText
+            });
+            console.log('Review response result:', response);
+            return {
+                success: true,
+                data: response.data,
+                message: response.message || 'Phản hồi đã được gửi thành công'
+            };
+        } catch (error) {
+            console.error('Error responding to review:', error);
+            console.error('Error response details:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || 'Không thể gửi phản hồi'
+            };
+        }
+    }
 }
 
 const reviewService = new ReviewService();

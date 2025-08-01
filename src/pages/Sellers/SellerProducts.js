@@ -4,15 +4,18 @@ import {
     FaPlus, FaEdit, FaTrash, FaEye, FaSearch, FaFilter,
     FaSortAmountDown, FaToggleOn, FaToggleOff, FaImage,
     FaChartLine, FaCopy, FaHeart, FaSpinner, FaChevronLeft,
-    FaChevronRight, FaBox, FaTh, FaList
+    FaChevronRight, FaBox, FaTh, FaList, FaTimes, FaStar
 } from "react-icons/fa";
+import { Modal, Rate } from "antd";
 import SellerLayout from "../../layouts/SellerLayout";
 import productService from "../../services/productService";
 import storeService from "../../services/storeService";
 import categoryService from "../../services/categoryService";
 import productUnitService from "../../services/productUnitService";
+import reviewService from "../../services/reviewService";
 import { getCurrentUser } from "../../services/authService";
 import toastService from "../../services/toastService";
+import ReviewListWithResponse from "../../components/Review/ReviewListWithResponse";
 
 const SellerProducts = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -31,6 +34,11 @@ const SellerProducts = () => {
     const [categories, setCategories] = useState(["all"]);
     const [categoryOptions, setCategoryOptions] = useState([]);
     const [unitOptions, setUnitOptions] = useState([]);
+
+    // State for product detail modal
+    const [showDetailModal, setShowDetailModal] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState(null);
+    const [productRating, setProductRating] = useState(0);
 
     // Modal state for adding product
     const [showAddModal, setShowAddModal] = useState(false);
@@ -183,6 +191,30 @@ const SellerProducts = () => {
             toastService.error(err?.message ? `Có lỗi khi thêm sản phẩm: ${err.message}` : 'Có lỗi khi thêm sản phẩm');
         } finally {
             setAddLoading(false);
+        }
+    };
+
+    // Handler for showing product detail
+    const handleShowProductDetail = async (product) => {
+        setSelectedProduct(product);
+        setShowDetailModal(true);
+        // Load rating for this product
+        await loadProductRating(product.id);
+    };
+
+    // Load product rating
+    const loadProductRating = async (productId) => {
+        try {
+            const result = await reviewService.getReviewsForTarget('Product', productId, {
+                page: 1,
+                pageSize: 1
+            });
+            if (result.success) {
+                setProductRating(result.averageRating || 0);
+            }
+        } catch (error) {
+            console.error('Error loading product rating:', error);
+            setProductRating(0);
         }
     };
 
@@ -558,7 +590,11 @@ const SellerProducts = () => {
                         {products.map((product) => (
                             <div key={product.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition">
                                 <div className="relative">
-                                    <div className="aspect-w-1 aspect-h-1 w-full h-48 bg-gray-200 flex items-center justify-center">
+                                    <div 
+                                        className="aspect-w-1 aspect-h-1 w-full h-48 bg-gray-200 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity"
+                                        onClick={() => handleShowProductDetail(product)}
+                                        title="Nhấn để xem chi tiết sản phẩm"
+                                    >
                                         {product.images && product.images.length > 0 ? (
                                             <img
                                                 src={product.images[0]}
@@ -599,7 +635,13 @@ const SellerProducts = () => {
                                 </div>
 
                                 <div className="p-4">
-                                    <h3 className="font-medium text-gray-800 mb-2 line-clamp-2">{product.name}</h3>
+                                    <h3 
+                                        className="font-medium text-gray-800 mb-2 line-clamp-2 cursor-pointer hover:text-blue-600 transition-colors"
+                                        onClick={() => handleShowProductDetail(product)}
+                                        title="Nhấn để xem chi tiết sản phẩm"
+                                    >
+                                        {product.name}
+                                    </h3>
                                     
                                     {/* Suspended warning banner */}
                                     {(product.status === 'Suspended' || product.status === 3) && (
@@ -646,6 +688,14 @@ const SellerProducts = () => {
                                         )}
                                         <div className="flex space-x-1">
                                             <button
+                                                onClick={() => handleShowProductDetail(product)}
+                                                className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                                                disabled={refreshing}
+                                                title="Xem chi tiết"
+                                            >
+                                                <FaEye size={14} />
+                                            </button>
+                                            <button
                                                 onClick={() => handleDeleteProduct(product.id)}
                                                 className="text-red-600 hover:bg-red-50 p-1 rounded"
                                                 disabled={refreshing}
@@ -678,7 +728,11 @@ const SellerProducts = () => {
                                         <tr key={product.id} className="border-b hover:bg-gray-50">
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center space-x-3">
-                                                    <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                                                    <div 
+                                                        className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+                                                        onClick={() => handleShowProductDetail(product)}
+                                                        title="Nhấn để xem chi tiết sản phẩm"
+                                                    >
                                                         {product.images && product.images.length > 0 ? (
                                                             <img
                                                                 src={product.images[0]}
@@ -695,7 +749,13 @@ const SellerProducts = () => {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <p className="font-medium text-gray-800">{product.name}</p>
+                                                        <p 
+                                                            className="font-medium text-gray-800 cursor-pointer hover:text-blue-600 transition-colors"
+                                                            onClick={() => handleShowProductDetail(product)}
+                                                            title="Nhấn để xem chi tiết sản phẩm"
+                                                        >
+                                                            {product.name}
+                                                        </p>
                                                         {product.createdAt && (
                                                             <div className="text-xs text-gray-500">
                                                                 Ngày đăng: {formatDate(product.createdAt)}
@@ -729,6 +789,15 @@ const SellerProducts = () => {
                                                         ) : (
                                                             <FaToggleOff className="text-gray-400" size={16} />
                                                         )}
+                                                    </button>
+                                                    {/* View Detail Button */}
+                                                    <button
+                                                        onClick={() => handleShowProductDetail(product)}
+                                                        className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                                                        disabled={refreshing}
+                                                        title="Xem chi tiết"
+                                                    >
+                                                        <FaEye size={14} />
                                                     </button>
                                                     {/* Delete Button */}
                                                     <button
@@ -833,6 +902,129 @@ const SellerProducts = () => {
                     </div>
                 )}
             </div>
+
+            {/* Product Detail Modal */}
+            <Modal
+                title={
+                    <div className="flex items-center space-x-2">
+                        <FaEye className="text-blue-600" />
+                        <span>Chi tiết sản phẩm</span>
+                    </div>
+                }
+                open={showDetailModal}
+                onCancel={() => {
+                    setShowDetailModal(false);
+                    setSelectedProduct(null);
+                    setProductRating(0);
+                }}
+                footer={null}
+                width={800}
+                className="product-detail-modal"
+            >
+                {selectedProduct && (
+                    <div className="space-y-6">
+                        {/* Product Info */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Product Image */}
+                            <div className="space-y-4">
+                                <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    {selectedProduct.images && selectedProduct.images.length > 0 ? (
+                                        <img
+                                            src={selectedProduct.images[0]}
+                                            alt={selectedProduct.name}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                if (!e.target.dataset.fallback) {
+                                                    e.target.src = '/assets/image/no-image.png';
+                                                    e.target.dataset.fallback = 'true';
+                                                }
+                                            }}
+                                        />
+                                    ) : (
+                                        <div className="text-center">
+                                            <FaImage className="mx-auto text-gray-400 mb-2" size={48} />
+                                            <p className="text-gray-500">Không có hình ảnh</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Product Details */}
+                            <div className="space-y-4">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                        {selectedProduct.name}
+                                    </h3>
+                                    {selectedProduct.description && (
+                                        <p className="text-gray-600 leading-relaxed">
+                                            {selectedProduct.description}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Rating */}
+                                <div className="flex items-center space-x-2">
+                                    <span className="text-sm font-medium text-gray-700">Đánh giá:</span>
+                                    <Rate disabled value={productRating} />
+                                    <span className="text-sm text-gray-600">
+                                        ({productRating.toFixed(1)})
+                                    </span>
+                                </div>
+
+                                {/* Product Info Grid */}
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-gray-50 p-3 rounded-lg">
+                                        <div className="text-sm text-gray-600">Giá bán</div>
+                                        <div className="font-bold text-supply-primary text-lg">
+                                            {formatPrice(selectedProduct.price)}đ/{selectedProduct.unit || 'kg'}
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-50 p-3 rounded-lg">
+                                        <div className="text-sm text-gray-600">Đã bán</div>
+                                        <div className="font-medium text-lg">
+                                            {selectedProduct.soldQuantity || 0}
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-50 p-3 rounded-lg">
+                                        <div className="text-sm text-gray-600">Danh mục</div>
+                                        <div className="font-medium">
+                                            {selectedProduct.category || 'Chưa phân loại'}
+                                        </div>
+                                    </div>
+                                    <div className="bg-gray-50 p-3 rounded-lg">
+                                        <div className="text-sm text-gray-600">Trạng thái</div>
+                                        <div>
+                                            {getStatusBadge(selectedProduct)}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Creation Date */}
+                                {selectedProduct.createdAt && (
+                                    <div className="text-sm text-gray-500">
+                                        Ngày tạo: {formatDate(selectedProduct.createdAt)}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Reviews Section */}
+                        <div className="border-t pt-6">
+                            <div className="flex items-center space-x-2 mb-4">
+                                <FaStar className="text-yellow-500" />
+                                <h4 className="text-lg font-semibold text-gray-900">Đánh giá từ khách hàng</h4>
+                            </div>
+                            <div style={{ maxHeight: '400px', overflow: 'auto' }}>
+                                <ReviewListWithResponse
+                                    targetType="Product"
+                                    targetId={selectedProduct.id}
+                                    maxHeight="400px"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </Modal>
         </SellerLayout>
     );
 };

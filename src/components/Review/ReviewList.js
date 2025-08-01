@@ -370,7 +370,7 @@ const ReviewList = forwardRef(({ targetType, targetId, showFilters = true, maxHe
                                         <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r">
                                             <div className="flex items-center space-x-2 mb-2">
                                                 <span className="font-medium text-blue-800">
-                                                    Phản hồi từ người bán
+                                                    Phản hồi từ cửa hàng
                                                 </span>
                                             </div>
                                             <p className="text-blue-700 text-sm">
