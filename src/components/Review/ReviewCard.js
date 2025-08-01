@@ -184,18 +184,6 @@ const ReviewCard = ({
                             </p>
                         </div>
                     )}
-
-                    {/* Actions */}
-                    {showActions && (
-                        <div className="flex items-center space-x-4">
-                            <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors">
-                                <FaThumbsUp className="text-sm" />
-                                <span className="text-sm">
-                                    Hữu ích ({review.helpfulCount || 0})
-                                </span>
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>

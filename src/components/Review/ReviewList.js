@@ -378,16 +378,6 @@ const ReviewList = forwardRef(({ targetType, targetId, showFilters = true, maxHe
                                             </p>
                                         </div>
                                     )}
-
-                                    {/* Actions */}
-                                    <div className="flex items-center space-x-4 mt-3">
-                                        <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors">
-                                            <FaThumbsUp className="text-sm" />
-                                            <span className="text-sm">
-                                                Hữu ích ({review.helpfulCount})
-                                            </span>
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>

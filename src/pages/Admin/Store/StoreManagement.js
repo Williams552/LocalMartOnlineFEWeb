@@ -34,6 +34,7 @@ import storeService from '../../../services/storeService';
 import marketService from '../../../services/marketService';
 import userService from '../../../services/userService';
 import reviewService from '../../../services/reviewService';
+import { ReviewList } from '../../../components/Review';
 import StoreNavigation from './StoreNavigation';
 
 const { Search } = Input;
@@ -986,16 +987,6 @@ const StoreManagement = () => {
                                 <Descriptions.Item label="Số điện thoại">
                                     {selectedStore.contactNumber || 'Chưa cập nhật'}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Đánh giá">
-                                    <Rate
-                                        disabled
-                                        allowHalf
-                                        value={selectedStore.rating || 0}
-                                    />
-                                    <span style={{ marginLeft: 8 }}>
-                                        {(selectedStore.rating || 0).toFixed(1)} / 5.0
-                                    </span>
-                                </Descriptions.Item>
                                 <Descriptions.Item label="Ngày tạo">
                                     {selectedStore.createdAt ?
                                         new Date(selectedStore.createdAt).toLocaleString('vi-VN') :
@@ -1012,9 +1003,28 @@ const StoreManagement = () => {
 
                             <div style={{ marginTop: '24px', textAlign: 'center' }}>
                                 {/* Edit and Toggle buttons removed as requested */}
-                                <p style={{ color: '#666', fontStyle: 'italic' }}>
-                                    Chỉ có thể xem chi tiết và thực hiện các thao tác tạm ngưng/kích hoạt từ bảng danh sách
-                                </p>
+                            </div>
+
+                            {/* Store Reviews Section */}
+                            <div style={{ marginTop: '24px' }}>
+                                <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
+                                    Đánh giá của khách hàng
+                                </h4>
+                                <div style={{ 
+                                    maxHeight: '400px', 
+                                    overflowY: 'auto',
+                                    border: '1px solid #f0f0f0',
+                                    borderRadius: '6px',
+                                    padding: '16px',
+                                    backgroundColor: '#fafafa'
+                                }}>
+                                    <ReviewList
+                                        targetType="Store"
+                                        targetId={selectedStore.id}
+                                        showFilters={false}
+                                        maxHeight="350px"
+                                    />
+                                </div>
                             </div>
                         </div>
                     )}

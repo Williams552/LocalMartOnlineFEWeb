@@ -38,6 +38,7 @@ import storeService from '../../../services/storeService';
 import categoryService from '../../../services/categoryService';
 import marketService from '../../../services/marketService';
 import reviewService from '../../../services/reviewService';
+import { ReviewList } from '../../../components/Review';
 import './ProductManagement.css';
 
 const { Search } = Input;
@@ -1098,6 +1099,27 @@ const ProductManagement = () => {
                                 </div>
                             </>
                         )}
+
+                        {/* Product Reviews Section */}
+                        <Divider />
+                        <div>
+                            <Title level={5}>Đánh giá sản phẩm</Title>
+                            <div style={{ 
+                                maxHeight: '400px', 
+                                overflowY: 'auto',
+                                border: '1px solid #f0f0f0',
+                                borderRadius: '6px',
+                                padding: '16px',
+                                backgroundColor: '#fafafa'
+                            }}>
+                                <ReviewList
+                                    targetType="Product"
+                                    targetId={selectedProduct.id}
+                                    showFilters={false}
+                                    maxHeight="350px"
+                                />
+                            </div>
+                        </div>
                     </div>
                 )}
             </Modal>
