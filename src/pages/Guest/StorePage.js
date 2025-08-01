@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import FollowStoreButton from "../../components/FollowStoreButton";
 import { ReportButton } from "../../components/Report";
-import {StoreReviewList, ClickableStoreRating } from "../../components/Review";
+import { StoreReviewList, ClickableStoreRating } from "../../components/Review";
 import {
     FaStar, FaRegStar, FaMapMarkerAlt, FaUsers, FaShoppingBag,
     FaCertificate, FaPhone, FaComments, FaStore, FaAward,
@@ -236,35 +236,35 @@ const StorePage = () => {
                                 <span className="text-green-100 text-lg">{store.address}</span>
                             </div>
 
-            <div className="flex items-center justify-center lg:justify-start gap-1 mb-4">
-                <ClickableStoreRating
-                    storeId={storeId}
-                    storeName={store.name}
-                    rating={store.rating || 0}
-                    reviewCount={statistics?.reviewCount || store.reviewCount || 0}
-                    onReviewSubmitted={async () => {
-                        // Refresh reviews and statistics
-                        setReviewsKey(prev => prev + 1);
-                        
-                        // Refresh store statistics
-                        try {
-                            const statsResponse = await storeService.getStoreStatistics(storeId);
-                            if (statsResponse.success && statsResponse.data) {
-                                setStatistics(statsResponse.data);
-                                
-                                // Update store rating and review count
-                                setStore(prev => prev ? {
-                                    ...prev,
-                                    rating: statsResponse.data.averageRating || 0,
-                                    reviewCount: statsResponse.data.reviewCount || 0
-                                } : null);
-                            }
-                        } catch (error) {
-                            console.error('Error refreshing statistics:', error);
-                        }
-                    }}
-                />
-            </div>                            {seller && (
+                            <div className="flex items-center justify-center lg:justify-start gap-1 mb-4">
+                                <ClickableStoreRating
+                                    storeId={storeId}
+                                    storeName={store.name}
+                                    rating={store.rating || 0}
+                                    reviewCount={statistics?.reviewCount || store.reviewCount || 0}
+                                    onReviewSubmitted={async () => {
+                                        // Refresh reviews and statistics
+                                        setReviewsKey(prev => prev + 1);
+
+                                        // Refresh store statistics
+                                        try {
+                                            const statsResponse = await storeService.getStoreStatistics(storeId);
+                                            if (statsResponse.success && statsResponse.data) {
+                                                setStatistics(statsResponse.data);
+
+                                                // Update store rating and review count
+                                                setStore(prev => prev ? {
+                                                    ...prev,
+                                                    rating: statsResponse.data.averageRating || 0,
+                                                    reviewCount: statsResponse.data.reviewCount || 0
+                                                } : null);
+                                            }
+                                        } catch (error) {
+                                            console.error('Error refreshing statistics:', error);
+                                        }
+                                    }}
+                                />
+                            </div>                            {seller && (
                                 <div className="flex items-center justify-center lg:justify-start gap-2 mb-4">
                                     <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                                         {seller.displayName.charAt(0)}
@@ -290,18 +290,6 @@ const StorePage = () => {
 
                             {/* Store Stats */}
                             <div className="flex flex-wrap justify-center lg:justify-start gap-6 text-sm">
-                                <div className="flex items-center gap-1">
-                                    <FaBox className="text-green-200" />
-                                    <span>{totalProductCount || statistics?.productCount || 0} sản phẩm</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <FaUsers className="text-green-200" />
-                                    <span>{statistics?.followerCount || store.followerCount || 0} người theo dõi</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <FaEye className="text-green-200" />
-                                    <span>{statistics?.viewCount || store.viewCount || 0} lượt xem</span>
-                                </div>
                                 <div className="flex items-center gap-1">
                                     <FaCalendarAlt className="text-green-200" />
                                     <span>Hoạt động từ {formatJoinDate(store.createdAt)}</span>
@@ -340,7 +328,7 @@ const StorePage = () => {
                                 <FaComments />
                                 Liên lạc với gian hàng
                             </button>
-                            
+
                             {/* Report Store Button */}
                             <ReportButton
                                 targetType="Store"
@@ -354,60 +342,6 @@ const StorePage = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-
-            {/* Stats Cards */}
-            <div className="max-w-7xl mx-auto px-4 -mt-6 relative z-10">
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="bg-white rounded-lg shadow-md p-4 text-center">
-                        <div className="text-2xl font-bold text-supply-primary mb-1">{totalProductCount || statistics?.productCount || 0}</div>
-                        <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
-                            <FaBox />
-                            Sản phẩm
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-md p-4 text-center">
-                        <div className="text-2xl font-bold text-yellow-600 mb-1">{(store.rating || 0).toFixed(1)}</div>
-                        <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
-                            <FaStar />
-                            Đánh giá
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-md p-4 text-center">
-                        <div className="text-2xl font-bold text-green-600 mb-1">{statistics?.orderCount || store.orderCount || 0}</div>
-                        <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
-                            <FaShoppingBag />
-                            Đơn hàng
-                        </div>
-                    </div>
-                    <div className="bg-white rounded-lg shadow-md p-4 text-center">
-                        <div className="text-2xl font-bold text-blue-600 mb-1">{statistics?.followerCount || store.followerCount || 0}</div>
-                        <div className="text-sm text-gray-600 flex items-center justify-center gap-1">
-                            <FaUsers />
-                            Theo dõi
-                        </div>
-                    </div>
-                </div>
-
-                {/* Contact Info Card */}
-                {seller?.phoneNumber && (
-                    <div className="mt-4">
-                        <div className="bg-white rounded-lg shadow-md p-4">
-                            <div className="flex items-center justify-center gap-4">
-                                <div className="flex items-center gap-2">
-                                    <FaPhone className="text-supply-primary" />
-                                    <span className="text-sm text-gray-600">Liên hệ:</span>
-                                </div>
-                                <a
-                                    href={`tel:${seller.phoneNumber}`}
-                                    className="text-supply-primary hover:text-green-600 font-medium transition-colors"
-                                >
-                                    {seller.phoneNumber}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
 
             {/* Main Content - Products */}
@@ -445,6 +379,18 @@ const StorePage = () => {
                     </div>
                 </div>
 
+                {/* Product Count and Store Info */}
+                <div className="flex items-center justify-between mb-6 bg-white rounded-lg shadow-sm p-4">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 text-gray-700">
+                            <FaBox className="text-supply-primary" />
+                            <span className="text-lg">
+                                Tổng cộng: <span className="font-semibold text-supply-primary">{totalProductCount || statistics?.productCount || 0}</span> sản phẩm
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Products Grid */}
                 {products.length > 0 ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -453,15 +399,17 @@ const StorePage = () => {
                                 key={product.id}
                                 id={product.id}
                                 name={product.name}
-                                seller={product.seller || seller?.displayName}
-                                sellerId={store.sellerId}
-                                market={store.address}
-                                storeId={store.id}
-                                storeName={store.name}
+                                seller={product.seller?.name || product.sellerName || seller?.displayName}
+                                sellerId={product.sellerId || store.sellerId}
+                                market={product.marketName || product.market || store.address}
+                                storeId={product.storeId || store.id}
+                                storeName={product.storeName || store.name}
                                 price={product.price}
-                                image={product.image}
+                                image={product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : product.image}
                                 description={product.description}
-                                status={product.statusDisplay}
+                                status={product.status || product.statusDisplay}
+                                minimumQuantity={product.minimumQuantity || 1}
+                                unitName={product.unitName || 'kg'}
                             />
                         ))}
                     </div>
@@ -503,7 +451,7 @@ const StorePage = () => {
 
             {/* Store Reviews Section */}
             <div className="max-w-7xl mx-auto px-4 py-8">
-                <StoreReviewList 
+                <StoreReviewList
                     key={reviewsKey}
                     storeId={storeId}
                     storeName={store.name}

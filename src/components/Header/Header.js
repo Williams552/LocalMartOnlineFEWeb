@@ -781,6 +781,10 @@ const Header = () => {
                                                     <FaHandshake size={16} />
                                                     <span>Thương lượng của tôi</span>
                                                 </Link>
+                                                <Link to="/buyer/proxy-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                    <FaHandshake size={16} />
+                                                    <span>Yêu cầu đi chợ giúm</span>
+                                                </Link>
                                                 <Link to="/support-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FaHeadset size={16} />
                                                     <span>Yêu cầu hỗ trợ</span>
