@@ -77,12 +77,7 @@ import ChartsAnalyticsPage from "../pages/Sellers/ChartsAnalyticsPage";
 import NotificationsPage from "../pages/Sellers/NotificationsPage";
 import SellerLicenses from "../pages/Sellers/SellerLicenses";
 import UserReportsPage from "../pages/Seller/UserReportsPage";
-
-// Test pages
-
 import CreateOrder from "../pages/ProxyShopper/CreateOrder";
-import ReportSystemTest from "../pages/Test/ReportSystemTest";
-import ProxyRequestTest from "../pages/Test/ProxyRequestTest";
 
 const AppRoutes = () => {
     return (
@@ -137,10 +132,6 @@ const AppRoutes = () => {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/faq" element={<FAQPage />} />
-                
-                {/* Test Routes - Development only */}
-                <Route path="/test/report-system" element={<ReportSystemTest />} />
-                <Route path="/test/proxy-requests" element={<ProxyRequestTest />} />
             </Route>
 
             {/* Seller Routes - Separate layout without Header/Footer */}

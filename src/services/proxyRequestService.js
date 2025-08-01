@@ -61,12 +61,18 @@ const proxyRequestService = {
         }
     },
 
-    // Hủy yêu cầu
-    cancelRequest: async (requestId) => {
+    // Hủy yêu cầu (chỉ khi chưa có proxy nhận - trạng thái Open)
+    cancelRequest: async (requestId, reason) => {
         try {
             const response = await authService.makeAuthenticatedRequest(
                 `${API_BASE_URL}/ProxyShopper/requests/${requestId}/cancel`,
-                { method: 'POST' }
+                { 
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                }
             );
 
             if (!response.ok) {
@@ -77,6 +83,32 @@ const proxyRequestService = {
             return await response.json();
         } catch (error) {
             console.error('Error cancelling request:', error);
+            throw error;
+        }
+    },
+
+    // Từ chối đề xuất và yêu cầu proxy lên đơn lại
+    rejectProposal: async (orderId, reason) => {
+        try {
+            const response = await authService.makeAuthenticatedRequest(
+                `${API_BASE_URL}/ProxyShopper/orders/${orderId}/reject-proposal`,
+                { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ reason })
+                }
+            );
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => null);
+                throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error rejecting proposal:', error);
             throw error;
         }
     },

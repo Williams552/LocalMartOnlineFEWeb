@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { FiUser, FiClock, FiPackage, FiMapPin, FiPhone, FiEye, FiCheck, FiX, FiShoppingCart, FiRefreshCw } from 'react-icons/fi';
-import proxyRequestService from '../../services/proxyRequestService';
+import demoProxyRequests from '../../data/demoProxyRequests';
 import '../../styles/proxy-requests.css';
 
-const MyProxyRequests = () => {
-    const [requests, setRequests] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState("");
+const MyProxyRequestsDemo = () => {
+    const [requests] = useState(demoProxyRequests);
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [showProposalModal, setShowProposalModal] = useState(false);
     const [actionLoading, setActionLoading] = useState(false);
@@ -18,25 +16,9 @@ const MyProxyRequests = () => {
     const [rejectReason, setRejectReason] = useState("");
     const [selectedRequestForAction, setSelectedRequestForAction] = useState(null);
 
-    useEffect(() => {
-        fetchMyRequests();
-    }, []);
-
-    const fetchMyRequests = async () => {
-        setLoading(true);
-        setError("");
-        try {
-            const data = await proxyRequestService.getMyRequests();
-            setRequests(data);
-        } catch (err) {
-            setError(err.message || "Không thể tải danh sách yêu cầu");
-        }
-        setLoading(false);
-    };
-
     const getStatusDisplay = (request) => {
         // Ưu tiên hiển thị Order status nếu có đơn hàng, ngược lại hiển thị Request status
-        const status = request.order?.status || request.proposal?.orderStatus || request.status;
+        const status = request.order?.status || request.status;
         const statusMap = {
             // Request statuses
             'Open': { text: 'Đang chờ proxy shopper nhận', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
@@ -57,29 +39,25 @@ const MyProxyRequests = () => {
         setActionLoading(true);
         setActionError("");
         setActionSuccess("");
-        try {
-            await proxyRequestService.approveProposal(requestId);
+        
+        // Simulate API call
+        setTimeout(() => {
             setActionSuccess("Đã duyệt đề xuất và thanh toán thành công!");
-            await fetchMyRequests(); // Refresh data
             setShowProposalModal(false);
-        } catch (err) {
-            setActionError(err.message || "Không thể duyệt đề xuất");
-        }
-        setActionLoading(false);
+            setActionLoading(false);
+        }, 2000);
     };
 
     const handleConfirmDelivery = async (requestId) => {
         setActionLoading(true);
         setActionError("");
         setActionSuccess("");
-        try {
-            await proxyRequestService.confirmDelivery(requestId);
+        
+        // Simulate API call
+        setTimeout(() => {
             setActionSuccess("Đã xác nhận nhận hàng!");
-            await fetchMyRequests(); // Refresh data
-        } catch (err) {
-            setActionError(err.message || "Không thể xác nhận nhận hàng");
-        }
-        setActionLoading(false);
+            setActionLoading(false);
+        }, 1500);
     };
 
     const handleCancelRequest = async () => {
@@ -91,17 +69,15 @@ const MyProxyRequests = () => {
         setActionLoading(true);
         setActionError("");
         setActionSuccess("");
-        try {
-            await proxyRequestService.cancelRequest(selectedRequestForAction.id, cancelReason);
+        
+        // Simulate API call
+        setTimeout(() => {
             setActionSuccess("Đã hủy yêu cầu thành công!");
-            await fetchMyRequests(); // Refresh data
             setShowCancelModal(false);
             setCancelReason("");
             setSelectedRequestForAction(null);
-        } catch (err) {
-            setActionError(err.message || "Không thể hủy yêu cầu");
-        }
-        setActionLoading(false);
+            setActionLoading(false);
+        }, 1500);
     };
 
     const handleRejectProposal = async () => {
@@ -113,19 +89,15 @@ const MyProxyRequests = () => {
         setActionLoading(true);
         setActionError("");
         setActionSuccess("");
-        try {
-            // Sử dụng orderId từ proposal hoặc requestId
-            const orderId = selectedRequestForAction.proposal?.orderId || selectedRequestForAction.id;
-            await proxyRequestService.rejectProposal(orderId, rejectReason);
+        
+        // Simulate API call
+        setTimeout(() => {
             setActionSuccess("Đã từ chối đề xuất! Proxy shopper sẽ lên đơn lại.");
-            await fetchMyRequests(); // Refresh data
             setShowRejectModal(false);
             setRejectReason("");
             setSelectedRequestForAction(null);
-        } catch (err) {
-            setActionError(err.message || "Không thể từ chối đề xuất");
-        }
-        setActionLoading(false);
+            setActionLoading(false);
+        }, 1500);
     };
 
     const openCancelModal = (request) => {
@@ -149,298 +121,277 @@ const MyProxyRequests = () => {
         setActionSuccess("");
     };
 
-    if (loading) return <div className="p-8 text-center">Đang tải...</div>;
-    if (error) return <div className="p-8 text-center text-red-600">{error}</div>;
-
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-supply-primary flex items-center">
                     <FiShoppingCart className="mr-2" />
-                    Yêu cầu đi chợ giúm của tôi
+                    Demo - Yêu cầu đi chợ giúm của tôi
                 </h1>
-                <button
-                    onClick={fetchMyRequests}
-                    className="px-4 py-2 bg-supply-primary text-white rounded hover:bg-supply-primary/90 flex items-center gap-2"
-                    disabled={loading}
-                >
-                    <FiRefreshCw className={`text-sm ${loading ? 'animate-spin' : ''}`} />
-                    {loading ? 'Đang tải...' : 'Làm mới'}
-                </button>
+                <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                    Demo Mode - Dữ liệu mẫu
+                </div>
             </div>
 
-            {requests.length === 0 ? (
-                <div className="text-center py-12">
-                    <FiPackage className="mx-auto text-6xl text-gray-300 mb-4" />
-                    <p className="text-xl text-gray-500">Bạn chưa có yêu cầu đi chợ giúm nào</p>
-                </div>
-            ) : (
-                <div className="grid gap-6">
-                    {requests.map((request) => {
-                        const statusInfo = getStatusDisplay(request);
-                        // Xác định trạng thái để hiển thị nút
-                        const requestStatus = request.status; // Request status: Open, Locked, Completed
-                        const orderStatus = request.proposal?.orderStatus; // Order status: Draft, Proposed, Paid, etc.
-                                                
-                        return (
-                            <div key={request.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="text-lg font-semibold">Yêu cầu #{request.id}</h3>
-                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color} flex items-center gap-1`}>
-                                                <span>{statusInfo.icon}</span>
-                                                {statusInfo.text}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center text-gray-600 text-sm mb-2">
-                                            <FiClock className="mr-1" />
-                                            Tạo lúc: {new Date(request.createdAt).toLocaleString('vi-VN')}
-                                        </div>
-                                        <div className="flex items-center text-gray-600 text-sm">
-                                            <FiMapPin className="mr-1" />
-                                            Giao đến: {request.deliveryAddress}
-                                        </div>
+            <div className="grid gap-6">
+                {requests.map((request) => {
+                    const statusInfo = getStatusDisplay(request);
+                    // Xác định trạng thái để hiển thị nút
+                    const requestStatus = request.status; // Request status: Open, Locked, Completed
+                    const orderStatus = request.order?.status || request.proposal?.status; // Order status: Draft, Proposed, Paid, etc.
+                    
+                    return (
+                        <div key={request.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200 product-card">
+                            <div className="flex justify-between items-start mb-4">
+                                <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <h3 className="text-lg font-semibold">Yêu cầu #{request.id}</h3>
+                                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color} flex items-center gap-1 status-badge`}>
+                                            <span>{statusInfo.icon}</span>
+                                            {statusInfo.text}
+                                        </span>
+                                    </div>
+                                    <div className="flex items-center text-gray-600 text-sm mb-2">
+                                        <FiClock className="mr-1" />
+                                        Tạo lúc: {new Date(request.createdAt).toLocaleString('vi-VN')}
+                                    </div>
+                                    <div className="flex items-center text-gray-600 text-sm">
+                                        <FiMapPin className="mr-1" />
+                                        Giao đến: {request.deliveryAddress}
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Thông tin proxy shopper */}
-                                {request.proxyShopperName && (
-                                    <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                                        <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                                            <FiUser className="mr-1" />
-                                            Người đi chợ giúm
-                                        </h4>
-                                        <div className="text-blue-700">
-                                            <div>Tên: {request.proxyShopperName}</div>
-                                            {request.proxyShopperPhone && (
-                                                <div className="flex items-center mt-1">
-                                                    <FiPhone className="mr-1" />
-                                                    {request.proxyShopperPhone}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Sản phẩm yêu cầu */}
-                                <div className="mb-4">
-                                    <h4 className="font-medium mb-2 flex items-center">
-                                        <FiPackage className="mr-1" />
-                                        Sản phẩm yêu cầu ({request.items?.length || 0} mặt hàng)
+                            {/* Thông tin proxy shopper */}
+                            {request.proxyShopperName && (
+                                <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                                    <h4 className="font-medium text-blue-800 mb-2 flex items-center">
+                                        <FiUser className="mr-1" />
+                                        Người đi chợ giúm
                                     </h4>
-                                    <div className="bg-gray-50 rounded p-3">
-                                        {request.items?.map((item, idx) => (
-                                            <div key={idx} className="flex justify-between items-center py-1">
-                                                <span className="font-medium">{item.name}</span>
-                                                <span className="text-gray-600">{item.quantity} {item.unit}</span>
+                                    <div className="text-blue-700">
+                                        <div>Tên: {request.proxyShopperName}</div>
+                                        {request.proxyShopperPhone && (
+                                            <div className="flex items-center mt-1">
+                                                <FiPhone className="mr-1" />
+                                                {request.proxyShopperPhone}
                                             </div>
-                                        ))}
+                                        )}
                                     </div>
                                 </div>
+                            )}
 
-                                {/* Thông tin đề xuất với sản phẩm chi tiết */}
-                                {request.proposal && (
-                                    <div className="bg-green-50 rounded-lg p-4 mb-4">
-                                        <h4 className="font-medium text-green-800 mb-3">Đề xuất từ người đi chợ giúm</h4>
-                                        
-                                        {/* Hiển thị sản phẩm đề xuất chi tiết */}
-                                        {request.proposal.proposedItems && request.proposal.proposedItems.length > 0 && (
-                                            <div className="mb-4">
-                                                <h5 className="font-medium text-green-800 mb-2">Sản phẩm đề xuất:</h5>
-                                                <div className="space-y-3">
-                                                    {request.proposal.proposedItems.map((item, idx) => (
-                                                        <div key={idx} className="bg-white rounded-lg p-3 border border-green-200">
-                                                            <div className="flex items-start space-x-3">
-                                                                {/* Hình ảnh sản phẩm */}
-                                                                {item.imageUrls && item.imageUrls.length > 0 && (
-                                                                    <div className="flex-shrink-0">
-                                                                        <img 
-                                                                            src={item.imageUrls[0]} 
-                                                                            alt={item.name}
-                                                                            className="w-16 h-16 object-cover rounded-lg border"
-                                                                            onError={(e) => {
-                                                                                e.target.src = '/placeholder-product.png'; // Fallback image
-                                                                            }}
-                                                                        />
-                                                                    </div>
-                                                                )}
+                            {/* Sản phẩm yêu cầu */}
+                            <div className="mb-4">
+                                <h4 className="font-medium mb-2 flex items-center">
+                                    <FiPackage className="mr-1" />
+                                    Sản phẩm yêu cầu ({request.items?.length || 0} mặt hàng)
+                                </h4>
+                                <div className="bg-gray-50 rounded p-3">
+                                    {request.items?.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center py-1">
+                                            <span className="font-medium">{item.name}</span>
+                                            <span className="text-gray-600">{item.quantity} {item.unit}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Thông tin đề xuất với sản phẩm chi tiết */}
+                            {request.proposal && (
+                                <div className="bg-green-50 rounded-lg p-4 mb-4">
+                                    <h4 className="font-medium text-green-800 mb-3">Đề xuất từ người đi chợ giúm</h4>
+                                    
+                                    {/* Hiển thị sản phẩm đề xuất chi tiết */}
+                                    {request.proposal.proposedItems && request.proposal.proposedItems.length > 0 && (
+                                        <div className="mb-4">
+                                            <h5 className="font-medium text-green-800 mb-2">Sản phẩm đề xuất:</h5>
+                                            <div className="space-y-3">
+                                                {request.proposal.proposedItems.map((item, idx) => (
+                                                    <div key={idx} className="bg-white rounded-lg p-3 border border-green-200">
+                                                        <div className="flex items-start space-x-3">
+                                                            {/* Hình ảnh sản phẩm */}
+                                                            {item.imageUrls && item.imageUrls.length > 0 && (
+                                                                <div className="flex-shrink-0">
+                                                                    <img 
+                                                                        src={item.imageUrls[0]} 
+                                                                        alt={item.name}
+                                                                        className="w-16 h-16 object-cover rounded-lg border"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                            
+                                                            {/* Thông tin sản phẩm */}
+                                                            <div className="flex-1">
+                                                                <div className="flex justify-between items-start mb-1">
+                                                                    <h6 className="font-semibold text-gray-800">{item.name}</h6>
+                                                                    <span className={`px-2 py-1 rounded text-xs ${
+                                                                        item.isAvailable 
+                                                                            ? 'bg-green-100 text-green-800' 
+                                                                            : 'bg-red-100 text-red-800'
+                                                                    }`}>
+                                                                        {item.isAvailable ? 'Còn hàng' : 'Hết hàng'}
+                                                                    </span>
+                                                                </div>
                                                                 
-                                                                {/* Thông tin sản phẩm */}
-                                                                <div className="flex-1">
-                                                                    <div className="flex justify-between items-start mb-1">
-                                                                        <h6 className="font-semibold text-gray-800">{item.name}</h6>
-                                                                        <span className={`px-2 py-1 rounded text-xs ${
-                                                                            item.isAvailable 
-                                                                                ? 'bg-green-100 text-green-800' 
-                                                                                : 'bg-red-100 text-red-800'
-                                                                        }`}>
-                                                                            {item.isAvailable ? 'Còn hàng' : 'Hết hàng'}
+                                                                <div className="text-sm text-gray-600 space-y-1">
+                                                                    <div className="flex justify-between">
+                                                                        <span>Số lượng:</span>
+                                                                        <span className="font-medium">{item.quantity} {item.unit}</span>
+                                                                    </div>
+                                                                    <div className="flex justify-between">
+                                                                        <span>Đơn giá:</span>
+                                                                        <span className="font-semibold text-green-600">
+                                                                            {item.price?.toLocaleString()} đ/{item.unit}
                                                                         </span>
                                                                     </div>
-                                                                    
-                                                                    <div className="text-sm text-gray-600 space-y-1">
-                                                                        <div className="flex justify-between">
-                                                                            <span>Số lượng:</span>
-                                                                            <span className="font-medium">{item.quantity} {item.unit}</span>
-                                                                        </div>
-                                                                        <div className="flex justify-between">
-                                                                            <span>Đơn giá:</span>
-                                                                            <span className="font-semibold text-green-600">
-                                                                                {item.price?.toLocaleString()} đ/{item.unit}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="flex justify-between">
-                                                                            <span>Thành tiền:</span>
-                                                                            <span className="font-bold text-green-700">
-                                                                                {((item.price || 0) * (item.quantity || 0)).toLocaleString()} đ
-                                                                            </span>
-                                                                        </div>
-                                                                        {item.storeName && (
-                                                                            <div className="flex justify-between">
-                                                                                <span>Cửa hàng:</span>
-                                                                                <span className="font-medium">{item.storeName}</span>
-                                                                            </div>
-                                                                        )}
-                                                                        {item.storeRating && (
-                                                                            <div className="flex justify-between">
-                                                                                <span>Đánh giá:</span>
-                                                                                <span className="flex items-center">
-                                                                                    ⭐ {item.storeRating}/5
-                                                                                </span>
-                                                                            </div>
-                                                                        )}
-                                                                        {item.categoryName && (
-                                                                            <div className="flex justify-between">
-                                                                                <span>Danh mục:</span>
-                                                                                <span className="text-blue-600">{item.categoryName}</span>
-                                                                            </div>
-                                                                        )}
+                                                                    <div className="flex justify-between">
+                                                                        <span>Thành tiền:</span>
+                                                                        <span className="font-bold text-green-700">
+                                                                            {((item.price || 0) * (item.quantity || 0)).toLocaleString()} đ
+                                                                        </span>
                                                                     </div>
+                                                                    {item.storeName && (
+                                                                        <div className="flex justify-between">
+                                                                            <span>Cửa hàng:</span>
+                                                                            <span className="font-medium">{item.storeName}</span>
+                                                                        </div>
+                                                                    )}
+                                                                    {item.storeRating && (
+                                                                        <div className="flex justify-between">
+                                                                            <span>Đánh giá:</span>
+                                                                            <span className="flex items-center rating-star">
+                                                                                ⭐ {item.storeRating}/5
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
+                                                                    {item.categoryName && (
+                                                                        <div className="flex justify-between">
+                                                                            <span>Danh mục:</span>
+                                                                            <span className="text-blue-600">{item.categoryName}</span>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    ))}
-                                                </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Tổng kết chi phí */}
+                                    <div className="text-green-700">
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span>Tổng tiền sản phẩm:</span>
+                                            <span className="font-semibold">
+                                                {(request.proposal.totalAmount || 0).toLocaleString()} đ
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center mb-1">
+                                            <span>Phí dịch vụ:</span>
+                                            <span className="font-semibold">{request.proposal.proxyFee?.toLocaleString()} đ</span>
+                                        </div>
+                                        <div className="flex justify-between items-center font-bold text-lg pt-2 border-t border-green-200">
+                                            <span>Tổng cộng:</span>
+                                            <span>
+                                                {((request.proposal.totalAmount || 0) + (request.proposal.proxyFee || 0)).toLocaleString()} đ
+                                            </span>
+                                        </div>
+                                        {request.proposal.note && (
+                                            <div className="mt-2 pt-2 border-t border-green-200">
+                                                <span className="font-medium">Ghi chú:</span>
+                                                <p className="text-sm mt-1">{request.proposal.note}</p>
                                             </div>
                                         )}
-
-                                        {/* Tổng kết chi phí */}
-                                        <div className="text-green-700">
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span>Tổng tiền sản phẩm:</span>
-                                                <span className="font-semibold">
-                                                    {(request.proposal.totalAmount || request.proposal.totalProductPrice || 0).toLocaleString()} đ
-                                                </span>
+                                        {request.proposal.createdAt && (
+                                            <div className="mt-2 pt-2 border-t border-green-200">
+                                                <span className="font-medium">Thời gian đề xuất:</span>
+                                                <p className="text-sm mt-1">
+                                                    {new Date(request.proposal.createdAt).toLocaleString('vi-VN')}
+                                                </p>
                                             </div>
-                                            <div className="flex justify-between items-center mb-1">
-                                                <span>Phí dịch vụ:</span>
-                                                <span className="font-semibold">{request.proposal.proxyFee?.toLocaleString()} đ</span>
-                                            </div>
-                                            <div className="flex justify-between items-center font-bold text-lg pt-2 border-t border-green-200">
-                                                <span>Tổng cộng:</span>
-                                                <span>
-                                                    {((request.proposal.totalAmount || request.proposal.totalProductPrice || 0) + (request.proposal.proxyFee || 0)).toLocaleString()} đ
-                                                </span>
-                                            </div>
-                                            {request.proposal.note && (
-                                                <div className="mt-2 pt-2 border-t border-green-200">
-                                                    <span className="font-medium">Ghi chú:</span>
-                                                    <p className="text-sm mt-1">{request.proposal.note}</p>
-                                                </div>
-                                            )}
-                                            {request.proposal.createdAt && (
-                                                <div className="mt-2 pt-2 border-t border-green-200">
-                                                    <span className="font-medium">Thời gian đề xuất:</span>
-                                                    <p className="text-sm mt-1">
-                                                        {new Date(request.proposal.createdAt).toLocaleString('vi-VN')}
-                                                    </p>
-                                                </div>
-                                            )}
-                                        </div>
+                                        )}
                                     </div>
-                                )}
+                                </div>
+                            )}
 
-                                {/* Nút thao tác */}
-                                <div className="flex gap-3 justify-end mt-4">
-                                    {request.proposal && (
+                            {/* Nút thao tác */}
+                            <div className="flex gap-3 justify-end mt-4">
+                                {request.proposal && (
+                                    <button
+                                        onClick={() => viewProposal(request)}
+                                        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
+                                    >
+                                        <FiEye className="text-sm" />
+                                        Xem đề xuất
+                                    </button>
+                                )}
+                                
+                                {request.status === 'Proposed' && (
+                                    <>
                                         <button
-                                            onClick={() => viewProposal(request)}
-                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
-                                        >
-                                            <FiEye className="text-sm" />
-                                            Xem đề xuất
-                                        </button>
-                                    )}
-                                    
-                                    {/* Nút cho Order status = Proposed */}
-                                    {orderStatus === 'Proposed' && (
-                                        <>
-                                            <button
-                                                onClick={() => openRejectModal(request)}
-                                                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 flex items-center gap-1"
-                                                disabled={actionLoading}
-                                            >
-                                                <FiX className="text-sm" />
-                                                Từ chối & Yêu cầu lên lại
-                                            </button>
-                                            <button
-                                                onClick={() => handleApproveProposal(request.id)}
-                                                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-1"
-                                                disabled={actionLoading}
-                                            >
-                                                <FiCheck className="text-sm" />
-                                                {actionLoading ? 'Đang xử lý...' : 'Duyệt & Thanh toán'}
-                                            </button>
-                                        </>
-                                    )}
-                                    
-                                    {/* Nút cho Order status = Paid hoặc InProgress */}
-                                    {(orderStatus === 'Paid' || orderStatus === 'InProgress') && (
-                                        <button
-                                            onClick={() => handleConfirmDelivery(request.id)}
-                                            className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 flex items-center gap-1"
-                                            disabled={actionLoading}
-                                        >
-                                            <FiCheck className="text-sm" />
-                                            {actionLoading ? 'Đang xử lý...' : 'Xác nhận nhận hàng'}
-                                        </button>
-                                    )}
-                                    
-                                    {/* Nút cho Request status = Open (chưa có proxy nhận) */}
-                                    {requestStatus === 'Open' && (
-                                        <button
-                                            onClick={() => openCancelModal(request)}
-                                            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center gap-1"
+                                            onClick={() => openRejectModal(request)}
+                                            className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 flex items-center gap-1"
                                             disabled={actionLoading}
                                         >
                                             <FiX className="text-sm" />
-                                            Hủy yêu cầu
+                                            Từ chối & Yêu cầu lên lại
                                         </button>
-                                    )}
-                                </div>
-
-                                {/* Hiển thị thông báo lỗi/thành công */}
-                                {actionError && (
-                                    <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded text-red-700">
-                                        {actionError}
-                                    </div>
+                                        <button
+                                            onClick={() => handleApproveProposal(request.id)}
+                                            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-1"
+                                            disabled={actionLoading}
+                                        >
+                                            <FiCheck className="text-sm" />
+                                            {actionLoading ? 'Đang xử lý...' : 'Duyệt & Thanh toán'}
+                                        </button>
+                                    </>
                                 )}
-                                {actionSuccess && (
-                                    <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded text-green-700">
-                                        {actionSuccess}
-                                    </div>
+                                
+                                {(request.status === 'Paid' || request.status === 'InProgress') && (
+                                    <button
+                                        onClick={() => handleConfirmDelivery(request.id)}
+                                        className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 flex items-center gap-1"
+                                        disabled={actionLoading}
+                                    >
+                                        <FiCheck className="text-sm" />
+                                        {actionLoading ? 'Đang xử lý...' : 'Xác nhận nhận hàng'}
+                                    </button>
+                                )}
+                                
+                                {request.status === 'Open' && (
+                                    <button
+                                        onClick={() => openCancelModal(request)}
+                                        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center gap-1"
+                                        disabled={actionLoading}
+                                    >
+                                        <FiX className="text-sm" />
+                                        Hủy yêu cầu
+                                    </button>
                                 )}
                             </div>
-                        );
-                    })}
-                </div>
-            )}
+
+                            {/* Hiển thị thông báo lỗi/thành công */}
+                            {actionError && (
+                                <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded text-red-700">
+                                    {actionError}
+                                </div>
+                            )}
+                            {actionSuccess && (
+                                <div className="mt-3 p-3 bg-green-100 border border-green-300 rounded text-green-700">
+                                    {actionSuccess}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
 
             {/* Modal xem đề xuất chi tiết */}
             {showProposalModal && selectedRequest && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
                         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
                             <h3 className="text-xl font-bold">Chi tiết đề xuất - Yêu cầu #{selectedRequest.id}</h3>
                             <button
@@ -487,9 +438,6 @@ const MyProxyRequests = () => {
                                                                 src={item.imageUrls[0]} 
                                                                 alt={item.name}
                                                                 className="w-20 h-20 object-cover rounded-lg border"
-                                                                onError={(e) => {
-                                                                    e.target.src = '/placeholder-product.png';
-                                                                }}
                                                             />
                                                         </div>
                                                     )}
@@ -537,7 +485,7 @@ const MyProxyRequests = () => {
                                                                 {item.storeRating && (
                                                                     <div className="flex justify-between">
                                                                         <span className="text-gray-600">Đánh giá cửa hàng:</span>
-                                                                        <span className="flex items-center font-semibold">
+                                                                        <span className="flex items-center font-semibold rating-star">
                                                                             ⭐ {item.storeRating}/5
                                                                         </span>
                                                                     </div>
@@ -562,9 +510,6 @@ const MyProxyRequests = () => {
                                                                             src={url} 
                                                                             alt={`${item.name} ${imgIdx + 2}`}
                                                                             className="w-12 h-12 object-cover rounded border flex-shrink-0"
-                                                                            onError={(e) => {
-                                                                                e.target.style.display = 'none';
-                                                                            }}
                                                                         />
                                                                     ))}
                                                                     {item.imageUrls.length > 4 && (
@@ -583,42 +528,6 @@ const MyProxyRequests = () => {
                                 </div>
                             )}
 
-                            {/* Fallback cho format cũ */}
-                            {selectedRequest.proposal?.items && !selectedRequest.proposal?.proposedItems && (
-                                <div className="mb-6">
-                                    <h4 className="font-semibold mb-3 flex items-center text-green-800">
-                                        <FiPackage className="mr-2" />
-                                        Sản phẩm đề xuất
-                                    </h4>
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full border border-gray-200 rounded-lg">
-                                            <thead className="bg-gray-50">
-                                                <tr>
-                                                    <th className="px-4 py-3 text-left font-medium">Tên sản phẩm</th>
-                                                    <th className="px-4 py-3 text-left font-medium">Số lượng</th>
-                                                    <th className="px-4 py-3 text-left font-medium">Đơn giá</th>
-                                                    <th className="px-4 py-3 text-left font-medium">Thành tiền</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {selectedRequest.proposal.items.map((item, idx) => (
-                                                    <tr key={idx} className="border-t">
-                                                        <td className="px-4 py-3 font-medium">{item.name}</td>
-                                                        <td className="px-4 py-3">{item.quantity} {item.unit}</td>
-                                                        <td className="px-4 py-3 text-green-600 font-medium">
-                                                            {item.price?.toLocaleString()} đ
-                                                        </td>
-                                                        <td className="px-4 py-3 text-green-600 font-bold">
-                                                            {((item.price || 0) * (item.quantity || 0)).toLocaleString()} đ
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-
                             {/* Tổng kết chi phí */}
                             <div className="bg-green-50 rounded-lg p-4 mb-6">
                                 <h4 className="font-semibold mb-3 text-green-800">Tổng kết chi phí</h4>
@@ -626,7 +535,7 @@ const MyProxyRequests = () => {
                                     <div className="flex justify-between">
                                         <span>Tổng tiền sản phẩm:</span>
                                         <span className="font-semibold">
-                                            {(selectedRequest.proposal?.totalAmount || selectedRequest.proposal?.totalProductPrice || 0).toLocaleString()} đ
+                                            {(selectedRequest.proposal?.totalAmount || 0).toLocaleString()} đ
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
@@ -637,7 +546,7 @@ const MyProxyRequests = () => {
                                     <div className="flex justify-between text-lg font-bold">
                                         <span>Tổng cộng:</span>
                                         <span className="text-green-700">
-                                            {((selectedRequest.proposal?.totalAmount || selectedRequest.proposal?.totalProductPrice || 0) + (selectedRequest.proposal?.proxyFee || 0)).toLocaleString()} đ
+                                            {((selectedRequest.proposal?.totalAmount || 0) + (selectedRequest.proposal?.proxyFee || 0)).toLocaleString()} đ
                                         </span>
                                     </div>
                                     
@@ -674,7 +583,7 @@ const MyProxyRequests = () => {
                                     Đóng
                                 </button>
                                 
-                                {(selectedRequest.order?.status === 'Proposed' || selectedRequest.proposal?.orderStatus === 'Proposed') && (
+                                {selectedRequest.status === 'Proposed' && (
                                     <>
                                         <button
                                             onClick={() => {
@@ -834,4 +743,4 @@ const MyProxyRequests = () => {
     );
 };
 
-export default MyProxyRequests;
+export default MyProxyRequestsDemo;
