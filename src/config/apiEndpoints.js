@@ -247,6 +247,11 @@ export const API_ENDPOINTS = {
         GET_BY_SELLER_ID: (sellerId) => `${API_URL}/api/store/seller/${sellerId}`,
         GET_STATISTICS: (id) => `${API_URL}/api/store/${id}/statistics`,
 
+        // Payment Management Endpoints
+        PAYMENT_OVERVIEW: `${API_URL}/api/Store/admin/payment-overview`,
+        UPDATE_PAYMENT_STATUS: (paymentId) => `${API_URL}/api/Store/admin/payment/${paymentId}/update-status`,
+        EXPORT_PAYMENT: `${API_URL}/api/Store/admin/payment/export`,
+
         // Follow endpoints
         FOLLOW: (storeId) => `${API_URL}/api/store/${storeId}/follow`,
         UNFOLLOW: (storeId) => `${API_URL}/api/store/${storeId}/unfollow`,

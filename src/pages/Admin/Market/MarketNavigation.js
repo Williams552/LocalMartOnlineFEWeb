@@ -6,6 +6,7 @@ import {
     DashboardOutlined, 
     DollarOutlined, 
     TagOutlined,
+    CreditCardOutlined,
     FileTextOutlined,
     BarChartOutlined,
     SettingOutlined
@@ -35,6 +36,12 @@ const MarketNavigation = () => {
             icon: <TagOutlined />,
             label: 'Loại phí',
             onClick: () => navigate('/admin/market-fee-types')
+        },
+        {
+            key: '/admin/stores/payment',
+            icon: <CreditCardOutlined />,
+            label: 'Thanh toán cửa hàng',
+            onClick: () => navigate('/admin/stores/payment')
         },
         {
             key: '/admin/market-rules',
