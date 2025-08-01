@@ -16,15 +16,20 @@ const ProxyShopperOrders = () => {
     const fetchOrders = async () => {
         try {
             setLoading(true);
-            const response = await proxyShopperService.getMyOrders(
-                filter === 'all' ? null : filter
-            );
-
-            if (response.success) {
-                setOrders(response.data);
-            }
+            // Lấy token xác thực giống các service khác
+            const token = localStorage.getItem("token");
+            const res = await fetch("http://localhost:5183/api/ProxyShopper/requests/my-accepted", {
+                headers: {
+                    "Authorization": token ? `Bearer ${token}` : undefined,
+                    "Content-Type": "application/json"
+                },
+            });
+            if (!res.ok) throw new Error("Không thể lấy danh sách đơn hàng đã nhận");
+            const data = await res.json();
+            setOrders(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching orders:', error);
+            setOrders([]);
         } finally {
             setLoading(false);
         }
