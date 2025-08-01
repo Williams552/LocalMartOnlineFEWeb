@@ -46,7 +46,6 @@ import moment from 'moment';
 
 const { Search } = Input;
 const { Option } = Select;
-const { TextArea } = Input;
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
@@ -172,7 +171,6 @@ const StorePaymentManagement = () => {
         setSelectedStore(store);
         form.setFieldsValue({
             paymentStatus: store.paymentStatus,
-            adminNote: '',
             paymentDate: store.paymentDate ? moment(store.paymentDate) : moment()
         });
         setModalVisible(true);
@@ -187,7 +185,6 @@ const StorePaymentManagement = () => {
 
             const updateData = {
                 paymentStatus: values.paymentStatus,
-                adminNote: values.adminNote || '',
                 paymentDate: values.paymentDate ? values.paymentDate.toISOString() : null
             };
 
@@ -565,16 +562,6 @@ const StorePaymentManagement = () => {
                             style={{ width: '100%' }}
                             format="DD/MM/YYYY"
                             placeholder="Chọn ngày thanh toán"
-                        />
-                    </Form.Item>
-
-                    <Form.Item
-                        name="adminNote"
-                        label="Ghi chú của Admin"
-                    >
-                        <TextArea
-                            rows={4}
-                            placeholder="Nhập ghi chú..."
                         />
                     </Form.Item>
 

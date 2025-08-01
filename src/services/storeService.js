@@ -603,11 +603,9 @@ class StoreService {
         try {
             const token = localStorage.getItem('token');
             
-            // Format according to UpdateStorePaymentStatusDto
+            // Format according to UpdateStorePaymentStatusDto (simplified)
             const updateDto = {
-                paymentId: paymentId,
                 paymentStatus: updateData.paymentStatus,
-                adminNote: updateData.adminNote || '',
                 paymentDate: updateData.paymentDate || null
             };
 
