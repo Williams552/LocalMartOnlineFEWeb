@@ -217,11 +217,11 @@ const ProxyShopperOrders = () => {
                                     </div>
                                     <div className="flex items-center space-x-3">
                                         <Link
-                                            to={`/proxy-shopper/orders/${order.id}`}
-                                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                                            to={`/proxy-shopper/orders/${order.id}/create`}
+                                            className="inline-flex items-center px-4 py-2 bg-supply-primary text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
                                         >
-                                            <FiEye className="mr-2" size={16} />
-                                            Xem chi tiết
+                                            <FiPackage className="mr-2" size={16} />
+                                            Lên đơn hàng
                                         </Link>
                                         {order.status === 'Accepted' && (
                                             <Link

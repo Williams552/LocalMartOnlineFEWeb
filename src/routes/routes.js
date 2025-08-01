@@ -54,6 +54,7 @@ import AvailableOrders from "../pages/ProxyShopper/AvailableOrders";
 import ProxyShopperProfile from "../pages/ProxyShopper/ProxyShopperProfile";
 import ProxyShopperWelcome from "../pages/ProxyShopper/ProxyShopperWelcome";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
+import MyProxyRequests from "../pages/Buyer/MyProxyRequests";
 import RegisterSeller from "../pages/Buyer/RegisterSeller";
 import UserProfile from "../pages/User/UserProfile";
 import MyReports from "../pages/User/MyReports";
@@ -78,7 +79,10 @@ import SellerLicenses from "../pages/Sellers/SellerLicenses";
 import UserReportsPage from "../pages/Seller/UserReportsPage";
 
 // Test pages
+
+import CreateOrder from "../pages/ProxyShopper/CreateOrder";
 import ReportSystemTest from "../pages/Test/ReportSystemTest";
+import ProxyRequestTest from "../pages/Test/ProxyRequestTest";
 
 const AppRoutes = () => {
     return (
@@ -109,6 +113,7 @@ const AppRoutes = () => {
                 <Route path="/proxy-shopper/dashboard" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperDashboard /></ProtectedRoute>} />
                 <Route path="/proxy-shopper/welcome" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperWelcome /></ProtectedRoute>} />
                 <Route path="/proxy-shopper/orders" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperOrders /></ProtectedRoute>} />
+                <Route path="/proxy-shopper/orders/:id/create" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><CreateOrder /></ProtectedRoute>} />
                 <Route path="/proxy-shopper/available-orders" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><AvailableOrders /></ProtectedRoute>} />
                 <Route path="/proxy-shopper/profile" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperProfile /></ProtectedRoute>} />
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
@@ -116,6 +121,7 @@ const AppRoutes = () => {
                 <Route path="/buyer/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />
                 <Route path="/buyer/following" element={<ProtectedRoute><FollowingStoresPage /></ProtectedRoute>} />
                 <Route path="/buyer/orders" element={<ProtectedRoute><BuyerOrders /></ProtectedRoute>} />
+                <Route path="/buyer/proxy-requests" element={<ProtectedRoute><MyProxyRequests /></ProtectedRoute>} />
                 <Route path="/buyer/chat" element={<ProtectedRoute><ChatListPage /></ProtectedRoute>} />
                 <Route path="/buyer/chat/:sellerId" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
@@ -134,6 +140,7 @@ const AppRoutes = () => {
                 
                 {/* Test Routes - Development only */}
                 <Route path="/test/report-system" element={<ReportSystemTest />} />
+                <Route path="/test/proxy-requests" element={<ProxyRequestTest />} />
             </Route>
 
             {/* Seller Routes - Separate layout without Header/Footer */}
