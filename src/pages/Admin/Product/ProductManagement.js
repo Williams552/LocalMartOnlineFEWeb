@@ -18,7 +18,8 @@ import {
     Select,
     Divider,
     Pagination,
-    Empty
+    Empty,
+    Rate
 } from 'antd';
 import {
     SearchOutlined,
@@ -36,6 +37,8 @@ import productService from '../../../services/productService';
 import storeService from '../../../services/storeService';
 import categoryService from '../../../services/categoryService';
 import marketService from '../../../services/marketService';
+import reviewService from '../../../services/reviewService';
+import { ReviewList } from '../../../components/Review';
 import './ProductManagement.css';
 
 const { Search } = Input;
@@ -61,6 +64,7 @@ const ProductManagement = () => {
     const [categories, setCategories] = useState([]);
     const [stores, setStores] = useState([]);
     const [markets, setMarkets] = useState([]);
+    const [productRatings, setProductRatings] = useState({}); // Cache for product ratings
     const [toggleLoading, setToggleLoading] = useState({});
     const [statistics, setStatistics] = useState({
         total: 0,
@@ -118,12 +122,18 @@ const ProductManagement = () => {
 
             if (response && response.items) {
                 console.log('Sample product data:', response.items[0]);
-                setProducts(Array.isArray(response.items) ? response.items : []);
+                const productsData = Array.isArray(response.items) ? response.items : [];
+                setProducts(productsData);
                 setPagination({
                     current: page,
                     pageSize,
                     total: response.totalCount || 0,
                 });
+                
+                // Load product ratings
+                if (productsData.length > 0) {
+                    await loadProductRatings(productsData);
+                }
             } else {
                 console.log('Service response not as expected, trying direct API call...');
                 // Fallback - try direct API call if service response is not as expected
@@ -154,12 +164,18 @@ const ProductManagement = () => {
                 if (result.success && result.data) {
                     const productList = result.data.items || result.data.products || [];
                     console.log('Sample product from direct API:', productList[0]);
-                    setProducts(Array.isArray(productList) ? productList : []);
+                    const productsData = Array.isArray(productList) ? productList : [];
+                    setProducts(productsData);
                     setPagination({
                         current: page,
                         pageSize,
                         total: result.data.totalCount || 0,
                     });
+                    
+                    // Load product ratings
+                    if (productsData.length > 0) {
+                        await loadProductRatings(productsData);
+                    }
                 } else {
                     console.error('Direct API call also failed:', result);
                     setProducts([]);
@@ -175,6 +191,49 @@ const ProductManagement = () => {
             message.error('Không thể tải danh sách sản phẩm: ' + error.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Load product ratings information for products
+    const loadProductRatings = async (productsData) => {
+        try {
+            console.log('📊 Loading product ratings for products:', productsData.length);
+            const uniqueProductIds = [...new Set(productsData.map(product => product.id))];
+            
+            const ratingPromises = uniqueProductIds.map(async (productId) => {
+                if (productRatings[productId]) {
+                    return { productId, rating: productRatings[productId] };
+                }
+                try {
+                    const response = await reviewService.getReviewsForTarget('Product', productId);
+                    const ratingData = {
+                        averageRating: response.averageRating || 0,
+                        reviewCount: response.totalCount || 0
+                    };
+                    console.log(`📊 Product ${productId} rating:`, ratingData);
+                    return { productId, rating: ratingData };
+                } catch (error) {
+                    console.error(`Error loading rating for product ${productId}:`, error);
+                    return { 
+                        productId, 
+                        rating: { averageRating: 0, reviewCount: 0 } 
+                    };
+                }
+            });
+
+            const ratingResults = await Promise.all(ratingPromises);
+            const newProductRatings = { ...productRatings };
+            
+            ratingResults.forEach(({ productId, rating }) => {
+                if (rating) {
+                    newProductRatings[productId] = rating;
+                }
+            });
+
+            console.log('📊 Updated product ratings cache:', newProductRatings);
+            setProductRatings(newProductRatings);
+        } catch (error) {
+            console.error('Error loading product ratings:', error);
         }
     };
 
@@ -551,6 +610,11 @@ const ProductManagement = () => {
         return 'Không xác định';
     };
 
+    const getProductRating = (productId) => {
+        const ratingData = productRatings[productId];
+        return ratingData || { averageRating: 0, reviewCount: 0 };
+    };
+
     const columns = [
         {
             title: 'Hình ảnh',
@@ -571,6 +635,7 @@ const ProductManagement = () => {
             title: 'Tên sản phẩm',
             dataIndex: 'name',
             key: 'name',
+            width: 180,
             ellipsis: true,
             render: (text, record) => (
                 <div>
@@ -624,6 +689,29 @@ const ProductManagement = () => {
                     <Text type="secondary" style={{ fontSize: 12 }}>lượt</Text>
                 </div>
             ),
+        },
+        {
+            title: 'Đánh giá',
+            dataIndex: 'rating',
+            key: 'rating',
+            width: 130,
+            align: 'center',
+            render: (rating, record) => {
+                const productRating = getProductRating(record.id);
+                return (
+                    <div style={{ textAlign: 'center' }}>
+                        <Rate
+                            disabled
+                            allowHalf
+                            value={productRating.averageRating || 0}
+                            style={{ fontSize: '12px' }}
+                        />
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: 2 }}>
+                            {(productRating.averageRating || 0).toFixed(1)} ({productRating.reviewCount || 0})
+                        </div>
+                    </div>
+                );
+            },
         },
         {
             title: 'Trạng thái',
@@ -1011,6 +1099,27 @@ const ProductManagement = () => {
                                 </div>
                             </>
                         )}
+
+                        {/* Product Reviews Section */}
+                        <Divider />
+                        <div>
+                            <Title level={5}>Đánh giá sản phẩm</Title>
+                            <div style={{ 
+                                maxHeight: '400px', 
+                                overflowY: 'auto',
+                                border: '1px solid #f0f0f0',
+                                borderRadius: '6px',
+                                padding: '16px',
+                                backgroundColor: '#fafafa'
+                            }}>
+                                <ReviewList
+                                    targetType="Product"
+                                    targetId={selectedProduct.id}
+                                    showFilters={false}
+                                    maxHeight="350px"
+                                />
+                            </div>
+                        </div>
                     </div>
                 )}
             </Modal>

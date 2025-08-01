@@ -370,7 +370,7 @@ const ReviewList = forwardRef(({ targetType, targetId, showFilters = true, maxHe
                                         <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r">
                                             <div className="flex items-center space-x-2 mb-2">
                                                 <span className="font-medium text-blue-800">
-                                                    Phản hồi từ người bán
+                                                    Phản hồi từ cửa hàng
                                                 </span>
                                             </div>
                                             <p className="text-blue-700 text-sm">
@@ -378,16 +378,6 @@ const ReviewList = forwardRef(({ targetType, targetId, showFilters = true, maxHe
                                             </p>
                                         </div>
                                     )}
-
-                                    {/* Actions */}
-                                    <div className="flex items-center space-x-4 mt-3">
-                                        <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors">
-                                            <FaThumbsUp className="text-sm" />
-                                            <span className="text-sm">
-                                                Hữu ích ({review.helpfulCount})
-                                            </span>
-                                        </button>
-                                    </div>
                                 </div>
                             </div>
                         </div>

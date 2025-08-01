@@ -74,18 +74,28 @@ class ApiService {
 
     async post(endpoint, data) {
         try {
+            console.log('Making POST request to:', `${API_BASE_URL}${endpoint}`);
+            console.log('With data:', data);
             const response = await apiClient.post(endpoint, data);
+            console.log('POST response:', response.data);
             return response.data;
         } catch (error) {
+            console.error('POST Error:', error);
+            console.error('Error details:', error.response?.data);
             throw new Error(error.response?.data?.message || `Lỗi khi gọi POST ${endpoint}`);
         }
     }
 
     async put(endpoint, data) {
         try {
+            console.log('Making PUT request to:', `${API_BASE_URL}${endpoint}`);
+            console.log('With data:', data);
             const response = await apiClient.put(endpoint, data);
+            console.log('PUT response:', response.data);
             return response.data;
         } catch (error) {
+            console.error('PUT Error:', error);
+            console.error('Error details:', error.response?.data);
             throw new Error(error.response?.data?.message || `Lỗi khi gọi PUT ${endpoint}`);
         }
     }

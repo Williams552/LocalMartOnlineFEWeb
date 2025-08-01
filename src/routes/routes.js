@@ -75,6 +75,7 @@ import QuickActionsPage from "../pages/Sellers/QuickActionsPage";
 import ChartsAnalyticsPage from "../pages/Sellers/ChartsAnalyticsPage";
 import NotificationsPage from "../pages/Sellers/NotificationsPage";
 import SellerLicenses from "../pages/Sellers/SellerLicenses";
+import UserReportsPage from "../pages/Seller/UserReportsPage";
 
 // Test pages
 import ReportSystemTest from "../pages/Test/ReportSystemTest";
@@ -207,6 +208,13 @@ const AppRoutes = () => {
                     <ProtectedRoute allowedRoles={['Seller']}>
                         <ProtectedSellerRoute>
                             <NotificationsPage />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/user-reports" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <UserReportsPage />
                         </ProtectedSellerRoute>
                     </ProtectedRoute>
                 } />

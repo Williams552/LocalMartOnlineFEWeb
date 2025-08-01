@@ -2,3 +2,7 @@ export { default as ReviewList } from './ReviewList';
 export { default as ReviewForm } from './ReviewForm';
 export { default as ReviewSummary } from './ReviewSummary';
 export { default as ReviewCard } from './ReviewCard';
+export { default as StoreReviewForm } from './StoreReviewForm';
+export { default as StoreReviewModal } from './StoreReviewModal';
+export { default as StoreReviewList } from './StoreReviewList';
+export { default as ClickableStoreRating } from './ClickableStoreRating';

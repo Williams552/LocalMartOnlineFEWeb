@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
 import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox, FiPackage } from "react-icons/fi";
-import { FaUserCircle, FaStore, FaHandshake, FaHeadset } from "react-icons/fa";
+import { FaUserCircle, FaStore, FaHandshake, FaHeadset, FaExclamationTriangle } from "react-icons/fa";
 import axios from "axios";
 import { useCart } from "../../contexts/CartContext";
 import { useFavorites } from "../../contexts/FavoriteContext";
@@ -793,6 +793,10 @@ const Header = () => {
                                                 <Link to="/support-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FaHeadset size={16} />
                                                     <span>Yêu cầu hỗ trợ</span>
+                                                </Link>
+                                                <Link to="/my-reports" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                    <FaExclamationTriangle size={16} />
+                                                    <span>Báo cáo của tôi</span>
                                                 </Link>
 
                                                 {/* Seller Navigation */}

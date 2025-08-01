@@ -26,7 +26,9 @@ const MyReports = () => {
             const result = await reportService.getMyReports(filters);
             
             if (result.success) {
-                setReports(result.data?.items || result.data || []);
+                // API trả về { reports: [...] }
+                const reportsData = result.data?.reports || result.data?.items || result.data || [];
+                setReports(reportsData);
             } else {
                 toast.error(result.message || 'Không thể tải danh sách báo cáo');
             }
@@ -97,13 +99,6 @@ const MyReports = () => {
                     <h1 className="text-2xl font-bold text-gray-900">Báo cáo của tôi</h1>
                     <p className="text-gray-600">Quản lý các báo cáo mà bạn đã gửi</p>
                 </div>
-                <button
-                    onClick={() => setShowReportModal(true)}
-                    className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                    <FaPlus size={16} />
-                    <span>Gửi báo cáo mới</span>
-                </button>
             </div>
 
             {/* Quick Stats */}
@@ -115,30 +110,6 @@ const MyReports = () => {
                             <p className="text-2xl font-bold text-gray-900">{reports.length}</p>
                         </div>
                         <FaFileAlt className="text-blue-500" size={24} />
-                    </div>
-                </div>
-                
-                <div className="bg-white p-6 rounded-lg shadow border">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Đang xử lý</p>
-                            <p className="text-2xl font-bold text-yellow-600">
-                                {reports.filter(r => r.status === 'Pending').length}
-                            </p>
-                        </div>
-                        <FaExclamationTriangle className="text-yellow-500" size={24} />
-                    </div>
-                </div>
-                
-                <div className="bg-white p-6 rounded-lg shadow border">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm text-gray-600">Đã giải quyết</p>
-                            <p className="text-2xl font-bold text-green-600">
-                                {reports.filter(r => r.status === 'Resolved').length}
-                            </p>
-                        </div>
-                        <FaCheck className="text-green-500" size={24} />
                     </div>
                 </div>
             </div>

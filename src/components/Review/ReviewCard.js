@@ -171,7 +171,7 @@ const ReviewCard = ({
                         <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r mb-3">
                             <div className="flex items-center space-x-2 mb-2">
                                 <span className="font-medium text-blue-800 text-sm">
-                                    Phản hồi từ người bán
+                                    Phản hồi từ cửa hàng
                                 </span>
                                 {review.responseDate && (
                                     <span className="text-xs text-blue-600">
@@ -182,18 +182,6 @@ const ReviewCard = ({
                             <p className="text-blue-700 text-sm">
                                 {review.response}
                             </p>
-                        </div>
-                    )}
-
-                    {/* Actions */}
-                    {showActions && (
-                        <div className="flex items-center space-x-4">
-                            <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700 transition-colors">
-                                <FaThumbsUp className="text-sm" />
-                                <span className="text-sm">
-                                    Hữu ích ({review.helpfulCount || 0})
-                                </span>
-                            </button>
                         </div>
                     )}
                 </div>

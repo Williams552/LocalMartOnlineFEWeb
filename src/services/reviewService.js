@@ -8,7 +8,9 @@ class ReviewService {
     // Tạo review mới
     async createReview(userId, reviewData) {
         try {
+            console.log('Creating review with data:', { userId, reviewData });
             const response = await apiService.post(`${this.baseURL}?userId=${userId}`, reviewData);
+            console.log('Create review response:', response);
             return {
                 success: true,
                 data: response.data,
@@ -16,9 +18,28 @@ class ReviewService {
             };
         } catch (error) {
             console.error('Error creating review:', error);
+            console.error('Error response details:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            console.error('Error config:', error.config);
+            
+            let errorMessage = 'Không thể tạo đánh giá';
+            
+            // Customize error message based on server response
+            if (error.response?.data?.message) {
+                if (error.response.data.message.includes('already reviewed')) {
+                    errorMessage = 'Bạn đã đánh giá cửa hàng này rồi';
+                } else if (error.response.data.message.includes('completed an order')) {
+                    errorMessage = 'Bạn cần mua hàng từ cửa hàng này trước khi có thể đánh giá';
+                } else {
+                    errorMessage = error.response.data.message;
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
             return {
                 success: false,
-                message: error.response?.data?.message || 'Không thể tạo đánh giá'
+                message: errorMessage
             };
         }
     }
@@ -26,7 +47,9 @@ class ReviewService {
     // Cập nhật review
     async updateReview(reviewId, userId, reviewData) {
         try {
+            console.log('Updating review with data:', { reviewId, userId, reviewData });
             const response = await apiService.put(`${this.baseURL}/${reviewId}?userId=${userId}`, reviewData);
+            console.log('Update review response:', response);
             return {
                 success: true,
                 data: response.data,
@@ -34,9 +57,11 @@ class ReviewService {
             };
         } catch (error) {
             console.error('Error updating review:', error);
+            console.error('Error response details:', error.response?.data);
+            console.error('Error status:', error.response?.status);
             return {
                 success: false,
-                message: error.response?.data?.message || 'Không thể cập nhật đánh giá'
+                message: error.response?.data?.message || error.message || 'Không thể cập nhật đánh giá'
             };
         }
     }
@@ -323,6 +348,61 @@ class ReviewService {
         }, 0);
 
         return Number((sum / validReviews.length).toFixed(1));
+    }
+
+    // Lấy review của user cho một target cụ thể
+    async getUserReviewForTarget(targetType, targetId, userId) {
+        try {
+            console.log('Getting user review for target:', { targetType, targetId, userId });
+            const response = await apiService.get(`${this.baseURL}/user-review?targetType=${targetType}&targetId=${targetId}&userId=${userId}`);
+            console.log('Get user review response:', response);
+            return {
+                success: true,
+                data: response.data || response
+            };
+        } catch (error) {
+            console.error('Error fetching user review for target:', error);
+            console.error('Error response details:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            
+            // If 404, user hasn't reviewed this target yet
+            if (error.response?.status === 404) {
+                console.log('No existing review found (404)');
+                return {
+                    success: true,
+                    data: null
+                };
+            }
+            
+            return {
+                success: false,
+                message: error.response?.data?.message || 'Không thể kiểm tra đánh giá của người dùng'
+            };
+        }
+    }
+
+    // Phản hồi review
+    async respondToReview(reviewId, userId, responseText) {
+        try {
+            console.log('Responding to review:', { reviewId, userId, responseText });
+            const response = await apiService.put(`${this.baseURL}/${reviewId}/response?userId=${userId}`, {
+                response: responseText
+            });
+            console.log('Review response result:', response);
+            return {
+                success: true,
+                data: response.data,
+                message: response.message || 'Phản hồi đã được gửi thành công'
+            };
+        } catch (error) {
+            console.error('Error responding to review:', error);
+            console.error('Error response details:', error.response?.data);
+            console.error('Error status:', error.response?.status);
+            return {
+                success: false,
+                message: error.response?.data?.message || error.message || 'Không thể gửi phản hồi'
+            };
+        }
     }
 }
 

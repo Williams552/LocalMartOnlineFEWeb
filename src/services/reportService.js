@@ -79,6 +79,7 @@ class ReportService {
         // Map FE params to BE DTO fields (GetReportsRequestDto)
         if (params.reporterId) query.ReporterId = params.reporterId;
         if (params.targetType) query.TargetType = params.targetType;
+        if (params.targetId) query.TargetId = params.targetId;
         if (params.status) query.Status = params.status;
         if (params.page) query.Page = params.page;
         if (params.pageSize) query.PageSize = params.pageSize;

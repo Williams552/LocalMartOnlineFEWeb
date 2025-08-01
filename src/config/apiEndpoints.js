@@ -393,6 +393,15 @@ export const API_ENDPOINTS = {
         GET_STATISTICS: `${API_URL}/api/report/statistics`,
         UPDATE_STATUS: (reportId) => `${API_URL}/api/report/${reportId}/status`,
     },
+
+    // Review Endpoints
+    REVIEW: {
+        CREATE: `${API_URL}/api/Review`,
+        UPDATE: (reviewId) => `${API_URL}/api/Review/${reviewId}`,
+        GET_BY_TARGET: `${API_URL}/api/Review/target`,
+        GET_USER_REVIEW: `${API_URL}/api/Review/user-review`,
+        DELETE: (reviewId) => `${API_URL}/api/Review/${reviewId}`,
+    },
 };
 
 export default API_ENDPOINTS;
