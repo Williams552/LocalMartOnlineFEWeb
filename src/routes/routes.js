@@ -31,6 +31,7 @@ import CategoryRegistrationManagement from "../pages/Admin/CategoryRegistration/
 import MarketManagement from "../pages/Admin/Market/MarketManagement";
 import MarketDashboard from "../pages/Admin/Market/MarketDashboard";
 import MarketFeeManagement from "../pages/Admin/Market/MarketFeeManagement";
+import MarketFeeTypeManagement from "../pages/Admin/Market/MarketFeeTypeManagement";
 import MarketRuleManagement from "../pages/Admin/Market/MarketRuleManagement";
 import StoreManagement from "../pages/Admin/Store/StoreManagement";
 import StoreDashboard from "../pages/Admin/Store/StoreDashboard";
@@ -268,6 +269,7 @@ const AppRoutes = () => {
                 <Route path="markets/create" element={<MarketManagement />} />
                 <Route path="markets/dashboard" element={<MarketDashboard />} />
                 <Route path="market-fees" element={<MarketFeeManagement />} />
+                <Route path="market-fee-types" element={<MarketFeeTypeManagement />} />
                 <Route path="market-rules" element={<MarketRuleManagement />} />
 
 

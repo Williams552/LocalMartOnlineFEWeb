@@ -9,15 +9,21 @@ class MarketFeeService {
             const token = authService.getToken();
             const queryParams = new URLSearchParams();
 
-            // Backend sử dụng các tên parameter khác
-            if (params.marketId) queryParams.append('MarketFeeId', params.marketId); // MarketFeeId thay vì marketId
-            if (params.name) queryParams.append('SearchKeyword', params.name); // SearchKeyword thay vì name
-            if (params.search) queryParams.append('SearchKeyword', params.search); // SearchKeyword thay vì search
+            // Match với GetMarketFeeRequestDto - validate trước khi gửi
+            if (params.marketId && typeof params.marketId === 'string' && params.marketId.trim()) {
+                queryParams.append('MarketId', params.marketId.trim());
+            }
+            if (params.searchKeyword && typeof params.searchKeyword === 'string' && params.searchKeyword.trim()) {
+                queryParams.append('SearchKeyword', params.searchKeyword.trim());
+            }
+            if (params.search && typeof params.search === 'string' && params.search.trim()) {
+                queryParams.append('SearchKeyword', params.search.trim());
+            }
 
             const finalUrl = `${API_ENDPOINTS.MARKET_FEE.GET_ALL}?${queryParams}`;
             console.log('MarketFeeService - API URL:', finalUrl);
             console.log('MarketFeeService - Params received:', params);
-            console.log('MarketFeeService - Query params sent:', Object.fromEntries(queryParams));
+            console.log('MarketFeeService - Query params:', queryParams.toString());
 
             const response = await fetch(finalUrl, {
                 headers: {
@@ -27,14 +33,28 @@ class MarketFeeService {
             });
 
             if (!response.ok) {
-                throw new Error('Không thể tải danh sách phí chợ');
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tải danh sách phí chợ'}`);
             }
 
             const result = await response.json();
-            return result;
+            
+            // Format dữ liệu theo MarketFeeDto mới
+            const formattedResult = {
+                success: true,
+                data: Array.isArray(result) ? result : (result.data || []),
+                totalCount: result.totalCount || (Array.isArray(result) ? result.length : 0)
+            };
+
+            return formattedResult;
         } catch (error) {
             console.error('Error fetching market fees:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            return {
+                success: false,
+                message: error.message || 'Lỗi kết nối server',
+                data: []
+            };
         }
     }
 
@@ -50,14 +70,23 @@ class MarketFeeService {
             });
 
             if (!response.ok) {
-                throw new Error('Không tìm thấy thông tin phí');
+                if (response.status === 404) {
+                    throw new Error('Không tìm thấy thông tin phí');
+                }
+                throw new Error('Không thể tải thông tin phí');
             }
 
             const result = await response.json();
-            return result;
+            return {
+                success: true,
+                data: result
+            };
         } catch (error) {
             console.error('Error fetching market fee:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            return {
+                success: false,
+                message: error.message || 'Lỗi kết nối server'
+            };
         }
     }
 
@@ -65,24 +94,45 @@ class MarketFeeService {
     async createMarketFee(feeData) {
         try {
             const token = authService.getToken();
+            
+            // Validate và format dữ liệu theo MarketFeeCreateDto - Backend expect string cho MarketId và MarketFeeTypeId
+            const createDto = {
+                marketId: feeData.marketId.toString(), // Backend expect string
+                marketFeeTypeId: feeData.marketFeeTypeId.toString(), // Backend expect string
+                name: feeData.name,
+                amount: parseFloat(feeData.amount),
+                description: feeData.description || '',
+                paymentDay: parseInt(feeData.paymentDay)
+            };
+
+            console.log('MarketFeeService - CreateDto being sent:', createDto);
+
             const response = await fetch(API_ENDPOINTS.MARKET_FEE.CREATE, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(feeData)
+                body: JSON.stringify(createDto)
             });
 
             if (!response.ok) {
-                const error = await response.json();
+                const error = await response.json().catch(() => ({}));
                 throw new Error(error.message || 'Không thể tạo phí mới');
             }
 
-            return await response.json();
+            const result = await response.json();
+            return {
+                success: true,
+                data: result,
+                message: 'Tạo phí thành công'
+            };
         } catch (error) {
             console.error('Error creating market fee:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            return {
+                success: false,
+                message: error.message || 'Lỗi kết nối server'
+            };
         }
     }
 
@@ -90,25 +140,32 @@ class MarketFeeService {
     async updateMarketFee(feeId, feeData) {
         try {
             const token = authService.getToken();
+            
+            // Format dữ liệu theo MarketFeeUpdateDto - Backend expect string cho MarketFeeTypeId
+            const updateDto = {};
+            if (feeData.marketFeeTypeId) updateDto.marketFeeTypeId = feeData.marketFeeTypeId.toString(); // Backend expect string
+            if (feeData.name) updateDto.name = feeData.name;
+            if (feeData.amount !== undefined) updateDto.amount = parseFloat(feeData.amount);
+            if (feeData.description !== undefined) updateDto.description = feeData.description;
+            if (feeData.paymentDay !== undefined) updateDto.paymentDay = parseInt(feeData.paymentDay);
+
+            console.log('MarketFeeService - UpdateDto being sent:', updateDto);
+
             const response = await fetch(API_ENDPOINTS.MARKET_FEE.UPDATE(feeId), {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(feeData)
+                body: JSON.stringify(updateDto)
             });
 
             if (!response.ok) {
-                let errorMessage = 'Không thể cập nhật phí';
-                try {
-                    const error = await response.json();
-                    errorMessage = error.message || errorMessage;
-                } catch (e) {
-                    // Response không có JSON, sử dụng status text
-                    errorMessage = response.statusText || errorMessage;
+                if (response.status === 404) {
+                    throw new Error('Không tìm thấy thông tin phí');
                 }
-                throw new Error(errorMessage);
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.message || 'Không thể cập nhật phí');
             }
 
             // Kiểm tra xem response có content không
@@ -116,16 +173,18 @@ class MarketFeeService {
                 return { success: true, message: 'Cập nhật phí thành công' };
             }
 
-            // Chỉ parse JSON nếu có content
-            try {
-                return await response.json();
-            } catch (e) {
-                // Nếu không parse được JSON, vẫn coi là thành công
-                return { success: true, message: 'Cập nhật phí thành công' };
-            }
+            const result = await response.json().catch(() => ({ success: true, message: 'Cập nhật phí thành công' }));
+            return {
+                success: true,
+                data: result,
+                message: 'Cập nhật phí thành công'
+            };
         } catch (error) {
             console.error('Error updating market fee:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            return {
+                success: false,
+                message: error.message || 'Lỗi kết nối server'
+            };
         }
     }
 
@@ -141,15 +200,11 @@ class MarketFeeService {
             });
 
             if (!response.ok) {
-                let errorMessage = 'Không thể xóa phí';
-                try {
-                    const error = await response.json();
-                    errorMessage = error.message || errorMessage;
-                } catch (e) {
-                    // Response không có JSON, sử dụng status text
-                    errorMessage = response.statusText || errorMessage;
+                if (response.status === 404) {
+                    throw new Error('Không tìm thấy thông tin phí');
                 }
-                throw new Error(errorMessage);
+                const error = await response.json().catch(() => ({}));
+                throw new Error(error.message || 'Không thể xóa phí');
             }
 
             // Kiểm tra xem response có content không
@@ -157,16 +212,17 @@ class MarketFeeService {
                 return { success: true, message: 'Xóa phí thành công' };
             }
 
-            // Chỉ parse JSON nếu có content
-            try {
-                return await response.json();
-            } catch (e) {
-                // Nếu không parse được JSON, vẫn coi là thành công
-                return { success: true, message: 'Xóa phí thành công' };
-            }
+            const result = await response.json().catch(() => ({ message: 'Xóa phí thành công' }));
+            return {
+                success: true,
+                message: result.message || 'Xóa phí thành công'
+            };
         } catch (error) {
             console.error('Error deleting market fee:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            return {
+                success: false,
+                message: error.message || 'Lỗi kết nối server'
+            };
         }
     }
 
@@ -192,11 +248,42 @@ class MarketFeeService {
             }
 
             const result = await response.json();
-            return result;
+            return {
+                success: true,
+                data: Array.isArray(result) ? result : (result.data || []),
+                totalCount: result.totalCount || (Array.isArray(result) ? result.length : 0)
+            };
         } catch (error) {
             console.error('Error fetching market fees by market:', error);
-            throw new Error(error.message || 'Lỗi kết nối server');
+            return {
+                success: false,
+                message: error.message || 'Lỗi kết nối server',
+                data: []
+            };
         }
+    }
+
+    // Format market fee for display
+    formatMarketFeeForDisplay(fee) {
+        if (!fee) return null;
+
+        return {
+            id: fee.id,
+            marketId: fee.marketId,
+            marketName: fee.marketName,
+            marketFeeTypeId: fee.marketFeeTypeId,
+            marketFeeTypeName: fee.marketFeeTypeName,
+            name: fee.name,
+            amount: fee.amount,
+            description: fee.description,
+            paymentDay: fee.paymentDay,
+            createdAt: fee.createdAt,
+            displayAmount: new Intl.NumberFormat('vi-VN', { 
+                style: 'currency', 
+                currency: 'VND' 
+            }).format(fee.amount),
+            createdDate: fee.createdAt ? new Date(fee.createdAt).toLocaleDateString('vi-VN') : ''
+        };
     }
 
     // Pay market fee

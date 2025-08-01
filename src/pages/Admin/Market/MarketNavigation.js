@@ -5,6 +5,7 @@ import {
     ShopOutlined, 
     DashboardOutlined, 
     DollarOutlined, 
+    TagOutlined,
     FileTextOutlined,
     BarChartOutlined,
     SettingOutlined
@@ -28,7 +29,12 @@ const MarketNavigation = () => {
             icon: <DollarOutlined />,
             label: 'Phí chợ',
             onClick: () => navigate('/admin/market-fees'),
-            badge: { count: 3, status: 'warning' } // Mock pending fees
+        },
+        {
+            key: '/admin/market-fee-types',
+            icon: <TagOutlined />,
+            label: 'Loại phí',
+            onClick: () => navigate('/admin/market-fee-types')
         },
         {
             key: '/admin/market-rules',

@@ -402,6 +402,29 @@ export const API_ENDPOINTS = {
         GET_USER_REVIEW: `${API_URL}/api/Review/user-review`,
         DELETE: (reviewId) => `${API_URL}/api/Review/${reviewId}`,
     },
+
+    // Market Fee Endpoints
+    MARKET_FEE: {
+        GET_ALL: `${API_URL}/api/MarketFee`,
+        GET_BY_ID: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
+        CREATE: `${API_URL}/api/MarketFee`,
+        UPDATE: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
+        DELETE: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
+        GET_BY_MARKET: (marketId) => `${API_URL}/api/MarketFee/market/${marketId}`,
+        PAY: `${API_URL}/api/MarketFee/pay`,
+        STATISTICS: `${API_URL}/api/MarketFee/statistics`,
+        STATISTICS_BY_MARKET: (marketId) => `${API_URL}/api/MarketFee/statistics/market/${marketId}`,
+    },
+
+    // Market Fee Type Endpoints
+    MARKET_FEE_TYPE: {
+        GET_ALL: `${API_URL}/api/MarketFeeType`,
+        GET_BY_ID: (feeTypeId) => `${API_URL}/api/MarketFeeType/${feeTypeId}`,
+        CREATE: `${API_URL}/api/MarketFeeType`,
+        UPDATE: (feeTypeId) => `${API_URL}/api/MarketFeeType/${feeTypeId}`,
+        DELETE: (feeTypeId) => `${API_URL}/api/MarketFeeType/${feeTypeId}`,
+        RESTORE: (feeTypeId) => `${API_URL}/api/MarketFeeType/${feeTypeId}/restore`,
+    },
 };
 
 export default API_ENDPOINTS;
