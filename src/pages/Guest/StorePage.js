@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import FollowStoreButton from "../../components/FollowStoreButton";
 import { ReportButton } from "../../components/Report";
+import {StoreReviewList, ClickableStoreRating } from "../../components/Review";
 import {
     FaStar, FaRegStar, FaMapMarkerAlt, FaUsers, FaShoppingBag,
     FaCertificate, FaPhone, FaComments, FaStore, FaAward,
@@ -31,6 +32,7 @@ const StorePage = () => {
     const [sortBy, setSortBy] = useState('newest');
     const [filterCategory, setFilterCategory] = useState('all');
     const [totalProductCount, setTotalProductCount] = useState(0);
+    const [reviewsKey, setReviewsKey] = useState(0);
 
     // Fetch store data from API
     useEffect(() => {
@@ -234,18 +236,35 @@ const StorePage = () => {
                                 <span className="text-green-100 text-lg">{store.address}</span>
                             </div>
 
-                            <div className="flex items-center justify-center lg:justify-start gap-1 mb-4">
-                                {[...Array(5)].map((_, i) => (
-                                    i < Math.floor(store.rating || 4.5) ?
-                                        <FaStar key={i} className="text-yellow-400" /> :
-                                        <FaRegStar key={i} className="text-white opacity-50" />
-                                ))}
-                                <span className="ml-2 text-white">
-                                    {(store.rating || 0).toFixed(1)} ({(statistics?.reviewCount || store.reviewCount || 0)} đánh giá)
-                                </span>
-                            </div>
-
-                            {seller && (
+            <div className="flex items-center justify-center lg:justify-start gap-1 mb-4">
+                <ClickableStoreRating
+                    storeId={storeId}
+                    storeName={store.name}
+                    rating={store.rating || 0}
+                    reviewCount={statistics?.reviewCount || store.reviewCount || 0}
+                    onReviewSubmitted={async () => {
+                        // Refresh reviews and statistics
+                        setReviewsKey(prev => prev + 1);
+                        
+                        // Refresh store statistics
+                        try {
+                            const statsResponse = await storeService.getStoreStatistics(storeId);
+                            if (statsResponse.success && statsResponse.data) {
+                                setStatistics(statsResponse.data);
+                                
+                                // Update store rating and review count
+                                setStore(prev => prev ? {
+                                    ...prev,
+                                    rating: statsResponse.data.averageRating || 0,
+                                    reviewCount: statsResponse.data.reviewCount || 0
+                                } : null);
+                            }
+                        } catch (error) {
+                            console.error('Error refreshing statistics:', error);
+                        }
+                    }}
+                />
+            </div>                            {seller && (
                                 <div className="flex items-center justify-center lg:justify-start gap-2 mb-4">
                                     <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-bold">
                                         {seller.displayName.charAt(0)}
@@ -480,6 +499,25 @@ const StorePage = () => {
                         </div>
                     </div>
                 )}
+            </div>
+
+            {/* Store Reviews Section */}
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                <StoreReviewList 
+                    key={reviewsKey}
+                    storeId={storeId}
+                    storeName={store.name}
+                    onReviewsLoaded={(data) => {
+                        // Update store rating and review count
+                        if (data.averageRating !== undefined && data.totalCount !== undefined) {
+                            setStore(prev => prev ? {
+                                ...prev,
+                                rating: data.averageRating,
+                                reviewCount: data.totalCount
+                            } : null);
+                        }
+                    }}
+                />
             </div>
 
             {/* Chat Box */}
