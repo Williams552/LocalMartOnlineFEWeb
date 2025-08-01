@@ -178,7 +178,7 @@ const StorePaymentManagement = () => {
 
     const handleSubmitUpdate = async (values) => {
         try {
-            if (!selectedStore?.id) {
+            if (!selectedStore?.paymentId) {
                 message.error('Không tìm thấy thông tin thanh toán');
                 return;
             }
@@ -188,7 +188,7 @@ const StorePaymentManagement = () => {
                 paymentDate: values.paymentDate ? values.paymentDate.toISOString() : null
             };
 
-            const response = await storeService.updateStorePaymentStatus(selectedStore.id, updateData);
+            const response = await storeService.updateStorePaymentStatus(selectedStore.paymentId, updateData);
             
             if (response.success) {
                 message.success('Cập nhật trạng thái thanh toán thành công');
