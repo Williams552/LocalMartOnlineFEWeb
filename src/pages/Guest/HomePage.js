@@ -23,7 +23,7 @@ const HomePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [searchLoading, setSearchLoading] = useState(false);
-    
+
     // Store suspension alert state
     const [showSuspensionAlert, setShowSuspensionAlert] = useState(false);
     const [suspensionInfo, setSuspensionInfo] = useState(null);
@@ -145,7 +145,7 @@ const HomePage = () => {
                 if (selectedNearbyMarket && selectedMarket === selectedNearbyMarket.name) {
                     marketFilter = selectedNearbyMarket.name;
                 }
-                
+
                 if (marketFilter !== "Tất cả") {
                     const market = markets.find(m => m.name === marketFilter);
                     if (market) {
@@ -186,28 +186,28 @@ const HomePage = () => {
 
                 const searchResults = searchResult.items || [];
                 console.log(`📦 Found ${searchResults.length} products`);
-                
+
                 // Additional filtering for nearby markets if needed
                 let filteredResults = searchResults;
                 if (selectedNearbyMarket && selectedNearbyMarket.distance) {
                     console.log(`📍 Filtering products from nearby market: ${selectedNearbyMarket.name}`);
                     filteredResults = await getProductsFromNearbyMarkets([selectedNearbyMarket], searchResults);
                 }
-                
+
                 // Sort products to prioritize Active products first
                 const sortedResults = filteredResults.sort((a, b) => {
                     // Priority order: Active (0) > OutOfStock (1) > Inactive (2)
                     const statusPriorityA = a.status === 0 ? 0 : a.status === 1 ? 1 : 2;
                     const statusPriorityB = b.status === 0 ? 0 : b.status === 1 ? 1 : 2;
-                    
+
                     if (statusPriorityA !== statusPriorityB) {
                         return statusPriorityA - statusPriorityB;
                     }
-                    
+
                     // If same status, sort by newest first
                     return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
                 });
-                
+
                 setProducts(sortedResults);
 
             } catch (err) {
@@ -311,27 +311,10 @@ const HomePage = () => {
                         🥕 Chào mừng đến với LocalMart! 🌾
                     </h1>
                     <p className="text-gray-700 text-xl leading-relaxed max-w-3xl mx-auto">
-                        Nơi kết nối người mua và người bán nông sản tươi sạch từ các chợ địa phương.<br />
+                        Nơi kết nối người mua và người bán thực phẩm tươi sạch từ các chợ địa phương.<br />
                         Tìm kiếm và mua bán dễ dàng, nhanh chóng, an toàn.
                     </p>
-                    <div className="mt-6 flex justify-center space-x-8 text-sm text-gray-600">
-                        <div className="flex items-center space-x-2">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                            <span>Tươi sạch từ chợ</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                            <span>Giao hàng tận nơi</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
-                            <span>Giá cả hợp lý</span>
-                        </div>
-                    </div>
                 </section>
-
-
-
                 {/* About Section */}
                 <section className="mb-12 bg-white rounded-xl shadow-sm border p-8">
                     <div className="text-center mb-8">
@@ -340,20 +323,13 @@ const HomePage = () => {
                             Chúng tôi kết nối bạn trực tiếp với các tiểu thương địa phương, mang đến những sản phẩm nông sản tươi ngon nhất.
                         </p>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="text-center p-6">
                             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <span className="text-2xl">🥬</span>
                             </div>
                             <h3 className="font-semibold text-lg mb-2">Tươi sạch từ chợ</h3>
                             <p className="text-gray-600 text-sm">Sản phẩm được thu hoạch và bán trong ngày, đảm bảo độ tươi ngon tối đa.</p>
-                        </div>
-                        <div className="text-center p-6">
-                            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <span className="text-2xl">🚚</span>
-                            </div>
-                            <h3 className="font-semibold text-lg mb-2">Giao hàng nhanh</h3>
-                            <p className="text-gray-600 text-sm">Giao hàng trong vòng 2-4 giờ, đảm bảo sản phẩm luôn tươi khi đến tay bạn.</p>
                         </div>
                         <div className="text-center p-6">
                             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
