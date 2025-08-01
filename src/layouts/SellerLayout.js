@@ -237,13 +237,6 @@ const SellerLayout = ({ children }) => {
             description: 'Thông báo & cập nhật'
         },
         {
-            path: '/seller/user-reports',
-            icon: FaExclamationTriangle,
-            label: "Báo Cáo",
-            color: 'text-red-600',
-            description: 'Xem báo cáo của người dùng'
-        },
-        {
             path: '/seller/licenses',
             icon: FaCertificate,
             label: 'Giấy phép',
@@ -286,12 +279,6 @@ const SellerLayout = ({ children }) => {
             icon: FaHome,
             label: "Về trang chủ",
             color: "text-blue-600"
-        },
-        {
-            to: "/seller/user-reports",
-            icon: FaExclamationTriangle,
-            label: "Xem báo cáo của người dùng",
-            color: "text-orange-600"
         },
         {
             to: "/support",
