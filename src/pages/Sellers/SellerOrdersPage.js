@@ -69,15 +69,6 @@ const SellerOrdersPage = () => {
             if (result.success) {
                 // result.data.items is the array of orders per new API
                 const ordersData = Array.isArray(result.data?.items) ? result.data.items : [];
-                console.log('✅ Orders loaded:', ordersData.length, 'orders');
-                console.log('📋 Sample order structure:', ordersData[0]);
-                console.log('👤 Customer info in first order:', {
-                    customerName: ordersData[0]?.customerName,
-                    customer: ordersData[0]?.customer,
-                    user: ordersData[0]?.user,
-                    buyerName: ordersData[0]?.buyerName,
-                    buyerPhone: ordersData[0]?.buyerPhone
-                });
                 setOrders(ordersData);
             } else {
                 const ordersData = Array.isArray(result.data?.items) ? result.data.items : [];
@@ -570,16 +561,22 @@ const SellerOrdersPage = () => {
                                             <td className="px-6 py-4">
                                                 <div className="max-w-xs">
                                                     {order.items && order.items.length > 0 ? (
-                                                        order.items.length === 1 ? (
-                                                            <span className="text-sm text-gray-900">{order.items[0]?.productName || 'Sản phẩm không xác định'}</span>
-                                                        ) : (
-                                                            <div>
-                                                                <span className="text-sm text-gray-900">{order.items[0]?.productName || 'Sản phẩm không xác định'}</span>
-                                                                <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                                                                    +{order.items.length - 1} khác
-                                                                </span>
-                                                            </div>
-                                                        )
+                                                        <div>
+                                                            {order.items.length === 1 ? (
+                                                                <p className="text-sm text-gray-900 font-medium truncate">
+                                                                    {order.items[0]?.productName || 'Sản phẩm không xác định'}
+                                                                </p>
+                                                            ) : (
+                                                                <div>
+                                                                    <p className="text-sm text-gray-900 font-medium truncate">
+                                                                        {order.items[0]?.productName || 'Sản phẩm không xác định'}
+                                                                    </p>
+                                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 mt-1">
+                                                                        +{order.items.length - 1} sản phẩm khác
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     ) : (
                                                         <span className="text-sm text-gray-500">Không có sản phẩm</span>
                                                     )}
@@ -689,19 +686,53 @@ const SellerOrdersPage = () => {
                                                         <tr key={index}>
                                                             <td className="px-4 py-3">
                                                                 <div className="flex items-center">
-                                                                    {item.productImage && (
-                                                                        <img
-                                                                            src={item.productImage}
-                                                                            alt={item.productName || 'Sản phẩm'}
-                                                                            className="w-10 h-10 rounded object-cover mr-3"
-                                                                            onError={(e) => {
-                                                                                e.target.style.display = 'none';
-                                                                            }}
-                                                                        />
-                                                                    )}
-                                                                    <span className="text-sm font-medium text-gray-900">
-                                                                        {item.productName || 'Sản phẩm không xác định'}
-                                                                    </span>
+                                                                    <div className="flex-shrink-0 mr-4">
+                                                                        {(item.productImage || item.image || item.imageUrl || item.productImageUrl || item.thumbnail || item.photo) ? (
+                                                                            <img
+                                                                                src={item.productImage || item.image || item.imageUrl || item.productImageUrl || item.thumbnail || item.photo}
+                                                                                alt={item.productName || 'Sản phẩm'}
+                                                                                className="w-16 h-16 rounded-lg object-cover border border-gray-200 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+                                                                                onError={(e) => {
+                                                                                    e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNjQiIHZpZXdCb3g9IjAgMCA2NCA2NCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjRjlGQUZCIi8+CjxwYXRoIGQ9Ik0yMSAyNUM5IDI1IDkgMzkgMjEgMzlIMzlDNTEgMzkgNTEgMjUgMzkgMjVIMjFaIiBmaWxsPSIjRTVFN0VCIi8+CjxwYXRoIGQ9Ik0yNyAzMkMyNyAzNCAyOSAzNiAzMSAzNkMzMyAzNiAzNSAzNCAzNSAzMlYzMEMzNSAyOCAzMyAyNiAzMSAyNkMyOSAyNiAyNyAyOCAyNyAzMFYzMloiIGZpbGw9IiM5Q0E0QUIiLz4KPC9zdmc+';
+                                                                                    e.target.className = "w-16 h-16 rounded-lg object-cover border border-gray-200 bg-gray-100";
+                                                                                }}
+                                                                                onClick={() => {
+                                                                                    // Có thể thêm tính năng xem ảnh phóng to ở đây
+                                                                                    const imageUrl = item.productImage || item.image || item.imageUrl || item.productImageUrl || item.thumbnail || item.photo;
+                                                                                    if (imageUrl) {
+                                                                                        window.open(imageUrl, '_blank');
+                                                                                    }
+                                                                                }}
+                                                                                title="Click để xem ảnh lớn"
+                                                                            />
+                                                                        ) : (
+                                                                            <div className="w-16 h-16 rounded-lg border border-gray-200 bg-gray-100 flex items-center justify-center">
+                                                                                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                                                </svg>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h4 className="text-sm font-medium text-gray-900 truncate">
+                                                                            {item.productName || 'Sản phẩm không xác định'}
+                                                                        </h4>
+                                                                        {item.productDescription && (
+                                                                            <p className="text-xs text-gray-500 mt-1" style={{
+                                                                                display: '-webkit-box',
+                                                                                WebkitLineClamp: 2,
+                                                                                WebkitBoxOrient: 'vertical',
+                                                                                overflow: 'hidden'
+                                                                            }}>
+                                                                                {item.productDescription}
+                                                                            </p>
+                                                                        )}
+                                                                        {item.productCode && (
+                                                                            <p className="text-xs text-gray-400 mt-1">
+                                                                                Mã: {item.productCode}
+                                                                            </p>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                             </td>
                                                             <td className="px-4 py-3 text-sm text-gray-900">
