@@ -5,6 +5,8 @@ import {
     ShopOutlined, 
     DashboardOutlined, 
     DollarOutlined, 
+    TagOutlined,
+    CreditCardOutlined,
     FileTextOutlined,
     BarChartOutlined,
     SettingOutlined
@@ -28,7 +30,18 @@ const MarketNavigation = () => {
             icon: <DollarOutlined />,
             label: 'Phí chợ',
             onClick: () => navigate('/admin/market-fees'),
-            badge: { count: 3, status: 'warning' } // Mock pending fees
+        },
+        {
+            key: '/admin/market-fee-types',
+            icon: <TagOutlined />,
+            label: 'Loại phí',
+            onClick: () => navigate('/admin/market-fee-types')
+        },
+        {
+            key: '/admin/stores/payment',
+            icon: <CreditCardOutlined />,
+            label: 'Thanh toán cửa hàng',
+            onClick: () => navigate('/admin/stores/payment')
         },
         {
             key: '/admin/market-rules',

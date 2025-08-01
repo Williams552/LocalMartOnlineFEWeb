@@ -330,15 +330,6 @@ const Header = () => {
             <div className="bg-supply-primary text-white py-1">
                 <div className="max-w-7xl mx-auto px-4 flex items-center justify-between text-sm">
                     <div className="flex items-center space-x-4">
-                        <span className="flex items-center space-x-1">
-                            <FiMapPin size={14} />
-                            <span>Giao hàng toàn TP. Cần Thơ</span>
-                        </span>
-                        <span>📞 Hotline: 1900-6868</span>
-                    </div>
-                    <div className="flex items-center space-x-4">
-                        <span>🚚 Miễn phí giao hàng đơn từ 200k</span>
-                        <span>⏰ Giao hàng 30 phút</span>
                     </div>
                 </div>
             </div>
@@ -579,154 +570,154 @@ const Header = () => {
                                     <FaHandshake size={24} className="group-hover:text-purple-600" />
                                     <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded shadow hidden group-hover:block">Đi chợ giùm</span>
                                 </button>
-            {/* Proxy Shopper Modal */}
-            {showProxyModal && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center">
-                    {/* Backdrop with fade-in animation */}
-                    <div className="absolute inset-0 bg-black/40 transition-opacity animate-fadeIn" onClick={() => setShowProxyModal(false)} aria-label="Đóng modal" tabIndex={-1}></div>
-                    {/* Modal panel with scale/slide animation */}
-                    <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-[95vw] max-w-2xl z-10 animate-modalIn" role="dialog" aria-modal="true">
-                        <button
-                            className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl focus:outline-none focus:ring-2 focus:ring-red-400 rounded-full transition"
-                            onClick={() => setShowProxyModal(false)}
-                            aria-label="Đóng modal"
-                            tabIndex={0}
-                        >&times;</button>
-                        <h2 className="text-2xl font-bold mb-4 text-center text-supply-primary tracking-tight">Yêu cầu đi chợ giùm</h2>
-                        <form
-                            onSubmit={async (e) => {
-                                e.preventDefault();
-                                setProxyError("");
-                                setProxySuccess("");
-                                if (proxyItems.some(item => !item.name || !item.quantity || !item.unit)) {
-                                    setProxyError("Vui lòng nhập đầy đủ thông tin cho tất cả các mặt hàng.");
-                                    return;
-                                }
-                                setProxyLoading(true);
-                                try {
-                                    const res = await axios.post(
-                                        "http://localhost:5183/api/ProxyShopper/requests",
-                                        {
-                                            buyerId: user?.id || "",
-                                            items: proxyItems
-                                        }
-                                    );
-                                    if (res.data && res.data.requestId) {
-                                        setProxySuccess("Gửi yêu cầu thành công! Mã yêu cầu: " + res.data.requestId);
-                                        setProxyItems([{ name: "", quantity: 1, unit: "" }]);
-                                    } else {
-                                        setProxyError("Gửi yêu cầu thất bại. Vui lòng thử lại.");
-                                    }
-                                } catch (err) {
-                                    setProxyError(err.response?.data?.message || "Gửi yêu cầu thất bại.");
-                                } finally {
-                                    setProxyLoading(false);
-                                }
-                            }}
-                            autoComplete="off"
-                        >
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full border mb-4 rounded-xl overflow-hidden">
-                                    <thead>
-                                        <tr className="bg-gray-100 text-gray-700">
-                                            <th className="px-3 py-2 border">Tên mặt hàng</th>
-                                            <th className="px-3 py-2 border">Số lượng</th>
-                                            <th className="px-3 py-2 border">Đơn vị</th>
-                                            <th className="px-2 py-2 border"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {proxyItems.map((item, idx) => (
-                                            <tr key={idx} className="transition hover:bg-gray-50">
-                                                <td className="border px-2 py-1">
-                                                    <input
-                                                        type="text"
-                                                        className="w-full border rounded px-2 py-1 focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
-                                                        placeholder="Tên hàng"
-                                                        value={item.name}
-                                                        onChange={e => setProxyItems(items => items.map((it, i) => i === idx ? { ...it, name: e.target.value } : it))}
-                                                        required
-                                                        autoFocus={idx === 0}
-                                                        aria-label={`Tên mặt hàng ${idx + 1}`}
-                                                    />
-                                                </td>
-                                                <td className="border px-2 py-1">
-                                                    <input
-                                                        type="number"
-                                                        min="0.01"
-                                                        step="0.01"
-                                                        className="w-full border rounded px-2 py-1 focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
-                                                        placeholder="Số lượng"
-                                                        value={item.quantity}
-                                                        onChange={e => setProxyItems(items => items.map((it, i) => i === idx ? { ...it, quantity: e.target.value } : it))}
-                                                        required
-                                                        aria-label={`Số lượng mặt hàng ${idx + 1}`}
-                                                    />
-                                                </td>
-                                                <td className="border px-2 py-1">
-                                                    <select
-                                                        className="w-full border rounded px-2 py-1 focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
-                                                        value={item.unit}
-                                                        onChange={e => setProxyItems(items => items.map((it, i) => i === idx ? { ...it, unit: e.target.value } : it))}
-                                                        required
-                                                        aria-label={`Đơn vị mặt hàng ${idx + 1}`}
+                                {/* Proxy Shopper Modal */}
+                                {showProxyModal && (
+                                    <div className="fixed inset-0 z-[100] flex items-center justify-center">
+                                        {/* Backdrop with fade-in animation */}
+                                        <div className="absolute inset-0 bg-black/40 transition-opacity animate-fadeIn" onClick={() => setShowProxyModal(false)} aria-label="Đóng modal" tabIndex={-1}></div>
+                                        {/* Modal panel with scale/slide animation */}
+                                        <div className="relative bg-white rounded-2xl shadow-2xl p-8 w-[95vw] max-w-2xl z-10 animate-modalIn" role="dialog" aria-modal="true">
+                                            <button
+                                                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-2xl focus:outline-none focus:ring-2 focus:ring-red-400 rounded-full transition"
+                                                onClick={() => setShowProxyModal(false)}
+                                                aria-label="Đóng modal"
+                                                tabIndex={0}
+                                            >&times;</button>
+                                            <h2 className="text-2xl font-bold mb-4 text-center text-supply-primary tracking-tight">Yêu cầu đi chợ giùm</h2>
+                                            <form
+                                                onSubmit={async (e) => {
+                                                    e.preventDefault();
+                                                    setProxyError("");
+                                                    setProxySuccess("");
+                                                    if (proxyItems.some(item => !item.name || !item.quantity || !item.unit)) {
+                                                        setProxyError("Vui lòng nhập đầy đủ thông tin cho tất cả các mặt hàng.");
+                                                        return;
+                                                    }
+                                                    setProxyLoading(true);
+                                                    try {
+                                                        const res = await axios.post(
+                                                            "http://localhost:5183/api/ProxyShopper/requests",
+                                                            {
+                                                                buyerId: user?.id || "",
+                                                                items: proxyItems
+                                                            }
+                                                        );
+                                                        if (res.data && res.data.requestId) {
+                                                            setProxySuccess("Gửi yêu cầu thành công! Mã yêu cầu: " + res.data.requestId);
+                                                            setProxyItems([{ name: "", quantity: 1, unit: "" }]);
+                                                        } else {
+                                                            setProxyError("Gửi yêu cầu thất bại. Vui lòng thử lại.");
+                                                        }
+                                                    } catch (err) {
+                                                        setProxyError(err.response?.data?.message || "Gửi yêu cầu thất bại.");
+                                                    } finally {
+                                                        setProxyLoading(false);
+                                                    }
+                                                }}
+                                                autoComplete="off"
+                                            >
+                                                <div className="overflow-x-auto">
+                                                    <table className="min-w-full border mb-4 rounded-xl overflow-hidden">
+                                                        <thead>
+                                                            <tr className="bg-gray-100 text-gray-700">
+                                                                <th className="px-3 py-2 border">Tên mặt hàng</th>
+                                                                <th className="px-3 py-2 border">Số lượng</th>
+                                                                <th className="px-3 py-2 border">Đơn vị</th>
+                                                                <th className="px-2 py-2 border"></th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {proxyItems.map((item, idx) => (
+                                                                <tr key={idx} className="transition hover:bg-gray-50">
+                                                                    <td className="border px-2 py-1">
+                                                                        <input
+                                                                            type="text"
+                                                                            className="w-full border rounded px-2 py-1 focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
+                                                                            placeholder="Tên hàng"
+                                                                            value={item.name}
+                                                                            onChange={e => setProxyItems(items => items.map((it, i) => i === idx ? { ...it, name: e.target.value } : it))}
+                                                                            required
+                                                                            autoFocus={idx === 0}
+                                                                            aria-label={`Tên mặt hàng ${idx + 1}`}
+                                                                        />
+                                                                    </td>
+                                                                    <td className="border px-2 py-1">
+                                                                        <input
+                                                                            type="number"
+                                                                            min="0.01"
+                                                                            step="0.01"
+                                                                            className="w-full border rounded px-2 py-1 focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
+                                                                            placeholder="Số lượng"
+                                                                            value={item.quantity}
+                                                                            onChange={e => setProxyItems(items => items.map((it, i) => i === idx ? { ...it, quantity: e.target.value } : it))}
+                                                                            required
+                                                                            aria-label={`Số lượng mặt hàng ${idx + 1}`}
+                                                                        />
+                                                                    </td>
+                                                                    <td className="border px-2 py-1">
+                                                                        <select
+                                                                            className="w-full border rounded px-2 py-1 focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
+                                                                            value={item.unit}
+                                                                            onChange={e => setProxyItems(items => items.map((it, i) => i === idx ? { ...it, unit: e.target.value } : it))}
+                                                                            required
+                                                                            aria-label={`Đơn vị mặt hàng ${idx + 1}`}
+                                                                        >
+                                                                            <option value="">Chọn đơn vị</option>
+                                                                            {units.map(u => <option key={u.id} value={u.name}>{u.displayName || u.name}</option>)}
+                                                                        </select>
+                                                                    </td>
+                                                                    <td className="border px-2 py-1 text-center">
+                                                                        {proxyItems.length > 1 && (
+                                                                            <button
+                                                                                type="button"
+                                                                                className="text-red-500 font-bold text-lg rounded-full hover:bg-red-100 w-8 h-8 flex items-center justify-center transition"
+                                                                                onClick={() => setProxyItems(items => items.filter((_, i) => i !== idx))}
+                                                                                aria-label={`Xóa mặt hàng ${idx + 1}`}
+                                                                            >×</button>
+                                                                        )}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-4">
+                                                    <button
+                                                        type="button"
+                                                        className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-supply-primary font-medium transition flex items-center gap-1"
+                                                        onClick={() => {
+                                                            setProxyItems(items => [...items, { name: "", quantity: 1, unit: "" }]);
+                                                            setTimeout(() => {
+                                                                const inputs = document.querySelectorAll('.proxy-modal input[type="text"]');
+                                                                if (inputs.length) inputs[inputs.length - 1].focus();
+                                                            }, 100);
+                                                        }}
+                                                        aria-label="Thêm mặt hàng"
                                                     >
-                                                        <option value="">Chọn đơn vị</option>
-                                                        {units.map(u => <option key={u.id} value={u.name}>{u.displayName || u.name}</option>)}
-                                                    </select>
-                                                </td>
-                                                <td className="border px-2 py-1 text-center">
-                                                    {proxyItems.length > 1 && (
-                                                        <button
-                                                            type="button"
-                                                            className="text-red-500 font-bold text-lg rounded-full hover:bg-red-100 w-8 h-8 flex items-center justify-center transition"
-                                                            onClick={() => setProxyItems(items => items.filter((_, i) => i !== idx))}
-                                                            aria-label={`Xóa mặt hàng ${idx + 1}`}
-                                                        >×</button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-4">
-                                <button
-                                    type="button"
-                                    className="px-4 py-2 bg-gray-100 rounded hover:bg-gray-200 text-supply-primary font-medium transition flex items-center gap-1"
-                                    onClick={() => {
-                                        setProxyItems(items => [...items, { name: "", quantity: 1, unit: "" }]);
-                                        setTimeout(() => {
-                                            const inputs = document.querySelectorAll('.proxy-modal input[type="text"]');
-                                            if (inputs.length) inputs[inputs.length - 1].focus();
-                                        }, 100);
-                                    }}
-                                    aria-label="Thêm mặt hàng"
-                                >
-                                    <span className="text-lg">+</span> Thêm mặt hàng
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="px-6 py-2 bg-supply-primary text-white rounded hover:bg-green-600 font-semibold disabled:opacity-50 transition flex items-center gap-2 justify-center"
-                                    disabled={proxyLoading}
-                                    aria-busy={proxyLoading}
-                                >
-                                    {proxyLoading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
-                                    {proxyLoading ? "Đang gửi..." : "Gửi yêu cầu"}
-                                </button>
-                            </div>
-                            {proxyError && <div className="text-red-600 text-sm mb-2 animate-fadeIn" role="alert">{proxyError}</div>}
-                            {proxySuccess && <div className="text-green-600 text-sm mb-2 animate-fadeIn" role="status">{proxySuccess}</div>}
-                        </form>
-                    </div>
-                    <style>{`
+                                                        <span className="text-lg">+</span> Thêm mặt hàng
+                                                    </button>
+                                                    <button
+                                                        type="submit"
+                                                        className="px-6 py-2 bg-supply-primary text-white rounded hover:bg-green-600 font-semibold disabled:opacity-50 transition flex items-center gap-2 justify-center"
+                                                        disabled={proxyLoading}
+                                                        aria-busy={proxyLoading}
+                                                    >
+                                                        {proxyLoading && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>}
+                                                        {proxyLoading ? "Đang gửi..." : "Gửi yêu cầu"}
+                                                    </button>
+                                                </div>
+                                                {proxyError && <div className="text-red-600 text-sm mb-2 animate-fadeIn" role="alert">{proxyError}</div>}
+                                                {proxySuccess && <div className="text-green-600 text-sm mb-2 animate-fadeIn" role="status">{proxySuccess}</div>}
+                                            </form>
+                                        </div>
+                                        <style>{`
                         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
                         .animate-fadeIn { animation: fadeIn 0.25s ease; }
                         @keyframes modalIn { from { opacity: 0; transform: translateY(40px) scale(0.98); } to { opacity: 1; transform: none; } }
                         .animate-modalIn { animation: modalIn 0.3s cubic-bezier(.4,2,.6,1) forwards; }
                     `}</style>
-                </div>
-            )}
+                                    </div>
+                                )}
                                 <Link
                                     to="/buyer/cart"
                                     className="relative text-gray-600 hover:text-supply-primary transition"
@@ -941,18 +932,6 @@ const Header = () => {
                         <Link to="/" className="hover:text-supply-primary transition flex items-center space-x-1">
                             <span>🏠</span>
                             <span>Trang chủ</span>
-                        </Link>
-                        <Link to="/products" className="hover:text-supply-primary transition flex items-center space-x-1">
-                            <span>🥕</span>
-                            <span>Sản phẩm</span>
-                        </Link>
-                        <Link to="/markets" className="hover:text-supply-primary transition flex items-center space-x-1">
-                            <span>🏪</span>
-                            <span>Các chợ</span>
-                        </Link>
-                        <Link to="/sellers" className="hover:text-supply-primary transition flex items-center space-x-1">
-                            <span>👨‍🌾</span>
-                            <span>Người bán</span>
                         </Link>
                         <Link to="/about" className="hover:text-supply-primary transition flex items-center space-x-1">
                             <span>ℹ️</span>

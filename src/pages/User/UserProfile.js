@@ -103,33 +103,6 @@ const UserProfile = () => {
         }
     };
 
-    const getRoleStats = () => {
-        // This would normally come from API calls
-        switch (profileData?.role) {
-            case 'Seller':
-                return [
-                    { label: 'Sản phẩm', value: '25', icon: FaShoppingBag, color: 'text-blue-600' },
-                    { label: 'Đơn hàng', value: '128', icon: FiTruck, color: 'text-green-600' },
-                    { label: 'Đánh giá', value: '4.8', icon: FaStar, color: 'text-yellow-600' },
-                    { label: 'Khách hàng', value: '95', icon: FaUserCircle, color: 'text-purple-600' }
-                ];
-            case 'Admin':
-                return [
-                    { label: 'Tổng người dùng', value: '1,234', icon: FaUserCircle, color: 'text-blue-600' },
-                    { label: 'Người bán', value: '56', icon: FaStore, color: 'text-green-600' },
-                    { label: 'Đơn hàng', value: '2,345', icon: FiTruck, color: 'text-orange-600' },
-                    { label: 'Doanh thu', value: '1.5M', icon: FiAward, color: 'text-purple-600' }
-                ];
-            default:
-                return [
-                    { label: 'Đơn hàng', value: '28', icon: FiTruck, color: 'text-blue-600' },
-                    { label: 'Yêu thích', value: '15', icon: FaHeart, color: 'text-red-600' },
-                    { label: 'Điểm thưởng', value: '1,250', icon: FiAward, color: 'text-yellow-600' },
-                    { label: 'Theo dõi', value: '8', icon: FaStore, color: 'text-green-600' }
-                ];
-        }
-    };
-
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -198,20 +171,6 @@ const UserProfile = () => {
                             <FiEdit3 />
                             <span>Chỉnh sửa hồ sơ</span>
                         </button>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-8">
-                        {getRoleStats().map((stat, index) => {
-                            const Icon = stat.icon;
-                            return (
-                                <div key={index} className="bg-gray-50 rounded-lg p-4 text-center">
-                                    <Icon className={`w-8 h-8 ${stat.color} mx-auto mb-2`} />
-                                    <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-                                    <p className="text-gray-600 text-sm">{stat.label}</p>
-                                </div>
-                            );
-                        })}
                     </div>
                 </div>
 

@@ -93,10 +93,10 @@ const FollowStoreButton = ({
         >
             {isLoading ? (
                 <FaSpinner className="animate-spin" />
-            ) : isFollowing ? (
-                <FaHeart className="text-red-500" />
+            ) : currentlyFollowing ? (
+                <FaHeart className="text-current" />
             ) : (
-                <FaRegHeart />
+                <FaRegHeart className="text-current" />
             )}
 
             {variant !== 'icon-only' && (
@@ -133,8 +133,8 @@ const getVariantClasses = (variant, isFollowing) => {
                 : 'border-2 border-supply-primary text-supply-primary bg-white hover:bg-supply-primary hover:text-white';
         case 'white':
             return isFollowing
-                ? 'border-2 border-white text-white bg-red-500 hover:bg-red-600'
-                : 'border-2 border-white text-supply-primary bg-white hover:bg-gray-100';
+                ? 'border-2 border-red-500 text-red-500 bg-white hover:bg-red-50'
+                : 'border-2 border-supply-primary text-supply-primary bg-white hover:bg-supply-primary hover:text-white';
         case 'icon-only':
             return isFollowing
                 ? 'text-red-500 hover:text-red-600 p-2'
@@ -142,7 +142,7 @@ const getVariantClasses = (variant, isFollowing) => {
         default:
             return isFollowing
                 ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'bg-supply-primary text-white hover:bg-green-600';
+                : 'bg-supply-primary text-white hover:bg-supply-primary-dark';
     }
 };
 

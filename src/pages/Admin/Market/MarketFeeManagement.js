@@ -24,6 +24,7 @@ import {
 } from 'antd';
 import {
     DollarOutlined,
+    TagOutlined,
     EditOutlined,
     DeleteOutlined,
     PlusOutlined,
@@ -34,7 +35,9 @@ import {
 } from '@ant-design/icons';
 import { marketService } from '../../../services/marketService';
 import { marketFeeService } from '../../../services/marketFeeService';
+import { marketFeeTypeService } from '../../../services/marketFeeTypeService';
 import MarketNavigation from './MarketNavigation';
+import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 
 const { Search } = Input;
@@ -44,8 +47,10 @@ const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
 
 const MarketFeeManagement = () => {
+    const navigate = useNavigate();
     const [fees, setFees] = useState([]);
     const [markets, setMarkets] = useState([]);
+    const [feeTypes, setFeeTypes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [pagination, setPagination] = useState({
         current: 1,
@@ -64,6 +69,7 @@ const MarketFeeManagement = () => {
 
     useEffect(() => {
         loadMarkets();
+        loadFeeTypes();
         loadFees();
     }, [filters]); // Chỉ reload khi filters thay đổi, không cần pagination
 
@@ -85,20 +91,36 @@ const MarketFeeManagement = () => {
         }
     };
 
+    const loadFeeTypes = async () => {
+        try {
+            const response = await marketFeeTypeService.getAllMarketFeeTypes();
+            if (response?.success && response.data) {
+                setFeeTypes(response.data);
+            } else {
+                setFeeTypes([]);
+            }
+        } catch (error) {
+            console.error('Error loading fee types:', error);
+            message.error('Lỗi khi tải danh sách loại phí');
+            setFeeTypes([]);
+        }
+    };
+
     const loadFees = async () => {
         setLoading(true);
         try {
-            // Backend API sử dụng DTO với tên parameters khác
+            // Backend API sử dụng GetMarketFeeRequestDto với tên parameters mới
             const params = {};
             
             // Tìm kiếm theo tên phí - backend nhận SearchKeyword
             if (filters.search && filters.search.trim()) {
-                params.search = filters.search.trim(); // Sẽ được chuyển thành SearchKeyword
+                params.searchKeyword = filters.search.trim();
             }
             
-            // Lọc theo marketId - backend nhận MarketFeeId (có thể là marketId)
-            if (filters.marketId) {
-                params.marketId = filters.marketId; // Sẽ được chuyển thành MarketFeeId
+            // Lọc theo marketId - backend nhận MarketId (không phải MarketFeeId)
+            // Chỉ thêm marketId nếu nó có giá trị hợp lệ
+            if (filters.marketId && filters.marketId !== '') {
+                params.marketId = filters.marketId.toString();
             }
 
             console.log('=== LOAD FEES DEBUG ===');
@@ -111,38 +133,56 @@ const MarketFeeManagement = () => {
             
             console.log('API response:', response);
             
-            // Xử lý response từ API - backend trả về tất cả data không phân trang
-            if (response && Array.isArray(response)) {
-                // Trường hợp response trực tiếp là array
+            // Xử lý response từ API theo format mới
+            if (response?.success && response.data) {
+                console.log('Fees loaded successfully:', response.data);
+                setFees(response.data);
+                setPagination(prev => ({
+                    ...prev,
+                    total: response.totalCount || response.data.length
+                }));
+            } else if (Array.isArray(response)) {
+                // Fallback cho trường hợp response trực tiếp là array
                 console.log('Fees loaded directly as array:', response);
                 setFees(response);
                 setPagination(prev => ({
                     ...prev,
                     total: response.length
                 }));
-            } else if (response && response.data && Array.isArray(response.data)) {
-                // Trường hợp API trả về {data: [...]}
-                console.log('Fees loaded from data field:', response.data);
-                setFees(response.data);
-                setPagination(prev => ({
-                    ...prev,
-                    total: response.data.length
-                }));
-            } else if (response && response.marketFees && Array.isArray(response.marketFees)) {
-                // Trường hợp API trả về {marketFees: [...]}
-                console.log('Fees loaded from marketFees field:', response.marketFees);
-                setFees(response.marketFees);
-                setPagination(prev => ({
-                    ...prev,
-                    total: response.marketFees.length
-                }));
             } else {
-                console.log('No data in response or unexpected format, setting empty array');
+                console.log('No fees data found in response');
                 setFees([]);
-                setPagination(prev => ({ ...prev, total: 0 }));
+                setPagination(prev => ({
+                    ...prev,
+                    total: 0
+                }));
             }
         } catch (error) {
             console.error('Error loading fees:', error);
+            // Nếu có lỗi với filter, thử load lại mà không có filter marketId
+            if (filters.marketId) {
+                console.log('Retrying without marketId filter due to error');
+                try {
+                    const fallbackParams = {};
+                    if (filters.search && filters.search.trim()) {
+                        fallbackParams.searchKeyword = filters.search.trim();
+                    }
+                    
+                    const fallbackResponse = await marketFeeService.getAllMarketFees(fallbackParams);
+                    if (fallbackResponse?.success && fallbackResponse.data) {
+                        setFees(fallbackResponse.data);
+                        setPagination(prev => ({
+                            ...prev,
+                            total: fallbackResponse.totalCount || fallbackResponse.data.length
+                        }));
+                        message.warning('Không thể lọc theo chợ được chọn, hiển thị tất cả phí');
+                        return;
+                    }
+                } catch (fallbackError) {
+                    console.error('Fallback request also failed:', fallbackError);
+                }
+            }
+            
             message.error(error.message || 'Lỗi khi tải danh sách phí');
             setFees([]);
             setPagination(prev => ({ ...prev, total: 0 }));
@@ -198,10 +238,11 @@ const MarketFeeManagement = () => {
         setEditMode(true);
         form.setFieldsValue({
             marketId: fee.marketId,
+            marketFeeTypeId: fee.marketFeeTypeId,
             name: fee.name,
             amount: fee.amount,
             description: fee.description,
-            paymentDay: fee.paymentDay // Backend sử dụng paymentDay thay vì dueDate
+            paymentDay: fee.paymentDay
         });
         setModalVisible(true);
     };
@@ -235,33 +276,45 @@ const MarketFeeManagement = () => {
         try {
             console.log('Form values:', values);
             
-            // Backend sử dụng name và paymentDay
+            // Sử dụng DTO format cho tạo mới và cập nhật - Backend expect string cho MarketId và MarketFeeTypeId
             const feeData = {
-                marketId: values.marketId,
-                name: values.name,
-                amount: values.amount,
-                description: values.description,
-                paymentDay: values.paymentDay // Backend sử dụng paymentDay thay vì dueDate
+                marketId: values.marketId.toString(), // Backend expect string
+                marketFeeTypeId: values.marketFeeTypeId.toString(), // Backend expect string
+                name: values.name.trim(),
+                amount: parseFloat(values.amount),
+                description: values.description?.trim() || '',
+                paymentDay: parseInt(values.paymentDay)
             };
 
             console.log('Sending fee data:', feeData);
 
+            let response;
             if (editMode && selectedFee) {
-                const result = await marketFeeService.updateMarketFee(selectedFee.id, feeData);
-                console.log('Update result:', result);
-                message.success('Cập nhật phí thành công');
+                response = await marketFeeService.updateMarketFee(selectedFee.id, feeData);
+                console.log('Update result:', response);
+                if (response.success) {
+                    message.success('Cập nhật phí thành công');
+                } else {
+                    message.error(response.message || 'Cập nhật phí thất bại');
+                }
             } else {
-                const result = await marketFeeService.createMarketFee(feeData);
-                console.log('Create result:', result);
-                message.success('Tạo phí thành công');
+                response = await marketFeeService.createMarketFee(feeData);
+                console.log('Create result:', response);
+                if (response.success) {
+                    message.success('Tạo phí thành công');
+                } else {
+                    message.error(response.message || 'Tạo phí thất bại');
+                }
             }
 
-            setModalVisible(false);
-            form.resetFields();
-            loadFees();
+            if (response.success) {
+                setModalVisible(false);
+                form.resetFields();
+                loadFees();
+            }
         } catch (error) {
             console.error('Error saving fee:', error);
-            message.error(error.message || (editMode ? 'Lỗi khi cập nhật phí' : 'Lỗi khi tạo phí'));
+            message.error(error.response?.data?.message || error.message || (editMode ? 'Lỗi khi cập nhật phí' : 'Lỗi khi tạo phí'));
         }
     };
 
@@ -280,6 +333,16 @@ const MarketFeeManagement = () => {
             render: (text, record) => {
                 // Nếu có thông tin market object
                 return record.market?.name || text || 'Chưa xác định';
+            }
+        },
+        {
+            title: 'Loại phí',
+            dataIndex: 'marketFeeTypeName',
+            key: 'marketFeeTypeName',
+            width: 150,
+            render: (text, record) => {
+                // Hiển thị tên loại phí từ response
+                return text || record.marketFeeType?.name || 'Chưa xác định';
             }
         },
         {
@@ -431,6 +494,16 @@ const MarketFeeManagement = () => {
                             Tạo phí mới
                         </Button>
                     </Col>
+                    <Col xs={24} sm={8} lg={6}>
+                        <Button
+                            type="default"
+                            icon={<TagOutlined />}
+                            onClick={() => navigate('/admin/market-fee-types')}
+                            style={{ width: '100%' }}
+                        >
+                            Quản lý loại phí
+                        </Button>
+                    </Col>
                 </Row>
 
                 {/* Table */}
@@ -480,6 +553,24 @@ const MarketFeeManagement = () => {
                                 </Select>
                             </Form.Item>
                         </Col>
+                        <Col span={12}>
+                            <Form.Item
+                                name="marketFeeTypeId"
+                                label="Loại phí"
+                                rules={[{ required: true, message: 'Vui lòng chọn loại phí!' }]}
+                            >
+                                <Select placeholder="Chọn loại phí">
+                                    {feeTypes.map(feeType => (
+                                        <Option key={feeType.id} value={feeType.id}>
+                                            {feeType.feeType}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Form.Item>
+                        </Col>
+                    </Row>
+
+                    <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
                                 name="name"

@@ -57,12 +57,14 @@ const AdminLayout = () => {
             key: 'markets', icon: <BankOutlined />, label: 'Quản lý chợ', children: [
                 { key: '/admin/markets', label: 'Danh sách chợ' },
                 { key: '/admin/market-fees', label: 'Phí chợ' },
+                { key: '/admin/market-fee-types', label: 'Loại phí' },
                 { key: '/admin/market-rules', label: 'Quy định chợ' },
             ]
         },
         {
             key: 'stores', icon: <ShopOutlined />, label: 'Quản lý cửa hàng', children: [
                 { key: '/admin/stores', label: 'Danh sách cửa hàng' },
+                { key: '/admin/stores/payment', label: 'Thanh toán cửa hàng' },
 
             ]
         },

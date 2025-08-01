@@ -247,6 +247,11 @@ export const API_ENDPOINTS = {
         GET_BY_SELLER_ID: (sellerId) => `${API_URL}/api/store/seller/${sellerId}`,
         GET_STATISTICS: (id) => `${API_URL}/api/store/${id}/statistics`,
 
+        // Payment Management Endpoints
+        PAYMENT_OVERVIEW: `${API_URL}/api/Store/admin/payment-overview`,
+        UPDATE_PAYMENT_STATUS: (paymentId) => `${API_URL}/api/Store/admin/payment/${paymentId}/update-status`,
+        EXPORT_PAYMENT: `${API_URL}/api/Store/admin/payment/export`,
+
         // Follow endpoints
         FOLLOW: (storeId) => `${API_URL}/api/store/${storeId}/follow`,
         UNFOLLOW: (storeId) => `${API_URL}/api/store/${storeId}/unfollow`,
@@ -401,6 +406,29 @@ export const API_ENDPOINTS = {
         GET_BY_TARGET: `${API_URL}/api/Review/target`,
         GET_USER_REVIEW: `${API_URL}/api/Review/user-review`,
         DELETE: (reviewId) => `${API_URL}/api/Review/${reviewId}`,
+    },
+
+    // Market Fee Endpoints
+    MARKET_FEE: {
+        GET_ALL: `${API_URL}/api/MarketFee`,
+        GET_BY_ID: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
+        CREATE: `${API_URL}/api/MarketFee`,
+        UPDATE: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
+        DELETE: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
+        GET_BY_MARKET: (marketId) => `${API_URL}/api/MarketFee/market/${marketId}`,
+        PAY: `${API_URL}/api/MarketFee/pay`,
+        STATISTICS: `${API_URL}/api/MarketFee/statistics`,
+        STATISTICS_BY_MARKET: (marketId) => `${API_URL}/api/MarketFee/statistics/market/${marketId}`,
+    },
+
+    // Market Fee Type Endpoints
+    MARKET_FEE_TYPE: {
+        GET_ALL: `${API_URL}/api/MarketFeeType`,
+        GET_BY_ID: (feeTypeId) => `${API_URL}/api/MarketFeeType/${feeTypeId}`,
+        CREATE: `${API_URL}/api/MarketFeeType`,
+        UPDATE: (feeTypeId) => `${API_URL}/api/MarketFeeType/${feeTypeId}`,
+        DELETE: (feeTypeId) => `${API_URL}/api/MarketFeeType/${feeTypeId}`,
+        RESTORE: (feeTypeId) => `${API_URL}/api/MarketFeeType/${feeTypeId}/restore`,
     },
 };
 
