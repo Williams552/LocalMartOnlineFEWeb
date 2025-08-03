@@ -30,7 +30,41 @@ const ProxyShopperOrders = () => {
             if (!res.ok) throw new Error("Không thể lấy danh sách đơn hàng đã nhận");
             const data = await res.json();
             console.log('Fetched orders data:', data); // Debug log
-            setOrders(Array.isArray(data) ? data : []);
+            
+            // Debug: Log structure of first order to see available fields
+            if (data && data.length > 0) {
+                console.log('First order structure:', Object.keys(data[0]));
+                console.log('First order full data:', data[0]);
+            }
+            
+            // Fetch proof images for each order that might have them
+            const ordersWithProof = await Promise.all(data.map(async (order) => {
+                try {
+                    // Kiểm tra xem order đã có proofImages chưa
+                    if (!order.proofImages && order.orderId) {
+                        const proofRes = await fetch(`http://localhost:5183/api/ProxyShopper/orders/${order.orderId}/proof`, {
+                            headers: {
+                                "Authorization": token ? `Bearer ${token}` : undefined,
+                                "Content-Type": "application/json"
+                            },
+                        });
+                        if (proofRes.ok) {
+                            const proofData = await proofRes.json();
+                            console.log(`Proof data for order ${order.orderId}:`, proofData);
+                            // Gắn proof data vào order - handle both string and array
+                            const imageUrls = proofData.imageUrls || proofData.images || proofData.proofImages;
+                            order.proofImages = imageUrls;
+                            order.proofNote = proofData.note || '';
+                            order.proofUploadedAt = proofData.uploadedAt || proofData.createdAt;
+                        }
+                    }
+                } catch (proofError) {
+                    console.log(`No proof found for order ${order.orderId}:`, proofError.message);
+                }
+                return order;
+            }));
+            
+            setOrders(Array.isArray(ordersWithProof) ? ordersWithProof : []);
         } catch (error) {
             console.error('Error fetching orders:', error);
             setOrders([]);
@@ -418,6 +452,51 @@ const ProxyShopperOrders = () => {
                                         </div>
                                     )}
 
+                                    {/* Proof Images Display - Hiển thị ảnh xác nhận đã upload */}
+                                    {order.proofImages && (
+                                        <div className="mb-4">
+                                            <h4 className="text-sm font-medium text-gray-700 mb-2">Hình ảnh xác nhận mua hàng:</h4>
+                                            <div className="bg-blue-50 rounded-lg p-3">
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                                                    {/* Handle both string (single image) and array (multiple images) */}
+                                                    {(() => {
+                                                        const images = Array.isArray(order.proofImages) 
+                                                            ? order.proofImages 
+                                                            : [order.proofImages];
+                                                        
+                                                        return images.map((imageUrl, index) => (
+                                                            <div key={index} className="relative">
+                                                                <img
+                                                                    src={imageUrl}
+                                                                    alt={`Proof ${index + 1}`}
+                                                                    className="w-full h-40 object-contain rounded-lg border bg-white"
+                                                                    onClick={() => window.open(imageUrl, '_blank')}
+                                                                    style={{ cursor: 'pointer' }}
+                                                                />
+                                                                <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                                                                    {index + 1}/{images.length}
+                                                                </div>
+                                                            </div>
+                                                        ));
+                                                    })()}
+                                                </div>
+                                                <div className="mt-2 text-xs text-gray-600">
+                                                    ✅ Đã upload {Array.isArray(order.proofImages) ? order.proofImages.length : 1} hình ảnh xác nhận
+                                                    {order.proofUploadedAt && (
+                                                        <div className="text-gray-500">
+                                                            Upload lúc: {new Date(order.proofUploadedAt).toLocaleString('vi-VN')}
+                                                        </div>
+                                                    )}
+                                                    {order.proofNote && (
+                                                        <div className="mt-1 text-gray-700">
+                                                            <strong>Ghi chú:</strong> {order.proofNote}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Order Footer with Actions */}
                                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                                         <div className="flex items-center space-x-4">
@@ -473,8 +552,8 @@ const ProxyShopperOrders = () => {
                                                 </button>
                                             )}
 
-                                            {/* Nút upload chứng từ */}
-                                            {order.canUploadProof && (
+                                            {/* Nút upload chứng từ - chỉ hiện khi chưa có ảnh proof */}
+                                            {order.canUploadProof && !order.proofImages && (
                                                 <button
                                                     onClick={() => handleOpenUploadModal(order.orderId)}
                                                     className="inline-flex items-center px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium hover:bg-purple-600 transition-colors"
@@ -482,6 +561,45 @@ const ProxyShopperOrders = () => {
                                                     <FiCamera className="mr-2" size={16} />
                                                     Đăng hình sản phẩm đã mua
                                                 </button>
+                                            )}
+
+                                            {/* Hiển thị trạng thái đã upload proof với thumbnail nhỏ */}
+                                            {order.proofImages && (
+                                                <div className="flex items-center space-x-2">
+                                                    <div className="flex items-center text-sm text-green-600">
+                                                        <FiCheck className="mr-1" size={16} />
+                                                        Đã gửi chứng từ
+                                                    </div>
+                                                    <div className="flex -space-x-1">
+                                                        {(() => {
+                                                            const images = Array.isArray(order.proofImages) 
+                                                                ? order.proofImages 
+                                                                : [order.proofImages];
+                                                            
+                                                            return images.slice(0, 3).map((imageUrl, index) => (
+                                                                <img
+                                                                    key={index}
+                                                                    src={imageUrl}
+                                                                    alt={`Proof ${index + 1}`}
+                                                                    className="w-6 h-6 rounded-full border-2 border-white object-cover"
+                                                                    onClick={() => window.open(imageUrl, '_blank')}
+                                                                    style={{ cursor: 'pointer' }}
+                                                                />
+                                                            ));
+                                                        })()}
+                                                        {(() => {
+                                                            const images = Array.isArray(order.proofImages) 
+                                                                ? order.proofImages 
+                                                                : [order.proofImages];
+                                                            
+                                                            return images.length > 3 && (
+                                                                <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-xs text-gray-600">
+                                                                    +{images.length - 3}
+                                                                </div>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </div>
                                             )}
 
                                             {/* Nút hủy đơn hàng */}
