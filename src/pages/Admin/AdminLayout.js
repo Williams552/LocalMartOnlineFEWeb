@@ -64,7 +64,7 @@ const AdminLayout = () => {
         {
             key: 'stores', icon: <ShopOutlined />, label: 'Quản lý cửa hàng', children: [
                 { key: '/admin/stores', label: 'Danh sách cửa hàng' },
-                { key: '/admin/stores/payment', label: 'Thanh toán cửa hàng' },
+                { key: '/admin/stores/payment', label: 'Phí Thuê' },
 
             ]
         },

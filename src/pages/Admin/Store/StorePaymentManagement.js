@@ -20,7 +20,6 @@ import {
     Tooltip,
     Drawer,
     Descriptions,
-    Popconfirm,
     Statistic
 } from 'antd';
 import {
@@ -28,7 +27,6 @@ import {
     EditOutlined,
     EyeOutlined,
     ExportOutlined,
-    SearchOutlined,
     ReloadOutlined,
     ClockCircleOutlined,
     CheckCircleOutlined,
@@ -42,17 +40,27 @@ import {
 } from '@ant-design/icons';
 import storeService from '../../../services/storeService';
 import { marketService } from '../../../services/marketService';
+import { marketFeeTypeService } from '../../../services/marketFeeTypeService';
+import userService from '../../../services/userService';
 import moment from 'moment';
 
 const { Search } = Input;
 const { Option } = Select;
 const { Title, Text } = Typography;
-const { RangePicker } = DatePicker;
 
 const StorePaymentManagement = () => {
     const [stores, setStores] = useState([]);
     const [markets, setMarkets] = useState([]);
+    const [feeTypes, setFeeTypes] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [statistics, setStatistics] = useState({
+        total: 0,
+        pending: 0,
+        completed: 0,
+        overdue: 0,
+        totalAmount: 0
+    });
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
@@ -64,16 +72,27 @@ const StorePaymentManagement = () => {
         paymentStatus: '',
         month: null,
         year: null,
-        searchKeyword: ''
+        searchKeyword: '',
+        feeId: ''
     });
     const [selectedStore, setSelectedStore] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [drawerVisible, setDrawerVisible] = useState(false);
+    const [createPaymentModalVisible, setCreatePaymentModalVisible] = useState(false);
+    const [createMarketPaymentModalVisible, setCreateMarketPaymentModalVisible] = useState(false);
     const [form] = Form.useForm();
+    const [createPaymentForm] = Form.useForm();
+    const [createMarketPaymentForm] = Form.useForm();
 
     useEffect(() => {
         loadMarkets();
+        loadFeeTypes();
+        loadUsers();
+    }, []); // Load markets, fee types and users only once
+
+    useEffect(() => {
         loadStoresWithPayment();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [filters, pagination.current, pagination.pageSize]);
 
     const loadMarkets = async () => {
@@ -90,6 +109,41 @@ const StorePaymentManagement = () => {
             console.error('Error loading markets:', error);
             message.error('Lỗi khi tải danh sách chợ');
             setMarkets([]);
+        }
+    };
+
+    const loadFeeTypes = async () => {
+        try {
+            const response = await marketFeeTypeService.getAllMarketFeeTypes();
+            if (response?.success && response.data) {
+                setFeeTypes(response.data);
+            } else {
+                setFeeTypes([]);
+            }
+        } catch (error) {
+            console.error('Error loading fee types:', error);
+            message.error('Lỗi khi tải danh sách loại phí');
+            setFeeTypes([]);
+        }
+    };
+
+    const loadUsers = async () => {
+        try {
+            const response = await userService.getAllUsers({ 
+                pageNumber: 1, 
+                pageSize: 100, 
+                role: 'Seller', 
+                sortOrder: 'asc' 
+            });
+            if (response?.success && response?.data) {
+                setUsers(response.data);
+            } else {
+                setUsers([]);
+            }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            message.error('Lỗi khi tải danh sách người dùng');
+            setUsers([]);
         }
     };
 
@@ -120,6 +174,9 @@ const StorePaymentManagement = () => {
                     total: response.totalCount,
                     totalPages: response.totalPages
                 }));
+                
+                // Load statistics separately
+                await loadStatistics();
             } else {
                 message.error(response.message || 'Lỗi khi tải dữ liệu thanh toán');
                 setStores([]);
@@ -130,6 +187,46 @@ const StorePaymentManagement = () => {
             setStores([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadStatistics = async () => {
+        try {
+            // Load all data without pagination to calculate statistics
+            const allDataParams = {
+                pageSize: 9999, // Large number to get all records
+                page: 1,
+                ...filters
+            };
+
+            // Remove empty values
+            Object.keys(allDataParams).forEach(key => {
+                if (allDataParams[key] === '' || allDataParams[key] === null || allDataParams[key] === undefined) {
+                    delete allDataParams[key];
+                }
+            });
+
+            console.log('Loading statistics with params:', allDataParams);
+
+            const response = await storeService.getAllStoresWithPaymentInfo(allDataParams);
+            
+            if (response.success && response.data) {
+                const allStores = response.data;
+                
+                const stats = {
+                    total: allStores.length,
+                    pending: allStores.filter(s => s.paymentStatus === 'Pending').length,
+                    completed: allStores.filter(s => s.paymentStatus === 'Completed').length,
+                    overdue: allStores.filter(s => s.isOverdue).length,
+                    totalAmount: allStores.filter(s => s.paymentStatus === 'Completed').reduce((sum, s) => sum + (s.monthlyRentalFee || 0), 0)
+                };
+                
+                setStatistics(stats);
+                console.log('Statistics calculated:', stats);
+            }
+        } catch (error) {
+            console.error('Error loading statistics:', error);
+            // Keep current statistics in case of error
         }
     };
 
@@ -157,7 +254,8 @@ const StorePaymentManagement = () => {
             paymentStatus: '',
             month: null,
             year: null,
-            searchKeyword: ''
+            searchKeyword: '',
+            feeId: ''
         });
         setPagination(prev => ({ ...prev, current: 1 }));
     };
@@ -222,6 +320,50 @@ const StorePaymentManagement = () => {
         } catch (error) {
             console.error('Error exporting data:', error);
             message.error('Lỗi khi xuất dữ liệu');
+        }
+    };
+
+    const handleCreatePaymentForSeller = async (values) => {
+        try {
+            const paymentData = {
+                userId: values.userId,
+                feeId: values.feeId
+            };
+
+            const response = await storeService.createPaymentForSeller(paymentData);
+            if (response.success) {
+                message.success('Tạo phí thanh toán cho seller thành công');
+                setCreatePaymentModalVisible(false);
+                createPaymentForm.resetFields();
+                loadStoresWithPayment();
+            } else {
+                message.error(response.message || 'Tạo phí thanh toán thất bại');
+            }
+        } catch (error) {
+            console.error('Error creating payment for seller:', error);
+            message.error('Lỗi khi tạo phí thanh toán');
+        }
+    };
+
+    const handleCreatePaymentForMarket = async (values) => {
+        try {
+            const paymentData = {
+                marketId: values.marketId,
+                feeId: values.feeId
+            };
+
+            const response = await storeService.createPaymentForMarket(paymentData);
+            if (response.success) {
+                message.success('Tạo phí thanh toán cho chợ thành công');
+                setCreateMarketPaymentModalVisible(false);
+                createMarketPaymentForm.resetFields();
+                loadStoresWithPayment();
+            } else {
+                message.error(response.message || 'Tạo phí thanh toán thất bại');
+            }
+        } catch (error) {
+            console.error('Error creating payment for market:', error);
+            message.error('Lỗi khi tạo phí thanh toán');
         }
     };
 
@@ -349,14 +491,7 @@ const StorePaymentManagement = () => {
         },
     ];
 
-    // Calculate statistics
-    const statistics = {
-        total: stores.length,
-        pending: stores.filter(s => s.paymentStatus === 'Pending').length,
-        completed: stores.filter(s => s.paymentStatus === 'Completed').length,
-        overdue: stores.filter(s => s.isOverdue).length,
-        totalAmount: stores.filter(s => s.paymentStatus === 'Completed').reduce((sum, s) => sum + s.monthlyRentalFee, 0)
-    };
+    // Statistics are now calculated and stored in state
 
     return (
         <div style={{ padding: '24px' }}>
@@ -420,7 +555,7 @@ const StorePaymentManagement = () => {
 
                 {/* Filters */}
                 <Row gutter={[16, 16]} style={{ marginBottom: '16px' }}>
-                    <Col xs={24} sm={6}>
+                    <Col xs={24} sm={5}>
                         <Search
                             placeholder="Tìm kiếm cửa hàng, người bán..."
                             allowClear
@@ -429,7 +564,7 @@ const StorePaymentManagement = () => {
                             onSearch={handleSearch}
                         />
                     </Col>
-                    <Col xs={24} sm={4}>
+                    <Col xs={24} sm={3}>
                         <Select
                             placeholder="Chọn chợ"
                             allowClear
@@ -444,7 +579,22 @@ const StorePaymentManagement = () => {
                             ))}
                         </Select>
                     </Col>
-                    <Col xs={24} sm={4}>
+                    <Col xs={24} sm={3}>
+                        <Select
+                            placeholder="Loại phí"
+                            allowClear
+                            value={filters.feeId}
+                            onChange={(value) => handleFilterChange('feeId', value)}
+                            style={{ width: '100%' }}
+                        >
+                            {feeTypes.map(feeType => (
+                                <Option key={feeType.id} value={feeType.id}>
+                                    {feeType.feeType}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Col>
+                    <Col xs={24} sm={3}>
                         <Select
                             placeholder="Trạng thái thanh toán"
                             allowClear
@@ -457,7 +607,7 @@ const StorePaymentManagement = () => {
                             <Option value="Failed">Thanh toán thất bại</Option>
                         </Select>
                     </Col>
-                    <Col xs={24} sm={3}>
+                    <Col xs={24} sm={2}>
                         <Select
                             placeholder="Tháng"
                             allowClear
@@ -472,7 +622,7 @@ const StorePaymentManagement = () => {
                             ))}
                         </Select>
                     </Col>
-                    <Col xs={24} sm={3}>
+                    <Col xs={24} sm={2}>
                         <Select
                             placeholder="Năm"
                             allowClear
@@ -490,7 +640,27 @@ const StorePaymentManagement = () => {
                             })}
                         </Select>
                     </Col>
-                    <Col xs={24} sm={4}>
+                    <Col xs={24} sm={6}>
+                        <Space>
+                            <Button
+                                type="primary"
+                                icon={<CreditCardOutlined />}
+                                onClick={() => setCreatePaymentModalVisible(true)}
+                                style={{ backgroundColor: '#52c41a' }}
+                            >
+                                Tạo phí cho người bán
+                            </Button>
+                            <Button
+                                type="primary"
+                                icon={<ShopOutlined />}
+                                onClick={() => setCreateMarketPaymentModalVisible(true)}
+                                style={{ backgroundColor: '#1890ff' }}
+                            >
+                                Tạo phí cho chợ
+                            </Button>
+                        </Space>
+                    </Col>
+                    <Col xs={24} sm={6}>
                         <Space>
                             <Button
                                 icon={<ReloadOutlined />}
@@ -657,6 +827,132 @@ const StorePaymentManagement = () => {
                     </div>
                 )}
             </Drawer>
+
+            {/* Create Payment for Seller Modal */}
+            <Modal
+                title="Tạo phí thanh toán cho Seller"
+                open={createPaymentModalVisible}
+                onCancel={() => {
+                    setCreatePaymentModalVisible(false);
+                    createPaymentForm.resetFields();
+                }}
+                footer={null}
+                width={600}
+            >
+                <Form
+                    form={createPaymentForm}
+                    layout="vertical"
+                    onFinish={handleCreatePaymentForSeller}
+                >
+                    <Form.Item
+                        name="userId"
+                        label="Chọn người dùng"
+                        rules={[{ required: true, message: 'Vui lòng chọn người dùng' }]}
+                    >
+                        <Select
+                            placeholder="Chọn người dùng"
+                            showSearch
+                            filterOption={(input, option) =>
+                                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                            }
+                        >
+                            {users.map(user => (
+                                <Option key={user.id} value={user.id}>
+                                    {user.fullName} ({user.username}) - {user.phoneNumber}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="feeId"
+                        label="Loại phí"
+                        rules={[{ required: true, message: 'Vui lòng chọn loại phí' }]}
+                    >
+                        <Select placeholder="Chọn loại phí">
+                            {feeTypes.map(feeType => (
+                                <Option key={feeType.id} value={feeType.id}>
+                                    {feeType.feeType}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
+                        <Space>
+                            <Button onClick={() => {
+                                setCreatePaymentModalVisible(false);
+                                createPaymentForm.resetFields();
+                            }}>
+                                Hủy
+                            </Button>
+                            <Button type="primary" htmlType="submit" icon={<CreditCardOutlined />}>
+                                Tạo phí thanh toán
+                            </Button>
+                        </Space>
+                    </Form.Item>
+                </Form>
+            </Modal>
+
+            {/* Create Payment for Market Modal */}
+            <Modal
+                title="Tạo phí thanh toán cho Chợ"
+                open={createMarketPaymentModalVisible}
+                onCancel={() => {
+                    setCreateMarketPaymentModalVisible(false);
+                    createMarketPaymentForm.resetFields();
+                }}
+                footer={null}
+                width={600}
+            >
+                <Form
+                    form={createMarketPaymentForm}
+                    layout="vertical"
+                    onFinish={handleCreatePaymentForMarket}
+                >
+                    <Form.Item
+                        name="marketId"
+                        label="Chọn chợ"
+                        rules={[{ required: true, message: 'Vui lòng chọn chợ' }]}
+                    >
+                        <Select placeholder="Chọn chợ">
+                            {markets.map(market => (
+                                <Option key={market.id} value={market.id}>
+                                    {market.name}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item
+                        name="feeId"
+                        label="Loại phí"
+                        rules={[{ required: true, message: 'Vui lòng chọn loại phí' }]}
+                    >
+                        <Select placeholder="Chọn loại phí">
+                            {feeTypes.map(feeType => (
+                                <Option key={feeType.id} value={feeType.id}>
+                                    {feeType.feeType}
+                                </Option>
+                            ))}
+                        </Select>
+                    </Form.Item>
+
+                    <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
+                        <Space>
+                            <Button onClick={() => {
+                                setCreateMarketPaymentModalVisible(false);
+                                createMarketPaymentForm.resetFields();
+                            }}>
+                                Hủy
+                            </Button>
+                            <Button type="primary" htmlType="submit" icon={<ShopOutlined />}>
+                                Tạo phí thanh toán
+                            </Button>
+                        </Space>
+                    </Form.Item>
+                </Form>
+            </Modal>
         </div>
     );
 };

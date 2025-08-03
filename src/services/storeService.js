@@ -546,6 +546,7 @@ class StoreService {
 
             // Add filters according to GetAllStoresWithPaymentRequestDto
             if (params.marketId) queryParams.append('MarketId', params.marketId);
+            if (params.feeId) queryParams.append('FeeId', params.feeId);
             if (params.paymentStatus) queryParams.append('PaymentStatus', params.paymentStatus);
             if (params.month) queryParams.append('Month', params.month.toString());
             if (params.year) queryParams.append('Year', params.year.toString());
@@ -678,6 +679,7 @@ class StoreService {
 
             // Add same filters
             if (params.marketId) queryParams.append('MarketId', params.marketId);
+            if (params.feeTypeId) queryParams.append('FeeTypeId', params.feeTypeId);
             if (params.paymentStatus) queryParams.append('PaymentStatus', params.paymentStatus);
             if (params.month) queryParams.append('Month', params.month.toString());
             if (params.year) queryParams.append('Year', params.year.toString());
@@ -713,6 +715,143 @@ class StoreService {
             return {
                 success: false,
                 message: error.message || 'Lỗi khi xuất dữ liệu'
+            };
+        }
+    }
+
+    // Create payment for specific seller
+    async createPaymentForSeller(paymentData) {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(API_ENDPOINTS.STORE.CREATE_PAYMENT, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(paymentData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tạo phí thanh toán'}`);
+            }
+
+            const result = await response.json();
+            return {
+                success: result.success || true,
+                message: result.message || 'Tạo phí thanh toán thành công',
+                data: result.data
+            };
+        } catch (error) {
+            console.error('Error creating payment for seller:', error);
+            return {
+                success: false,
+                message: error.message || 'Lỗi khi tạo phí thanh toán'
+            };
+        }
+    }
+
+    // Create payment for entire market
+    async createPaymentForMarket(paymentData) {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(API_ENDPOINTS.STORE.CREATE_PAYMENT_FOR_MARKET, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(paymentData)
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tạo phí thanh toán cho chợ'}`);
+            }
+
+            const result = await response.json();
+            return {
+                success: result.success || true,
+                message: result.message || 'Tạo phí thanh toán cho chợ thành công',
+                data: result.data
+            };
+        } catch (error) {
+            console.error('Error creating payment for market:', error);
+            return {
+                success: false,
+                message: error.message || 'Lỗi khi tạo phí thanh toán cho chợ'
+            };
+        }
+    }
+
+    // ============ VNPAY PAYMENT METHODS ============
+    
+    // Get pending payments for seller
+    async getPendingPayments(sellerId) {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(`${API_ENDPOINTS.API_BASE}/api/vnpay/marketfee/pending/${sellerId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tải danh sách phí cần thanh toán'}`);
+            }
+
+            const result = await response.json();
+            return {
+                success: result.success || true,
+                data: result.data || result || [],
+                message: result.message || 'Lấy danh sách phí thành công'
+            };
+        } catch (error) {
+            console.error('Error fetching pending payments:', error);
+            return {
+                success: false,
+                message: error.message || 'Lỗi khi tải danh sách phí cần thanh toán',
+                data: []
+            };
+        }
+    }
+
+    // Create VnPay payment URL
+    async createVnPayPaymentUrl(paymentId) {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(`${API_ENDPOINTS.API_BASE}/api/vnpay/marketfee/create-payment-url/${paymentId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tạo URL thanh toán'}`);
+            }
+
+            const result = await response.json();
+            return {
+                success: result.success || true,
+                data: result.data || result,
+                message: result.message || 'Tạo URL thanh toán thành công'
+            };
+        } catch (error) {
+            console.error('Error creating VnPay payment URL:', error);
+            return {
+                success: false,
+                message: error.message || 'Lỗi khi tạo URL thanh toán'
             };
         }
     }

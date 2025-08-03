@@ -230,6 +230,13 @@ const SellerLayout = ({ children }) => {
             description: 'Báo cáo & phân tích'
         },
         {
+            path: '/seller/payments',
+            icon: FaCreditCard,
+            label: 'Thanh toán',
+            color: 'text-blue-600',
+            description: 'Quản lý thanh toán & phí'
+        },
+        {
             path: '/seller/notifications',
             icon: FaBell,
             label: 'Thông báo',

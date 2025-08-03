@@ -248,9 +248,11 @@ export const API_ENDPOINTS = {
         GET_STATISTICS: (id) => `${API_URL}/api/store/${id}/statistics`,
 
         // Payment Management Endpoints
-        PAYMENT_OVERVIEW: `${API_URL}/api/Store/admin/payment-overview`,
-        UPDATE_PAYMENT_STATUS: (paymentId) => `${API_URL}/api/Store/admin/payment/${paymentId}/update-status`,
-        EXPORT_PAYMENT: `${API_URL}/api/Store/admin/payment/export`,
+        PAYMENT_OVERVIEW: `${API_URL}/api/MarketFeePayment/admin/stores-payment-overview`,
+        UPDATE_PAYMENT_STATUS: (paymentId) => `${API_URL}/api/MarketFeePayment/admin/payment/${paymentId}/update-status`,
+        EXPORT_PAYMENT: `${API_URL}/api/MarketFeePayment/admin/payment/export`,
+        CREATE_PAYMENT: `${API_URL}/api/MarketFeePayment/admin/create-payment`,
+        CREATE_PAYMENT_FOR_MARKET: `${API_URL}/api/MarketFeePayment/admin/create-payment-for-market`,
 
         // Follow endpoints
         FOLLOW: (storeId) => `${API_URL}/api/store/${storeId}/follow`,

@@ -6,3 +6,4 @@ export { default as StoreReviewForm } from './StoreReviewForm';
 export { default as StoreReviewModal } from './StoreReviewModal';
 export { default as StoreReviewList } from './StoreReviewList';
 export { default as ClickableStoreRating } from './ClickableStoreRating';
+export { default as ReviewListWithResponse } from './ReviewListWithResponse';
