@@ -35,14 +35,22 @@ const MyProxyRequests = () => {
     };
 
     const getStatusDisplay = (request) => {
-        // Ưu tiên hiển thị Order status nếu có đơn hàng, ngược lại hiển thị Request status
-        const status = request.order?.status || request.proposal?.orderStatus || request.status;
+        // Sử dụng currentPhase từ API response mới
+        const displayPhase = request.currentPhase || request.status;
         const statusMap = {
-            // Request statuses
+            // Current phase values từ API
+            'Chưa có Proxy nhận': { text: 'Đang chờ proxy shopper nhận', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+            'Đang soạn đơn': { text: 'Proxy đang soạn đề xuất', color: 'bg-blue-100 text-blue-800', icon: '📝' },
+            'Chờ duyệt': { text: 'Có đề xuất, chờ duyệt', color: 'bg-purple-100 text-purple-800', icon: '📋' },
+            'Đã thanh toán': { text: 'Đã thanh toán, đang mua hàng', color: 'bg-green-100 text-green-800', icon: '💳' },
+            'Đang mua hàng': { text: 'Đang mua hàng', color: 'bg-indigo-100 text-indigo-800', icon: '🛒' },
+            'Đã hoàn thành': { text: 'Hoàn thành', color: 'bg-green-100 text-green-800', icon: '✅' },
+            'Đã hủy': { text: 'Đã hủy', color: 'bg-red-100 text-red-800', icon: '❌' },
+            'Đã hết hạn': { text: 'Đã hết hạn', color: 'bg-gray-100 text-gray-800', icon: '⏰' },
+            
+            // Fallback cho old statuses
             'Open': { text: 'Đang chờ proxy shopper nhận', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
             'Locked': { text: 'Đã có proxy nhận, đang soạn đề xuất', color: 'bg-blue-100 text-blue-800', icon: '🔒' },
-            
-            // Order statuses  
             'Draft': { text: 'Proxy đang soạn đề xuất', color: 'bg-blue-100 text-blue-800', icon: '📝' },
             'Proposed': { text: 'Có đề xuất, chờ duyệt', color: 'bg-purple-100 text-purple-800', icon: '📋' },
             'Paid': { text: 'Đã thanh toán, đang mua hàng', color: 'bg-green-100 text-green-800', icon: '💳' },
@@ -50,7 +58,7 @@ const MyProxyRequests = () => {
             'Completed': { text: 'Hoàn thành', color: 'bg-green-100 text-green-800', icon: '✅' },
             'Cancelled': { text: 'Đã hủy', color: 'bg-red-100 text-red-800', icon: '❌' }
         };
-        return statusMap[status] || { text: status, color: 'bg-gray-100 text-gray-800', icon: '❓' };
+        return statusMap[displayPhase] || { text: displayPhase, color: 'bg-gray-100 text-gray-800', icon: '❓' };
     };
 
     const handleApproveProposal = async (requestId) => {
@@ -178,9 +186,11 @@ const MyProxyRequests = () => {
                 <div className="grid gap-6">
                     {requests.map((request) => {
                         const statusInfo = getStatusDisplay(request);
-                        // Xác định trạng thái để hiển thị nút
+                        // Sử dụng API response mới
                         const requestStatus = request.status; // Request status: Open, Locked, Completed
-                        const orderStatus = request.proposal?.orderStatus; // Order status: Draft, Proposed, Paid, etc.
+                        const orderStatus = request.orderStatus; // Order status từ API: Draft, Proposed, Paid, InProgress, Completed
+                        const currentPhase = request.currentPhase; // Current phase từ API
+                        const hasOrder = request.hasOrder; // Có order hay không
                                                 
                         return (
                             <div key={request.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
@@ -205,18 +215,23 @@ const MyProxyRequests = () => {
                                 </div>
 
                                 {/* Thông tin proxy shopper */}
-                                {request.proxyShopperName && (
+                                {request.partnerName && request.partnerRole === 'Proxy Shopper' && (
                                     <div className="bg-blue-50 rounded-lg p-4 mb-4">
                                         <h4 className="font-medium text-blue-800 mb-2 flex items-center">
                                             <FiUser className="mr-1" />
                                             Người đi chợ giúm
                                         </h4>
                                         <div className="text-blue-700">
-                                            <div>Tên: {request.proxyShopperName}</div>
-                                            {request.proxyShopperPhone && (
+                                            <div>Tên: {request.partnerName}</div>
+                                            {request.partnerEmail && (
+                                                <div className="mt-1">
+                                                    Email: {request.partnerEmail}
+                                                </div>
+                                            )}
+                                            {request.partnerPhone && (
                                                 <div className="flex items-center mt-1">
                                                     <FiPhone className="mr-1" />
-                                                    {request.proxyShopperPhone}
+                                                    {request.partnerPhone}
                                                 </div>
                                             )}
                                         </div>
@@ -238,6 +253,125 @@ const MyProxyRequests = () => {
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Thông tin đơn hàng chi tiết (nếu có) */}
+                                {request.hasOrder && request.orderId && (
+                                    <div className="bg-green-50 rounded-lg p-4 mb-4">
+                                        <h4 className="font-medium text-green-800 mb-3 flex items-center">
+                                            <FiShoppingCart className="mr-1" />
+                                            Thông tin đơn hàng (#{request.orderId.slice(-8)})
+                                        </h4>
+                                        
+                                        {/* Chi tiết sản phẩm trong order */}
+                                        {request.orderItems && request.orderItems.length > 0 && (
+                                            <div className="mb-4">
+                                                <h5 className="font-medium text-green-800 mb-2">Sản phẩm đã chọn:</h5>
+                                                <div className="space-y-2">
+                                                    {request.orderItems.map((item, idx) => (
+                                                        <div key={idx} className="bg-white rounded-lg p-3 border border-green-200">
+                                                            <div className="flex justify-between items-start">
+                                                                <div className="flex-1">
+                                                                    <h6 className="font-semibold text-gray-800">{item.name}</h6>
+                                                                    <div className="text-sm text-gray-600 mt-1">
+                                                                        <div className="flex justify-between">
+                                                                            <span>Số lượng tối thiểu:</span>
+                                                                            <span className="font-medium">{item.minimumQuantity} {item.unitName}</span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span>Đơn giá:</span>
+                                                                            <span className="font-semibold text-green-600">
+                                                                                {item.price?.toLocaleString()} đ/{item.unitName}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div className="flex justify-between">
+                                                                            <span>Thành tiền:</span>
+                                                                            <span className="font-bold text-green-700">
+                                                                                {((item.price || 0) * (item.minimumQuantity || 0)).toLocaleString()} đ
+                                                                            </span>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Tổng kết chi phí */}
+                                        {(request.totalAmount || request.proxyFee) && (
+                                            <div className="text-green-700">
+                                                <div className="flex justify-between items-center mb-1">
+                                                    <span>Tổng tiền sản phẩm:</span>
+                                                    <span className="font-semibold">
+                                                        {(request.totalAmount || 0).toLocaleString()} đ
+                                                    </span>
+                                                </div>
+                                                {request.proxyFee && (
+                                                    <div className="flex justify-between items-center mb-1">
+                                                        <span>Phí dịch vụ:</span>
+                                                        <span className="font-semibold">{request.proxyFee.toLocaleString()} đ</span>
+                                                    </div>
+                                                )}
+                                                <div className="flex justify-between items-center font-bold text-lg pt-2 border-t border-green-200">
+                                                    <span>Tổng cộng:</span>
+                                                    <span>
+                                                        {((request.totalAmount || 0) + (request.proxyFee || 0)).toLocaleString()} đ
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Địa chỉ giao hàng */}
+                                        {request.deliveryAddress && (
+                                            <div className="mt-3 pt-3 border-t border-green-200">
+                                                <span className="font-medium text-green-800">Địa chỉ giao hàng:</span>
+                                                <p className="text-sm mt-1 text-green-700">{request.deliveryAddress}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Ghi chú */}
+                                        {request.notes && (
+                                            <div className="mt-3 pt-3 border-t border-green-200">
+                                                <span className="font-medium text-green-800">Ghi chú:</span>
+                                                <p className="text-sm mt-1 text-green-700">{request.notes}</p>
+                                            </div>
+                                        )}
+
+                                        {/* Proof Images */}
+                                        {request.proofImages && (
+                                            <div className="mt-3 pt-3 border-t border-green-200">
+                                                <span className="font-medium text-green-800">Hình ảnh xác nhận mua hàng:</span>
+                                                <div className="mt-2">
+                                                    <img
+                                                        src={request.proofImages}
+                                                        alt="Proof of purchase"
+                                                        className="w-full max-w-md h-64 object-contain rounded-lg border bg-white cursor-pointer"
+                                                        onClick={() => window.open(request.proofImages, '_blank')}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Thời gian đơn hàng */}
+                                        {request.orderCreatedAt && (
+                                            <div className="mt-3 pt-3 border-t border-green-200">
+                                                <span className="font-medium text-green-800">Thời gian tạo đơn:</span>
+                                                <p className="text-sm mt-1 text-green-700">
+                                                    {new Date(request.orderCreatedAt).toLocaleString('vi-VN')}
+                                                </p>
+                                                {request.orderUpdatedAt && request.orderUpdatedAt !== request.orderCreatedAt && (
+                                                    <>
+                                                        <span className="font-medium text-green-800">Cập nhật lần cuối:</span>
+                                                        <p className="text-sm mt-1 text-green-700">
+                                                            {new Date(request.orderUpdatedAt).toLocaleString('vi-VN')}
+                                                        </p>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
                                 {/* Thông tin đề xuất với sản phẩm chi tiết */}
                                 {request.proposal && (
@@ -363,18 +497,19 @@ const MyProxyRequests = () => {
 
                                 {/* Nút thao tác */}
                                 <div className="flex gap-3 justify-end mt-4">
-                                    {request.proposal && (
+                                    {/* Hiển thị chi tiết order nếu có */}
+                                    {hasOrder && (
                                         <button
                                             onClick={() => viewProposal(request)}
                                             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
                                         >
                                             <FiEye className="text-sm" />
-                                            Xem đề xuất
+                                            Xem chi tiết đơn hàng
                                         </button>
                                     )}
                                     
-                                    {/* Nút cho Order status = Proposed */}
-                                    {orderStatus === 'Proposed' && (
+                                    {/* Nút cho currentPhase = "Chờ duyệt" */}
+                                    {currentPhase === 'Chờ duyệt' && (
                                         <>
                                             <button
                                                 onClick={() => openRejectModal(request)}
@@ -385,7 +520,7 @@ const MyProxyRequests = () => {
                                                 Từ chối & Yêu cầu lên lại
                                             </button>
                                             <button
-                                                onClick={() => handleApproveProposal(request.id)}
+                                                onClick={() => handleApproveProposal(request.orderId || request.id)}
                                                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-1"
                                                 disabled={actionLoading}
                                             >
@@ -395,10 +530,10 @@ const MyProxyRequests = () => {
                                         </>
                                     )}
                                     
-                                    {/* Nút cho Order status = Paid hoặc InProgress */}
-                                    {(orderStatus === 'Paid' || orderStatus === 'InProgress') && (
+                                    {/* Nút cho currentPhase = "Đã thanh toán" hoặc "Đang mua hàng" */}
+                                    {(currentPhase === 'Đã thanh toán' || currentPhase === 'Đang mua hàng') && (
                                         <button
-                                            onClick={() => handleConfirmDelivery(request.id)}
+                                            onClick={() => handleConfirmDelivery(request.orderId || request.id)}
                                             className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 flex items-center gap-1"
                                             disabled={actionLoading}
                                         >
@@ -407,8 +542,8 @@ const MyProxyRequests = () => {
                                         </button>
                                     )}
                                     
-                                    {/* Nút cho Request status = Open (chưa có proxy nhận) */}
-                                    {requestStatus === 'Open' && (
+                                    {/* Nút cho currentPhase = "Chưa có Proxy nhận" */}
+                                    {currentPhase === 'Chưa có Proxy nhận' && (
                                         <button
                                             onClick={() => openCancelModal(request)}
                                             className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center gap-1"
@@ -418,6 +553,16 @@ const MyProxyRequests = () => {
                                             Hủy yêu cầu
                                         </button>
                                     )}
+
+                                    {/* Nút làm mới để cập nhật trạng thái */}
+                                    <button
+                                        onClick={fetchMyRequests}
+                                        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 flex items-center gap-1"
+                                        disabled={loading}
+                                    >
+                                        <FiRefreshCw className={`text-sm ${loading ? 'animate-spin' : ''}`} />
+                                        Làm mới
+                                    </button>
                                 </div>
 
                                 {/* Hiển thị thông báo lỗi/thành công */}
