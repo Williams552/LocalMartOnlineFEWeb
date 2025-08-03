@@ -80,6 +80,8 @@ import NotificationsPage from "../pages/Sellers/NotificationsPage";
 import SellerLicenses from "../pages/Sellers/SellerLicenses";
 import SellerPayments from "../pages/Seller/SellerPayments";
 import UserReportsPage from "../pages/Seller/UserReportsPage";
+import MarketFees from "../pages/Seller/MarketFees";
+import MarketRules from "../pages/Seller/MarketRules";
 import CreateOrder from "../pages/ProxyShopper/CreateOrder";
 
 const AppRoutes = () => {
@@ -223,6 +225,20 @@ const AppRoutes = () => {
                     <ProtectedRoute allowedRoles={['Seller']}>
                         <ProtectedSellerRoute>
                             <SellerPayments />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/market-fees" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <MarketFees />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/market-rules" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <MarketRules />
                         </ProtectedSellerRoute>
                     </ProtectedRoute>
                 } />

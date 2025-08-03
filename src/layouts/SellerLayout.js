@@ -5,7 +5,7 @@ import {
     FaUser, FaHome, FaBell, FaCog, FaSignOutAlt,
     FaUsers, FaCertificate, FaCreditCard, FaComments,
     FaQuestionCircle, FaBars, FaTimes, FaChevronDown, FaShoppingBag,
-    FaExclamationTriangle, FaHandshake, FaSpinner, FaLock, FaMapMarkerAlt, FaClock
+    FaExclamationTriangle, FaHandshake, FaSpinner, FaLock, FaMapMarkerAlt, FaClock, FaDollarSign, FaFileAlt
 } from "react-icons/fa";
 import { toast } from 'react-toastify';
 import { useAuth } from "../hooks/useAuth";
@@ -235,6 +235,20 @@ const SellerLayout = ({ children }) => {
             label: 'Thanh toán',
             color: 'text-blue-600',
             description: 'Quản lý thanh toán & phí'
+        },
+        {
+            path: '/seller/market-fees',
+            icon: FaDollarSign,
+            label: 'Loại phí chợ',
+            color: 'text-green-600',
+            description: 'Xem các loại phí áp dụng'
+        },
+        {
+            path: '/seller/market-rules',
+            icon: FaFileAlt,
+            label: 'Quy định chợ',
+            color: 'text-purple-600',
+            description: 'Xem quy định và điều khoản'
         },
         {
             path: '/seller/notifications',

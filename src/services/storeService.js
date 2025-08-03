@@ -734,8 +734,18 @@ class StoreService {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tạo phí thanh toán'}`);
+                if (response.status === 400) {
+                    // Lỗi HTTP 400 - Bad Request (thường là dữ liệu đã tồn tại)
+                    const errorData = await response.json();
+                    return {
+                        success: false,
+                        message: errorData.message || 'Dữ liệu đã tồn tại hoặc không hợp lệ',
+                        errorCode: 'DUPLICATE_PAYMENT'
+                    };
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tạo phí thanh toán'}`);
+                }
             }
 
             const result = await response.json();
@@ -768,8 +778,18 @@ class StoreService {
             });
 
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tạo phí thanh toán cho chợ'}`);
+                if (response.status === 400) {
+                    // Lỗi HTTP 400 - Bad Request (thường là dữ liệu đã tồn tại)
+                    const errorData = await response.json();
+                    return {
+                        success: false,
+                        message: errorData.message || 'Dữ liệu đã tồn tại hoặc không hợp lệ',
+                        errorCode: 'DUPLICATE_PAYMENT'
+                    };
+                } else {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tạo phí thanh toán cho chợ'}`);
+                }
             }
 
             const result = await response.json();
@@ -852,6 +872,74 @@ class StoreService {
             return {
                 success: false,
                 message: error.message || 'Lỗi khi tạo URL thanh toán'
+            };
+        }
+    }
+
+    // Get market fees by market ID
+    async getMarketFees(marketId) {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(`${API_ENDPOINTS.API_BASE}/api/marketfee?MarketFeeId=${marketId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tải danh sách phí chợ'}`);
+            }
+
+            const result = await response.json();
+            return {
+                success: result.success || true,
+                data: result.data || result,
+                message: result.message || 'Tải danh sách phí chợ thành công'
+            };
+        } catch (error) {
+            console.error('Error loading market fees:', error);
+            return {
+                success: false,
+                message: error.message || 'Lỗi khi tải danh sách phí chợ',
+                data: []
+            };
+        }
+    }
+
+    // Get market rules by market ID
+    async getMarketRules(marketId) {
+        try {
+            const token = localStorage.getItem('token');
+            
+            const response = await fetch(`${API_ENDPOINTS.API_BASE}/api/marketrule?MarketId=${marketId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`HTTP ${response.status}: ${errorText || 'Không thể tải quy định chợ'}`);
+            }
+
+            const result = await response.json();
+            return {
+                success: result.success || true,
+                data: result.marketRules || result.data || result,
+                message: result.message || 'Tải quy định chợ thành công'
+            };
+        } catch (error) {
+            console.error('Error loading market rules:', error);
+            return {
+                success: false,
+                message: error.message || 'Lỗi khi tải quy định chợ',
+                data: []
             };
         }
     }
