@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { FaStore, FaEdit, FaSave, FaTimes, FaMapMarkerAlt, FaPhone, FaUser, FaClock, FaPlus, FaImage, FaCalendarAlt, FaIdCard, FaStar } from 'react-icons/fa';
+import { FaStore, FaEdit, FaSave, FaTimes, FaMapMarkerAlt, FaPhone, FaUser, FaClock, FaPlus, FaImage, FaCalendarAlt, FaIdCard, FaStar, FaComments } from 'react-icons/fa';
 import { FiLoader } from 'react-icons/fi';
 import storeService from '../../services/storeService';
 import authService from '../../services/authService';
-import sellerRegistrationService from '../../services/sellerRegistrationService';
 import { toast } from 'react-toastify';
 import SellerLayout from '../../layouts/SellerLayout';
+import { ReviewListWithResponse } from '../../components/Review';
 
 const StoreProfile = () => {
     const [store, setStore] = useState(null);
@@ -13,7 +13,6 @@ const StoreProfile = () => {
     const [error, setError] = useState("");
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [hasSellerRegistration, setHasSellerRegistration] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         address: '',
@@ -163,16 +162,14 @@ const StoreProfile = () => {
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-4">Không thể tải thông tin</h3>
                         <p className="text-gray-600 mb-6">{error}</p>
-
-                        {!hasSellerRegistration && (
-                            <button
-                                onClick={() => window.location.href = '/register-seller'}
-                                className="bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center mx-auto"
-                            >
-                                <FaPlus className="mr-2" />
-                                Đăng ký làm Seller
-                            </button>
-                        )}
+                        
+                        <button
+                            onClick={() => window.location.href = '/register-seller'}
+                            className="bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center mx-auto"
+                        >
+                            <FaPlus className="mr-2" />
+                            Đăng ký làm Seller
+                        </button>
                     </div>
                 </div>
             </SellerLayout>
@@ -492,6 +489,25 @@ const StoreProfile = () => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Store Reviews Section */}
+                    <div className="bg-white rounded-xl shadow-lg overflow-hidden mt-6">
+                        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-green-50">
+                            <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                                <FaComments className="mr-3 text-supply-primary" />
+                                Đánh giá của khách hàng
+                            </h2>
+                            <p className="text-gray-600 mt-1">Xem và phản hồi đánh giá về cửa hàng của bạn</p>
+                        </div>
+                        
+                        <div className="p-6">
+                            <ReviewListWithResponse
+                                targetType="Store"
+                                targetId={store.id}
+                                maxHeight="500px"
+                            />
                         </div>
                     </div>
                 </div>

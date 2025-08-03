@@ -12,6 +12,7 @@ import TopProducts from "../../components/Seller/TopProducts";
 import QuickActions from "../../components/Seller/QuickActions";
 import ChartsAnalytics from "../../components/Seller/ChartsAnalytics";
 import PriorityActionWidgets from "../../components/Seller/PriorityActionWidgets";
+import PaymentOptions from "../../components/Seller/PaymentOptions";
 import notificationService from "../../services/notificationService";
 import useStoreStatus from "../../hooks/useStoreStatus";
 import { toast } from "react-toastify";
@@ -323,6 +324,23 @@ const SellerDashboard = () => {
                             <p className="text-gray-500 text-sm sm:text-base">Không có thông báo mới</p>
                         </div>
                     )}
+                </div>
+
+                {/* Payment Options Section */}
+                <div className="mb-6 sm:mb-8">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-2 sm:space-y-0">
+                        <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center">
+                            <FaCreditCard className="mr-2 sm:mr-3 text-supply-primary" />
+                            Tùy chọn thanh toán
+                        </h2>
+                        <Link
+                            to="/seller/payments"
+                            className="text-supply-primary hover:text-green-700 transition text-sm font-medium self-start sm:self-auto"
+                        >
+                            Xem tất cả →
+                        </Link>
+                    </div>
+                    <PaymentOptions sellerId={storeInfo?.sellerId} />
                 </div>
 
                 {/* Additional Information */}

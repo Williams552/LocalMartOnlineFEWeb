@@ -78,6 +78,7 @@ import QuickActionsPage from "../pages/Sellers/QuickActionsPage";
 import ChartsAnalyticsPage from "../pages/Sellers/ChartsAnalyticsPage";
 import NotificationsPage from "../pages/Sellers/NotificationsPage";
 import SellerLicenses from "../pages/Sellers/SellerLicenses";
+import SellerPayments from "../pages/Seller/SellerPayments";
 import UserReportsPage from "../pages/Seller/UserReportsPage";
 import CreateOrder from "../pages/ProxyShopper/CreateOrder";
 
@@ -221,7 +222,7 @@ const AppRoutes = () => {
                 <Route path="/seller/payments" element={
                     <ProtectedRoute allowedRoles={['Seller']}>
                         <ProtectedSellerRoute>
-                            <StoreProfile />
+                            <SellerPayments />
                         </ProtectedSellerRoute>
                     </ProtectedRoute>
                 } />
