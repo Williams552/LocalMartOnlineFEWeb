@@ -26,6 +26,7 @@ import AdminLayout from "../pages/Admin/AdminLayout";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
 import UserManagement from "../pages/Admin/User/UserManagement";
 import UserAnalytics from "../pages/Admin/Analytics/UserAnalytics";
+import RevenueAnalytics from "../pages/Admin/Analytics/RevenueAnalytics";
 import CategoryManagement from "../pages/Admin/Category/CategoryManagement";
 import CategoryRegistrationManagement from "../pages/Admin/CategoryRegistration/CategoryRegistrationManagement";
 import MarketManagement from "../pages/Admin/Market/MarketManagement";
@@ -327,7 +328,7 @@ const AppRoutes = () => {
 
                 {/* Analytics */}
                 <Route path="analytics/users" element={<UserAnalytics />} />
-                <Route path="analytics/revenue" element={<Analytics />} />
+                <Route path="analytics/revenue" element={<RevenueAnalytics />} />
                 <Route path="analytics/products" element={<Analytics />} />
                 <Route path="analytics/orders" element={<Analytics />} />
 
