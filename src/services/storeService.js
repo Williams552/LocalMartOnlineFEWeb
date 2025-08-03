@@ -546,7 +546,7 @@ class StoreService {
 
             // Add filters according to GetAllStoresWithPaymentRequestDto
             if (params.marketId) queryParams.append('MarketId', params.marketId);
-            if (params.feeId) queryParams.append('FeeId', params.feeId);
+            if (params.feeTypeId) queryParams.append('FeeTypeId', params.feeTypeId);
             if (params.paymentStatus) queryParams.append('PaymentStatus', params.paymentStatus);
             if (params.month) queryParams.append('Month', params.month.toString());
             if (params.year) queryParams.append('Year', params.year.toString());

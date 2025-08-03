@@ -73,7 +73,7 @@ const StorePaymentManagement = () => {
         month: null,
         year: null,
         searchKeyword: '',
-        feeId: ''
+        feeTypeId: ''
     });
     const [selectedStore, setSelectedStore] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
@@ -255,7 +255,7 @@ const StorePaymentManagement = () => {
             month: null,
             year: null,
             searchKeyword: '',
-            feeId: ''
+            feeTypeId: ''
         });
         setPagination(prev => ({ ...prev, current: 1 }));
     };
@@ -327,7 +327,7 @@ const StorePaymentManagement = () => {
         try {
             const paymentData = {
                 userId: values.userId,
-                feeId: values.feeId
+                feeTypeId: values.feeTypeId
             };
 
             const response = await storeService.createPaymentForSeller(paymentData);
@@ -349,7 +349,7 @@ const StorePaymentManagement = () => {
         try {
             const paymentData = {
                 marketId: values.marketId,
-                feeId: values.feeId
+                feeTypeId: values.feeTypeId
             };
 
             const response = await storeService.createPaymentForMarket(paymentData);
@@ -583,8 +583,8 @@ const StorePaymentManagement = () => {
                         <Select
                             placeholder="Loại phí"
                             allowClear
-                            value={filters.feeId}
-                            onChange={(value) => handleFilterChange('feeId', value)}
+                            value={filters.feeTypeId}
+                            onChange={(value) => handleFilterChange('feeTypeId', value)}
                             style={{ width: '100%' }}
                         >
                             {feeTypes.map(feeType => (
@@ -865,7 +865,7 @@ const StorePaymentManagement = () => {
                     </Form.Item>
 
                     <Form.Item
-                        name="feeId"
+                        name="feeTypeId"
                         label="Loại phí"
                         rules={[{ required: true, message: 'Vui lòng chọn loại phí' }]}
                     >
@@ -925,7 +925,7 @@ const StorePaymentManagement = () => {
                     </Form.Item>
 
                     <Form.Item
-                        name="feeId"
+                        name="feeTypeId"
                         label="Loại phí"
                         rules={[{ required: true, message: 'Vui lòng chọn loại phí' }]}
                     >

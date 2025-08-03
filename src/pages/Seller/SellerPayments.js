@@ -195,41 +195,6 @@ const SellerPayments = () => {
                 )}
 
                 {/* Quick Actions */}
-                {stats.pending > 0 && (
-                    <Card style={{ marginBottom: '24px', backgroundColor: '#f6ffed', border: '1px solid #b7eb8f' }}>
-                        <Row justify="space-between" align="middle">
-                            <Col>
-                                <Space>
-                                    <Button 
-                                        type="primary" 
-                                        icon={<CreditCardOutlined />}
-                                        size="large"
-                                        style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-                                        onClick={() => {
-                                            // Scroll to PaymentOptions component
-                                            const paymentSection = document.querySelector('[data-payment-options]');
-                                            if (paymentSection) {
-                                                paymentSection.scrollIntoView({ behavior: 'smooth' });
-                                            }
-                                        }}
-                                    >
-                                        Thanh toán ngay
-                                    </Button>
-                                    <Button 
-                                        icon={<DollarOutlined />}
-                                        onClick={() => {
-                                            // Show total amount info
-                                            const totalAmount = storeService.formatCurrency(stats.totalAmount);
-                                            alert(`Tổng số tiền cần thanh toán: ${totalAmount}`);
-                                        }}
-                                    >
-                                        Xem tổng tiền
-                                    </Button>
-                                </Space>
-                            </Col>
-                        </Row>
-                    </Card>
-                )}
 
                 {/* Payment Options Component */}
                 <div data-payment-options>
