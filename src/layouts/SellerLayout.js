@@ -1,35 +1,66 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
-    FaStore, FaBoxOpen, FaShoppingCart, FaChartLine,
-    FaUser, FaHome, FaBell, FaCog, FaSignOutAlt,
-    FaUsers, FaCertificate, FaCreditCard, FaComments,
-    FaQuestionCircle, FaBars, FaTimes, FaChevronDown, FaShoppingBag,
-    FaExclamationTriangle, FaHandshake, FaSpinner, FaLock, FaMapMarkerAlt, FaClock, FaDollarSign, FaFileAlt
-} from "react-icons/fa";
+    Layout,
+    Menu,
+    Button,
+    Avatar,
+    Dropdown,
+    Space,
+    Typography,
+    Badge,
+    Breadcrumb
+} from 'antd';
+import {
+    MenuFoldOutlined,
+    MenuUnfoldOutlined,
+    DashboardOutlined,
+    UserOutlined,
+    ShopOutlined,
+    ShoppingCartOutlined,
+    FileTextOutlined,
+    SettingOutlined,
+    LogoutOutlined,
+    BellOutlined,
+    AppstoreOutlined,
+    BankOutlined,
+    CustomerServiceOutlined,
+    BarChartOutlined,
+    DollarOutlined,
+    TagsOutlined,
+    BoxPlotOutlined,
+    CreditCardOutlined,
+    TeamOutlined,
+    TransactionOutlined,
+    SafetyCertificateOutlined,
+    LockOutlined,
+    UnlockOutlined,
+    HomeOutlined
+} from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import { useAuth } from "../hooks/useAuth";
 import useStoreStatus from "../hooks/useStoreStatus";
 import NotificationBell from "../components/Seller/NotificationBell";
 import storeService from "../services/storeService";
 import marketService from "../services/marketService";
+import logoGreen from "../assets/image/logo-non.png";
+
+const { Header, Sider, Content } = Layout;
+const { Title } = Typography;
 
 const SellerLayout = ({ children }) => {
     const location = useLocation();
     const navigate = useNavigate();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(false);
     const [userInfo, setUserInfo] = useState(null);
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isStoreOpen, setIsStoreOpen] = useState(false);
     const [toggleLoading, setToggleLoading] = useState(false);
     const [storeInfoData, setStoreInfo] = useState(null);
     const [marketInfo, setMarketInfo] = useState(null);
     const [marketLoading, setMarketLoading] = useState(true);
-    const dropdownRef = useRef(null);
-    const sidebarRef = useRef(null);
 
     // Use authentication context like in Header
-    const { logout } = useAuth();
+    const { user, logout } = useAuth();
     
     // Use store status hook to check if store is suspended
     const { storeStatus, storeInfo, isLoading: storeLoading, isStoreSuspended } = useStoreStatus();
@@ -81,6 +112,7 @@ const SellerLayout = ({ children }) => {
             const result = await marketService.getMarketById(marketId);
             
             if (result) {
+                console.log('📍 Market Info Data:', result); // Debug để xem cấu trúc dữ liệu
                 setMarketInfo(result);
             }
         } catch (error) {
@@ -151,176 +183,153 @@ const SellerLayout = ({ children }) => {
         }
     };
 
-    // Close dropdown when clicking outside
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsDropdownOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, []);
-
-    // Close sidebar when clicking outside on mobile
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (
-                sidebarRef.current &&
-                !sidebarRef.current.contains(event.target) &&
-                isSidebarOpen &&
-                window.innerWidth < 1024 // Only on mobile/tablet
-            ) {
-                setIsSidebarOpen(false);
-            }
-        };
-
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => {
-            document.removeEventListener('mousedown', handleClickOutside);
-        };
-    }, [isSidebarOpen]);
-
-    const sidebarItems = [
+    // Menu items for sidebar - hiển thị tất cả items mở rộng
+    const menuItems = [
+        // Sản phẩm
         {
-            type: 'toggle',
-            icon: isStoreOpen ? FaLock : FaStore,
-            label: isStoreOpen ? 'Đóng cửa hàng' : 'Mở cửa hàng',
-            color: isStoreOpen ? 'text-red-600' : 'text-green-600',
-            description: 'Đóng mở cửa hàng',
-            action: handleToggleStore,
-            loading: toggleLoading
+            key: '/seller/products',
+            icon: <BoxPlotOutlined />,
+            label: 'Danh sách sản phẩm',
+        },
+        // Đơn hàng
+        {
+            key: '/seller/orders',
+            icon: <ShoppingCartOutlined />,
+            label: 'Tất cả đơn hàng',
         },
         {
-            path: '/seller/products',
-            icon: FaBoxOpen,
-            label: 'Sản phẩm',
-            color: 'text-green-600',
-            description: 'Quản lý sản phẩm'
-        },
-        {
-            path: '/seller/orders',
-            icon: FaShoppingCart,
-            label: 'Đơn hàng',
-            color: 'text-orange-600',
-            description: 'Quản lý đơn hàng'
-        },
-        {
-            path: '/seller/fast-bargains',
-            icon: FaHandshake,
+            key: '/seller/fast-bargains',
+            icon: <TransactionOutlined />,
             label: 'Thương lượng nhanh',
-            color: 'text-orange-500',
-            description: 'Quản lý thương lượng từ khách hàng'
         },
+        // Khách hàng
+        // {
+        //     key: '/seller/customers',
+        //     icon: <TeamOutlined />,
+        //     label: 'Danh sách khách hàng',
+        // },
+        // {
+        //     key: '/seller/personal-shopping',
+        //     icon: <TeamOutlined />,
+        //     label: 'Mua hộ cá nhân',
+        // },
+        // Thống kê
         {
-            path: '/seller/customers',
-            icon: FaUsers,
-            label: 'Khách hàng',
-            color: 'text-indigo-600',
-            description: 'Quản lý khách hàng'
+            key: '/seller/analytics',
+            icon: <BarChartOutlined />,
+            label: 'Thống kê bán hàng',
         },
+        // Tài chính
         {
-            path: '/seller/analytics',
-            icon: FaChartLine,
-            label: 'Thống kê',
-            color: 'text-purple-600',
-            description: 'Báo cáo & phân tích'
-        },
-        {
-            path: '/seller/payments',
-            icon: FaCreditCard,
+            key: '/seller/payments',
+            icon: <CreditCardOutlined />,
             label: 'Thanh toán',
-            color: 'text-blue-600',
-            description: 'Quản lý thanh toán & phí'
         },
         {
-            path: '/seller/market-fees',
-            icon: FaDollarSign,
-            label: 'Loại phí chợ',
-            color: 'text-green-600',
-            description: 'Xem các loại phí áp dụng'
+            key: '/seller/market-fees',
+            icon: <DollarOutlined />,
+            label: 'Phí chợ',
         },
+        // Nội dung
         {
-            path: '/seller/market-rules',
-            icon: FaFileAlt,
-            label: 'Quy định chợ',
-            color: 'text-purple-600',
-            description: 'Xem quy định và điều khoản'
-        },
-        {
-            path: '/seller/notifications',
-            icon: FaBell,
+            key: '/seller/notifications',
+            icon: <BellOutlined />,
             label: 'Thông báo',
-            color: 'text-indigo-600',
-            description: 'Thông báo & cập nhật'
         },
         {
-            path: '/seller/licenses',
-            icon: FaCertificate,
-            label: 'Giấy phép',
-            color: 'text-yellow-600',
-            description: 'Quản lý giấy phép'
+            key: '/seller/user-reports',
+            icon: <FileTextOutlined />,
+            label: 'Báo cáo người dùng',
         },
+        // Cài đặt
         {
-            path: '/seller/profile',
-            icon: FaStore,
+            key: '/seller/profile',
+            icon: <ShopOutlined />,
             label: 'Hồ sơ cửa hàng',
-            color: 'text-teal-600',
-            description: 'Thông tin cửa hàng'
+        },
+        {
+            key: '/seller/licenses',
+            icon: <SafetyCertificateOutlined />,
+            label: 'Giấy phép',
+        },
+        {
+            key: '/seller/market-rules',
+            icon: <FileTextOutlined />,
+            label: 'Quy định chợ',
         },
     ];
 
-    const isActive = (path) => location.pathname === path;
-
-    const handleLogout = (logoutFromAllDevices = false) => {
-        console.log('SellerLayout - Logout button clicked', { logoutFromAllDevices });
-        logout(logoutFromAllDevices);
-        setIsDropdownOpen(false);
-        // Navigate to login page after logout with a small delay to ensure state is updated
-        setTimeout(() => {
-            navigate('/login');
-        }, 100);
+    const handleMenuClick = ({ key }) => {
+        // Navigate to the selected page
+        navigate(key);
     };
 
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
-
-    const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
-    };
-
-    // Dropdown menu items
-    const dropdownItems = [
-        {
-            to: "/",
-            icon: FaHome,
-            label: "Về trang chủ",
-            color: "text-blue-600"
+    // User dropdown menu items
+    const userMenuItems = [
+        { 
+            key: 'home', 
+            icon: <HomeOutlined />, 
+            label: 'Về trang chủ',
+            onClick: () => navigate('/') 
         },
-        {
-            to: "/support",
-            icon: FaQuestionCircle,
-            label: "Hỗ trợ",
-            color: "text-yellow-600"
+        { 
+            key: 'support', 
+            icon: <CustomerServiceOutlined />, 
+            label: 'Hỗ trợ',
+            onClick: () => navigate('/support') 
         },
-        {
-            action: handleLogout,
-            icon: FaSignOutAlt,
-            label: "Đăng xuất",
-            color: "text-red-600"
-        }
+        { type: 'divider' },
+        { 
+            key: 'logout', 
+            icon: <LogoutOutlined />, 
+            label: 'Đăng xuất',
+            onClick: () => {
+                logout();
+                navigate('/login');
+            }
+        },
     ];
+
+    // Breadcrumb items
+    const getBreadcrumbItems = () => {
+        const pathSegments = location.pathname.split('/').filter(Boolean);
+        const items = [{ title: 'Dashboard', href: '/seller/products' }];
+
+        // Mapping để chuyển đổi path thành tiếng Việt
+        const breadcrumbMap = {
+            'products': 'Sản phẩm',
+            'orders': 'Đơn hàng',
+            'customers': 'Khách hàng',
+            'analytics': 'Thống kê',
+            'payments': 'Thanh toán',
+            'notifications': 'Thông báo',
+            'profile': 'Hồ sơ cửa hàng',
+            'licenses': 'Giấy phép',
+            'market-rules': 'Quy định chợ',
+            'market-fees': 'Phí chợ',
+            'fast-bargains': 'Thương lượng nhanh',
+            'personal-shopping': 'Mua hộ cá nhân',
+            'user-reports': 'Báo cáo người dùng',
+            'quick-actions': 'Hành động nhanh',
+            'add': 'Thêm mới'
+        };
+
+        pathSegments.slice(1).forEach((segment, index) => {
+            const title = breadcrumbMap[segment] || segment.charAt(0).toUpperCase() + segment.slice(1);
+            items.push({
+                title,
+                href: '/' + pathSegments.slice(0, index + 2).join('/'),
+            });
+        });
+        return items;
+    };
 
     // Show loading state while checking store status
     if (storeLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
-                    <FaSpinner className="animate-spin text-4xl text-supply-primary mx-auto mb-4" />
+                    <div className="animate-spin text-4xl text-supply-primary mx-auto mb-4">⟳</div>
                     <p className="text-gray-600">Đang kiểm tra trạng thái cửa hàng...</p>
                 </div>
             </div>
@@ -333,232 +342,196 @@ const SellerLayout = ({ children }) => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex">
-
-            {/* Sidebar */}
-            <aside
-                ref={sidebarRef}
-                className={`fixed lg:relative left-0 top-0 h-screen w-64 bg-white shadow-lg z-40 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    } lg:translate-x-0 flex flex-col`}
+        <Layout style={{ minHeight: '100vh' }}>
+            <Sider
+                trigger={null}
+                collapsible
+                collapsed={collapsed}
+                width={250}
+                style={{
+                    background: '#607d8b',
+                    overflow: 'auto',
+                    height: '100vh',
+                    position: 'fixed',
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                }}
             >
-                {/* Header */}
-                <div className="flex-shrink-0 p-4 sm:p-6 border-b border-gray-200">
-                    <Link to="/seller/dashboard" className="flex items-center space-x-2 sm:space-x-3">
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-supply-primary rounded-lg flex items-center justify-center">
-                            <FaStore className="text-white" size={16} />
-                        </div>
-                        <div className="min-w-0">
-                            <h2 className="text-base sm:text-lg font-bold text-gray-800 truncate">Seller Panel</h2>
-                            <p className="text-xs sm:text-sm text-gray-600 truncate">Quản lý cửa hàng</p>
-                        </div>
-                    </Link>
+                <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+                    <img
+                        src={logoGreen}
+                        alt="LocalMart Seller"
+                        style={{ height: 48, objectFit: 'contain', padding: collapsed ? 4 : 8 }}
+                    />
                 </div>
 
-                {/* Market Information */}
-                {marketInfo && (
-                    <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 bg-gray-50">
-                        <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                                <FaMapMarkerAlt className="text-blue-600 flex-shrink-0" size={12} />
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-xs font-medium text-gray-800 truncate">
-                                        {marketInfo.name}
-                                    </p>
-                                    <p className="text-xs text-gray-600 truncate">
-                                        {marketInfo.address}
-                                    </p>
-                                </div>
-                            </div>
-                            
-                            <div className="flex items-center space-x-2">
-                                <FaClock className="text-green-600 flex-shrink-0" size={12} />
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-xs text-gray-700">
-                                        {marketInfo.operatingHours || marketInfo.openingHours || 'Chưa cập nhật giờ hoạt động'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-600">Trạng thái chợ:</span>
-                                <span className={`text-xs font-medium px-2 py-1 rounded-full ${
-                                    marketInfo.status === 'Active' 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : 'bg-red-100 text-red-800'
-                                }`}>
-                                    {marketInfo.status === 'Active' ? 'Hoạt động' : 'Tạm ngưng'}
+                {/* Store Status Information */}
+                {!collapsed && (
+                    <div style={{ padding: '16px', borderBottom: '1px solid #455a64', background: '#546e7a' }}>
+                        <div style={{ marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                                <div style={{ 
+                                    width: '8px', 
+                                    height: '8px', 
+                                    borderRadius: '50%', 
+                                    backgroundColor: isStoreOpen ? '#4caf50' : '#f44336',
+                                    marginRight: '8px'
+                                }}></div>
+                                <span style={{ color: 'white', fontSize: '14px', fontWeight: '500' }}>
+                                    Cửa hàng {isStoreOpen ? 'đang mở' : 'đã đóng'}
                                 </span>
                             </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Loading Market Info */}
-                {marketLoading && (
-                    <div className="flex-shrink-0 px-4 py-3 border-b border-gray-100 bg-gray-50">
-                        <div className="flex items-center space-x-2">
-                            <FaSpinner className="animate-spin text-gray-400" size={12} />
-                            <p className="text-xs text-gray-600">Đang tải thông tin chợ...</p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Navigation Menu */}
-                <nav className="flex-1 p-3 sm:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                    <ul className="space-y-1 sm:space-y-2">
-                        {sidebarItems.map((item, index) => {
-                            const Icon = item.icon;
-                            const key = item.path || `action-${index}`;
                             
-                            // Render toggle button
-                            if (item.type === 'toggle') {
-                                return (
-                                    <li key={key}>
-                                        <button
-                                            onClick={item.action}
-                                            disabled={item.loading}
-                                            className={`w-full flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all group ${
-                                                item.loading 
-                                                    ? 'opacity-50 cursor-not-allowed' 
-                                                    : 'text-gray-700 hover:bg-gray-100'
-                                            }`}
-                                        >
-                                            {item.loading ? (
-                                                <FaSpinner className="animate-spin flex-shrink-0" size={16} />
-                                            ) : (
-                                                <Icon
-                                                    size={16}
-                                                    className={`flex-shrink-0 ${item.color}`}
-                                                />
-                                            )}
-                                            <div className="flex-1 min-w-0 text-left">
-                                                <span className="text-sm sm:text-base font-medium truncate block">
-                                                    {item.loading ? 'Đang xử lý...' : item.label}
-                                                </span>
-                                                <p className="text-xs text-gray-500 mt-0.5 truncate hidden sm:block">
-                                                    {item.description}
-                                                </p>
-                                            </div>
-                                        </button>
-                                    </li>
-                                );
-                            }
-                            
-                            // Render normal navigation link
-                            return (
-                                <li key={key}>
-                                    <Link
-                                        to={item.path}
-                                        onClick={() => setIsSidebarOpen(false)}
-                                        className={`flex items-center space-x-2 sm:space-x-3 px-3 sm:px-4 py-2 sm:py-3 rounded-lg transition-all group ${isActive(item.path)
-                                            ? 'bg-supply-primary text-white shadow-md'
-                                            : 'text-gray-700 hover:bg-gray-100'
-                                            }`}
-                                    >
-                                        <Icon
-                                            size={16}
-                                            className={`flex-shrink-0 ${isActive(item.path) ? 'text-white' : item.color}`}
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <span className="text-sm sm:text-base font-medium truncate block">{item.label}</span>
-                                            {!isActive(item.path) && (
-                                                <p className="text-xs text-gray-500 mt-0.5 truncate hidden sm:block">
-                                                    {item.description}
-                                                </p>
-                                            )}
-                                        </div>
-                                    </Link>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                </nav>
-            </aside>
-
-            {/* Top Navigation Bar - Compact seller header */}
-            <div className="flex-1 flex flex-col lg:min-h-screen">
-                <nav className="flex-shrink-0 h-14 sm:h-16 bg-white border-b border-gray-200 z-10">
-                    <div className="flex items-center justify-between h-full px-3 sm:px-4">
-                        {/* Mobile Menu Button */}
-                        <button
-                            onClick={toggleSidebar}
-                            className="lg:hidden p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors z-50"
-                        >
-                            {isSidebarOpen ? <FaTimes size={18} /> : <FaBars size={18} />}
-                        </button>
-
-                        {/* Page Title */}
-                        <div className="flex-1 lg:flex-none px-2">
-                            <h1 className="text-lg sm:text-xl font-semibold text-gray-800 truncate">
-                                {sidebarItems.find(item => isActive(item.path))?.label || 'Dashboard'}
-                            </h1>
+                            {/* Toggle Store Button */}
+                            <button
+                                onClick={handleToggleStore}
+                                disabled={toggleLoading}
+                                style={{
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    backgroundColor: isStoreOpen ? '#f44336' : '#4caf50',
+                                    color: 'white',
+                                    fontSize: '12px',
+                                    fontWeight: '500',
+                                    cursor: toggleLoading ? 'not-allowed' : 'pointer',
+                                    opacity: toggleLoading ? 0.6 : 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '6px'
+                                }}
+                            >
+                                {toggleLoading ? (
+                                    <>⟳ Đang xử lý...</>
+                                ) : (
+                                    <>
+                                        {isStoreOpen ? '🔒' : '🔓'}
+                                        {isStoreOpen ? 'Đóng cửa hàng' : 'Mở cửa hàng'}
+                                    </>
+                                )}
+                            </button>
                         </div>
 
-                        {/* Right Side Actions */}
-                        <div className="flex items-center space-x-2 sm:space-x-4">
-                            {/* Notifications */}
-                            <NotificationBell />
-
-                            {/* User Menu with Dropdown */}
-                            <div className="relative" ref={dropdownRef}>
-                                <button
-                                    onClick={toggleDropdown}
-                                    className="flex items-center space-x-2 sm:space-x-3 p-1 sm:p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                                >
-                                    <div className="hidden md:block text-right">
-                                        <p className="text-sm font-medium text-gray-800 truncate max-w-32">
-                                            {userInfo?.name || userInfo?.storeName || 'Seller'}
-                                        </p>
-                                        <p className="text-xs text-gray-600 truncate">
-                                            {userInfo?.role || 'Seller'}
-                                        </p>
+                        {/* Market Information */}
+                        {marketInfo && (
+                            <div style={{ fontSize: '12px', color: '#cfd8dc' }}>
+                                <div style={{ marginBottom: '4px' }}>
+                                    <strong style={{ color: 'white' }}>{marketInfo.name}</strong>
+                                </div>
+                                <div style={{ marginBottom: '4px' }}>
+                                    {marketInfo.address}
+                                </div>
+                                
+                                {/* Market Operating Hours */}
+                                {(marketInfo.openTime && marketInfo.closeTime) || 
+                                 (marketInfo.openingTime && marketInfo.closingTime) ||
+                                 (marketInfo.operatingHours) ? (
+                                    <div style={{ marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span>Giờ hoạt động:</span>
+                                        <span style={{ color: 'white', fontWeight: '500' }}>
+                                            {marketInfo.operatingHours || 
+                                             `${marketInfo.openTime || marketInfo.openingTime} - ${marketInfo.closeTime || marketInfo.closingTime}` ||
+                                             '06:00 - 22:00'}
+                                        </span>
                                     </div>
-                                    <div className="w-7 h-7 sm:w-8 sm:h-8 bg-supply-primary rounded-full flex items-center justify-center">
-                                        <FaUser className="text-white text-xs sm:text-sm" />
-                                    </div>
-                                    <FaChevronDown className={`text-gray-500 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} size={10} />
-                                </button>
-
-                                {/* Dropdown Menu */}
-                                {isDropdownOpen && (
-                                    <div className="absolute right-0 mt-2 w-48 sm:w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-[60]">
-                                        {dropdownItems.map((item, index) => (
-                                            <div key={index}>
-                                                {item.to ? (
-                                                    <Link
-                                                        to={item.to}
-                                                        onClick={() => setIsDropdownOpen(false)}
-                                                        className="flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        <item.icon size={16} className={item.color} />
-                                                        <span>{item.label}</span>
-                                                    </Link>
-                                                ) : (
-                                                    <button
-                                                        onClick={item.action}
-                                                        className="w-full flex items-center space-x-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                                                    >
-                                                        <item.icon size={16} className={item.color} />
-                                                        <span>{item.label}</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        ))}
+                                ) : (
+                                    <div style={{ marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                                        <span>Giờ hoạt động:</span>
+                                        <span style={{ color: 'white', fontWeight: '500' }}>
+                                            06:00 - 22:00
+                                        </span>
                                     </div>
                                 )}
+                                
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Trạng thái chợ:</span>
+                                    <span style={{
+                                        backgroundColor: marketInfo.status === 'Active' ? '#4caf50' : '#f44336',
+                                        color: 'white',
+                                        padding: '2px 6px',
+                                        borderRadius: '4px',
+                                        fontSize: '10px'
+                                    }}>
+                                        {marketInfo.status === 'Active' ? 'Hoạt động' : 'Tạm ngưng'}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                </nav>
+                        )}
 
-                {/* Main Content */}
-                <main className="flex-1 overflow-y-auto bg-gray-50">
-                    <div className="min-h-full">
+                        {/* Loading Market Info */}
+                        {marketLoading && (
+                            <div style={{ display: 'flex', alignItems: 'center', color: '#cfd8dc', fontSize: '12px' }}>
+                                <div style={{ marginRight: '8px' }}>⟳</div>
+                                <span>Đang tải thông tin chợ...</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                <Menu
+                    theme="dark"
+                    mode="inline"
+                    selectedKeys={[location.pathname]}
+                    items={menuItems}
+                    onClick={handleMenuClick}
+                    style={{ background: '#607d8b' }}
+                    // Hiển thị tất cả items mở rộng
+                    defaultOpenKeys={['products', 'orders', 'customers', 'analytics', 'finance', 'content', 'settings']}
+                    inlineIndent={16}
+                />
+            </Sider>
+            <Layout style={{ marginLeft: collapsed ? 80 : 250, transition: 'all 0.2s' }}>
+                <Header style={{ padding: '0 24px', background: '#fff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Button
+                        type="text"
+                        icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+                        onClick={() => setCollapsed(!collapsed)}
+                        style={{ fontSize: '16px', width: 64, height: 64 }}
+                    />
+                    <Space size="large">
+                        <Badge count={5}>
+                            <Button type="text" icon={<BellOutlined />} onClick={() => navigate('/seller/notifications')} />
+                        </Badge>
+                        <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                            <Space
+                                style={{
+                                    cursor: 'pointer',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    minWidth: 160,
+                                }}
+                            >
+                                <Avatar icon={<UserOutlined />} size="large" />
+                                <div style={{ lineHeight: 1.2 }}>
+                                    <div style={{
+                                        fontWeight: 600,
+                                        fontSize: 14,
+                                        whiteSpace: 'nowrap',
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        maxWidth: 120
+                                    }}>
+                                        {user?.fullName || user?.username || userInfo?.fullName}
+                                    </div>
+                                    <div style={{ fontSize: 12, color: '#888' }}>
+                                        Người bán
+                                    </div>
+                                </div>
+                            </Space>
+                        </Dropdown>
+                    </Space>
+                </Header>
+                <Content style={{ margin: '24px 24px 0', overflow: 'initial' }}>
+                    <Breadcrumb items={getBreadcrumbItems()} style={{ marginBottom: 16 }} />
+                    <div style={{ padding: 24, minHeight: 'calc(100vh - 112px)', background: '#fff', borderRadius: '8px' }}>
                         {children}
                     </div>
-                </main>
-            </div>
-        </div>
+                </Content>
+            </Layout>
+        </Layout>
     );
 };
 
