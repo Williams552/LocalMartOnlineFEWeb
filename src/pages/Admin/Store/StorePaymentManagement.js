@@ -332,16 +332,22 @@ const StorePaymentManagement = () => {
 
             const response = await storeService.createPaymentForSeller(paymentData);
             if (response.success) {
-                message.success('Tạo phí thanh toán cho seller thành công');
+                message.success('Tạo phí thanh toán cho người bán thành công');
                 setCreatePaymentModalVisible(false);
                 createPaymentForm.resetFields();
                 loadStoresWithPayment();
             } else {
-                message.error(response.message || 'Tạo phí thanh toán thất bại');
+                // Xử lý các loại lỗi khác nhau dựa trên errorCode hoặc message
+                if (response.errorCode === 'DUPLICATE_PAYMENT' || 
+                    (response.message && response.message.includes('đã tồn tại'))) {
+                    message.warning('Phí thanh toán cho người bán này trong tháng hiện tại đã được tạo trước đó. Vui lòng kiểm tra lại danh sách thanh toán.');
+                } else {
+                    message.error('Không thể tạo phí thanh toán. Vui lòng thử lại sau.');
+                }
             }
         } catch (error) {
             console.error('Error creating payment for seller:', error);
-            message.error('Lỗi khi tạo phí thanh toán');
+            message.error('Có lỗi xảy ra khi tạo phí thanh toán. Vui lòng thử lại sau.');
         }
     };
 
@@ -359,11 +365,17 @@ const StorePaymentManagement = () => {
                 createMarketPaymentForm.resetFields();
                 loadStoresWithPayment();
             } else {
-                message.error(response.message || 'Tạo phí thanh toán thất bại');
+                // Xử lý các loại lỗi khác nhau dựa trên errorCode hoặc message
+                if (response.errorCode === 'DUPLICATE_PAYMENT' || 
+                    (response.message && response.message.includes('đã tồn tại'))) {
+                    message.warning('Phí thanh toán cho chợ này trong tháng hiện tại đã được tạo trước đó. Vui lòng kiểm tra lại danh sách thanh toán.');
+                } else {
+                    message.error('Không thể tạo phí thanh toán. Vui lòng thử lại sau.');
+                }
             }
         } catch (error) {
             console.error('Error creating payment for market:', error);
-            message.error('Lỗi khi tạo phí thanh toán');
+            message.error('Có lỗi xảy ra khi tạo phí thanh toán. Vui lòng thử lại sau.');
         }
     };
 

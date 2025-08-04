@@ -26,6 +26,7 @@ import AdminLayout from "../pages/Admin/AdminLayout";
 import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
 import UserManagement from "../pages/Admin/User/UserManagement";
 import UserAnalytics from "../pages/Admin/Analytics/UserAnalytics";
+import RevenueAnalytics from "../pages/Admin/Analytics/RevenueAnalytics";
 import CategoryManagement from "../pages/Admin/Category/CategoryManagement";
 import CategoryRegistrationManagement from "../pages/Admin/CategoryRegistration/CategoryRegistrationManagement";
 import MarketManagement from "../pages/Admin/Market/MarketManagement";
@@ -80,6 +81,8 @@ import NotificationsPage from "../pages/Sellers/NotificationsPage";
 import SellerLicenses from "../pages/Sellers/SellerLicenses";
 import SellerPayments from "../pages/Seller/SellerPayments";
 import UserReportsPage from "../pages/Seller/UserReportsPage";
+import MarketFees from "../pages/Seller/MarketFees";
+import MarketRules from "../pages/Seller/MarketRules";
 import CreateOrder from "../pages/ProxyShopper/CreateOrder";
 
 const AppRoutes = () => {
@@ -226,6 +229,20 @@ const AppRoutes = () => {
                         </ProtectedSellerRoute>
                     </ProtectedRoute>
                 } />
+                <Route path="/seller/market-fees" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <MarketFees />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
+                <Route path="/seller/market-rules" element={
+                    <ProtectedRoute allowedRoles={['Seller']}>
+                        <ProtectedSellerRoute>
+                            <MarketRules />
+                        </ProtectedSellerRoute>
+                    </ProtectedRoute>
+                } />
                 <Route path="/seller/licenses" element={
                     <ProtectedRoute allowedRoles={['Seller']}>
                         <ProtectedSellerRoute>
@@ -311,7 +328,7 @@ const AppRoutes = () => {
 
                 {/* Analytics */}
                 <Route path="analytics/users" element={<UserAnalytics />} />
-                <Route path="analytics/revenue" element={<Analytics />} />
+                <Route path="analytics/revenue" element={<RevenueAnalytics />} />
                 <Route path="analytics/products" element={<Analytics />} />
                 <Route path="analytics/orders" element={<Analytics />} />
 
