@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -19,8 +19,23 @@ import SupportButton from './components/Support/SupportButton';
 // Services
 import authService from './services/authService';
 
+// Hooks
+import { useAuth } from './hooks/useAuth';
+
 // Styles
 import './App.css';
+
+const AdminRedirectWrapper = ({ children }) => {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  // If user is Admin and trying to access non-admin pages, redirect to admin
+  if (user?.role === 'Admin' && !location.pathname.startsWith('/admin')) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return children;
+};
 
 const App = () => {
   // Setup auth service on app init
@@ -42,27 +57,31 @@ const App = () => {
       <UserIdFixer />
 
       {/* Session Timeout Warning - cảnh báo session sắp hết hạn */}
-      <SessionTimeoutWarning />        {/* Cart Provider - quản lý global cart state */}
+      <SessionTimeoutWarning />
+      {/* Cart Provider - quản lý global cart state */}
       <CartProvider>
         {/* Favorite Provider - quản lý global favorite state */}
         <FavoriteProvider>
           {/* Follow Store Provider - quản lý global follow store state */}
           <FollowStoreProvider>
-            <div className="app-layout">
-              {/* Header - Navigation và user menu */}
-              <Header />
+            {/* Admin Redirect Wrapper - chặn Admin truy cập trang không phải admin */}
+            <AdminRedirectWrapper>
+              <div className="app-layout">
+                {/* Header - Navigation và user menu */}
+                <Header />
 
-              {/* Main Content Area */}
-              <main className="main-content">
-                <Outlet />
-              </main>
+                {/* Main Content Area */}
+                <main className="main-content">
+                  <Outlet />
+                </main>
 
-              {/* Footer */}
-              <Footer />
+                {/* Footer */}
+                <Footer />
 
-              {/* Floating Support Button */}
-              <SupportButton variant="floating" />
-            </div>
+                {/* Floating Support Button */}
+                <SupportButton variant="floating" />
+              </div>
+            </AdminRedirectWrapper>
           </FollowStoreProvider>
         </FavoriteProvider>
       </CartProvider>

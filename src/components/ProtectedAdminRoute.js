@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
-const ProtectedRoute = ({ children, allowedRoles = [], requireAuth = true, blockAdminFromNonAdmin = false }) => {
+const ProtectedAdminRoute = ({ children, allowedRoles = [], requireAuth = true, blockAdminFromNonAdmin = false }) => {
     const { isAuthenticated, user, loading } = useAuth();
     const location = useLocation();
 
@@ -21,8 +21,8 @@ const ProtectedRoute = ({ children, allowedRoles = [], requireAuth = true, block
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Block Admin from accessing non-admin pages (except when explicitly accessing admin routes)
-    if (user?.role === 'Admin' && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/login') && !location.pathname.startsWith('/unauthorized')) {
+    // Block Admin from accessing non-admin pages
+    if (blockAdminFromNonAdmin && user?.role === 'Admin') {
         return <Navigate to="/admin" replace />;
     }
 
@@ -40,4 +40,4 @@ const ProtectedRoute = ({ children, allowedRoles = [], requireAuth = true, block
     return children;
 };
 
-export default ProtectedRoute;
+export default ProtectedAdminRoute;

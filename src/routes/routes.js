@@ -1,5 +1,8 @@
 import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
 import ChangePassword from "../pages/User/ChangePassword";
+import AdminChangePassword from "../pages/Admin/User/AdminChangePassword";
+import AdminProfile from "../pages/Admin/User/AdminProfile";
+import AdminProfileEdit from "../pages/Admin/User/AdminProfileEdit";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
@@ -333,6 +336,9 @@ const AppRoutes = () => {
                 <Route path="analytics/orders" element={<Analytics />} />
 
                 {/* System */}
+                <Route path="profile" element={<AdminProfile />} />
+                <Route path="profile/edit" element={<AdminProfileEdit />} />
+                <Route path="change-password" element={<AdminChangePassword />} />
                 <Route path="licenses" element={<ContentManagement />} />
                 <Route path="devices" element={<ContentManagement />} />
                 <Route path="system-settings" element={<ContentManagement />} />

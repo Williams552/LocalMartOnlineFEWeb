@@ -359,33 +359,38 @@ const Header = () => {
                     <div className="flex items-center space-x-4">
                         {isAuthenticated ? (
                             <>
-                                {/* Favorites/Wishlist */}
-                                <Link
-                                    to="/buyer/favorites"
-                                    className="relative text-gray-600 hover:text-red-500 transition group"
-                                    title="Sản phẩm yêu thích"
-                                >
-                                    <FiHeart size={24} className="group-hover:text-red-500" />
-                                    {favoriteCount > 0 && (
-                                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
-                                            {favoriteCount > 99 ? '99+' : favoriteCount}
-                                        </span>
-                                    )}
-                                </Link>
+                                {/* Hide buyer-specific actions for Admin */}
+                                {user?.role !== 'Admin' && (
+                                    <>
+                                        {/* Favorites/Wishlist */}
+                                        <Link
+                                            to="/buyer/favorites"
+                                            className="relative text-gray-600 hover:text-red-500 transition group"
+                                            title="Sản phẩm yêu thích"
+                                        >
+                                            <FiHeart size={24} className="group-hover:text-red-500" />
+                                            {favoriteCount > 0 && (
+                                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                                                    {favoriteCount > 99 ? '99+' : favoriteCount}
+                                                </span>
+                                            )}
+                                        </Link>
 
-                                {/* Following Stores */}
-                                <Link
-                                    to="/buyer/following"
-                                    className="relative text-gray-600 hover:text-blue-500 transition group"
-                                    title="Gian hàng theo dõi"
-                                >
-                                    <FaStore size={24} className="group-hover:text-blue-500" />
-                                    {followingCount > 0 && (
-                                        <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
-                                            {followingCount > 99 ? '99+' : followingCount}
-                                        </span>
-                                    )}
-                                </Link>
+                                        {/* Following Stores */}
+                                        <Link
+                                            to="/buyer/following"
+                                            className="relative text-gray-600 hover:text-blue-500 transition group"
+                                            title="Gian hàng theo dõi"
+                                        >
+                                            <FaStore size={24} className="group-hover:text-blue-500" />
+                                            {followingCount > 0 && (
+                                                <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
+                                                    {followingCount > 99 ? '99+' : followingCount}
+                                                </span>
+                                            )}
+                                        </Link>
+                                    </>
+                                )}
 
                                 {/* Notifications */}
                                 <div className="relative" ref={notificationRef}>
@@ -565,39 +570,11 @@ const Header = () => {
                                         setProxyError("");
                                         setProxySuccess("");
                                         setProxyItems([{ name: "", quantity: 1, unit: "" }]);
-                                        setSelectedStoreId("");
-                                        
-                                        // Fetch units
                                         if (units.length === 0) {
                                             try {
                                                 const res = await axios.get("http://localhost:5183/api/ProductUnit");
                                                 if (res.data && res.data.success) setUnits(res.data.data);
                                             } catch (e) { setUnits([]); }
-                                        }
-                                        
-                                        // Fetch markets
-                                        if (stores.length === 0) {
-                                            try {
-                                                setStoresLoading(true);
-                                                const res = await axios.get("http://localhost:5183/api/Market");
-                                                if (res.data && res.data.success && Array.isArray(res.data.data)) {
-                                                    // Filter only active markets
-                                                    const activeMarkets = res.data.data.filter(market => market.isActive || market.status === 'Active');
-                                                    setStores(activeMarkets);
-                                                } else if (Array.isArray(res.data)) {
-                                                    // Filter only active markets
-                                                    const activeMarkets = res.data.filter(market => market.isActive || market.status === 'Active');
-                                                    setStores(activeMarkets);
-                                                } else {
-                                                    console.warn('Invalid markets data format:', res.data);
-                                                    setStores([]);
-                                                }
-                                            } catch (e) { 
-                                                console.error('Error fetching markets:', e);
-                                                setStores([]);
-                                            } finally {
-                                                setStoresLoading(false);
-                                            }
                                         }
                                     }}
                                 >
@@ -811,19 +788,7 @@ const Header = () => {
                     `}</style>
                                     </div>
                                 )}
-                                <Link
-                                    to="/buyer/cart"
-                                    className="relative text-gray-600 hover:text-supply-primary transition"
-                                    title="Giỏ hàng"
-                                >
-                                    <FiShoppingCart size={24} />
-                                    {cartCount > 0 && (
-                                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-medium">
-                                            {cartCount > 99 ? '99+' : cartCount}
-                                        </span>
-                                    )}
-                                </Link>
-
+                                
                                 {/* User Profile */}
                                 <div className="relative" ref={profileRef}>
                                     <button
@@ -845,47 +810,62 @@ const Header = () => {
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
                                             <div className="py-2">
-                                                <Link to="/profile" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FiUser size={16} />
-                                                    <span>Hồ sơ của tôi</span>
-                                                </Link>                                <Link to="/buyer/orders" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FiBox size={16} />
-                                                    <span>Đơn hàng của tôi</span>
-                                                </Link>
-                                                <Link to="/buyer/favorites" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FiHeart size={16} />
-                                                    <span>Sản phẩm yêu thích</span>
-                                                    {favoriteCount > 0 && (
-                                                        <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                                                            {favoriteCount}
-                                                        </span>
-                                                    )}
-                                                </Link>
-                                                <Link to="/buyer/following" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FaStore size={16} />
-                                                    <span>Gian hàng theo dõi</span>
-                                                    {followingCount > 0 && (
-                                                        <span className="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
-                                                            {followingCount}
-                                                        </span>
-                                                    )}
-                                                </Link>
-                                                <Link to="/fast-bargain" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FaHandshake size={16} />
-                                                    <span>Thương lượng của tôi</span>
-                                                </Link>
-                                                <Link to="/buyer/proxy-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FaHandshake size={16} />
-                                                    <span>Yêu cầu đi chợ giúm</span>
-                                                </Link>
-                                                <Link to="/support-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FaHeadset size={16} />
-                                                    <span>Yêu cầu hỗ trợ</span>
-                                                </Link>
-                                                <Link to="/my-reports" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FaExclamationTriangle size={16} />
-                                                    <span>Báo cáo của tôi</span>
-                                                </Link>
+                                                {/* Admin has different profile links */}
+                                                {user?.role === 'Admin' ? (
+                                                    <Link to="/admin/profile" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                        <FiUser size={16} />
+                                                        <span>Hồ sơ của tôi</span>
+                                                    </Link>
+                                                ) : (
+                                                    <Link to="/profile" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                        <FiUser size={16} />
+                                                        <span>Hồ sơ của tôi</span>
+                                                    </Link>
+                                                )}
+                                                
+                                                {/* Hide buyer-specific menus for Admin */}
+                                                {user?.role !== 'Admin' && (
+                                                    <>
+                                                        <Link to="/buyer/orders" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                            <FiBox size={16} />
+                                                            <span>Đơn hàng của tôi</span>
+                                                        </Link>
+                                                        <Link to="/buyer/favorites" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                            <FiHeart size={16} />
+                                                            <span>Sản phẩm yêu thích</span>
+                                                            {favoriteCount > 0 && (
+                                                                <span className="ml-auto bg-red-500 text-white text-xs px-2 py-1 rounded-full">
+                                                                    {favoriteCount}
+                                                                </span>
+                                                            )}
+                                                        </Link>
+                                                        <Link to="/buyer/following" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                            <FaStore size={16} />
+                                                            <span>Gian hàng theo dõi</span>
+                                                            {followingCount > 0 && (
+                                                                <span className="ml-auto bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                                                                    {followingCount}
+                                                                </span>
+                                                            )}
+                                                        </Link>
+                                                        <Link to="/fast-bargain" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                            <FaHandshake size={16} />
+                                                            <span>Thương lượng của tôi</span>
+                                                        </Link>
+                                                        <Link to="/buyer/proxy-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                            <FaHandshake size={16} />
+                                                            <span>Yêu cầu đi chợ giúm</span>
+                                                        </Link>
+                                                        <Link to="/support-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                            <FaHeadset size={16} />
+                                                            <span>Yêu cầu hỗ trợ</span>
+                                                        </Link>
+                                                        <Link to="/my-reports" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
+                                                            <FaExclamationTriangle size={16} />
+                                                            <span>Báo cáo của tôi</span>
+                                                        </Link>
+                                                    </>
+                                                )}
 
                                                 {/* Seller Navigation */}
                                                 {user?.role === 'Seller' && (
