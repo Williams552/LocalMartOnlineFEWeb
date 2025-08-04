@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -14,8 +14,23 @@ import ScrollToTop from './components/Common/ScrollToTop';
 // Services
 import authService from './services/authService';
 
+// Hooks
+import { useAuth } from './hooks/useAuth';
+
 // Styles
 import './App.css';
+
+const AdminRedirectWrapper = ({ children }) => {
+  const { user } = useAuth();
+  const location = useLocation();
+
+  // If user is Admin and trying to access seller pages, redirect to admin
+  if (user?.role === 'Admin' && location.pathname.startsWith('/seller')) {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return children;
+};
 
 const SellerApp = () => {
     // Setup auth service on app init
@@ -41,12 +56,15 @@ const SellerApp = () => {
 
             {/* Cart Provider - quản lý global cart state */}
             <CartProvider>
-                <div className="seller-app-layout min-h-screen bg-gray-50">
-                    {/* Main Content Area - No Header/Footer for clean seller dashboard */}
-                    <main className="seller-main-content h-full">
-                        <Outlet />
-                    </main>
-                </div>
+                {/* Admin Redirect Wrapper - chặn Admin truy cập trang seller */}
+                <AdminRedirectWrapper>
+                    <div className="seller-app-layout min-h-screen bg-gray-50">
+                        {/* Main Content Area - No Header/Footer for clean seller dashboard */}
+                        <main className="seller-main-content h-full">
+                            <Outlet />
+                        </main>
+                    </div>
+                </AdminRedirectWrapper>
             </CartProvider>
 
             {/* Toast Notifications */}

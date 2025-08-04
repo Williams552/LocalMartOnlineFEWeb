@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { FaLock, FaSave } from "react-icons/fa";
+import { useAuth } from "../../hooks/useAuth";
 
 const ChangePassword = () => {
     const [oldPassword, setOldPassword] = useState("");
@@ -10,6 +11,7 @@ const ChangePassword = () => {
     const [success, setSuccess] = useState("");
     const { changePassword } = require("../../services/authService");
     const navigate = require("react-router-dom").useNavigate();
+    const { user } = useAuth();
 
     const validateForm = () => {
         if (!oldPassword || !newPassword || !confirmPassword) {
@@ -36,13 +38,18 @@ const ChangePassword = () => {
         try {
             const result = await changePassword(oldPassword, newPassword);
             if (result.success) {
-                setSuccess("Đổi mật khẩu thành công! Đang chuyển về trang hồ sơ...");
+                setSuccess("Đổi mật khẩu thành công! Đang chuyển hướng...");
                 setOldPassword("");
                 setNewPassword("");
                 setConfirmPassword("");
                 setTimeout(() => {
-                    navigate("/profile");
-                }, 500);
+                    // Admin được chuyển về admin dashboard, các role khác về profile
+                    if (user?.role === 'Admin') {
+                        navigate("/admin");
+                    } else {
+                        navigate("/profile");
+                    }
+                }, 1500);
             } else {
                 setError(result.message || "Đổi mật khẩu thất bại.");
             }

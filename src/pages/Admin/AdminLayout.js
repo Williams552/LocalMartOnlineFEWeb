@@ -27,7 +27,8 @@ import {
     BarChartOutlined,
     DollarOutlined,
     TagsOutlined,
-    BoxPlotOutlined
+    BoxPlotOutlined,
+    LockOutlined
 } from '@ant-design/icons';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
@@ -71,7 +72,7 @@ const AdminLayout = () => {
         {
             key: 'products', icon: <BoxPlotOutlined />, label: 'Quản lý sản phẩm', children: [
                 { key: '/admin/products', label: 'Danh sách sản phẩm' },
-                { key: '/admin/products/pending', label: 'Sản phẩm chờ duyệt' },
+                // { key: '/admin/products/pending', label: 'Sản phẩm chờ duyệt' },
                 { key: '/admin/products/fast-bargain', label: 'Sản phẩm thương lượng' },
             ]
         },
@@ -94,13 +95,13 @@ const AdminLayout = () => {
         {
             key: 'content', icon: <FileTextOutlined />, label: 'Quản lý nội dung', children: [
                 { key: '/admin/faqs', label: 'FAQ' },
-                { key: '/admin/notifications', label: 'Thông báo' },
+                // { key: '/admin/notifications', label: 'Thông báo' },
             ]
         },
         {
             key: 'support', icon: <CustomerServiceOutlined />, label: 'Hỗ trợ khách hàng', children: [
                 { key: '/admin/support-requests', label: 'Yêu cầu hỗ trợ' },
-                { key: '/admin/chat', label: 'Chat hỗ trợ' },
+                // { key: '/admin/chat', label: 'Chat hỗ trợ' },
                 { key: '/admin/reports', label: 'Báo cáo vi phạm' },
             ]
         },
@@ -116,10 +117,31 @@ const AdminLayout = () => {
     const handleMenuClick = ({ key }) => navigate(key);
 
     const userMenuItems = [
-        { key: 'profile', icon: <UserOutlined />, label: 'Hồ sơ cá nhân' },
-        { key: 'settings', icon: <SettingOutlined />, label: 'Cài đặt' },
+        { 
+            key: 'profile', 
+            icon: <UserOutlined />, 
+            label: 'Hồ sơ cá nhân',
+            onClick: () => navigate('/admin/profile')
+        },
+        { 
+            key: 'change-password', 
+            icon: <LockOutlined />, 
+            label: 'Đổi mật khẩu',
+            onClick: () => navigate('/admin/change-password')
+        },
+        // { 
+        //     key: 'settings', 
+        //     icon: <SettingOutlined />, 
+        //     label: 'Cài đặt',
+        //     onClick: () => navigate('/admin/system-settings')
+        // },
         { type: 'divider' },
-        { key: 'logout', icon: <LogoutOutlined />, label: 'Đăng xuất', onClick: logout },
+        { 
+            key: 'logout', 
+            icon: <LogoutOutlined />, 
+            label: 'Đăng xuất', 
+            onClick: logout 
+        },
     ];
 
     const getBreadcrumbItems = () => {
@@ -140,6 +162,10 @@ const AdminLayout = () => {
             'analytics': 'Báo cáo & Thống kê',
             'proxy-shopping': 'Đơn hàng mua hộ',
             'fast-bargain': 'Khuyến mãi',
+            'profile': 'Hồ sơ cá nhân',
+            'edit': 'Chỉnh sửa',
+            'change-password': 'Đổi mật khẩu',
+            'system-settings': 'Cài đặt hệ thống',
             'demo': 'Demo Selector'
         };
 
@@ -195,9 +221,6 @@ const AdminLayout = () => {
                         style={{ fontSize: '16px', width: 64, height: 64 }}
                     />
                     <Space size="large">
-                        <Badge count={5}>
-                            <Button type="text" icon={<BellOutlined />} onClick={() => navigate('/admin/notifications')} />
-                        </Badge>
                         <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                             <Space
                                 style={{
