@@ -52,26 +52,65 @@ const AdminProfile = () => {
     });
 
     useEffect(() => {
+        console.log('AdminProfile - Current user data:', user);
         loadProfileData();
         loadAdminStatistics();
-    }, []);
+    }, [user]);
 
     const loadProfileData = async () => {
         setLoading(true);
         try {
-            // Trong thực tế sẽ gọi API để lấy thông tin chi tiết admin
-            // const response = await adminService.getAdminProfile();
+            // Lấy thông tin user hiện tại từ API thay vì dùng cache
+            const userId = user?.id;
+            if (userId) {
+                try {
+                    const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5183';
+                    const response = await fetch(`${API_URL}/api/user/${userId}`, {
+                        method: 'GET',
+                        headers: {
+                            'accept': '*/*',
+                            'Authorization': `Bearer ${authService.getToken()}`
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            const userData = result.data;
+                            console.log('AdminProfile - API response:', userData);
+                            
+                            setProfileData({
+                                id: userData.id,
+                                username: userData.username,
+                                fullName: userData.fullName,
+                                email: userData.email,
+                                phoneNumber: userData.phoneNumber,
+                                role: userData.role,
+                                status: userData.status,
+                                createdAt: userData.createdAt,
+                                lastLogin: userData.updatedAt,
+                                department: 'Công nghệ thông tin',
+                                level: 'Admin'
+                            });
+                            return; // Exit early if API call successful
+                        }
+                    }
+                } catch (apiError) {
+                    console.error('API call failed, falling back to user data:', apiError);
+                }
+            }
             
-            // Mock data based on current user
+            // Fallback: sử dụng dữ liệu từ user object nếu API call thất bại
+            console.log('AdminProfile - Using fallback user data:', user);
             setProfileData({
                 id: user?.id || 'admin-001',
                 username: user?.username || 'admin',
                 fullName: user?.fullName || 'Quản trị viên hệ thống',
-                email: user?.email || 'admin@localmart.com',
-                phone: user?.phone || '+84 xxx xxx xxx',
-                role: 'Admin',
-                status: 'Active',
-                createdAt: '2024-01-01T00:00:00Z',
+                email: user?.email || 'Chưa cập nhật',
+                phoneNumber: user?.phoneNumber || 'Chưa cập nhật',
+                role: user?.role || 'Admin',
+                status: user?.status || 'Active',
+                createdAt: user?.createdAt || '2024-01-01T00:00:00Z',
                 lastLogin: new Date().toISOString(),
                 permissions: [
                     'Quản lý người dùng',
@@ -141,9 +180,6 @@ const AdminProfile = () => {
                     <UserOutlined className="text-blue-600" />
                     Hồ sơ quản trị viên
                 </Title>
-                <Text type="secondary">
-                    Thông tin cá nhân và quyền hạn của tài khoản quản trị viên
-                </Text>
             </div>
 
             <Row gutter={[24, 24]}>
@@ -178,12 +214,6 @@ const AdminProfile = () => {
                                     {profileData?.fullName}
                                 </Title>
                                 <Space wrap>
-                                    <Tag color="blue" icon={<UserOutlined />}>
-                                        {profileData?.role}
-                                    </Tag>
-                                    <Tag color={getStatusColor(profileData?.status)}>
-                                        {profileData?.status === 'Active' ? 'Hoạt động' : 'Ngưng hoạt động'}
-                                    </Tag>
                                     <Tag color="purple">
                                         {profileData?.level}
                                     </Tag>
@@ -195,12 +225,6 @@ const AdminProfile = () => {
                         </div>
 
                         <Descriptions column={2} bordered>
-                            <Descriptions.Item label="Tên đăng nhập" span={1}>
-                                <Text strong>{profileData?.username}</Text>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Họ và tên" span={1}>
-                                {profileData?.fullName}
-                            </Descriptions.Item>
                             <Descriptions.Item label="Email" span={1}>
                                 <Space>
                                     <MailOutlined />
@@ -210,7 +234,7 @@ const AdminProfile = () => {
                             <Descriptions.Item label="Số điện thoại" span={1}>
                                 <Space>
                                     <PhoneOutlined />
-                                    {profileData?.phone}
+                                    {profileData?.phoneNumber}
                                 </Space>
                             </Descriptions.Item>
                             <Descriptions.Item label="Phòng ban" span={1}>
