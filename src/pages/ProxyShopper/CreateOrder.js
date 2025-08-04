@@ -31,7 +31,10 @@ const CreateOrder = () => {
             },
         });
         if (res.ok) {
-            setRequest(await res.json());
+            const requestData = await res.json();
+            console.log('Request data with market info:', requestData); // Debug log
+            console.log('ProxyOrderId for proposal:', requestData.proxyOrderId); // Debug proxyOrderId
+            setRequest(requestData);
         }
         setLoading(false);
     };
@@ -39,16 +42,25 @@ const CreateOrder = () => {
     const handleSearch = async (e) => {
         e.preventDefault();
         if (!search.trim()) return;
-        // Gọi API tìm kiếm sản phẩm cho proxy shopper
+        // Gọi API tìm kiếm sản phẩm cho proxy shopper với thông tin market
         const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:5183/api/ProxyShopper/products/advanced-search?query=${encodeURIComponent(search)}`, {
+        let searchUrl = `http://localhost:5183/api/ProxyShopper/products/advanced-search?query=${encodeURIComponent(search)}`;
+        
+        // Nếu có marketId trong request, thêm vào query để lọc sản phẩm theo chợ
+        if (request?.marketId) {
+            searchUrl += `&marketId=${request.marketId}`;
+        }
+        
+        const res = await fetch(searchUrl, {
             headers: {
                 "Authorization": token ? `Bearer ${token}` : undefined,
                 "Content-Type": "application/json"
             },
         });
         if (res.ok) {
-            setProducts(await res.json());
+            const productsData = await res.json();
+            console.log('Products data:', productsData); // Debug log
+            setProducts(productsData);
         }
     };
 
@@ -77,10 +89,19 @@ const CreateOrder = () => {
             })),
             TotalProductPrice: selected.reduce((total, item) => total + ((item.price || 0) * item.quantity), 0),
             proxyFee: Number(proxyFee),
-            note
+            note,
+            // Bao gồm marketId nếu có trong request
+            ...(request?.marketId && { marketId: request.marketId })
         };
+        
+        console.log('Sending proposal with body:', body); // Debug log
+        
+        // Sử dụng proxyOrderId từ request data thay vì id từ params
+        const proposalId = request.proxyOrderId || id;
+        console.log('Using proposalId:', proposalId); // Debug log
+        
         try {
-            const res = await fetch(`http://localhost:5183/api/ProxyShopper/requests/${id}/proposal`, {
+            const res = await fetch(`http://localhost:5183/api/ProxyShopper/orders/${proposalId}/proposal`, {
                 method: "POST",
                 headers: {
                     "Authorization": token ? `Bearer ${token}` : undefined,
@@ -91,6 +112,10 @@ const CreateOrder = () => {
             if (res.ok) {
                 setSendSuccess("Gửi đề xuất thành công!");
                 setShowProposalModal(false);
+                // Có thể redirect về trang orders sau khi gửi thành công
+                setTimeout(() => {
+                    window.location.href = '/proxy-shopper/orders';
+                }, 2000);
             } else {
                 const err = await res.json().catch(() => ({}));
                 setSendError(err.message || "Gửi đề xuất thất bại.");
@@ -103,12 +128,68 @@ const CreateOrder = () => {
 
     if (loading) return <div className="p-8 text-center">Đang tải...</div>;
     if (!request) return <div className="p-8 text-center text-red-600">Không tìm thấy yêu cầu đơn hàng.</div>;
+    
+    // Validation: Đảm bảo request có thông tin Market và proxyOrderId
+    if (!request.marketId) {
+        return (
+            <div className="p-8 text-center">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-yellow-800 mb-2">Thiếu thông tin chợ</h3>
+                    <p className="text-yellow-700">
+                        Yêu cầu này không có thông tin chợ cụ thể. Đây có thể là dữ liệu cũ hoặc có lỗi xảy ra.
+                        Vui lòng liên hệ hỗ trợ hoặc quay lại danh sách đơn hàng.
+                    </p>
+                    <button 
+                        onClick={() => window.history.back()}
+                        className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                    >
+                        Quay lại
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    if (!request.proxyOrderId) {
+        return (
+            <div className="p-8 text-center">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-red-800 mb-2">Thiếu thông tin đơn hàng</h3>
+                    <p className="text-red-700">
+                        Yêu cầu này không có ProxyOrderId. Không thể tạo đề xuất.
+                        Vui lòng liên hệ hỗ trợ hoặc quay lại danh sách đơn hàng.
+                    </p>
+                    <button 
+                        onClick={() => window.history.back()}
+                        className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                        Quay lại
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
             {/* Thông tin request khách hàng */}
             <div className="bg-white rounded-lg shadow p-6 mb-8">
                 <h2 className="text-xl font-bold mb-2 text-supply-primary flex items-center"><FiUser className="mr-2" /> Yêu cầu của khách hàng</h2>
+                
+                {/* Thông tin chợ */}
+                {request.marketName && (
+                    <div className="bg-blue-50 rounded-lg p-3 mb-4">
+                        <h4 className="text-sm font-medium text-blue-800 mb-1">Chợ được yêu cầu</h4>
+                        <div className="flex items-center text-blue-700">
+                            <FiMapPin className="mr-1" size={16} />
+                            <span className="font-semibold">{request.marketName}</span>
+                            {request.marketId && (
+                                <span className="ml-2 text-xs text-blue-600">(ID: {request.marketId})</span>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 <div className="mb-2 flex flex-wrap gap-4">
                     <div className="flex items-center text-gray-700"><FiUser className="mr-1" /> {request.buyerName}</div>
                     <div className="flex items-center text-gray-700"><FiPhone className="mr-1" /> {request.buyerPhone}</div>
@@ -184,7 +265,7 @@ const CreateOrder = () => {
                                     <div className="text-sm text-gray-600 mt-1">
                                         <span className="font-semibold text-green-600">{product.price?.toLocaleString()} đ</span>
                                         <span className="mx-2">•</span>
-                                        <span>Cửa hàng: {product.storeName}</span>
+                                        <span>Cửa hàng: {product.storeName || product.marketName}</span>
                                     </div>
                                     <div className="text-xs text-gray-500 mt-1">
                                         <span>⭐ {product.sellerReputation}</span>

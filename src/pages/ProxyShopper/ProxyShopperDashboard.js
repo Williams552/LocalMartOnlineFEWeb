@@ -80,7 +80,16 @@ const ProxyShopperDashboard = () => {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard Proxy Shopper</h1>
-                <p className="text-gray-600">Chào mừng bạn quay trở lại! Quản lý đơn hàng và theo dõi thu nhập của bạn.</p>
+                <p className="text-gray-600">Chào mừng bạn quay trở lại! Quản lý đơn hàng và theo dõi thu nhập từ các chợ đã đăng ký.</p>
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                    <div className="flex items-center">
+                        <FiPackage className="text-blue-500 mr-2" size={16} />
+                        <p className="text-sm text-blue-700">
+                            <strong>Hệ thống mới:</strong> Bạn chỉ nhận đơn hàng từ những chợ mà bạn đã đăng ký. 
+                            Khách hàng sẽ chọn chợ cụ thể khi tạo yêu cầu đi chợ giùm.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Stats Cards */}

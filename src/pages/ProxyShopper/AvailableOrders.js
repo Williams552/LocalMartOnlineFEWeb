@@ -26,6 +26,7 @@ const AvailableOrders = () => {
             });
             if (!res.ok) throw new Error("Không thể lấy danh sách đơn hàng khả dụng");
             const data = await res.json();
+            console.log('Available orders with market info:', data); // Debug log
             setOrders(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching available orders:', error);
@@ -107,7 +108,20 @@ const AvailableOrders = () => {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Đơn hàng khả dụng</h1>
-                <p className="text-gray-600">Tìm và nhận các đơn hàng phù hợp với bạn.</p>
+                <p className="text-gray-600">Tìm và nhận các đơn hàng từ những chợ bạn đã đăng ký.</p>
+                <div className="mt-3 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                    <div className="flex items-start">
+                        <FiMapPin className="text-blue-500 mr-2 mt-0.5" size={16} />
+                        <div className="text-sm text-blue-700">
+                            <p className="font-medium mb-1">Cơ chế hoạt động:</p>
+                            <ul className="list-disc list-inside space-y-1">
+                                <li>Bạn chỉ thấy đơn hàng từ những chợ mà bạn đã đăng ký làm proxy shopper</li>
+                                <li>Khách hàng phải chọn chợ cụ thể khi tạo yêu cầu đi chợ giùm</li>
+                                <li>Hệ thống tự động lọc và hiển thị đúng đơn hàng phù hợp với bạn</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Refresh Button */}
@@ -170,6 +184,25 @@ const AvailableOrders = () => {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Market Info */}
+                                {order.marketName && (
+                                    <div className="mb-4 p-4 bg-green-50 rounded-lg">
+                                        <div className="flex items-center space-x-2 mb-2">
+                                            <FiMapPin className="text-green-600" size={16} />
+                                            <span className="font-medium text-green-700">Thông tin chợ</span>
+                                        </div>
+                                        <div className="flex items-center">
+                                            <p className="text-sm text-green-600">Chợ yêu cầu:</p>
+                                            <p className="text-sm font-medium text-green-800 ml-2">
+                                                {order.marketName}
+                                                {order.marketId && (
+                                                    <span className="ml-1 text-xs text-green-600">(ID: {order.marketId})</span>
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {/* Order Items */}
                                 <div className="mb-4">
@@ -277,9 +310,17 @@ const AvailableOrders = () => {
                         <h3 className="text-xl font-medium text-gray-900 mb-2">
                             Hiện tại không có đơn hàng nào
                         </h3>
-                        <p className="text-gray-500 mb-6">
-                            Chưa có đơn hàng mới cần được xử lý. Hãy quay lại sau hoặc làm mới trang để kiểm tra.
-                        </p>
+                        <div className="text-gray-500 mb-6 space-y-2">
+                            <p>Chưa có đơn hàng mới từ các chợ bạn đã đăng ký.</p>
+                            <div className="text-sm bg-gray-50 rounded-lg p-3 mt-4">
+                                <p className="font-medium text-gray-700 mb-2">Có thể do:</p>
+                                <ul className="text-left list-disc list-inside space-y-1">
+                                    <li>Chưa có khách hàng tạo yêu cầu đi chợ từ các chợ bạn đã đăng ký</li>
+                                    <li>Tất cả đơn hàng hiện tại đã được proxy shopper khác nhận</li>
+                                    <li>Bạn cần đăng ký làm proxy shopper tại nhiều chợ hơn</li>
+                                </ul>
+                            </div>
+                        </div>
                         <button
                             onClick={fetchAvailableOrders}
                             className="inline-flex items-center px-6 py-3 bg-supply-primary text-white rounded-lg hover:bg-green-600 transition-colors"
