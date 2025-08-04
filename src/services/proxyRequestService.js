@@ -1,13 +1,12 @@
 import authService from './authService';
-
-const API_BASE_URL = 'http://localhost:5183/api';
+import { API_ENDPOINTS } from '../config/apiEndpoints';
 
 const proxyRequestService = {
     // Lấy danh sách yêu cầu của buyer
     getMyRequests: async () => {
         try {
             const response = await authService.makeAuthenticatedRequest(
-                `${API_BASE_URL}/ProxyShopper/requests/my-requests`
+                API_ENDPOINTS.PROXY_REQUEST.GET_MY_REQUESTS
             );
 
             if (!response.ok) {
@@ -25,7 +24,7 @@ const proxyRequestService = {
     approveProposal: async (requestId) => {
         try {
             const response = await authService.makeAuthenticatedRequest(
-                `${API_BASE_URL}/ProxyShopper/orders/${requestId}/approve-pay`,
+                API_ENDPOINTS.PROXY_REQUEST.APPROVE_PROPOSAL(requestId),
                 { method: 'POST' }
             );
 
@@ -47,7 +46,7 @@ const proxyRequestService = {
     confirmDelivery: async (requestId) => {
         try {
             const response = await authService.makeAuthenticatedRequest(
-                `${API_BASE_URL}/ProxyShopper/orders/${requestId}/confirm-delivery`,
+                API_ENDPOINTS.PROXY_REQUEST.CONFIRM_DELIVERY(requestId),
                 { method: 'POST' }
             );
 
@@ -69,7 +68,7 @@ const proxyRequestService = {
     cancelRequest: async (requestId, reason) => {
         try {
             const response = await authService.makeAuthenticatedRequest(
-                `${API_BASE_URL}/ProxyShopper/requests/${requestId}/cancel`,
+                API_ENDPOINTS.PROXY_REQUEST.CANCEL_REQUEST(requestId),
                 { 
                     method: 'DELETE',
                     headers: {
@@ -103,7 +102,7 @@ const proxyRequestService = {
     rejectProposal: async (orderId, reason) => {
         try {
             const response = await authService.makeAuthenticatedRequest(
-                `${API_BASE_URL}/ProxyShopper/orders/${orderId}/reject-proposal`,
+                API_ENDPOINTS.PROXY_REQUEST.REJECT_PROPOSAL(orderId),
                 { 
                     method: 'POST',
                     headers: {
@@ -137,7 +136,7 @@ const proxyRequestService = {
     getRequestDetail: async (requestId) => {
         try {
             const response = await authService.makeAuthenticatedRequest(
-                `${API_BASE_URL}/ProxyShopper/requests/${requestId}`
+                API_ENDPOINTS.PROXY_REQUEST.GET_REQUEST_DETAIL(requestId)
             );
 
             if (!response.ok) {
