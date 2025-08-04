@@ -17,7 +17,10 @@ import {
     FaSearch,
     FaSyncAlt,
     FaMoneyBillWave,
-    FaBan
+    FaBan,
+    FaPrint,
+    FaFileExcel,
+    FaDownload
 } from 'react-icons/fa';
 import SellerLayout from '../../layouts/SellerLayout';
 import { ReportButton } from '../../components/Report';
@@ -405,8 +408,156 @@ const SellerOrdersPage = () => {
                     tooltip="Báo cáo người mua"
                     className="p-1 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded"
                 />
+
+                {/* Print Invoice Button - Available for all orders */}
+                <button
+                    onClick={() => handlePrintOrder(order)}
+                    className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded"
+                    title="In hóa đơn"
+                >
+                    <FaPrint />
+                </button>
             </div>
         );
+    };
+
+    // Function to print order invoice
+    const handlePrintOrder = (order) => {
+        const printWindow = window.open('', '_blank');
+        const printContent = `
+            <html>
+                <head>
+                    <title>Hóa đơn đơn hàng #${order.id?.slice(-8) || 'N/A'}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.4; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 20px; }
+                        .header h1 { color: #333; margin: 0; font-size: 24px; }
+                        .info { margin-bottom: 20px; }
+                        .info-section { margin-bottom: 15px; }
+                        .info-label { font-weight: bold; color: #555; }
+                        .items { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                        .items th, .items td { border: 1px solid #ddd; padding: 12px 8px; text-align: left; }
+                        .items th { background-color: #f8f9fa; font-weight: bold; }
+                        .items tr:nth-child(even) { background-color: #f9f9f9; }
+                        .total { text-align: right; margin-top: 20px; font-size: 18px; font-weight: bold; color: #d9534f; }
+                        .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
+                        .seller-info { background-color: #e9ecef; padding: 10px; border-radius: 5px; margin-bottom: 15px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>HÓA ĐƠN BÁN HÀNG</h1>
+                        <p style="margin: 5px 0;">Mã đơn hàng: #${order.id?.slice(-8) || 'N/A'}</p>
+                        <p style="margin: 5px 0;">Ngày xuất: ${new Date().toLocaleDateString('vi-VN')}</p>
+                    </div>
+                    
+                    <div class="seller-info">
+                        <h3 style="margin: 0 0 10px 0;">Thông tin người bán</h3>
+                        <p style="margin: 3px 0;"><span class="info-label">Cửa hàng:</span> ${order.storeName || authService.getCurrentUser()?.storeName || 'Cửa hàng của tôi'}</p>
+                        <p style="margin: 3px 0;"><span class="info-label">Người bán:</span> ${authService.getCurrentUser()?.name || 'Chưa có thông tin'}</p>
+                    </div>
+
+                    <div class="info">
+                        <h3>Thông tin khách hàng</h3>
+                        <div class="info-section">
+                            <p><span class="info-label">Tên khách hàng:</span> ${order.customerName || order.customer?.name || order.user?.name || order.buyerName || 'Không xác định'}</p>
+                            <p><span class="info-label">Số điện thoại:</span> ${order.customerPhone || order.customer?.phone || order.user?.phone || order.buyerPhone || 'Chưa có'}</p>
+                            <p><span class="info-label">Địa chỉ giao hàng:</span> ${order.deliveryAddress || 'Chưa có thông tin'}</p>
+                        </div>
+                        
+                        <div class="info-section">
+                            <p><span class="info-label">Ngày đặt hàng:</span> ${new Date(order.createdAt || order.orderDate).toLocaleDateString('vi-VN')}</p>
+                            <p><span class="info-label">Trạng thái:</span> ${getStatusText(order.status)}</p>
+                            <p><span class="info-label">Ghi chú:</span> ${order.notes || 'Không có ghi chú'}</p>
+                        </div>
+                    </div>
+
+                    <table class="items">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">Sản phẩm</th>
+                                <th style="width: 15%;">Đơn vị</th>
+                                <th style="width: 15%;">Số lượng</th>
+                                <th style="width: 15%;">Đơn giá</th>
+                                <th style="width: 15%;">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${(order.items || []).map(item => `
+                                <tr>
+                                    <td>${item.productName || item.name || 'Sản phẩm không xác định'}</td>
+                                    <td>${item.productUnitName || item.unit || 'cái'}</td>
+                                    <td style="text-align: center;">${item.quantity || 0}</td>
+                                    <td style="text-align: right;">${(item.priceAtPurchase || item.price || 0).toLocaleString('vi-VN')} VNĐ</td>
+                                    <td style="text-align: right;">${((item.priceAtPurchase || item.price || 0) * (item.quantity || 0)).toLocaleString('vi-VN')} VNĐ</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+
+                    <div class="total">
+                        <p>Tổng cộng: ${(order.totalAmount || 0).toLocaleString('vi-VN')} VNĐ</p>
+                    </div>
+
+                    <div class="footer">
+                        <p>Cảm ơn quý khách đã tin tưởng và ủng hộ!</p>
+                        <p>Hóa đơn được xuất tự động từ hệ thống - ${new Date().toLocaleString('vi-VN')}</p>
+                    </div>
+                </body>
+            </html>
+        `;
+
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+    };
+
+    // Function to export orders to Excel
+    const handleExportExcel = () => {
+        const exportData = filteredOrders.map(order => ({
+            'Mã đơn hàng': `#${order.id?.slice(-8) || 'N/A'}`,
+            'Khách hàng': order.customerName || order.customer?.name || order.user?.name || order.buyerName || 'Không xác định',
+            'Số điện thoại': order.customerPhone || order.customer?.phone || order.user?.phone || order.buyerPhone || '',
+            'Số lượng sản phẩm': order.items?.length || 0,
+            'Tổng tiền': `${(order.totalAmount || 0).toLocaleString('vi-VN')} VNĐ`,
+            'Trạng thái': getStatusText(order.status),
+            'Ngày đặt': new Date(order.createdAt || order.orderDate).toLocaleDateString('vi-VN'),
+            'Địa chỉ giao hàng': order.deliveryAddress || 'Chưa có thông tin',
+            'Ghi chú': order.notes || 'Không có'
+        }));
+
+        if (exportData.length === 0) {
+            toast.warning('Không có đơn hàng nào để xuất');
+            return;
+        }
+
+        // Tạo CSV content
+        const headers = Object.keys(exportData[0] || {});
+        const csvContent = [
+            headers.join(','),
+            ...exportData.map(row => headers.map(header => `"${row[header] || ''}"`).join(','))
+        ].join('\n');
+
+        // Download file
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `don_hang_seller_${new Date().getTime()}.csv`;
+        link.click();
+
+        toast.success('Xuất Excel thành công');
+    };
+
+    // Helper function to get status text
+    const getStatusText = (status) => {
+        const statusMap = {
+            'Pending': 'Chờ xác nhận',
+            'Confirmed': 'Đã xác nhận hàng',
+            'Paid': 'Đã nhận tiền',
+            'Completed': 'Hoàn thành',
+            'Cancelled': 'Đã hủy'
+        };
+        return statusMap[status] || status || 'Không xác định';
     };
 
     const filteredOrders = orders.filter(order => {
@@ -432,14 +583,24 @@ const SellerOrdersPage = () => {
                                 Xem và quản lý tất cả đơn hàng của bạn
                             </p>
                         </div>
-                        <button
-                            onClick={fetchOrders}
-                            disabled={loading}
-                            className="flex items-center px-4 py-2 bg-supply-primary text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
-                        >
-                            <FaSyncAlt className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
-                            Tải lại
-                        </button>
+                        <div className="flex items-center space-x-3">
+                            <button
+                                onClick={handleExportExcel}
+                                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                                title="Xuất danh sách đơn hàng ra Excel"
+                            >
+                                <FaFileExcel className="mr-2" />
+                                Xuất Excel
+                            </button>
+                            <button
+                                onClick={fetchOrders}
+                                disabled={loading}
+                                className="flex items-center px-4 py-2 bg-supply-primary text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+                            >
+                                <FaSyncAlt className={`mr-2 ${loading ? 'animate-spin' : ''}`} />
+                                Tải lại
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -482,10 +643,13 @@ const SellerOrdersPage = () => {
                             </select>
                         </div>
 
-                        {/* Order Count */}
+                        {/* Order Count and Export Info */}
                         <div className="flex items-end">
                             <div className="text-sm text-gray-600">
-                                Hiển thị {filteredOrders.length} đơn hàng
+                                <div>Hiển thị {filteredOrders.length} đơn hàng</div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                    Xuất Excel sẽ bao gồm {filteredOrders.length} đơn hàng hiện tại
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -780,12 +944,21 @@ const SellerOrdersPage = () => {
                                 <div className="flex gap-2">
                                     {getActionButtons(selectedOrder)}
                                 </div>
-                                <button
-                                    onClick={() => setShowOrderDetail(false)}
-                                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                                >
-                                    Đóng
-                                </button>
+                                <div className="flex items-center space-x-3">
+                                    <button
+                                        onClick={() => handlePrintOrder(selectedOrder)}
+                                        className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                                    >
+                                        <FaPrint className="mr-2" />
+                                        In hóa đơn
+                                    </button>
+                                    <button
+                                        onClick={() => setShowOrderDetail(false)}
+                                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                                    >
+                                        Đóng
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
