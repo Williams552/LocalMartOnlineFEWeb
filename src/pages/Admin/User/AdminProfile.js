@@ -55,10 +55,32 @@ const AdminProfile = () => {
         console.log('AdminProfile - Current user data:', user);
         loadProfileData();
         loadAdminStatistics();
-    }, [user]);
+    }, []); // Remove user dependency to avoid infinite loops
+
+    // Separate effect to reload when user changes
+    useEffect(() => {
+        if (user?.id) {
+            console.log('AdminProfile - User changed, reloading profile data');
+            loadProfileData();
+        }
+    }, [user?.id]);
+
+    // Reload data when component becomes visible (e.g., navigating back from edit)
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!document.hidden && user?.id) {
+                console.log('AdminProfile - Page became visible, reloading data');
+                loadProfileData();
+            }
+        };
+        
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    }, [user?.id]);
 
     const loadProfileData = async () => {
         setLoading(true);
+        console.log('AdminProfile - Loading profile data for user:', user);
         try {
             // Lấy thông tin user hiện tại từ API thay vì dùng cache
             const userId = user?.id;
@@ -214,8 +236,11 @@ const AdminProfile = () => {
                                     {profileData?.fullName}
                                 </Title>
                                 <Space wrap>
-                                    <Tag color="purple">
-                                        {profileData?.level}
+                                    <Tag color="blue" icon={<UserOutlined />}>
+                                        {profileData?.role}
+                                    </Tag>
+                                    <Tag color={getStatusColor(profileData?.status)}>
+                                        {profileData?.status === 'Active' ? 'Hoạt động' : 'Ngưng hoạt động'}
                                     </Tag>
                                 </Space>
                                 <Paragraph className="mt-3 mb-0" type="secondary">
@@ -225,6 +250,12 @@ const AdminProfile = () => {
                         </div>
 
                         <Descriptions column={2} bordered>
+                            <Descriptions.Item label="Tên đăng nhập" span={1}>
+                                <Text strong>{profileData?.username}</Text>
+                            </Descriptions.Item>
+                            <Descriptions.Item label="Họ và tên" span={1}>
+                                {profileData?.fullName}
+                            </Descriptions.Item>
                             <Descriptions.Item label="Email" span={1}>
                                 <Space>
                                     <MailOutlined />

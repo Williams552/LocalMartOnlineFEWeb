@@ -135,8 +135,27 @@ const AdminProfileEdit = () => {
                 if (result.success) {
                     setSuccess("Cập nhật thông tin thành công!");
                     
-                    // Reload user data in auth context (if needed)
-                    // await authService.refreshUserData();
+                    // Reload user data from API to ensure we have the latest info
+                    try {
+                        const getResponse = await fetch(`${API_URL}/api/user/${userId}`, {
+                            method: 'GET',
+                            headers: {
+                                'accept': '*/*',
+                                'Authorization': `Bearer ${authService.getToken()}`
+                            }
+                        });
+                        
+                        if (getResponse.ok) {
+                            const getResult = await getResponse.json();
+                            if (getResult.success && getResult.data) {
+                                console.log('AdminProfileEdit - Refreshed user data after update:', getResult.data);
+                                // Optionally update the auth context here if needed
+                                // authService.setUser(getResult.data);
+                            }
+                        }
+                    } catch (refreshError) {
+                        console.error('Error refreshing user data:', refreshError);
+                    }
                     
                     setTimeout(() => {
                         navigate('/admin/profile');
