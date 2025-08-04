@@ -6,8 +6,9 @@ class ProxyShopperRegistrationService {
     async registerProxyShopper(registrationData) {
         try {
             // Prepare the request data according to backend DTO
+            // Backend expects: MarketId, TransportMethod, PaymentMethod
             const requestData = {
-                operatingArea: registrationData.operatingArea,
+                marketId: registrationData.operatingArea, // operatingArea contains the market ID
                 transportMethod: registrationData.transportMethod,
                 paymentMethod: registrationData.paymentMethod
             };

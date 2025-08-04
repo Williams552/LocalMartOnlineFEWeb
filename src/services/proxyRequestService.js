@@ -30,11 +30,13 @@ const proxyRequestService = {
             );
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+                // Backend trả về BadRequest với text message, không phải JSON
+                const errorText = await response.text().catch(() => '');
+                throw new Error(errorText || `HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            // Backend trả về Ok() với body rỗng, không cần parse JSON
+            return { success: true, message: 'Duyệt đề xuất thành công' };
         } catch (error) {
             console.error('Error approving proposal:', error);
             throw error;
@@ -50,11 +52,13 @@ const proxyRequestService = {
             );
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+                // Backend trả về BadRequest với text message, không phải JSON
+                const errorText = await response.text().catch(() => '');
+                throw new Error(errorText || `HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            // Backend trả về Ok() với body rỗng, không cần parse JSON
+            return { success: true, message: 'Xác nhận nhận hàng thành công' };
         } catch (error) {
             console.error('Error confirming delivery:', error);
             throw error;
@@ -76,11 +80,19 @@ const proxyRequestService = {
             );
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+                // Backend có thể trả về text message thay vì JSON
+                const errorText = await response.text().catch(() => '');
+                throw new Error(errorText || `HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            // Kiểm tra xem response có content hay không
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                // Nếu backend trả về Ok() với body rỗng
+                return { success: true, message: 'Hủy yêu cầu thành công' };
+            }
         } catch (error) {
             console.error('Error cancelling request:', error);
             throw error;
@@ -102,11 +114,19 @@ const proxyRequestService = {
             );
 
             if (!response.ok) {
-                const errorData = await response.json().catch(() => null);
-                throw new Error(errorData?.message || `HTTP error! status: ${response.status}`);
+                // Backend có thể trả về text message thay vì JSON
+                const errorText = await response.text().catch(() => '');
+                throw new Error(errorText || `HTTP error! status: ${response.status}`);
             }
 
-            return await response.json();
+            // Kiểm tra xem response có content hay không
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                // Nếu backend trả về Ok() với body rỗng
+                return { success: true, message: 'Từ chối đề xuất thành công' };
+            }
         } catch (error) {
             console.error('Error rejecting proposal:', error);
             throw error;
