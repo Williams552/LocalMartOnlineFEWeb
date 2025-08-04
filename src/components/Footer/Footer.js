@@ -16,7 +16,7 @@ const Footer = () => {
                             <img src={logo} alt="LocalMart" className="w-12 h-12 rounded-full border-2 border-white" />
                             <div>
                                 <h3 className="text-xl font-bold">LocalMart</h3>
-                                <p className="text-sm opacity-90">Chợ Online Cần Thơ</p>
+                                <p className="text-sm opacity-90">Chợ Online Việt Nam</p>
                             </div>
                         </div>
                         <p className="text-sm leading-relaxed opacity-90 mb-4">
@@ -103,7 +103,7 @@ const Footer = () => {
             <div className="border-t border-white/20 bg-green-700">
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex flex-col md:flex-row justify-between items-center text-sm">
-                        <p>© 2025 LocalMart - Chợ Online Cần Thơ. Bản quyền thuộc về SEP490_22.</p>
+                        <p>© 2025 LocalMart - Chợ Online Việt Nam. Bản quyền thuộc về SEP490_22.</p>
                         <div className="flex items-center space-x-4 mt-2 md:mt-0">
                             <span>🌾 Kết nối nông sản Việt</span>
                             <span>•</span>

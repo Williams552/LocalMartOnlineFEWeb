@@ -351,7 +351,7 @@ const Header = () => {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-supply-primary">LocalMart</h1>
-                            <p className="text-xs text-gray-500">Chợ Online Cần Thơ</p>
+                            <p className="text-xs text-gray-500">Chợ Online Việt Nam</p>
                         </div>
                     </Link>
 
