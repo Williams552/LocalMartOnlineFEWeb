@@ -133,13 +133,7 @@ const UserProfile = () => {
                     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
                         <div className="flex items-center space-x-6 mb-6 lg:mb-0">
                             <div className="relative">
-                                {profileData.avatarUrl ? (
-                                    <img
-                                        src={profileData.avatarUrl}
-                                        alt="Avatar"
-                                        className="w-24 h-24 rounded-full object-cover border-4 border-supply-primary"
-                                    />
-                                ) : (
+                                {(
                                     <div className="w-24 h-24 bg-supply-primary rounded-full flex items-center justify-center text-white text-2xl font-bold">
                                         {profileData.fullName?.charAt(0) || profileData.username?.charAt(0) || 'U'}
                                     </div>
@@ -393,17 +387,18 @@ const UserProfile = () => {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Tên đăng nhập <span className="text-red-500">*</span>
+                                    Tên đăng nhập <span className="text-gray-400">(Không thể thay đổi)</span>
                                 </label>
                                 <input
                                     type="text"
                                     name="username"
                                     value={editForm.username || ''}
                                     onChange={handleEditChange}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-supply-primary focus:border-transparent"
-                                    placeholder="Nhập tên đăng nhập"
-                                    required
+                                    disabled
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed"
+                                    placeholder="Tên đăng nhập"
                                 />
+                                <p className="text-xs text-gray-500 mt-1">Tên đăng nhập không thể thay đổi vì lý do bảo mật</p>
                             </div>
 
                             <div>

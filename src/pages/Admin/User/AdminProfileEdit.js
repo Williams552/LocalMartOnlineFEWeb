@@ -362,24 +362,6 @@ const AdminProfileEdit = () => {
                 </Col>
 
                 <Col span={8}>
-                    {/* Avatar Upload */}
-                    <Card
-                        title={
-                            <Space>
-                                <UserOutlined />
-                                <span>Ảnh đại diện</span>
-                            </Space>
-                        }
-                        className="shadow-sm mb-6"
-                    >
-                        <div className="text-center">
-                            <Avatar 
-                                size={120} 
-                                icon={<UserOutlined />}
-                                className="bg-blue-500 mb-4"
-                            />
-                        </div>
-                    </Card>
 
                     {/* Security Note */}
                     <Card
