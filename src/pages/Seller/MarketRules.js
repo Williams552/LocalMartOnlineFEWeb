@@ -21,6 +21,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import storeService from '../../services/storeService';
+import marketService from "../../services/marketService";
 import SellerLayout from '../../layouts/SellerLayout';
 import moment from 'moment';
 
@@ -30,6 +31,7 @@ const MarketRules = () => {
     const [loading, setLoading] = useState(true);
     const [storeInfo, setStoreInfo] = useState(null);
     const [marketRules, setMarketRules] = useState([]);
+    const [marketInfo, setMarketInfo] = useState(null);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -48,6 +50,7 @@ const MarketRules = () => {
                 // Load market rules if we have marketId
                 if (storeResult.data.marketId) {
                     await loadMarketRules(storeResult.data.marketId);
+                    fetchMarketInfo(storeResult.data.marketId);
                 }
             }
         } catch (error) {
@@ -55,6 +58,19 @@ const MarketRules = () => {
             message.error('Lỗi khi tải thông tin cửa hàng');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchMarketInfo = async (marketId) => {
+        try {
+            const result = await marketService.getMarketById(marketId);
+            
+            if (result) {
+                console.log('📍 Market Info Data:', result); // Debug để xem cấu trúc dữ liệu
+                setMarketInfo(result);
+            }
+        } catch (error) {
+            console.error('❌ Error fetching market info:', error);
         }
     };
 
@@ -174,7 +190,7 @@ const MarketRules = () => {
                     {storeInfo && (
                         <Alert
                             message={`Cửa hàng: ${storeInfo.name || 'N/A'}`}
-                            description={`Chợ: ${storeInfo.marketName || 'N/A'} | 
+                            description={`Chợ: ${marketInfo?.name || 'N/A'} | 
                                         Trạng thái: ${storeInfo.status === 'Open' ? 'Đang hoạt động' : 'Đóng cửa'}`}
                             type="info"
                             showIcon
