@@ -11,22 +11,18 @@ const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5183';
  */
 export const uploadBoughtItemsProof = async (orderId, imageFiles, note = '') => {
   try {
-    // 1. Upload tất cả ảnh lên Cloudinary
-    const uploadPromises = imageFiles.map(file => 
-      uploadImageToCloudinary(file, { 
-        folder: 'localmart/proofs' 
-      })
-    );
+    // 1. Chỉ upload 1 ảnh đầu tiên lên Cloudinary
+    let ImageUrls  = '';
+    if (imageFiles && imageFiles.length > 0) {
+      ImageUrls  = await uploadImageToCloudinary(imageFiles[0], { folder: 'localmart/proofs' });
+    }
+    console.log('Successfully uploaded image to Cloudinary:', ImageUrls);
     
-    const imageUrls = await Promise.all(uploadPromises);
-    console.log('Successfully uploaded images to Cloudinary:', imageUrls);
-    
-    // 2. Gửi URLs đến backend API
+    // 2. Gửi URL duy nhất đến backend API
     const token = localStorage.getItem('token');
     const requestUrl = `${API_BASE_URL}/api/ProxyShopper/orders/${orderId}/proof`;
     const requestBody = {
-      // Backend chỉ nhận 1 ảnh (string), lấy ảnh đầu tiên
-      proofImages: imageUrls[0], // Chỉ gửi ảnh đầu tiên
+      ImageUrls ,
       note
     };
     
