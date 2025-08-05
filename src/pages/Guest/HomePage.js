@@ -125,6 +125,7 @@ const HomePage = () => {
                 // Build search parameters
                 const searchParams = {
                     pageSize: 100,
+                    status: 'Active' // Always filter for Active products only
                 };
 
                 // Add search keyword if provided

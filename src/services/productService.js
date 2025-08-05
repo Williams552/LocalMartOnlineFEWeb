@@ -82,7 +82,11 @@ class ProductService {
             if (params.categoryId) queryParams.append('categoryId', params.categoryId);
             if (params.storeId) queryParams.append('storeId', params.storeId);
             if (params.marketId) queryParams.append('marketId', params.marketId);
-            if (params.status) queryParams.append('status', params.status);
+            
+            // Handle status parameter - accept both string and numeric values
+            if (params.status !== null && params.status !== undefined) {
+                queryParams.append('status', params.status);
+            }
 
             console.log('Admin products query params:', queryParams.toString());
 
@@ -147,22 +151,30 @@ class ProductService {
             if (params.categoryId) queryParams.append('categoryId', params.categoryId);
             if (params.storeId) queryParams.append('storeId', params.storeId);
             if (params.marketId) queryParams.append('marketId', params.marketId);
+            
+            // Add status filter - default to Active for public display
+            if (params.status) {
+                queryParams.append('status', params.status);
+            } else {
+                queryParams.append('status', 'Active'); // Default to Active products only
+            }
 
             const url = queryParams.toString()
                 ? `${API_ENDPOINTS.PRODUCT.GET_ALL}?${queryParams}`
-                : API_ENDPOINTS.PRODUCT.GET_ALL;
+                : `${API_ENDPOINTS.PRODUCT.GET_ALL}?status=Active`;
 
+            console.log('🔍 ProductService - Calling API:', url);
             const response = await apiClient.get(url);
 
             // Return the items from the API response
             if (response.data && response.data.success && response.data.data) {
                 const items = response.data.data.items || [];
-                // Filter out Inactive products for public display
+                // Additional client-side filtering for extra safety
                 const filteredItems = this.filterPublicProducts(items);
                 
                 return {
                     items: filteredItems,
-                    totalCount: filteredItems.length, // Update count after filtering
+                    totalCount: response.data.data.totalCount || filteredItems.length,
                     page: response.data.data.page || 1,
                     pageSize: response.data.data.pageSize || 20
                 };
@@ -226,7 +238,8 @@ class ProductService {
         try {
             const searchParams = {
                 ...params,
-                search: searchTerm
+                search: searchTerm,
+                status: params.status || 'Active' // Default to Active products
             };
 
             return await this.getAllProducts(searchParams);
@@ -241,7 +254,8 @@ class ProductService {
         try {
             const categoryParams = {
                 ...params,
-                categoryId: categoryId
+                categoryId: categoryId,
+                status: params.status || 'Active' // Default to Active products
             };
 
             return await this.getAllProducts(categoryParams);
@@ -541,23 +555,27 @@ class ProductService {
             if (searchParams.marketId) queryParams.append('marketId', searchParams.marketId);
             if (searchParams.latitude) queryParams.append('latitude', searchParams.latitude);
             if (searchParams.longitude) queryParams.append('longitude', searchParams.longitude);
+            if (searchParams.radius) queryParams.append('radius', searchParams.radius);
             if (searchParams.page) queryParams.append('page', searchParams.page);
             if (searchParams.pageSize) queryParams.append('pageSize', searchParams.pageSize);
+            
+            // Always filter for Active products
+            queryParams.append('status', searchParams.status || 'Active');
 
-            const url = queryParams.toString()
+            const searchUrl = queryParams.toString()
                 ? `${API_ENDPOINTS.PRODUCT.SEARCH}?${queryParams}`
-                : API_ENDPOINTS.PRODUCT.SEARCH;
+                : `${API_ENDPOINTS.PRODUCT.SEARCH}?status=Active`;
 
-            console.log('🔍 Calling search API:', url);
-            const response = await apiClient.get(url);
-            console.log('📦 Search API response:', response.data);
+            console.log('🔍 Calling search API:', searchUrl);
+            const searchResponse = await apiClient.get(searchUrl);
+            console.log('📦 Search API response:', searchResponse.data);
 
-            if (response.data && response.data.success && response.data.data) {
+            if (searchResponse.data && searchResponse.data.success && searchResponse.data.data) {
                 return {
-                    items: (response.data.data.items || []).map(item => this.formatProductForFrontend(item)),
-                    totalCount: response.data.data.totalCount || 0,
-                    page: response.data.data.page || 1,
-                    pageSize: response.data.data.pageSize || 20
+                    items: (searchResponse.data.data.items || []).map(item => this.formatProductForFrontend(item)),
+                    totalCount: searchResponse.data.data.totalCount || 0,
+                    page: searchResponse.data.data.page || 1,
+                    pageSize: searchResponse.data.data.pageSize || 20
                 };
             }
 
