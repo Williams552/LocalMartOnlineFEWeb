@@ -219,7 +219,7 @@ const MyProxyRequests = () => {
                                     <div className="bg-blue-50 rounded-lg p-4 mb-4">
                                         <h4 className="font-medium text-blue-800 mb-2 flex items-center">
                                             <FiUser className="mr-1" />
-                                            Người đi chợ giúm
+                                            Người đi chợ giùm
                                         </h4>
                                         <div className="text-blue-700">
                                             <div>Tên: {request.partnerName}</div>
@@ -376,7 +376,7 @@ const MyProxyRequests = () => {
                                 {/* Thông tin đề xuất với sản phẩm chi tiết */}
                                 {request.proposal && (
                                     <div className="bg-green-50 rounded-lg p-4 mb-4">
-                                        <h4 className="font-medium text-green-800 mb-3">Đề xuất từ người đi chợ giúm</h4>
+                                        <h4 className="font-medium text-green-800 mb-3">Đề xuất từ Người đi chợ giùm</h4>
                                         
                                         {/* Hiển thị sản phẩm đề xuất chi tiết */}
                                         {request.proposal.proposedItems && request.proposal.proposedItems.length > 0 && (
@@ -601,7 +601,7 @@ const MyProxyRequests = () => {
                             <div className="mb-6">
                                 <h4 className="font-semibold mb-3 flex items-center text-blue-800">
                                     <FiUser className="mr-2" />
-                                    Người đi chợ giúm
+                                    Người đi chợ giùm
                                 </h4>
                                 <div className="bg-blue-50 rounded-lg p-4">
                                     <div>Tên: {selectedRequest.proxyShopperName}</div>
@@ -803,7 +803,7 @@ const MyProxyRequests = () => {
                             {/* Ghi chú */}
                             {selectedRequest.proposal?.note && (
                                 <div className="mb-6">
-                                    <h4 className="font-semibold mb-2">Ghi chú từ người đi chợ giúm:</h4>
+                                    <h4 className="font-semibold mb-2">Ghi chú từ Người đi chợ giùm:</h4>
                                     <div className="bg-gray-50 rounded-lg p-4">
                                         <p className="text-gray-700">{selectedRequest.proposal.note}</p>
                                     </div>
