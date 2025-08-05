@@ -232,14 +232,6 @@ const AvailableOrders = () => {
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                        <div className="text-right">
-                                                            <p className="font-medium text-gray-900">
-                                                                {formatCurrency(item.price * (item.quantity || 1))}
-                                                            </p>
-                                                            <p className="text-sm text-gray-600">
-                                                                {formatCurrency(item.price)}/sản phẩm
-                                                            </p>
-                                                        </div>
                                                     </div>
                                                 ))
                                             ) : (
@@ -247,17 +239,6 @@ const AvailableOrders = () => {
                                             )}
                                         </div>
                                     </div>
-                                </div>
-
-                                {/* Order Summary */}
-                                <div className="flex items-center justify-between p-4 bg-supply-primary bg-opacity-10 rounded-lg mb-4">
-                                    <div className="flex items-center space-x-2">
-                                        <FiDollarSign className="text-supply-primary" size={20} />
-                                        <span className="font-medium text-gray-700">Tổng giá trị đơn hàng:</span>
-                                    </div>
-                                    <span className="text-xl font-bold text-supply-primary">
-                                        {formatCurrency(order.totalAmount)}
-                                    </span>
                                 </div>
 
                                 {/* Notes */}

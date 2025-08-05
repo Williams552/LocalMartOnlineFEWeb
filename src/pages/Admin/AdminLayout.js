@@ -111,11 +111,11 @@ const AdminLayout = () => {
                 { key: '/admin/analytics/revenue', label: 'Doanh thu' }
             ]
         },
-        // {
-        //     key: 'demo', icon: <BoxPlotOutlined />, label: 'Demo & Test', children: [
-        //         { key: '/admin/demo/proxy-shopping', label: 'Proxy Shopping Demo' },
-        //     ]
-        // },
+        {
+            key: 'demo', icon: <BoxPlotOutlined />, label: 'Demo & Test', children: [
+                { key: '/admin/demo/proxy-shopping', label: 'Proxy Shopping Demo' },
+            ]
+        },
 
     ];
 
