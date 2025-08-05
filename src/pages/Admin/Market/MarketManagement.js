@@ -19,7 +19,8 @@ import {
     Statistic,
     Upload,
     Image,
-    TimePicker
+    TimePicker,
+    Alert
 } from 'antd';
 import {
     ShopOutlined,
@@ -35,6 +36,7 @@ import {
     PoweroffOutlined
 } from '@ant-design/icons';
 import { marketService } from '../../../services/marketService';
+import { marketFeeService } from '../../../services/marketFeeService';
 import MarketNavigation from './MarketNavigation';
 import moment from 'moment';
 
@@ -45,6 +47,7 @@ const { TextArea } = Input;
 const MarketManagement = () => {
     const [markets, setMarkets] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [marketFees, setMarketFees] = useState({}); // Store rental fees by marketId
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 10,
@@ -109,6 +112,57 @@ const MarketManagement = () => {
         } catch (error) {
             console.error('❌ MarketManagement - Error loading statistics:', error);
             // Don't show error message for statistics, just log it
+        }
+    };
+
+    // Load rental fees for markets
+    const loadMarketRentalFees = async (marketsData) => {
+        try {
+            console.log('🏷️ Loading rental fees for markets:', marketsData.map(m => ({ id: m.id, name: m.name })));
+            
+            const feePromises = marketsData.map(async (market) => {
+                try {
+                    console.log(`🔍 Loading fees for market: ${market.name} (${market.id})`);
+                    
+                    // Use the correct API parameter - MarketFeeId but pass marketId
+                    const feesResult = await marketFeeService.getAllMarketFees({ 
+                        MarketFeeId: market.id 
+                    });
+                    
+                    console.log(`📊 Fees result for ${market.name}:`, feesResult);
+                    
+                    if (feesResult.success && feesResult.data) {
+                        console.log(`💰 All fees for ${market.name}:`, feesResult.data);
+                        
+                        // Find monthly rental fee with exact match for "Phí Thuê Tháng"
+                        const rentalFee = feesResult.data.find(fee => 
+                            fee.marketFeeTypeName === 'Phí Thuê Tháng'
+                        );
+                        
+                        console.log(`🎯 Found rental fee for ${market.name}:`, rentalFee);
+                        
+                        return {
+                            marketId: market.id,
+                            rentalFee: rentalFee ? rentalFee.amount : 0
+                        };
+                    }
+                    return { marketId: market.id, rentalFee: 0 };
+                } catch (error) {
+                    console.warn(`Failed to load fees for market ${market.id}:`, error);
+                    return { marketId: market.id, rentalFee: 0 };
+                }
+            });
+
+            const feeResults = await Promise.all(feePromises);
+            const feeMap = {};
+            feeResults.forEach(result => {
+                feeMap[result.marketId] = result.rentalFee;
+            });
+            
+            console.log('💼 Final fee map:', feeMap);
+            setMarketFees(feeMap);
+        } catch (error) {
+            console.error('Error loading market rental fees:', error);
         }
     };
 
@@ -179,6 +233,11 @@ const MarketManagement = () => {
                 ...prev,
                 total
             }));
+
+            // Load rental fees for the markets
+            if (marketsData.length > 0) {
+                loadMarketRentalFees(marketsData);
+            }
             
             // Show appropriate message for search/filter results
             if ((filters.search || filters.status) && marketsData.length === 0) {
@@ -431,21 +490,26 @@ const MarketManagement = () => {
 
         {
             title: 'Số lượng cửa hàng',
-            dataIndex: 'storeCount',
-            key: 'storeCount',
+            dataIndex: 'stallCount',
+            key: 'stallCount',
             render: (count) => count || 0,
         },
         {
-            title: 'Phí thuê',
-            dataIndex: 'rentFee',
-            key: 'rentFee',
-            render: (fee) => fee ? `${fee.toLocaleString('vi-VN')} VNĐ` : 'Chưa cập nhật',
+            title: 'Email liên hệ',
+            dataIndex: 'contactInfo',
+            key: 'contactInfo',
+            render: (email) => email || 'Chưa cập nhật',
         },
         {
-            title: 'Ngày tạo',
-            dataIndex: 'createdAt',
-            key: 'createdAt',
-            render: (date) => date ? new Date(date).toLocaleDateString('vi-VN') : '',
+            title: 'Phí thuê tháng',
+            key: 'rentalFee',
+            render: (_, record) => {
+                const fee = marketFees[record.id];
+                if (fee === undefined) {
+                    return <span style={{ color: '#999' }}>Đang tải...</span>;
+                }
+                return fee > 0 ? `${fee.toLocaleString('vi-VN')} VNĐ` : 'Chưa thiết lập';
+            },
         },
         {
             title: 'Thao tác',
@@ -642,6 +706,7 @@ const MarketManagement = () => {
                         layout="vertical"
                         onFinish={handleSubmit}
                     >
+                        
                         <Row gutter={16}>
                             <Col span={12}>
                                 <Form.Item
@@ -678,6 +743,13 @@ const MarketManagement = () => {
                         </Form.Item>
 
                         <Form.Item
+                            name="contactInfo"
+                            label="Email liên hệ"
+                        >
+                            <Input type="email" placeholder="Nhập email liên hệ..." />
+                        </Form.Item>
+
+                        <Form.Item
                             name="description"
                             label="Mô tả"
                         >
@@ -685,7 +757,7 @@ const MarketManagement = () => {
                         </Form.Item>
 
                         <Row gutter={16}>
-                            <Col span={8}>
+                            <Col span={12}>
                                 <Form.Item
                                     name="openTime"
                                     label="Giờ mở cửa"
@@ -698,7 +770,7 @@ const MarketManagement = () => {
                                     />
                                 </Form.Item>
                             </Col>
-                            <Col span={8}>
+                            <Col span={12}>
                                 <Form.Item
                                     name="closeTime"
                                     label="Giờ đóng cửa"
@@ -711,7 +783,7 @@ const MarketManagement = () => {
                                                     return Promise.reject(new Error('Giờ đóng cửa phải sau giờ mở cửa'));
                                                 }
                                                 return Promise.resolve();
-                                            },
+                                            }
                                         }),
                                     ]}
                                 >
@@ -720,14 +792,6 @@ const MarketManagement = () => {
                                         style={{ width: '100%' }}
                                         placeholder="Chọn giờ đóng cửa"
                                     />
-                                </Form.Item>
-                            </Col>
-                            <Col span={8}>
-                                <Form.Item
-                                    name="rentFee"
-                                    label="Phí thuê (VNĐ)"
-                                >
-                                    <Input type="number" placeholder="Nhập phí thuê..." />
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -765,32 +829,6 @@ const MarketManagement = () => {
                                     </div>
                                 );
                             }}
-                        </Form.Item>
-
-                        <Row gutter={16}>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="phoneNumber"
-                                    label="Số điện thoại liên hệ"
-                                >
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                            <Col span={12}>
-                                <Form.Item
-                                    name="email"
-                                    label="Email liên hệ"
-                                >
-                                    <Input />
-                                </Form.Item>
-                            </Col>
-                        </Row>
-
-                        <Form.Item
-                            name="facilities"
-                            label="Tiện ích"
-                        >
-                            <TextArea rows={2} placeholder="Ví dụ: Bãi đỗ xe, WiFi, Điều hòa..." />
                         </Form.Item>
 
                         <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
@@ -845,23 +883,36 @@ const MarketManagement = () => {
                                 <Descriptions.Item label="Giờ hoạt động">
                                     {selectedMarket.operatingHours || 'Chưa cập nhật'}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Phí thuê">
-                                    {selectedMarket.rentFee ? `${selectedMarket.rentFee.toLocaleString('vi-VN')} VNĐ` : 'Chưa cập nhật'}
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Số điện thoại">
-                                    {selectedMarket.phoneNumber || 'Chưa cập nhật'}
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Email">
-                                    {selectedMarket.email || 'Chưa cập nhật'}
-                                </Descriptions.Item>
-                                <Descriptions.Item label="Tiện ích">
-                                    {selectedMarket.facilities || 'Chưa có thông tin'}
+                                <Descriptions.Item label="Email liên hệ">
+                                    {selectedMarket.contactInfo || 'Chưa cập nhật'}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Số lượng cửa hàng">
-                                    {selectedMarket.storeCount || 0} cửa hàng
+                                    {selectedMarket.stallCount || 0} cửa hàng
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Ngày tạo">
-                                    {selectedMarket.createdAt ? new Date(selectedMarket.createdAt).toLocaleDateString('vi-VN') : 'Chưa có thông tin'}
+                                <Descriptions.Item label="Phí thuê tháng">
+                                    {(() => {
+                                        const fee = marketFees[selectedMarket.id];
+                                        if (fee === undefined) {
+                                            return <span style={{ color: '#999' }}>Đang tải...</span>;
+                                        }
+                                        if (fee > 0) {
+                                            return (
+                                                <div>
+                                                    <div style={{ fontSize: '16px', fontWeight: 'bold', color: '#1890ff' }}>
+                                                        {fee.toLocaleString('vi-VN')} VNĐ/tháng
+                                                    </div>
+                                                </div>
+                                            );
+                                        }
+                                        return (
+                                            <div>
+                                                <div style={{ color: '#999' }}>Chưa thiết lập</div>
+                                                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                                                    Thiết lập tại: <strong>Quản lý cửa hàng → Phí thuê</strong>
+                                                </div>
+                                            </div>
+                                        );
+                                    })()}
                                 </Descriptions.Item>
                             </Descriptions>
 
@@ -876,15 +927,6 @@ const MarketManagement = () => {
                                         }}
                                     >
                                         Chỉnh sửa
-                                    </Button>
-                                    <Button
-                                        icon={<ShopOutlined />}
-                                        onClick={() => {
-                                            // Navigate to stores of this market
-                                            // navigate(`/admin/stores?marketId=${selectedMarket.id}`);
-                                        }}
-                                    >
-                                        Xem cửa hàng
                                     </Button>
                                 </Space>
                             </div>

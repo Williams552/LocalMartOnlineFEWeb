@@ -24,17 +24,10 @@ const StoreNavigation = () => {
         },
       
         {
-            key: '/admin/stores/sellers',
+            key: '/admin/stores/payment',
             icon: <TeamOutlined />,
-            label: 'Người bán',
-            onClick: () => navigate('/admin/stores/sellers')
-        },
-        {
-            key: '/admin/stores/reviews',
-            icon: <StarOutlined />,
-            label: 'Đánh giá',
-            onClick: () => navigate('/admin/stores/reviews'),
-            badge: { count: 5, status: 'processing' } // Mock pending reviews
+            label: 'Phí thuê',
+            onClick: () => navigate('/admin/stores/payment')
         }
     ];
 
