@@ -13,6 +13,9 @@ class MarketFeeService {
             if (params.marketId && typeof params.marketId === 'string' && params.marketId.trim()) {
                 queryParams.append('MarketId', params.marketId.trim());
             }
+            if (params.MarketFeeId && typeof params.MarketFeeId === 'string' && params.MarketFeeId.trim()) {
+                queryParams.append('MarketFeeId', params.MarketFeeId.trim());
+            }
             if (params.searchKeyword && typeof params.searchKeyword === 'string' && params.searchKeyword.trim()) {
                 queryParams.append('SearchKeyword', params.searchKeyword.trim());
             }
