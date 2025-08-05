@@ -306,9 +306,43 @@ class StoreService {
     // Update store (for sellers)
     async updateStore(id, storeData) {
         try {
-            const response = await apiClient.put(API_ENDPOINTS.STORE.UPDATE(id), storeData);
+            // Validation
+            if (!id) {
+                throw new Error('Store ID is required');
+            }
+            if (!storeData || typeof storeData !== 'object') {
+                throw new Error('Store data is required and must be an object');
+            }
 
+            const url = API_ENDPOINTS.STORE.UPDATE(id);
+            console.log('🔧 StoreService - updateStore called with:', { id, storeData, url });
+            
+            // Check if token exists
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('Authentication token not found. Please login again.');
+            }
+            
+            console.log('🔧 StoreService - Making PUT request to:', url);
+            console.log('🔧 StoreService - Request payload:', storeData);
+            
+            const response = await apiClient.put(url, storeData);
+            console.log('🔧 StoreService - updateStore API response status:', response.status);
+            console.log('🔧 StoreService - updateStore API response data:', response.data);
+
+            // Check if response exists
+            if (!response) {
+                throw new Error('No response received from server');
+            }
+
+            // Check response status
+            if (response.status >= 400) {
+                throw new Error(`HTTP Error ${response.status}: ${response.statusText}`);
+            }
+
+            // Check response data structure
             if (response.data && response.data.success) {
+                console.log('✅ StoreService - updateStore success:', response.data);
                 return {
                     success: true,
                     data: response.data.data,
@@ -316,16 +350,59 @@ class StoreService {
                 };
             }
 
+            // Handle case where success is false or undefined
+            const errorMessage = response.data?.message || 'Cập nhật gian hàng thất bại - không có thông báo lỗi cụ thể';
+            console.log('❌ StoreService - updateStore failed:', response.data);
             return {
                 success: false,
-                message: response.data?.message || 'Cập nhật gian hàng thất bại'
+                message: errorMessage
             };
+            
         } catch (error) {
-            console.error(`Error updating store ${id}:`, error);
-            return {
-                success: false,
-                message: error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật gian hàng'
-            };
+            console.error(`❌ StoreService - Error updating store ${id}:`, error);
+            
+            // Handle different types of errors
+            if (error.response) {
+                // Server responded with error status
+                console.error('❌ StoreService - Error response status:', error.response.status);
+                console.error('❌ StoreService - Error response data:', error.response.data);
+                console.error('❌ StoreService - Error response headers:', error.response.headers);
+                
+                let errorMessage = 'Có lỗi xảy ra khi cập nhật gian hàng';
+                
+                if (error.response.status === 401) {
+                    errorMessage = 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+                } else if (error.response.status === 403) {
+                    errorMessage = 'Bạn không có quyền thực hiện thao tác này.';
+                } else if (error.response.status === 404) {
+                    errorMessage = 'Không tìm thấy cửa hàng cần cập nhật.';
+                } else if (error.response.status === 400) {
+                    errorMessage = error.response.data?.message || 'Dữ liệu gửi lên không hợp lệ.';
+                } else if (error.response.status >= 500) {
+                    errorMessage = 'Lỗi server. Vui lòng thử lại sau.';
+                } else {
+                    errorMessage = error.response.data?.message || errorMessage;
+                }
+                
+                return {
+                    success: false,
+                    message: errorMessage
+                };
+            } else if (error.request) {
+                // Request was made but no response received
+                console.error('❌ StoreService - No response received:', error.request);
+                return {
+                    success: false,
+                    message: 'Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng.'
+                };
+            } else {
+                // Something else happened
+                console.error('❌ StoreService - Error setting up request:', error.message);
+                return {
+                    success: false,
+                    message: error.message || 'Có lỗi không xác định xảy ra'
+                };
+            }
         }
     }
 

@@ -9,6 +9,7 @@ import {
     Input,
     Select,
     Modal,
+    Form,
     message,
     Drawer,
     Descriptions,
@@ -17,13 +18,15 @@ import {
     Statistic,
     Avatar,
     Rate,
-    Tooltip
+    Tooltip,
+    InputNumber
 } from 'antd';
 import {
     ShopOutlined,
     SearchOutlined,
     ExportOutlined,
     EyeOutlined,
+    EditOutlined,
     EnvironmentOutlined,
     PhoneOutlined,
     StopOutlined,
@@ -58,6 +61,9 @@ const StoreManagement = () => {
     });
     const [selectedStore, setSelectedStore] = useState(null);
     const [drawerVisible, setDrawerVisible] = useState(false);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [form] = Form.useForm();
     const [statistics, setStatistics] = useState({
         totalStores: 0,
         openStores: 0,
@@ -532,6 +538,82 @@ const StoreManagement = () => {
         });
     };
 
+    const handleEditStore = (store) => {
+        setSelectedStore(store);
+        setEditMode(true);
+        setModalVisible(true);
+        form.setFieldsValue({
+            marketId: store.marketId
+        });
+    };
+
+    const handleUpdateStore = async () => {
+        try {
+            const values = await form.validateFields();
+            console.log('📝 Updating store market location:', selectedStore.id, 'to market:', values.marketId);
+            console.log('📝 Current marketId:', selectedStore.marketId);
+            console.log('📝 New marketId:', values.marketId);
+            
+            // Kiểm tra nếu marketId không thay đổi
+            if (selectedStore.marketId === values.marketId) {
+                message.warning('Vị trí chợ chưa thay đổi');
+                return;
+            }
+            
+            // Kiểm tra dữ liệu bắt buộc
+            if (!selectedStore.id) {
+                message.error('Không tìm thấy ID cửa hàng');
+                return;
+            }
+            
+            if (!values.marketId) {
+                message.error('Vui lòng chọn chợ');
+                return;
+            }
+            
+            // CHỈ GỬI MARKETID - đúng theo yêu cầu API
+            const updateData = {
+                marketId: values.marketId
+            };
+            
+            console.log('📝 Sending update data (only marketId):', updateData);
+            
+            // Gọi API với chỉ marketId
+            const response = await storeService.updateStore(selectedStore.id, updateData);
+            console.log('📝 Update response:', response);
+            
+            if (response && response.success) {
+                message.success(response.message || 'Cập nhật vị trí chợ thành công');
+                setModalVisible(false);
+                setEditMode(false);
+                form.resetFields();
+                
+                // Reload data to see changes
+                await loadStores();
+                await loadStatistics();
+            } else {
+                const errorMessage = response?.message || 'Cập nhật thất bại - không có thông tin lỗi';
+                console.error('❌ Update failed with message:', errorMessage);
+                message.error(errorMessage);
+            }
+        } catch (error) {
+            console.error('❌ Error in handleUpdateStore:', error);
+            
+            // Handle validation errors vs API errors
+            if (error.errorFields) {
+                message.error('Vui lòng kiểm tra lại thông tin trong form');
+            } else {
+                message.error(`Lỗi khi cập nhật: ${error.message || 'Lỗi không xác định'}`);
+            }
+        }
+    };
+
+    const handleModalCancel = () => {
+        setModalVisible(false);
+        setEditMode(false);
+        form.resetFields();
+    };
+
     const handleFindNearbyStores = async () => {
         // Get user's current location
         if (!navigator.geolocation) {
@@ -785,6 +867,14 @@ const StoreManagement = () => {
                             onClick={() => handleViewStore(record)}
                         />
                     </Tooltip>
+                    <Tooltip title="Cập nhật vị trí chợ">
+                        <Button
+                            type="text"
+                            size="small"
+                            icon={<EditOutlined />}
+                            onClick={() => handleEditStore(record)}
+                        />
+                    </Tooltip>
                     {record.status !== 'Suspended' ? (
                         <Tooltip title="Tạm ngưng">
                             <Button
@@ -1029,6 +1119,41 @@ const StoreManagement = () => {
                         </div>
                     )}
                 </Drawer>
+
+                {/* Edit Store Modal */}
+                <Modal
+                    title="Cập nhật vị trí chợ"
+                    open={modalVisible}
+                    onOk={handleUpdateStore}
+                    onCancel={handleModalCancel}
+                    okText="Cập nhật"
+                    cancelText="Hủy"
+                    width={400}
+                >
+                    <Form
+                        form={form}
+                        layout="vertical"
+                    >
+                        <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+                            <h4 style={{ margin: '0 0 8px 0', fontSize: '14px' }}>Cửa hàng hiện tại:</h4>
+                            <p style={{ margin: 0, fontWeight: 'bold' }}>{selectedStore?.name}</p>
+                        </div>
+
+                        <Form.Item
+                            name="marketId"
+                            label="Chọn chợ mới"
+                            rules={[{ required: true, message: 'Vui lòng chọn chợ' }]}
+                        >
+                            <Select placeholder="Chọn chợ" size="large">
+                                {markets.map(market => (
+                                    <Select.Option key={market.id} value={market.id}>
+                                        {market.name}
+                                    </Select.Option>
+                                ))}
+                            </Select>
+                        </Form.Item>
+                    </Form>
+                </Modal>
             </div>
         </div>
     );
