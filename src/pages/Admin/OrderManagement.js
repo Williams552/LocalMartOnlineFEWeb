@@ -86,9 +86,9 @@ const OrderManagement = ({ defaultStatus = null }) => {
 
     const orderStatuses = [
         { value: 'Pending', label: 'Chờ xác nhận', color: 'orange' },
-        { value: 'Preparing', label: 'Đang chuẩn bị', color: 'blue' },
-        { value: 'Delivering', label: 'Đang giao hàng', color: 'purple' },
-        { value: 'Completed', label: 'Đã hoàn thành', color: 'green' },
+        { value: 'Confirmed', label: 'Đã xác nhận hàng', color: 'blue' },
+        { value: 'Paid', label: 'Đã nhận tiền', color: 'purple' },
+        { value: 'Completed', label: 'Hoàn thành', color: 'green' },
         { value: 'Cancelled', label: 'Đã hủy', color: 'red' }
     ];
 
@@ -420,7 +420,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
     };
 
     const getOrderStatusStep = (status) => {
-        const statusOrder = ['Pending', 'Preparing', 'Delivering', 'Completed'];
+        const statusOrder = ['Pending', 'Confirmed', 'Paid', 'Completed'];
         return statusOrder.indexOf(status);
     };
 
