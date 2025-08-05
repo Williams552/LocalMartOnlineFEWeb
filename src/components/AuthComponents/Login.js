@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "./Login.scss";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import backgroundRegister from "../../assets/image/bg.jpg";
 import logoGreen from "../../assets/image/logo-non.png";
 import authService from "../../services/authService";
@@ -203,23 +202,6 @@ const Login = () => {
         navigate("/forgot-password");
     };
 
-    const handleGoogleSuccess = async (credentialResponse) => {
-        try {
-            setLoading(true);
-            // TODO: Implement Google OAuth login with backend
-            console.log("Google login success:", credentialResponse);
-            toast.info("Đăng nhập Google sẽ được hỗ trợ sớm");
-        } catch (error) {
-            toast.error("Lỗi đăng nhập Google");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleGoogleError = () => {
-        toast.error("Đăng nhập Google thất bại");
-    };
-
     return (
         <div className="login-container flex-center-center h-screen">
             <div
@@ -413,19 +395,6 @@ const Login = () => {
                             </div>
                         </form>
                     )}
-
-                    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID"}>
-                        <div className="login-container text-center mt-4">
-                            <h2 className="my-3 text-xs text-gray-500">Hoặc</h2>
-                            <div className="flex justify-center">
-                                <GoogleLogin
-                                    onSuccess={handleGoogleSuccess}
-                                    onError={handleGoogleError}
-                                    disabled={loading}
-                                />
-                            </div>
-                        </div>
-                    </GoogleOAuthProvider>
 
                     <div className="mt-4 text-center">
                         <p>
