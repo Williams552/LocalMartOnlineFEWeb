@@ -4,7 +4,6 @@ import logo from "../../assets/image/logo.jpg";
 import AddToCartButton from "../Common/AddToCartButton";
 import FavoriteButton from "../Common/FavoriteButton";
 import FollowStoreButton from "../FollowStoreButton";
-import ReportButton from "../Report/ReportButton";
 import { FaHandshake } from "react-icons/fa";
 import StartBargainModal from "../FastBargain/StartBargainModal";
 import authService from "../../services/authService";
@@ -131,117 +130,110 @@ const ProductCard = ({
         // Could navigate to bargain detail page or refresh data
     };
     return (
-        <div className="product-card border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden group relative">
-            <div className="relative">
-                <Link to={`/product/${id}`}>
-                    <img src={getDisplayImage()} alt={name} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
-                </Link>
-                <div className={`absolute top-3 right-3 text-white text-xs px-2 py-1 rounded-full font-medium ${getStatusColor()}`}>
-                    {finalStatus}
-                </div>
-                {/* Favorite Button */}
-                <div className="absolute top-3 left-3">
-                    <FavoriteButton
-                        productId={id}
-                        size="sm"
-                        className="bg-white/80 backdrop-blur-sm rounded-full shadow-sm"
-                    />
-                </div>
-            </div>
-            <div className="p-4">
-                <Link to={`/product/${id}`}>
-                    <h2 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-supply-primary transition-colors">
-                        {name}
-                    </h2>
-                </Link>
-                {description && (
-                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">
-                        {description}
-                    </p>
-                )}
-                <div className="mb-3">
-                    <div className="flex items-center justify-between">
-                        <p className="text-gray-600 text-sm flex items-center">
-                            <span className="mr-2">🏪</span>
-                            <Link
-                                to={`/store/${storeId}`}
-                                className="text-blue-600 font-medium hover:text-blue-800 transition-colors"
-                            >
-                                {storeName || market || 'Gian hàng'}
-                            </Link>
-                        </p>
-                        <div className="flex items-center space-x-2">
-                            {/* Report Button */}
-                            <ReportButton
-                                targetType="Product"
-                                targetId={id}
-                                targetName={name}
-                                variant="icon"
-                                size="sm"
-                                tooltip="Báo cáo sản phẩm"
-                            />
-                            {/* Follow Store Button */}
-                            {storeId && (
-                                <FollowStoreButton
-                                    storeId={storeId}
-                                    variant="icon-only"
-                                    size="sm"
-                                />
-                            )}
-                        </div>
+        <>
+            <div className="product-card border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden group relative">
+                <div className="relative">
+                    <Link to={`/product/${id}`}>
+                        <img src={getDisplayImage()} alt={name} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </Link>
+                    <div className={`absolute top-3 right-3 text-white text-xs px-2 py-1 rounded-full font-medium ${getStatusColor()}`}>
+                        {finalStatus}
+                    </div>
+                    {/* Favorite Button */}
+                    <div className="absolute top-3 left-3">
+                        <FavoriteButton
+                            productId={id}
+                            size="sm"
+                            className="bg-white/80 backdrop-blur-sm rounded-full shadow-sm"
+                        />
                     </div>
                 </div>
-                <div className="flex items-center justify-between">
-                    <p className="text-xl font-bold text-supply-primary">
-                        {formatPrice(price)}đ
-                    </p>
-                    <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                        /{unitName}
-                    </span>
-                </div>
-                <div className="mt-3 space-y-2">
-                    {/* Add to Cart Button - Only show if product is available */}
-                    {isAvailableForPurchase() && (
-                        <AddToCartButton
-                            product={{
-                                id,
-                                name,
-                                price,
-                                image: getDisplayImage(),
-                                unit: unitName,
-                                minimumQuantity: minimumQuantity
-                            }}
-                            quantity={minimumQuantity}
-                            className="text-sm font-medium w-full"
-                            size="small"
-                            showQuantityControls={false}
-                            onClick={(e) => e.stopPropagation()}
-                        />
+                <div className="p-4">
+                    <Link to={`/product/${id}`}>
+                        <h2 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-supply-primary transition-colors">
+                            {name}
+                        </h2>
+                    </Link>
+                    {description && (
+                        <p className="text-gray-600 text-sm mb-2 line-clamp-2">
+                            {description}
+                        </p>
                     )}
-
-                    {/* Bargain Button - Only show if authenticated and product is available */}
-                    {isAuthenticated && isAvailableForPurchase() && (
-                        <button
-                            onClick={handleBargainClick}
-                            className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
-                        >
-                            <FaHandshake size={14} />
-                            <span>Thương lượng</span>
-                        </button>
-                    )}
-
-                    {/* Show message for unavailable products */}
-                    {!isAvailableForPurchase() && (
-                        <div className="w-full text-center py-2 px-3 bg-gray-100 text-gray-600 text-sm rounded-lg">
-                            {finalStatus === 'Hết hàng' && 'Sản phẩm đã hết hàng'}
-                            {finalStatus === 'Tạm ngừng' && 'Sản phẩm tạm ngừng bán'}
-                            {(finalStatus !== 'Hết hàng' && finalStatus !== 'Tạm ngừng') && 'Sản phẩm không khả dụng'}
+                    <div className="mb-3">
+                        <div className="flex items-center justify-between">
+                            <p className="text-gray-600 text-sm flex items-center">
+                                <span className="mr-2">🏪</span>
+                                <Link
+                                    to={`/store/${storeId}`}
+                                    className="text-blue-600 font-medium hover:text-blue-800 transition-colors"
+                                >
+                                    {storeName || market || 'Gian hàng'}
+                                </Link>
+                            </p>
+                            <div className="flex items-center space-x-2">
+                                {/* Follow Store Button */}
+                                {storeId && (
+                                    <FollowStoreButton
+                                        storeId={storeId}
+                                        variant="icon-only"
+                                        size="sm"
+                                    />
+                                )}
+                            </div>
                         </div>
-                    )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <p className="text-xl font-bold text-supply-primary">
+                            {formatPrice(price)}đ
+                        </p>
+                        <span className="text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                            /{unitName}
+                        </span>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                        {/* Add to Cart Button - Only show if product is available */}
+                        {isAvailableForPurchase() && (
+                            <AddToCartButton
+                                product={{
+                                    id,
+                                    name,
+                                    price,
+                                    image: getDisplayImage(),
+                                    unit: unitName,
+                                    minimumQuantity: minimumQuantity
+                                }}
+                                quantity={minimumQuantity}
+                                className="text-sm font-medium w-full"
+                                size="small"
+                                showQuantityControls={false}
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        )}
+
+                        {/* Bargain Button - Only show if authenticated and product is available */}
+                        {isAuthenticated && isAvailableForPurchase() && (
+                            <button
+                                onClick={handleBargainClick}
+                                className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
+                            >
+                                <FaHandshake size={14} />
+                                <span>Thương lượng</span>
+                            </button>
+                        )}
+
+                        {/* Show message for unavailable products */}
+                        {!isAvailableForPurchase() && (
+                            <div className="w-full text-center py-2 px-3 bg-gray-100 text-gray-600 text-sm rounded-lg">
+                                {finalStatus === 'Hết hàng' && 'Sản phẩm đã hết hàng'}
+                                {finalStatus === 'Tạm ngừng' && 'Sản phẩm tạm ngừng bán'}
+                                {(finalStatus !== 'Hết hàng' && finalStatus !== 'Tạm ngừng') && 'Sản phẩm không khả dụng'}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
-            {/* Bargain Modal */}
+            {/* Bargain Modal - Moved outside the card */}
             <StartBargainModal
                 isOpen={showBargainModal}
                 onClose={() => setShowBargainModal(false)}
@@ -255,7 +247,7 @@ const ProductCard = ({
                 }}
                 onSuccess={handleBargainSuccess}
             />
-        </div>
+        </>
     );
 };
 
