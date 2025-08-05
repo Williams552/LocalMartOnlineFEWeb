@@ -63,6 +63,18 @@ export const API_ENDPOINTS = {
         // Reject proposal and request new one
         REJECT_PROPOSAL: (orderId) => `${API_URL}/ProxyShopper/orders/${orderId}/reject-proposal`,
     },
+
+    // Admin Proxy Shopping Management Endpoints
+    ADMIN_PROXY_SHOPPING: {
+        // Get all proxy requests (Admin)
+        GET_ALL_PROXY_REQUESTS: `${API_URL}/api/proxyshopper/proxy-requests`,
+        // Get proxy request detail by ID (Admin)
+        GET_PROXY_REQUEST_DETAIL: (id) => `${API_URL}/api/proxyshopper/proxy-requests/${id}`,
+        // Update proxy request status (Admin)
+        UPDATE_PROXY_REQUEST_STATUS: (id) => `${API_URL}/api/proxyshopper/proxy-requests/${id}/status`,
+        // Update proxy order status (Admin)
+        UPDATE_PROXY_ORDER_STATUS: (id) => `${API_URL}/api/proxyshopper/proxy-orders/${id}/status`,
+    },
     // Base API URL
     API_BASE: API_URL,
 

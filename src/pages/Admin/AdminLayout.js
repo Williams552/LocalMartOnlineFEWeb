@@ -89,7 +89,7 @@ const AdminLayout = () => {
         {
             key: 'orders', icon: <ShoppingCartOutlined />, label: 'Quản lý đơn hàng', children: [
                 { key: '/admin/orders', label: 'Tất cả đơn hàng' },
-                { key: '/admin/orders/proxy-shopping', label: 'Đơn hàng mua hộ' },
+                { key: '/admin/proxy-shopping', label: 'Proxy Shopping' },
             ]
         },
         {
@@ -109,6 +109,11 @@ const AdminLayout = () => {
             key: 'analytics', icon: <BarChartOutlined />, label: 'Báo cáo & Thống kê', children: [
                 { key: '/admin/analytics/users', label: 'Thống kê người dùng' },
                 { key: '/admin/analytics/revenue', label: 'Doanh thu' }
+            ]
+        },
+        {
+            key: 'demo', icon: <BoxPlotOutlined />, label: 'Demo & Test', children: [
+                { key: '/admin/demo/proxy-shopping', label: 'Proxy Shopping Demo' },
             ]
         },
 
@@ -160,7 +165,7 @@ const AdminLayout = () => {
             'content': 'Quản lý nội dung',
             'support': 'Hỗ trợ khách hàng',
             'analytics': 'Báo cáo & Thống kê',
-            'proxy-shopping': 'Đơn hàng mua hộ',
+            'proxy-shopping': 'Proxy Shopping',
             'fast-bargain': 'Khuyến mãi',
             'profile': 'Hồ sơ cá nhân',
             'edit': 'Chỉnh sửa',
