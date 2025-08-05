@@ -4,6 +4,8 @@ import backgroundRegister from "../../assets/image/bg.jpg";
 import { TbFaceIdError } from "react-icons/tb";
 import OtpInput from "react-otp-input";
 import authService from "../../services/authService";
+import TermsOfServiceModal from "../ModalComponent/TermsOfServiceModal";
+import PrivacyPolicyModal from "../ModalComponent/PrivacyPolicyModal";
 
 const Register = () => {
     const [formData, setFormData] = useState({
@@ -19,6 +21,8 @@ const Register = () => {
     const [loading, setLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [showTermsModal, setShowTermsModal] = useState(false);
+    const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -26,6 +30,24 @@ const Register = () => {
             ...prev,
             [name]: value
         }));
+    };
+
+    const handleTermsClick = (e) => {
+        e.preventDefault();
+        setShowTermsModal(true);
+    };
+
+    const handleCloseTermsModal = () => {
+        setShowTermsModal(false);
+    };
+
+    const handlePrivacyClick = (e) => {
+        e.preventDefault();
+        setShowPrivacyModal(true);
+    };
+
+    const handleClosePrivacyModal = () => {
+        setShowPrivacyModal(false);
     };
 
     const validateForm = () => {
@@ -233,7 +255,7 @@ const Register = () => {
                         <div className="flex items-start text-sm mt-4">
                             <input type="checkbox" className="mr-2 mt-1 text-supply-primary focus:ring-supply-primary" required />
                             <label className="text-gray-600">
-                                Tôi đồng ý với <a href="#" className="text-supply-primary hover:underline">Điều khoản sử dụng</a> và <a href="#" className="text-supply-primary hover:underline">Chính sách bảo mật</a> của LocalMart
+                                Tôi đồng ý với <a href="#" onClick={handleTermsClick} className="text-supply-primary hover:underline">Điều khoản sử dụng</a> và <a href="#" onClick={handlePrivacyClick} className="text-supply-primary hover:underline">Chính sách bảo mật</a> của LocalMart
                             </label>
                         </div>
 
@@ -331,6 +353,18 @@ const Register = () => {
                 </div> 
                 */}
             </div>
+
+            {/* Terms of Service Modal */}
+            <TermsOfServiceModal
+                isOpen={showTermsModal}
+                onClose={handleCloseTermsModal}
+            />
+
+            {/* Privacy Policy Modal */}
+            <PrivacyPolicyModal
+                isOpen={showPrivacyModal}
+                onClose={handleClosePrivacyModal}
+            />
         </div>
     );
 };
