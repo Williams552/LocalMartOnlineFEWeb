@@ -433,6 +433,36 @@ const UserProfile = () => {
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Vai trò <span className="text-gray-400">(Không thể thay đổi)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="role"
+                                    value={profileService.getRoleDisplayName(editForm.role) || ''}
+                                    disabled
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed"
+                                    placeholder="Vai trò"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Vai trò được quản lý bởi quản trị viên</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Trạng thái <span className="text-gray-400">(Không thể thay đổi)</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="status"
+                                    value={profileService.getStatusDisplay(editForm.status).name || ''}
+                                    disabled
+                                    className="w-full border border-gray-300 rounded-lg px-4 py-3 bg-gray-100 text-gray-500 cursor-not-allowed"
+                                    placeholder="Trạng thái tài khoản"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Trạng thái tài khoản được quản lý bởi hệ thống</p>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Số điện thoại
                                 </label>
                                 <input
