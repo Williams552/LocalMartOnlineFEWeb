@@ -41,6 +41,7 @@ const RegisterProxyShopper = () => {
     const loadMarkets = async () => {
         try {
             const marketsData = await marketService.getActiveMarkets();
+            console.log('🏪 Loaded markets for proxy registration:', marketsData);
             setMarkets(marketsData || []);
         } catch (error) {
             console.error('Error loading markets:', error);
@@ -77,7 +78,34 @@ const RegisterProxyShopper = () => {
         setLoading(true);
         setError("");
 
+        // Validate required fields
+        if (!formData.operatingArea) {
+            setError("Vui lòng chọn chợ hoạt động");
+            setLoading(false);
+            return;
+        }
+
+        if (!formData.transportMethod) {
+            setError("Vui lòng chọn phương tiện di chuyển");
+            setLoading(false);
+            return;
+        }
+
+        if (!formData.paymentMethod) {
+            setError("Vui lòng chọn phương thức thanh toán");
+            setLoading(false);
+            return;
+        }
+
         try {
+            console.log('🚀 Submitting proxy registration with data:', {
+                marketId: formData.operatingArea, // Selected market ID
+                transportMethod: formData.transportMethod,
+                paymentMethod: formData.paymentMethod
+            });
+            
+            console.log('📝 Form data before submit:', formData);
+            
             await proxyShopperRegistrationService.registerProxyShopper(formData);
             setSuccess(true);
             setTimeout(() => {
@@ -170,19 +198,19 @@ const RegisterProxyShopper = () => {
             >
                 <div>
                     <label className="block text-sm font-medium mb-1">
-                        Khu vực hoạt động <span className="text-red-500">*</span>
+                        Chợ hoạt động <span className="text-red-500">*</span>
                     </label>
                     <select
                         name="operatingArea"
                         value={formData.operatingArea}
                         onChange={handleChange}
                         required
-                        className="w-full border rounded px-3 py-2 text-sm bg-white"
+                        className="w-full border rounded px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
                     >
-                        <option value="">-- Chọn chợ --</option>
+                        <option value="">-- Chọn chợ hoạt động --</option>
                         {markets.map((market, idx) => (
-                            <option key={market.id || idx} value={market.name || market}>
-                                {market.name || market}
+                            <option key={market.id || idx} value={market.id || market}>
+                                {market.name || market} {market.address && `- ${market.address}`}
                             </option>
                         ))}
                     </select>

@@ -29,42 +29,16 @@ const ProxyShopperOrders = () => {
             });
             if (!res.ok) throw new Error("Không thể lấy danh sách đơn hàng đã nhận");
             const data = await res.json();
-            console.log('Fetched orders data:', data); // Debug log
+            console.log('Fetched orders data with market info and proofImages:', data); // Debug log để xem market info và proofImages
             
-            // Debug: Log structure of first order to see available fields
+            // Debug: Log structure of first order to see available fields including market and proofImages
             if (data && data.length > 0) {
                 console.log('First order structure:', Object.keys(data[0]));
-                console.log('First order full data:', data[0]);
+                console.log('First order full data with market and proofImages:', data[0]);
+                console.log('ProofImages field:', data[0].proofImages); // Debug proofImages
             }
             
-            // Fetch proof images for each order that might have them
-            const ordersWithProof = await Promise.all(data.map(async (order) => {
-                try {
-                    // Kiểm tra xem order đã có proofImages chưa
-                    if (!order.proofImages && order.orderId) {
-                        const proofRes = await fetch(`http://localhost:5183/api/ProxyShopper/orders/${order.orderId}/proof`, {
-                            headers: {
-                                "Authorization": token ? `Bearer ${token}` : undefined,
-                                "Content-Type": "application/json"
-                            },
-                        });
-                        if (proofRes.ok) {
-                            const proofData = await proofRes.json();
-                            console.log(`Proof data for order ${order.orderId}:`, proofData);
-                            // Gắn proof data vào order - handle both string and array
-                            const imageUrls = proofData.imageUrls || proofData.images || proofData.proofImages;
-                            order.proofImages = imageUrls;
-                            order.proofNote = proofData.note || '';
-                            order.proofUploadedAt = proofData.uploadedAt || proofData.createdAt;
-                        }
-                    }
-                } catch (proofError) {
-                    console.log(`No proof found for order ${order.orderId}:`, proofError.message);
-                }
-                return order;
-            }));
-            
-            setOrders(Array.isArray(ordersWithProof) ? ordersWithProof : []);
+            setOrders(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching orders:', error);
             setOrders([]);
@@ -83,8 +57,8 @@ const ProxyShopperOrders = () => {
     // Các hàm xử lý hành động
     const handleCreateProposal = async (requestId) => {
         try {
-            // Chuyển hướng đến trang tạo đề xuất
-            window.location.href = `/proxy-shopper/requests/${requestId}/create-proposal`;
+            // Chuyển hướng đến trang tạo order cho buyer
+            window.location.href = `/proxy-shopper/orders/${requestId}/create`;
         } catch (error) {
             console.error('Error creating proposal:', error);
             alert('Có lỗi xảy ra khi tạo đề xuất');
@@ -268,7 +242,15 @@ const ProxyShopperOrders = () => {
             {/* Header */}
             <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Đơn hàng của tôi</h1>
-                <p className="text-gray-600">Quản lý tất cả đơn hàng bạn đã nhận và thực hiện.</p>
+                <p className="text-gray-600">Quản lý tất cả đơn hàng bạn đã nhận và thực hiện từ các chợ đã đăng ký.</p>
+                <div className="mt-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-400">
+                    <div className="flex items-center">
+                        <FiMapPin className="text-green-500 mr-2" size={16} />
+                        <p className="text-sm text-green-700">
+                            <strong>Lưu ý:</strong> Bạn chỉ nhận được đơn hàng từ những chợ mà bạn đã đăng ký làm proxy shopper.
+                        </p>
+                    </div>
+                </div>
             </div>
 
             {/* Filter Tabs */}
@@ -349,6 +331,21 @@ const ProxyShopperOrders = () => {
                                                         <span className="text-blue-600">SĐT:</span>
                                                         <span className="ml-2 font-medium">{order.buyerPhone}</span>
                                                     </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Market Information */}
+                                    {order.marketName && (
+                                        <div className="bg-green-50 rounded-lg p-3 mb-4">
+                                            <h4 className="text-sm font-medium text-green-800 mb-2">Thông tin chợ</h4>
+                                            <div className="flex items-center text-sm">
+                                                <FiMapPin className="mr-2 text-green-600" size={16} />
+                                                <span className="text-green-600">Chợ:</span>
+                                                <span className="ml-2 font-medium text-green-800">{order.marketName}</span>
+                                                {order.marketId && (
+                                                    <span className="ml-2 text-xs text-green-600">(ID: {order.marketId})</span>
                                                 )}
                                             </div>
                                         </div>
@@ -525,7 +522,7 @@ const ProxyShopperOrders = () => {
                                             {/* Nút tạo/chỉnh sửa đề xuất */}
                                             {order.canEditProposal && (
                                                 <Link
-                                                    to={`/proxy-shopper/requests/${order.requestId}/create-proposal`}
+                                                    to={`/proxy-shopper/orders/${order.requestId}/create`}
                                                     className="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors"
                                                 >
                                                     <FiEdit3 className="mr-2" size={16} />

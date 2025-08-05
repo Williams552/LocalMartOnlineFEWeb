@@ -458,6 +458,18 @@ const SellerLayout = ({ children }) => {
                                         {marketInfo.status === 'Active' ? 'Hoạt động' : 'Tạm ngưng'}
                                     </span>
                                 </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>Liên hệ:</span>
+                                    <span style={{
+                                        color: 'white',
+                                        padding: '5px 10px',
+                                        borderRadius: '4px',
+                                        fontSize: '10px'
+                                    }}>
+                                        {marketInfo?.contactInfo}
+                                    </span>
+                                </div>
                             </div>
                         )}
 

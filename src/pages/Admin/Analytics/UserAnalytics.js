@@ -242,62 +242,6 @@ const UserAnalytics = () => {
                 </Col>
             </Row>
 
-            <Row gutter={[16, 16]}>
-                {/* User Distribution by Role */}
-                <Col xs={24} lg={12}>
-                    <Card title="Phân bố theo vai trò" loading={loading}>
-                        <div style={{ padding: '20px 0' }}>
-                            {usersByRole.map((item, index) => (
-                                <div key={index} style={{ marginBottom: 16 }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                                        <span>
-                                            <Tag color={getRoleColor(item.role)}>{item.role}</Tag>
-                                        </span>
-                                        <span style={{ fontWeight: 'bold' }}>
-                                            {item.count} ({item.percentage}%)
-                                        </span>
-                                    </div>
-                                    <Progress
-                                        percent={parseFloat(item.percentage)}
-                                        strokeColor={
-                                            item.role === 'Admin' ? '#1890ff' :
-                                                item.role === 'Seller' ? '#52c41a' :
-                                                    item.role === 'Buyer' ? '#722ed1' : '#fa8c16'
-                                        }
-                                        showInfo={false}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                </Col>
-
-                {/* Recent Users */}
-                <Col xs={24} lg={12}>
-                    <Card
-                        title="Người dùng mới nhất"
-                        loading={loading}
-                        extra={
-                            <Button
-                                type="link"
-                                icon={<EyeOutlined />}
-                                onClick={() => window.location.href = '/admin/users'}
-                            >
-                                Xem tất cả
-                            </Button>
-                        }
-                    >
-                        <Table
-                            dataSource={recentUsers}
-                            columns={recentUsersColumns}
-                            rowKey="id"
-                            pagination={false}
-                            size="small"
-                        />
-                    </Card>
-                </Col>
-            </Row>
-
             {/* Additional Statistics */}
             <Card title="Thống kê chi tiết" style={{ marginTop: 16 }}>
                 <Row gutter={[16, 16]}>

@@ -19,6 +19,7 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../../hooks/useAuth';
 import storeService from '../../services/storeService';
+import marketService from "../../services/marketService";
 import SellerLayout from '../../layouts/SellerLayout';
 
 const { Title, Text } = Typography;
@@ -27,6 +28,7 @@ const MarketFees = () => {
     const [loading, setLoading] = useState(true);
     const [storeInfo, setStoreInfo] = useState(null);
     const [marketFees, setMarketFees] = useState([]);
+    const [marketInfo, setMarketInfo] = useState(null);
     const { user } = useAuth();
 
     useEffect(() => {
@@ -45,6 +47,7 @@ const MarketFees = () => {
                 // Load market fees if we have marketId
                 if (storeResult.data.marketId) {
                     await loadMarketFees(storeResult.data.marketId);
+                    await fetchMarketInfo(storeResult.data.marketId);
                 }
             }
         } catch (error) {
@@ -52,6 +55,19 @@ const MarketFees = () => {
             message.error('Lỗi khi tải thông tin cửa hàng');
         } finally {
             setLoading(false);
+        }
+    };
+
+        const fetchMarketInfo = async (marketId) => {
+        try {
+            const result = await marketService.getMarketById(marketId);
+            
+            if (result) {
+                console.log('📍 Market Info Data:', result); // Debug để xem cấu trúc dữ liệu
+                setMarketInfo(result);
+            }
+        } catch (error) {
+            console.error('❌ Error fetching market info:', error);
         }
     };
 
@@ -161,7 +177,7 @@ const MarketFees = () => {
                 {storeInfo && (
                     <Alert
                         message={`Cửa hàng: ${storeInfo.name || 'N/A'}`}
-                        description={`Chợ: ${storeInfo.marketName || 'N/A'} | 
+                        description={`Chợ: ${marketInfo?.name || 'N/A'} | 
                                     Trạng thái: ${storeInfo.status === 'Open' ? 'Đang hoạt động' : 'Đóng cửa'}`}
                         type="info"
                         showIcon

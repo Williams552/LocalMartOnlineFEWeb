@@ -20,6 +20,12 @@ const Header = () => {
     const [proxyLoading, setProxyLoading] = useState(false);
     const [proxyError, setProxyError] = useState("");
     const [proxySuccess, setProxySuccess] = useState("");
+    
+    // Market selection states
+    const [selectedStoreId, setSelectedStoreId] = useState(""); // Keep variable name for consistency
+    const [stores, setStores] = useState([]); // Keep variable name but will store markets
+    const [storesLoading, setStoresLoading] = useState(false);
+    
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMessages, setShowMessages] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -345,7 +351,7 @@ const Header = () => {
                         </div>
                         <div>
                             <h1 className="text-2xl font-bold text-supply-primary">LocalMart</h1>
-                            <p className="text-xs text-gray-500">Chợ Online Cần Thơ</p>
+                            <p className="text-xs text-gray-500">Chợ Online Việt Nam</p>
                         </div>
                     </Link>
 
@@ -559,11 +565,39 @@ const Header = () => {
                                         setProxyError("");
                                         setProxySuccess("");
                                         setProxyItems([{ name: "", quantity: 1, unit: "" }]);
+                                        setSelectedStoreId("");
+                                        
+                                        // Fetch units
                                         if (units.length === 0) {
                                             try {
                                                 const res = await axios.get("http://localhost:5183/api/ProductUnit");
                                                 if (res.data && res.data.success) setUnits(res.data.data);
                                             } catch (e) { setUnits([]); }
+                                        }
+                                        
+                                        // Fetch markets
+                                        if (stores.length === 0) {
+                                            try {
+                                                setStoresLoading(true);
+                                                const res = await axios.get("http://localhost:5183/api/Market");
+                                                if (res.data && res.data.success && Array.isArray(res.data.data)) {
+                                                    // Filter only active markets
+                                                    const activeMarkets = res.data.data.filter(market => market.isActive || market.status === 'Active');
+                                                    setStores(activeMarkets);
+                                                } else if (Array.isArray(res.data)) {
+                                                    // Filter only active markets
+                                                    const activeMarkets = res.data.filter(market => market.isActive || market.status === 'Active');
+                                                    setStores(activeMarkets);
+                                                } else {
+                                                    console.warn('Invalid markets data format:', res.data);
+                                                    setStores([]);
+                                                }
+                                            } catch (e) { 
+                                                console.error('Error fetching markets:', e);
+                                                setStores([]);
+                                            } finally {
+                                                setStoresLoading(false);
+                                            }
                                         }
                                     }}
                                 >
@@ -584,27 +618,86 @@ const Header = () => {
                                                 tabIndex={0}
                                             >&times;</button>
                                             <h2 className="text-2xl font-bold mb-4 text-center text-supply-primary tracking-tight">Yêu cầu đi chợ giùm</h2>
+                                            
+                                            {/* Store Selection Notice */}
+                                            <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                                                <div className="flex items-start">
+                                                    <FiMapPin className="text-blue-500 mr-3 mt-0.5" size={18} />
+                                                    <div className="text-blue-700">
+                                                        <h4 className="font-medium mb-2">🆕 Cơ chế đi chợ giùm mới</h4>
+                                                        <div className="text-sm space-y-1">
+                                                            <p>• <strong>Bước 1:</strong> Bạn phải chọn chợ cụ thể trước khi tạo yêu cầu</p>
+                                                            <p>• <strong>Bước 2:</strong> Hệ thống sẽ gửi đến các proxy shopper đã đăng ký tại chợ đó</p>
+                                                            <p>• <strong>Bước 3:</strong> Proxy hiểu rõ về chợ sẽ mua đúng sản phẩm bạn yêu cầu</p>
+                                                            <p className="mt-2 font-medium text-blue-800">
+                                                                ✨ Điều này đảm bảo chất lượng dịch vụ tốt hơn!
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Store Selection */}
+                                            <div className="mb-6">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                    <FiMapPin className="inline mr-1" size={16} />
+                                                    Chọn chợ *
+                                                </label>
+                                                <select
+                                                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
+                                                    value={selectedStoreId}
+                                                    onChange={(e) => setSelectedStoreId(e.target.value)}
+                                                    required
+                                                    disabled={storesLoading}
+                                                >
+                                                    <option value="">
+                                                        {storesLoading ? "Đang tải danh sách chợ..." : "-- Chọn chợ --"}
+                                                    </option>
+                                                    {Array.isArray(stores) && stores.map(market => (
+                                                        <option key={market.id} value={market.id}>
+                                                            {market.name} - {market.address || market.location}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                                {!selectedStoreId && (
+                                                    <p className="text-xs text-red-600 mt-1">
+                                                        ⚠️ Bắt buộc phải chọn chợ để gửi yêu cầu đến proxy shopper phù hợp
+                                                    </p>
+                                                )}
+                                            </div>
+                                            
                                             <form
                                                 onSubmit={async (e) => {
                                                     e.preventDefault();
                                                     setProxyError("");
                                                     setProxySuccess("");
+                                                    
+                                                    // Validate market selection
+                                                    if (!selectedStoreId) {
+                                                        setProxyError("Vui lòng chọn chợ trước khi gửi yêu cầu.");
+                                                        return;
+                                                    }
+                                                    
+                                                    // Validate items
                                                     if (proxyItems.some(item => !item.name || !item.quantity || !item.unit)) {
                                                         setProxyError("Vui lòng nhập đầy đủ thông tin cho tất cả các mặt hàng.");
                                                         return;
                                                     }
+                                                    
                                                     setProxyLoading(true);
                                                     try {
                                                         const res = await axios.post(
                                                             "http://localhost:5183/api/ProxyShopper/requests",
                                                             {
                                                                 buyerId: user?.id || "",
+                                                                marketId: selectedStoreId,
                                                                 items: proxyItems
                                                             }
                                                         );
                                                         if (res.data && res.data.requestId) {
                                                             setProxySuccess("Gửi yêu cầu thành công! Mã yêu cầu: " + res.data.requestId);
                                                             setProxyItems([{ name: "", quantity: 1, unit: "" }]);
+                                                            setSelectedStoreId("");
                                                         } else {
                                                             setProxyError("Gửi yêu cầu thất bại. Vui lòng thử lại.");
                                                         }

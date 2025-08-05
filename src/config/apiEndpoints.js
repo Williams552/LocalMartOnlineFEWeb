@@ -41,6 +41,39 @@ export const API_ENDPOINTS = {
         // Profile
         PROFILE: `${API_URL}/api/ProxyShopper/profile`,
         UPDATE_PROFILE: `${API_URL}/api/ProxyShopper/profile`,
+        // Upload proof of purchase
+        UPLOAD_PROOF: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/proof`,
+        GET_PROOF: (orderId) => `${API_URL}/api/ProxyShopper/orders/${orderId}/proof`,
+    },
+
+    // Proxy Request Endpoints (Buyer side)
+    PROXY_REQUEST: {
+        // Get my requests (buyer)
+        GET_MY_REQUESTS: `${API_URL}/ProxyShopper/requests/my-requests`,
+        // Get request detail
+        GET_REQUEST_DETAIL: (requestId) => `${API_URL}/ProxyShopper/requests/${requestId}`,
+        // Create new request
+        CREATE_REQUEST: `${API_URL}/ProxyShopper/requests`,
+        // Approve proposal and pay
+        APPROVE_PROPOSAL: (requestId) => `${API_URL}/ProxyShopper/orders/${requestId}/approve-pay`,
+        // Confirm delivery
+        CONFIRM_DELIVERY: (requestId) => `${API_URL}/ProxyShopper/orders/${requestId}/confirm-delivery`,
+        // Cancel request (only when status is Open)
+        CANCEL_REQUEST: (requestId) => `${API_URL}/ProxyShopper/requests/${requestId}/cancel`,
+        // Reject proposal and request new one
+        REJECT_PROPOSAL: (orderId) => `${API_URL}/ProxyShopper/orders/${orderId}/reject-proposal`,
+    },
+
+    // Admin Proxy Shopping Management Endpoints
+    ADMIN_PROXY_SHOPPING: {
+        // Get all proxy requests (Admin)
+        GET_ALL_PROXY_REQUESTS: `${API_URL}/api/proxyshopper/proxy-requests`,
+        // Get proxy request detail by ID (Admin)
+        GET_PROXY_REQUEST_DETAIL: (id) => `${API_URL}/api/proxyshopper/proxy-requests/${id}`,
+        // Update proxy request status (Admin)
+        UPDATE_PROXY_REQUEST_STATUS: (id) => `${API_URL}/api/proxyshopper/proxy-requests/${id}/status`,
+        // Update proxy order status (Admin)
+        UPDATE_PROXY_ORDER_STATUS: (id) => `${API_URL}/api/proxyshopper/proxy-orders/${id}/status`,
     },
     // Base API URL
     API_BASE: API_URL,

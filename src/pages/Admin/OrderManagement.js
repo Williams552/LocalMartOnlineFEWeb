@@ -67,11 +67,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
         cancelledOrders: 0,
         todayRevenue: 0
     });
-    const [pagination, setPagination] = useState({
-        current: 1,
-        pageSize: 10,
-        total: 0
-    });
     const [filters, setFilters] = useState({
         search: '',
         status: defaultStatus || '',
@@ -95,7 +90,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
     useEffect(() => {
         loadOrders();
         loadStatistics();
-    }, [pagination.current, pagination.pageSize]);
+    }, []); // Chỉ chạy một lần khi component mount
 
     useEffect(() => {
         // Reload when filters change
@@ -113,18 +108,13 @@ const OrderManagement = ({ defaultStatus = null }) => {
     const loadOrders = async () => {
         setLoading(true);
         try {
-            const response = await orderService.getAllOrders(
-                pagination.current,
-                pagination.pageSize
-            );
+            // Lấy tất cả đơn hàng không phân trang (page size lớn)
+            const response = await orderService.getAllOrders(1, 10000);
 
             if (response.success) {
                 const data = response.data;
-                setOrders(data.items || data || []);
-                setPagination(prev => ({
-                    ...prev,
-                    total: data.totalCount || data.length || 0
-                }));
+                const allOrders = data.items || data || [];
+                setOrders(allOrders);
             } else {
                 message.error(response.message || 'Lỗi khi tải danh sách đơn hàng');
             }
@@ -160,7 +150,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
         try {
             const filterData = {
                 page: 1,
-                pageSize: pagination.pageSize,
+                pageSize: 10000, // Lấy tất cả kết quả filter
                 status: filters.status || undefined,
                 search: filters.search || undefined,
                 fromDate: filters.dateRange?.[0]?.format('YYYY-MM-DD') || undefined,
@@ -171,12 +161,8 @@ const OrderManagement = ({ defaultStatus = null }) => {
 
             if (response.success) {
                 const data = response.data;
-                setOrders(data.items || data || []);
-                setPagination(prev => ({
-                    ...prev,
-                    current: 1,
-                    total: data.totalCount || data.length || 0
-                }));
+                const filteredOrders = data.items || data || [];
+                setOrders(filteredOrders);
             } else {
                 message.error(response.message || 'Lỗi khi lọc đơn hàng');
             }
@@ -251,28 +237,9 @@ const OrderManagement = ({ defaultStatus = null }) => {
         }
 
         try {
-            let response;
-            switch (action) {
-                case 'complete':
-                    response = await orderService.bulkCompleteOrders(selectedRowKeys);
-                    break;
-                case 'cancel':
-                    response = await orderService.bulkCancelOrders(selectedRowKeys);
-                    break;
-                case 'export':
-                    handleExportSelected();
-                    return;
-                default:
-                    return;
-            }
-
-            if (response?.success) {
-                message.success(`Đã ${action === 'complete' ? 'hoàn thành' : 'hủy'} ${selectedRowKeys.length} đơn hàng`);
-                setSelectedRowKeys([]);
-                loadOrders();
-                loadStatistics();
-            } else {
-                message.error(response?.message || 'Có lỗi xảy ra');
+            if (action === 'export') {
+                handleExportSelected();
+                return;
             }
         } catch (error) {
             console.error(`Error bulk ${action}:`, error);
@@ -424,14 +391,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
         return statusOrder.indexOf(status);
     };
 
-    const handleTableChange = (paginationConfig) => {
-        setPagination({
-            current: paginationConfig.current,
-            pageSize: paginationConfig.pageSize,
-            total: pagination.total
-        });
-    };
-
     const columns = [
         {
             title: 'Mã đơn hàng',
@@ -562,7 +521,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
         {
             title: 'Thao tác',
             key: 'actions',
-            width: 200,
+            width: 150,
             render: (_, record) => (
                 <Space>
                     <Tooltip title="Xem chi tiết">
@@ -578,52 +537,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                             type="text"
                             icon={<PrinterOutlined />}
                             onClick={() => handlePrintOrder(record)}
-                        />
-                    </Tooltip>
-
-                    {record.status !== 'Completed' && record.status !== 'Cancelled' && (
-                        <>
-                            <Tooltip title="Hoàn thành">
-                                <Popconfirm
-                                    title="Xác nhận hoàn thành đơn hàng?"
-                                    onConfirm={() => handleCompleteOrder(record.id)}
-                                    okText="Có"
-                                    cancelText="Không"
-                                >
-                                    <Button
-                                        type="text"
-                                        icon={<CheckCircleOutlined />}
-                                        style={{ color: '#52c41a' }}
-                                    />
-                                </Popconfirm>
-                            </Tooltip>
-
-                            <Tooltip title="Hủy đơn hàng">
-                                <Popconfirm
-                                    title="Xác nhận hủy đơn hàng?"
-                                    onConfirm={() => handleCancelOrder(record.id)}
-                                    okText="Có"
-                                    cancelText="Không"
-                                >
-                                    <Button
-                                        type="text"
-                                        icon={<CloseCircleOutlined />}
-                                        style={{ color: '#f5222d' }}
-                                    />
-                                </Popconfirm>
-                            </Tooltip>
-                        </>
-                    )}
-
-                    <Tooltip title="Cập nhật trạng thái">
-                        <Button
-                            type="text"
-                            icon={<EditOutlined />}
-                            onClick={() => {
-                                setSelectedOrder(record);
-                                setStatusModalVisible(true);
-                                form.setFieldsValue({ status: record.status });
-                            }}
                         />
                     </Tooltip>
                 </Space>
@@ -649,21 +562,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                 <Space>
                     {selectedRowKeys.length > 0 && (
                         <>
-                            <Button
-                                type="primary"
-                                icon={<CheckCircleOutlined />}
-                                onClick={() => handleBulkAction('complete')}
-                                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-                            >
-                                Hoàn thành ({selectedRowKeys.length})
-                            </Button>
-                            <Button
-                                icon={<CloseCircleOutlined />}
-                                onClick={() => handleBulkAction('cancel')}
-                                danger
-                            >
-                                Hủy ({selectedRowKeys.length})
-                            </Button>
                             <Button
                                 icon={<DownloadOutlined />}
                                 onClick={() => handleBulkAction('export')}
@@ -774,7 +672,16 @@ const OrderManagement = ({ defaultStatus = null }) => {
             </Card>
 
             {/* Table */}
-            <Card>
+            <Card 
+                title={
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span>Danh sách tất cả đơn hàng</span>
+                        <span style={{ fontWeight: 'normal', color: '#666' }}>
+                            Tổng cộng: {orders.length} đơn hàng
+                        </span>
+                    </div>
+                }
+            >
                 <Table
                     columns={columns}
                     dataSource={orders}
@@ -788,20 +695,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
                             name: record.id,
                         }),
                     }}
-                    pagination={{
-                        current: pagination.current,
-                        pageSize: pagination.pageSize,
-                        total: pagination.total,
-                        showSizeChanger: true,
-                        showQuickJumper: true,
-                        showTotal: (total, range) =>
-                            `${range[0]}-${range[1]} của ${total} đơn hàng`,
-                        pageSizeOptions: ['10', '20', '50', '100'],
-                        onShowSizeChange: (current, size) => {
-                            setPagination(prev => ({ ...prev, current: 1, pageSize: size }));
-                        }
-                    }}
-                    onChange={handleTableChange}
+                    pagination={false}  // Tắt phân trang để hiển thị tất cả đơn hàng
                     scroll={{ x: 1400 }}
                     size="small"
                 />
@@ -950,14 +844,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                         {/* Actions */}
                         <div style={{ textAlign: 'center' }}>
                             <Space>
-                                {selectedOrder.status !== 'Completed' && selectedOrder.status !== 'Cancelled' && (
-                                    <Button
-                                        type="primary"
-                                        onClick={() => handleCompleteOrder(selectedOrder.id)}
-                                    >
-                                        Hoàn thành đơn hàng
-                                    </Button>
-                                )}
                                 <Button
                                     onClick={() => {
                                         setContactModalVisible(true);
@@ -967,14 +853,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                                 </Button>
                                 <Button onClick={() => handlePrintOrder(selectedOrder)}>
                                     In đơn hàng
-                                </Button>
-                                <Button
-                                    onClick={() => {
-                                        setStatusModalVisible(true);
-                                        form.setFieldsValue({ status: selectedOrder.status });
-                                    }}
-                                >
-                                    Cập nhật trạng thái
                                 </Button>
                             </Space>
                         </div>

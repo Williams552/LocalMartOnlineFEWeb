@@ -939,22 +939,76 @@ class OrderService {
             const allOrdersResponse = await this.getAllOrders(1, 1000); // Lấy nhiều để tính toán
             const orders = allOrdersResponse.data.items || allOrdersResponse.data || [];
 
+            // Lọc đơn hàng đã thanh toán (bao gồm Paid, Completed)
+            const paidOrders = orders.filter(o => ['Paid', 'Completed'].includes(o.status));
+            
+            // Tính doanh thu theo thời gian
+            const today = new Date();
+            const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+            // Doanh thu hôm nay
+            const todayRevenue = paidOrders
+                .filter(o => {
+                    const orderDate = new Date(o.createdAt);
+                    return orderDate >= startOfToday;
+                })
+                .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+            // Doanh thu tháng này
+            const monthlyRevenue = paidOrders
+                .filter(o => {
+                    const orderDate = new Date(o.createdAt);
+                    return orderDate >= startOfMonth;
+                })
+                .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+            // Tổng doanh thu tất cả thời gian
+            const totalRevenue = paidOrders
+                .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+            // Phân loại doanh thu theo loại phí (giả sử có thông tin về phí trong đơn hàng)
+            const revenueBreakdown = {
+                productRevenue: 0,      // Doanh thu từ sản phẩm
+                shippingFee: 0,         // Phí vận chuyển
+                serviceFee: 0,          // Phí dịch vụ
+                platformFee: 0,         // Phí nền tảng
+                other: 0                // Phí khác
+            };
+
+            // Tính phân loại doanh thu (tạm thời ước tính)
+            paidOrders.forEach(order => {
+                const orderAmount = order.totalAmount || 0;
+                
+                // Ước tính phân bổ (có thể thay đổi theo logic thực tế)
+                revenueBreakdown.productRevenue += Math.round(orderAmount * 0.85); // 85% là tiền hàng
+                revenueBreakdown.shippingFee += Math.round(orderAmount * 0.08);    // 8% phí ship
+                revenueBreakdown.serviceFee += Math.round(orderAmount * 0.05);     // 5% phí dịch vụ
+                revenueBreakdown.platformFee += Math.round(orderAmount * 0.02);    // 2% phí nền tảng
+            });
+
             const stats = {
                 totalOrders: orders.length,
-                pendingOrders: orders.filter(o => ['Pending', 'Confirmed'].includes(o.status)).length,
+                pendingOrders: orders.filter(o => ['Pending', 'Confirmed', 'Preparing', 'Delivering'].includes(o.status)).length,
                 completedOrders: orders.filter(o => o.status === 'Completed').length,
                 cancelledOrders: orders.filter(o => o.status === 'Cancelled').length,
-                totalRevenue: orders
-                    .filter(o => o.status === 'Completed')
-                    .reduce((sum, order) => sum + (order.totalAmount || 0), 0),
-                todayRevenue: orders
-                    .filter(o => {
-                        const today = new Date().toDateString();
-                        const orderDate = new Date(o.createdAt).toDateString();
-                        return orderDate === today && o.status === 'Completed';
-                    })
-                    .reduce((sum, order) => sum + (order.totalAmount || 0), 0)
+                paidOrders: paidOrders.length,
+                
+                // Doanh thu
+                totalRevenue,
+                monthlyRevenue,
+                todayRevenue,
+                averageOrderValue: paidOrders.length > 0 ? Math.round(totalRevenue / paidOrders.length) : 0,
+                
+                // Phân loại doanh thu
+                revenueBreakdown,
+                
+                // Tỷ lệ
+                completionRate: orders.length > 0 ? Math.round((orders.filter(o => o.status === 'Completed').length / orders.length) * 100) : 0,
+                paymentRate: orders.length > 0 ? Math.round((paidOrders.length / orders.length) * 100) : 0
             };
+
+            console.log('📊 Statistics calculated:', stats);
 
             return {
                 success: true,
@@ -972,8 +1026,20 @@ class OrderService {
                     pendingOrders: 23,
                     completedOrders: 98,
                     cancelledOrders: 12,
+                    paidOrders: 110,
                     totalRevenue: 15600000,
-                    todayRevenue: 2850000
+                    monthlyRevenue: 8500000,
+                    todayRevenue: 2850000,
+                    averageOrderValue: 141818,
+                    revenueBreakdown: {
+                        productRevenue: 13260000,
+                        shippingFee: 1248000,
+                        serviceFee: 780000,
+                        platformFee: 312000,
+                        other: 0
+                    },
+                    completionRate: 63,
+                    paymentRate: 71
                 },
                 message: 'Sử dụng dữ liệu thống kê mẫu'
             };

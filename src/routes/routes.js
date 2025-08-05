@@ -1,5 +1,8 @@
 import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
 import ChangePassword from "../pages/User/ChangePassword";
+import AdminChangePassword from "../pages/Admin/User/AdminChangePassword";
+import AdminProfile from "../pages/Admin/User/AdminProfile";
+import AdminProfileEdit from "../pages/Admin/User/AdminProfileEdit";
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "../components/AuthComponents/Login";
@@ -41,6 +44,7 @@ import StorePaymentManagement from "../pages/Admin/Store/StorePaymentManagement"
 import ProductUnitManagement from "../pages/Admin/ProductUnit/ProductUnitManagement";
 import { ProductManagement, PendingProducts, FastBargainProducts } from "../pages/Admin/Product";
 import OrderManagement from "../pages/Admin/OrderManagement";
+import ProxyShoppingManagement from "../pages/Admin/ProxyShoppingManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
 import { FAQManagement } from "../pages/Admin/FAQ";
 import Analytics from "../pages/Admin/Analytics";
@@ -67,6 +71,7 @@ import FastBargainPage from "../pages/FastBargain/FastBargainPage";
 import BargainDetail from "../pages/FastBargain/BargainDetail";
 import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
 import SupportRequestPage from "../pages/Support/SupportRequestPage";
+import ProxyShoppingDemo from "../demo/ProxyShoppingDemo";
 
 // Seller pages
 import SellerProducts from "../pages/Sellers/SellerProducts";
@@ -312,6 +317,9 @@ const AppRoutes = () => {
                 <Route path="orders/disputes" element={<OrderManagement />} />
                 <Route path="fast-bargains" element={<OrderManagement />} />
 
+                {/* Proxy Shopping Management */}
+                <Route path="proxy-shopping" element={<ProxyShoppingManagement />} />
+
                 {/* Payment Management */}
                 <Route path="payments" element={<OrderManagement />} />
                 <Route path="market-fee-payments" element={<OrderManagement />} />
@@ -333,10 +341,16 @@ const AppRoutes = () => {
                 <Route path="analytics/orders" element={<Analytics />} />
 
                 {/* System */}
+                <Route path="profile" element={<AdminProfile />} />
+                <Route path="profile/edit" element={<AdminProfileEdit />} />
+                <Route path="change-password" element={<AdminChangePassword />} />
                 <Route path="licenses" element={<ContentManagement />} />
                 <Route path="devices" element={<ContentManagement />} />
                 <Route path="system-settings" element={<ContentManagement />} />
                 <Route path="approvals" element={<UserManagement />} />
+                
+                {/* Demo Pages */}
+                <Route path="demo/proxy-shopping" element={<ProxyShoppingDemo />} />
             </Route>
         </Routes>
     );
