@@ -39,17 +39,18 @@ const MyProxyRequests = () => {
         const displayPhase = request.currentPhase || request.status;
         const statusMap = {
             // Current phase values từ API
-            'Chưa có Proxy nhận': { text: 'Đang chờ proxy shopper nhận', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+            'Chưa có Proxy nhận': { text: 'Đang chờ người nhận', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
             'Đang soạn đơn': { text: 'Proxy đang soạn đề xuất', color: 'bg-blue-100 text-blue-800', icon: '📝' },
             'Chờ duyệt': { text: 'Có đề xuất, chờ duyệt', color: 'bg-purple-100 text-purple-800', icon: '📋' },
             'Đã thanh toán': { text: 'Đã thanh toán, đang mua hàng', color: 'bg-green-100 text-green-800', icon: '💳' },
             'Đang mua hàng': { text: 'Đang mua hàng', color: 'bg-indigo-100 text-indigo-800', icon: '🛒' },
             'Đã hoàn thành': { text: 'Hoàn thành', color: 'bg-green-100 text-green-800', icon: '✅' },
             'Đã hủy': { text: 'Đã hủy', color: 'bg-red-100 text-red-800', icon: '❌' },
+            'Yêu cầu đã bị hủy': { text: 'Đã hủy', color: 'bg-red-100 text-red-800', icon: '❌' },
             'Đã hết hạn': { text: 'Đã hết hạn', color: 'bg-gray-100 text-gray-800', icon: '⏰' },
             
             // Fallback cho old statuses
-            'Open': { text: 'Đang chờ proxy shopper nhận', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
+            'Open': { text: 'Đang chờ người nhận', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
             'Locked': { text: 'Đã có proxy nhận, đang soạn đề xuất', color: 'bg-blue-100 text-blue-800', icon: '🔒' },
             'Draft': { text: 'Proxy đang soạn đề xuất', color: 'bg-blue-100 text-blue-800', icon: '📝' },
             'Proposed': { text: 'Có đề xuất, chờ duyệt', color: 'bg-purple-100 text-purple-800', icon: '📋' },
@@ -165,7 +166,7 @@ const MyProxyRequests = () => {
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-supply-primary flex items-center">
                     <FiShoppingCart className="mr-2" />
-                    Yêu cầu đi chợ giúm của tôi
+                    Yêu cầu đi chợ giùm của tôi
                 </h1>
                 <button
                     onClick={fetchMyRequests}
@@ -180,7 +181,7 @@ const MyProxyRequests = () => {
             {requests.length === 0 ? (
                 <div className="text-center py-12">
                     <FiPackage className="mx-auto text-6xl text-gray-300 mb-4" />
-                    <p className="text-xl text-gray-500">Bạn chưa có yêu cầu đi chợ giúm nào</p>
+                    <p className="text-xl text-gray-500">Bạn chưa có yêu cầu đi chợ giùm nào</p>
                 </div>
             ) : (
                 <div className="grid gap-6">
@@ -207,9 +208,11 @@ const MyProxyRequests = () => {
                                             <FiClock className="mr-1" />
                                             Tạo lúc: {new Date(request.createdAt).toLocaleString('vi-VN')}
                                         </div>
-                                        <div className="flex items-center text-gray-600 text-sm">
-                                            <FiMapPin className="mr-1" />
-                                            Giao đến: {request.deliveryAddress}
+                                        <div className="flex items-center bg-blue-50 border-l-4 border-blue-400 px-3 py-2 rounded-r-lg">
+                                            <FiMapPin className="mr-2 text-blue-600" size={18} />
+                                            <span className="text-blue-800 font-medium text-base">
+                                                Giao đến: {request.deliveryAddress}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
@@ -368,6 +371,41 @@ const MyProxyRequests = () => {
                                                         </p>
                                                     </>
                                                 )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Thông tin hủy đơn */}
+                                {(currentPhase === 'Đã hủy' || currentPhase === 'Yêu cầu đã bị hủy') && (
+                                    <div className="bg-red-50 rounded-lg p-4 mb-4 border-l-4 border-red-400">
+                                        <h4 className="font-medium text-red-800 mb-3 flex items-center">
+                                            <FiX className="mr-1" />
+                                            Yêu cầu đã bị hủy
+                                        </h4>
+                                        
+                                        {request.notes ? (
+                                            <div className="text-red-700">
+                                                <span className="font-medium">Lý do hủy:</span>
+                                                <p className="text-sm mt-1 bg-white rounded px-3 py-2 border border-red-200">
+                                                    {request.notes}
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="text-red-700">
+                                                <span className="font-medium">Lý do hủy:</span>
+                                                <p className="text-sm mt-1 bg-white rounded px-3 py-2 border border-red-200 italic text-gray-600">
+                                                    Người mua đã hủy yêu cầu này
+                                                </p>
+                                            </div>
+                                        )}
+                                        
+                                        {(request.orderUpdatedAt || request.updatedAt) && (
+                                            <div className="mt-3 pt-3 border-t border-red-200">
+                                                <span className="font-medium text-red-800">Thời gian hủy:</span>
+                                                <p className="text-sm mt-1 text-red-700">
+                                                    {new Date(request.orderUpdatedAt || request.updatedAt).toLocaleString('vi-VN')}
+                                                </p>
                                             </div>
                                         )}
                                     </div>

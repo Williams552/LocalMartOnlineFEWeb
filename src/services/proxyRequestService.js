@@ -2,6 +2,31 @@ import authService from './authService';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
 
 const proxyRequestService = {
+    // Tạo yêu cầu mới
+    createRequest: async (requestData) => {
+        try {
+            const response = await authService.makeAuthenticatedRequest(
+                API_ENDPOINTS.PROXY_REQUEST.CREATE_REQUEST,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestData)
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error creating proxy request:', error);
+            throw error;
+        }
+    },
+
     // Lấy danh sách yêu cầu của buyer
     getMyRequests: async () => {
         try {
@@ -70,7 +95,7 @@ const proxyRequestService = {
             const response = await authService.makeAuthenticatedRequest(
                 API_ENDPOINTS.PROXY_REQUEST.CANCEL_REQUEST(requestId),
                 { 
-                    method: 'DELETE',
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },

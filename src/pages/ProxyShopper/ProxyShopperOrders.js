@@ -11,6 +11,9 @@ const ProxyShopperOrders = () => {
     const [filter, setFilter] = useState('all');
     const [showUploadModal, setShowUploadModal] = useState(false);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelReason, setCancelReason] = useState('');
+    const [cancellingOrderId, setCancellingOrderId] = useState(null);
 
     useEffect(() => {
         fetchOrders();
@@ -116,16 +119,28 @@ const ProxyShopperOrders = () => {
                     "Authorization": token ? `Bearer ${token}` : undefined,
                     "Content-Type": "application/json"
                 },
+                body: JSON.stringify({
+                    reason: cancelReason
+                })
             });
             
             if (!res.ok) throw new Error("Không thể hủy đơn hàng");
             
             alert('Đã hủy đơn hàng!');
+            setShowCancelModal(false);
+            setCancelReason('');
+            setCancellingOrderId(null);
             await fetchOrders(); // Refresh data
         } catch (error) {
             console.error('Error cancelling order:', error);
             alert('Có lỗi xảy ra khi hủy đơn hàng');
         }
+    };
+
+    const handleOpenCancelModal = (orderId) => {
+        setCancellingOrderId(orderId);
+        setCancelReason('');
+        setShowCancelModal(true);
     };
 
     const handleOpenUploadModal = (orderId) => {
@@ -510,14 +525,6 @@ const ProxyShopperOrders = () => {
                                         
                                         {/* Action Buttons based on Permissions from API */}
                                         <div className="flex items-center space-x-3">
-                                            {/* Xem chi tiết luôn hiển thị */}
-                                            <Link
-                                                to={`/proxy-shopper/orders/${order.orderId || order.requestId}/details`}
-                                                className="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
-                                            >
-                                                <FiEye className="mr-2" size={16} />
-                                                Xem chi tiết
-                                            </Link>
 
                                             {/* Nút tạo/chỉnh sửa đề xuất */}
                                             {order.canEditProposal && (
@@ -602,11 +609,7 @@ const ProxyShopperOrders = () => {
                                             {/* Nút hủy đơn hàng */}
                                             {order.canCancel && (
                                                 <button
-                                                    onClick={() => {
-                                                        if (window.confirm('Bạn có chắc chắn muốn hủy đơn hàng này?')) {
-                                                            handleCancelOrder(order.orderId);
-                                                        }
-                                                    }}
+                                                    onClick={() => handleOpenCancelModal(order.orderId)}
                                                     className="inline-flex items-center px-3 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition-colors"
                                                 >
                                                     <FiX className="mr-2" size={16} />
@@ -659,6 +662,56 @@ const ProxyShopperOrders = () => {
                 orderId={selectedOrderId}
                 onSuccess={handleUploadSuccess}
             />
+
+            {/* Cancel Order Modal */}
+            {showCancelModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+                        <div className="border-b px-6 py-4">
+                            <h3 className="text-lg font-bold text-red-800">Hủy đơn hàng</h3>
+                        </div>
+                        
+                        <div className="p-6">
+                            <div className="mb-4">
+                                <p className="text-gray-700 mb-3">
+                                    Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.
+                                </p>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Lý do hủy <span className="text-red-500">*</span>
+                                </label>
+                                <textarea
+                                    value={cancelReason}
+                                    onChange={(e) => setCancelReason(e.target.value)}
+                                    placeholder="Nhập lý do hủy đơn hàng..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                    rows="3"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => {
+                                        setShowCancelModal(false);
+                                        setCancelReason('');
+                                        setCancellingOrderId(null);
+                                    }}
+                                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300"
+                                >
+                                    Quay lại
+                                </button>
+                                <button
+                                    onClick={() => handleCancelOrder(cancellingOrderId)}
+                                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 flex items-center gap-2"
+                                    disabled={!cancelReason.trim()}
+                                >
+                                    <FiX />
+                                    Xác nhận hủy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
