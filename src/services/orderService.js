@@ -824,7 +824,6 @@ class OrderService {
                 console.warn('🔄 Using mock data for development');
                 return {
                     success: true,
-                    data: this.getMockAdminOrders(),
                     message: 'Sử dụng dữ liệu mẫu - API chưa sẵn sàng'
                 };
             }
@@ -867,7 +866,6 @@ class OrderService {
                 console.warn('🔄 Using mock data for development');
                 return {
                     success: true,
-                    data: this.getMockAdminOrders(),
                     message: 'Sử dụng dữ liệu mẫu - API chưa sẵn sàng'
                 };
             }
