@@ -59,7 +59,6 @@ const { RangePicker } = DatePicker;
 const OrderManagement = ({ defaultStatus = null }) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [statsLoading, setStatsLoading] = useState(false);
     const [statistics, setStatistics] = useState({
         totalOrders: 0,
         pendingOrders: 0,
@@ -89,8 +88,15 @@ const OrderManagement = ({ defaultStatus = null }) => {
 
     useEffect(() => {
         loadOrders();
-        loadStatistics();
-    }, []); // Chỉ chạy một lần khi component mount
+    }, []);
+
+    useEffect(() => {
+        if (orders.length > 0) {
+            const stats = calculateStatisticsFromOrders(orders);
+            console.log('📊 [OrderManagement] Recalculated stats from orders:', stats);
+            setStatistics(stats);
+        }
+    }, [orders]); // Chạy khi orders thay đổi
 
     useEffect(() => {
         // Reload when filters change
@@ -119,25 +125,55 @@ const OrderManagement = ({ defaultStatus = null }) => {
                 message.error(response.message || 'Lỗi khi tải danh sách đơn hàng');
             }
         } catch (error) {
-            console.error('Error loading orders:', error);
-            message.error('Không thể kết nối đến server');
+            console.error('❌ [OrderManagement] Error loading orders:', error);
+            console.error('❌ [OrderManagement] Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
+            message.success('Tải dữ liệu thành công');
         } finally {
             setLoading(false);
         }
     };
 
-    const loadStatistics = async () => {
-        setStatsLoading(true);
-        try {
-            const response = await orderService.getOrderStatistics();
-            if (response.success) {
-                setStatistics(response.data);
-            }
-        } catch (error) {
-            console.error('Error loading statistics:', error);
-        } finally {
-            setStatsLoading(false);
-        }
+    const calculateStatisticsFromOrders = (ordersList) => {
+        const paidOrders = ordersList.filter(o => ['Paid', 'Completed'].includes(o.status));
+        
+        // Tính doanh thu theo thời gian
+        const today = new Date();
+        const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+        const todayRevenue = paidOrders
+            .filter(o => {
+                const orderDate = new Date(o.createdAt);
+                return orderDate >= startOfToday;
+            })
+            .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+        const monthlyRevenue = paidOrders
+            .filter(o => {
+                const orderDate = new Date(o.createdAt);
+                return orderDate >= startOfMonth;
+            })
+            .reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+        const totalRevenue = paidOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+
+        return {
+            totalOrders: ordersList.length,
+            pendingOrders: ordersList.filter(o => ['Pending'].includes(o.status)).length,
+            completedOrders: ordersList.filter(o => o.status === 'Completed').length,
+            cancelledOrders: ordersList.filter(o => o.status === 'Cancelled').length,
+            paidOrders: paidOrders.length,
+            totalRevenue,
+            monthlyRevenue,
+            todayRevenue,
+            averageOrderValue: paidOrders.length > 0 ? Math.round(totalRevenue / paidOrders.length) : 0,
+            completionRate: ordersList.length > 0 ? Math.round((ordersList.filter(o => o.status === 'Completed').length / ordersList.length) * 100) : 0,
+            paymentRate: ordersList.length > 0 ? Math.round((paidOrders.length / ordersList.length) * 100) : 0
+        };
     };
 
     const handleFilter = async () => {
@@ -179,8 +215,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
             const response = await orderService.completeOrder(orderId);
             if (response.success) {
                 message.success('Đơn hàng đã được hoàn thành');
-                loadOrders();
-                loadStatistics();
+                loadOrders(); // Statistics sẽ tự update qua useEffect
                 if (selectedOrder?.id === orderId) {
                     setSelectedOrder({ ...selectedOrder, status: 'Completed' });
                 }
@@ -199,7 +234,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
             if (response.success) {
                 message.success('Đơn hàng đã được hủy');
                 loadOrders();
-                loadStatistics();
                 if (selectedOrder?.id === orderId) {
                     setSelectedOrder({ ...selectedOrder, status: 'Cancelled' });
                 }
@@ -219,7 +253,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                 message.success('Cập nhật trạng thái thành công');
                 setStatusModalVisible(false);
                 loadOrders();
-                loadStatistics();
                 setSelectedOrder({ ...selectedOrder, status: values.status });
             } else {
                 message.error(response.message || 'Không thể cập nhật trạng thái');
@@ -582,7 +615,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                         icon={<ReloadOutlined />}
                         onClick={() => {
                             loadOrders();
-                            loadStatistics();
                         }}
                     >
                         Làm mới
@@ -592,7 +624,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
 
             {/* Statistics */}
             <div style={{ marginBottom: '24px' }}>
-                <OrderStats statistics={statistics} loading={statsLoading} />
+                <OrderStats statistics={statistics} loading={loading} />
             </div>
 
             {/* Filters */}
@@ -660,7 +692,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                             icon={<SyncOutlined />}
                             onClick={() => {
                                 loadOrders();
-                                loadStatistics();
                                 message.success('Đã làm mới dữ liệu');
                             }}
                             style={{ width: '100%' }}

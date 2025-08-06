@@ -120,7 +120,29 @@ class AuthService {
     }
 
     getCurrentUser() {
-        return this.user || this.getStoredUser();
+        const user = this.user || this.getStoredUser();
+        
+        // If user exists but no role, try to extract from token
+        if (user && !user.role) {
+            const token = this.getToken();
+            if (token) {
+                try {
+                    const decoded = jwtDecode(token);
+                    const userRole = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
+                                   decoded.role || 
+                                   decoded['role'];
+                    if (userRole) {
+                        user.role = userRole;
+                        this.setUser(user); // Update stored user with role
+                        console.log('🔍 AuthService: Extracted and updated user role:', userRole);
+                    }
+                } catch (err) {
+                    console.warn('⚠️ AuthService: Could not extract role from token:', err);
+                }
+            }
+        }
+        
+        return user;
     }
 
     getCurrentUserId() {
@@ -305,15 +327,30 @@ class AuthService {
                 const { data } = response.data;
                 if (data?.token) {
                     this.setTokens(data.token);
+                    
+                    // Extract role from token if not provided in response
+                    let userRole = data.role;
+                    if (!userRole) {
+                        try {
+                            const decoded = jwtDecode(data.token);
+                            userRole = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 
+                                      decoded.role || 
+                                      decoded['role'];
+                            console.log('🔍 AuthService: Extracted role from token:', userRole);
+                        } catch (err) {
+                            console.warn('⚠️ AuthService: Could not extract role from token:', err);
+                        }
+                    }
+                    
                     this.setUser({
                         id: data.userId,
                         userId: data.userId,
                         username: data.username,
-                        role: data.role,
+                        role: userRole,
                         token: data.token
                     });
 
-                    console.log('✅ AuthService: Login successful');
+                    console.log('✅ AuthService: Login successful with role:', userRole);
                     toastService.success('Đăng nhập thành công!');
 
                     return {

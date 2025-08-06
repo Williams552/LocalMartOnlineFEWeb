@@ -140,10 +140,13 @@ const AdminLayout = () => {
                 return [
                     allMenuItems.dashboard,
                     allMenuItems.users,
+                    allMenuItems.markets,
                     allMenuItems.stores,
                     allMenuItems.products,
+                    allMenuItems.categories,
                     allMenuItems.productUnits,
                     allMenuItems.orders,
+                    allMenuItems.content,
                     allMenuItems.support,
                     allMenuItems.analytics
                 ];
