@@ -19,12 +19,14 @@ const Header = () => {
     const [units, setUnits] = useState([]);
     const [proxyLoading, setProxyLoading] = useState(false);
     const [proxyError, setProxyError] = useState("");
-    const [proxySuccess, setProxySuccess] = useState("");
     
     // Market selection states
     const [selectedStoreId, setSelectedStoreId] = useState(""); // Keep variable name for consistency
     const [stores, setStores] = useState([]); // Keep variable name but will store markets
     const [storesLoading, setStoresLoading] = useState(false);
+    
+    // Delivery address state
+    const [deliveryAddress, setDeliveryAddress] = useState("");
     
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMessages, setShowMessages] = useState(false);
@@ -563,9 +565,9 @@ const Header = () => {
                                     onClick={async () => {
                                         setShowProxyModal(true);
                                         setProxyError("");
-                                        setProxySuccess("");
                                         setProxyItems([{ name: "", quantity: 1, unit: "" }]);
                                         setSelectedStoreId("");
+                                        setDeliveryAddress("");
                                         
                                         // Fetch units
                                         if (units.length === 0) {
@@ -666,15 +668,37 @@ const Header = () => {
                                                 )}
                                             </div>
                                             
+                                            {/* Delivery Address Input */}
+                                            <div className="mb-6">
+                                                <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="deliveryAddress">
+                                                    <FiMapPin className="inline mr-1" size={16} />
+                                                    Địa chỉ giao hàng *
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="deliveryAddress"
+                                                    className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-supply-primary focus:border-supply-primary transition"
+                                                    placeholder="Nhập địa chỉ giao hàng cụ thể"
+                                                    value={deliveryAddress}
+                                                    onChange={e => setDeliveryAddress(e.target.value)}
+                                                    required
+                                                />
+                                            </div>
+                                            
                                             <form
                                                 onSubmit={async (e) => {
                                                     e.preventDefault();
                                                     setProxyError("");
-                                                    setProxySuccess("");
                                                     
                                                     // Validate market selection
                                                     if (!selectedStoreId) {
                                                         setProxyError("Vui lòng chọn chợ trước khi gửi yêu cầu.");
+                                                        return;
+                                                    }
+                                                    
+                                                    // Validate delivery address
+                                                    if (!deliveryAddress.trim()) {
+                                                        setProxyError("Vui lòng nhập địa chỉ giao hàng.");
                                                         return;
                                                     }
                                                     
@@ -691,13 +715,21 @@ const Header = () => {
                                                             {
                                                                 buyerId: user?.id || "",
                                                                 marketId: selectedStoreId,
-                                                                items: proxyItems
+                                                                items: proxyItems,
+                                                                deliveryAddress: deliveryAddress.trim()
                                                             }
                                                         );
                                                         if (res.data && res.data.requestId) {
-                                                            setProxySuccess("Gửi yêu cầu thành công! Mã yêu cầu: " + res.data.requestId);
+                                                            // Reset form
                                                             setProxyItems([{ name: "", quantity: 1, unit: "" }]);
                                                             setSelectedStoreId("");
+                                                            setDeliveryAddress("");
+                                                            
+                                                            // Close modal
+                                                            setShowProxyModal(false);
+                                                            
+                                                            // Navigate to proxy requests page
+                                                            navigate("/buyer/proxy-requests");
                                                         } else {
                                                             setProxyError("Gửi yêu cầu thất bại. Vui lòng thử lại.");
                                                         }
@@ -800,7 +832,6 @@ const Header = () => {
                                                     </button>
                                                 </div>
                                                 {proxyError && <div className="text-red-600 text-sm mb-2 animate-fadeIn" role="alert">{proxyError}</div>}
-                                                {proxySuccess && <div className="text-green-600 text-sm mb-2 animate-fadeIn" role="status">{proxySuccess}</div>}
                                             </form>
                                         </div>
                                         <style>{`
@@ -876,7 +907,7 @@ const Header = () => {
                                                 </Link>
                                                 <Link to="/buyer/proxy-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FaHandshake size={16} />
-                                                    <span>Yêu cầu đi chợ giúm</span>
+                                                    <span>Yêu cầu đi chợ giùm</span>
                                                 </Link>
                                                 <Link to="/support-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FaHeadset size={16} />
