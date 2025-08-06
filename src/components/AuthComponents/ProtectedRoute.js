@@ -25,7 +25,8 @@ const ProtectedRoute = ({ children, requiredRoles = [] }) => {
         const hasRequiredRole = requiredRoles.includes(user.role);
         if (!hasRequiredRole) {
             // Redirect to appropriate page based on user role
-            if (user.role === 'Admin') {
+            const adminRoles = ['Admin', 'MS', 'MMBH', 'LGR'];
+            if (user.role && adminRoles.includes(user.role)) {
                 return <Navigate to="/admin" replace />;
             } else if (user.role === 'Seller') {
                 return <Navigate to="/seller/dashboard" replace />;

@@ -21,15 +21,16 @@ const ProtectedRoute = ({ children, allowedRoles = [], requireAuth = true, block
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
-    // Block Admin from accessing non-admin pages (except when explicitly accessing admin routes)
-    if (user?.role === 'Admin' && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/login') && !location.pathname.startsWith('/unauthorized')) {
+    // Block Admin roles from accessing non-admin pages (except when explicitly accessing admin routes)
+    const adminRoles = ['Admin', 'MS', 'MMBH', 'LGR'];
+    if (user?.role && adminRoles.includes(user.role) && !location.pathname.startsWith('/admin') && !location.pathname.startsWith('/login') && !location.pathname.startsWith('/unauthorized')) {
         return <Navigate to="/admin" replace />;
     }
 
     // If specific roles are required
     if (allowedRoles.length > 0 && (!user || !allowedRoles.includes(user.role))) {
-        // If user is Admin trying to access non-admin page, redirect to admin
-        if (user?.role === 'Admin') {
+        // If user has admin role trying to access non-admin page, redirect to admin
+        if (user?.role && adminRoles.includes(user.role)) {
             return <Navigate to="/admin" replace />;
         }
         // Otherwise redirect to unauthorized page
