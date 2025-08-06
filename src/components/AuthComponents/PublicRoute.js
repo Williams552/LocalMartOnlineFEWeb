@@ -20,7 +20,9 @@ const PublicRoute = ({ children }) => {
     // If authenticated, redirect to appropriate dashboard
     if (isAuthenticated && user) {
         console.log('PublicRoute - User is authenticated, redirecting to dashboard');
-        if (user.role === 'Admin') {
+        // Admin roles should go to /admin
+        const adminRoles = ['Admin', 'MS', 'MMBH', 'LGR'];
+        if (user.role && adminRoles.includes(user.role)) {
             return <Navigate to="/admin" replace />;
         } else if (user.role === 'Seller') {
             return <Navigate to="/seller/dashboard" replace />;

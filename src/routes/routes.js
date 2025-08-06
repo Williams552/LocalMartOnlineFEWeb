@@ -14,6 +14,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import PublicRoute from "../components/AuthComponents/PublicRoute";
 import ProtectedRoute from "../components/ProtectedRoute";
 import ProtectedSellerRoute from "../components/ProtectedSellerRoute";
+import ProtectedAdminRoleRoute from "../components/ProtectedAdminRoleRoute";
 import Unauthorized from "../components/Unauthorized";
 import ApiRedirectHandler from "../components/ApiRedirectHandler";
 import HomePage from "../pages/Guest/HomePage";
@@ -71,7 +72,6 @@ import FastBargainPage from "../pages/FastBargain/FastBargainPage";
 import BargainDetail from "../pages/FastBargain/BargainDetail";
 import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
 import SupportRequestPage from "../pages/Support/SupportRequestPage";
-import ProxyShoppingDemo from "../demo/ProxyShoppingDemo";
 
 // Seller pages
 import SellerProducts from "../pages/Sellers/SellerProducts";
@@ -265,92 +265,81 @@ const AppRoutes = () => {
             </Route>
 
             {/* Admin Routes - Protected with admin role */}
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={['Admin']}><AdminLayout /></ProtectedRoute>}>
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['Admin', 'MS', 'MMBH', 'LGR']}><AdminLayout /></ProtectedRoute>}>
                 <Route index element={<AdminDashboard />} />
 
-                {/* User Management */}
-                <Route path="users" element={<UserManagement />} />
-                <Route path="users/edit/:id" element={<UserManagement />} />
-                <Route path="users/:id" element={<UserManagement />} />
-                <Route path="seller-register" element={<SellerRegisterList />} />
-                <Route path="proxy-register" element={<ProxyRegisterList />} />
-                <Route path="seller-registrations" element={<UserManagement />} />
-                <Route path="proxy-registrations" element={<UserManagement />} />
+                {/* User Management - Only MS role */}
+                <Route path="users" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><UserManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="users/edit/:id" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><UserManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="users/:id" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><UserManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="seller-register" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><SellerRegisterList /></ProtectedAdminRoleRoute>} />
+                <Route path="proxy-register" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><ProxyRegisterList /></ProtectedAdminRoleRoute>} />
+                <Route path="seller-registrations" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><UserManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="proxy-registrations" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><UserManagement /></ProtectedAdminRoleRoute>} />
 
-                {/* Category Management */}
-                <Route path="categories" element={<CategoryManagement />} />
+                {/* Category Management - MMBH + Admin */}
+                <Route path="categories" element={<ProtectedAdminRoleRoute allowedRoles={['MMBH', 'Admin']}><CategoryManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="category-registrations" element={<ProtectedAdminRoleRoute allowedRoles={['MMBH', 'Admin']}><CategoryRegistrationManagement /></ProtectedAdminRoleRoute>} />
 
-                <Route path="category-registrations" element={<CategoryRegistrationManagement />} />
+                {/* Market Management - MMBH + Admin */}
+                <Route path="markets" element={<ProtectedAdminRoleRoute allowedRoles={['MMBH', 'Admin']}><MarketManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="markets/create" element={<ProtectedAdminRoleRoute allowedRoles={['MMBH', 'Admin']}><MarketManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="markets/dashboard" element={<ProtectedAdminRoleRoute allowedRoles={['MMBH', 'Admin']}><MarketDashboard /></ProtectedAdminRoleRoute>} />
+                <Route path="market-fees" element={<ProtectedAdminRoleRoute allowedRoles={['MMBH', 'Admin']}><MarketFeeManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="market-fee-types" element={<ProtectedAdminRoleRoute allowedRoles={['MMBH', 'Admin']}><MarketFeeTypeManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="market-rules" element={<ProtectedAdminRoleRoute allowedRoles={['MMBH', 'Admin']}><MarketRuleManagement /></ProtectedAdminRoleRoute>} />
 
+                {/* Store Management - MS + Admin */}
+                <Route path="stores" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><StoreManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="stores/dashboard" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><StoreDashboard /></ProtectedAdminRoleRoute>} />
+                <Route path="stores/create" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><StoreManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="stores/analytics" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><StoreAnalytics /></ProtectedAdminRoleRoute>} />
+                <Route path="stores/payment" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><StorePaymentManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="stores/sellers" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><StoreManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="stores/reviews" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><StoreManagement /></ProtectedAdminRoleRoute>} />
 
+                {/* Product Management - MS + Admin */}
+                <Route path="products" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><ProductManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="products/pending" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><PendingProducts /></ProtectedAdminRoleRoute>} />
+                <Route path="products/fast-bargain" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><FastBargainProducts /></ProtectedAdminRoleRoute>} />
+                <Route path="product-units" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><ProductUnitManagement /></ProtectedAdminRoleRoute>} />
 
+                {/* Order Management - MS + Admin */}
+                <Route path="orders" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><OrderManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="orders/disputes" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><OrderManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="fast-bargains" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><OrderManagement /></ProtectedAdminRoleRoute>} />
 
-                {/* Market Management */}
+                {/* Proxy Shopping Management - MS + Admin */}
+                <Route path="proxy-shopping" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><ProxyShoppingManagement /></ProtectedAdminRoleRoute>} />
 
-                <Route path="markets" element={<MarketManagement />} />
-                <Route path="markets/create" element={<MarketManagement />} />
-                <Route path="markets/dashboard" element={<MarketDashboard />} />
-                <Route path="market-fees" element={<MarketFeeManagement />} />
-                <Route path="market-fee-types" element={<MarketFeeTypeManagement />} />
-                <Route path="market-rules" element={<MarketRuleManagement />} />
+                {/* Payment Management - MS + Admin */}
+                <Route path="payments" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><OrderManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="market-fee-payments" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><OrderManagement /></ProtectedAdminRoleRoute>} />
 
+                {/* Content Management - LGR + Admin */}
+                <Route path="faqs" element={<ProtectedAdminRoleRoute allowedRoles={['LGR', 'Admin']}><FAQManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="policies" element={<ProtectedAdminRoleRoute allowedRoles={['LGR', 'Admin']}><ContentManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="notifications" element={<ProtectedAdminRoleRoute allowedRoles={['LGR', 'Admin']}><ContentManagement /></ProtectedAdminRoleRoute>} />
 
-                {/* Store Management */}
-                <Route path="stores" element={<StoreManagement />} />
-                <Route path="stores/dashboard" element={<StoreDashboard />} />
-                <Route path="stores/create" element={<StoreManagement />} />
-                <Route path="stores/analytics" element={<StoreAnalytics />} />
-                <Route path="stores/payment" element={<StorePaymentManagement />} />
-                <Route path="stores/sellers" element={<StoreManagement />} />
-                <Route path="stores/reviews" element={<StoreManagement />} />
+                {/* Support - MS + Admin */}
+                <Route path="support-requests" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><SupportManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="chat" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><SupportManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="reports" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><ReportManagement /></ProtectedAdminRoleRoute>} />
 
+                {/* Analytics - All admin roles can access */}
+                <Route path="analytics/users" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><UserAnalytics /></ProtectedAdminRoleRoute>} />
+                <Route path="analytics/revenue" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><RevenueAnalytics /></ProtectedAdminRoleRoute>} />
+                <Route path="analytics/products" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><Analytics /></ProtectedAdminRoleRoute>} />
+                <Route path="analytics/orders" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><Analytics /></ProtectedAdminRoleRoute>} />
 
-
-                {/* Product Management */}
-                <Route path="products" element={<ProductManagement />} />
-                <Route path="products/pending" element={<PendingProducts />} />
-                <Route path="products/fast-bargain" element={<FastBargainProducts />} />
-                <Route path="product-units" element={<ProductUnitManagement />} />
-
-                {/* Order Management */}
-                <Route path="orders" element={<OrderManagement />} />
-                <Route path="orders/disputes" element={<OrderManagement />} />
-                <Route path="fast-bargains" element={<OrderManagement />} />
-
-                {/* Proxy Shopping Management */}
-                <Route path="proxy-shopping" element={<ProxyShoppingManagement />} />
-
-                {/* Payment Management */}
-                <Route path="payments" element={<OrderManagement />} />
-                <Route path="market-fee-payments" element={<OrderManagement />} />
-
-                {/* Content Management */}
-                <Route path="faqs" element={<FAQManagement />} />
-                <Route path="policies" element={<ContentManagement />} />
-                <Route path="notifications" element={<ContentManagement />} />
-
-                {/* Support */}
-                <Route path="support-requests" element={<SupportManagement />} />
-                <Route path="chat" element={<SupportManagement />} />
-                <Route path="reports" element={<ReportManagement />} />
-
-                {/* Analytics */}
-                <Route path="analytics/users" element={<UserAnalytics />} />
-                <Route path="analytics/revenue" element={<RevenueAnalytics />} />
-                <Route path="analytics/products" element={<Analytics />} />
-                <Route path="analytics/orders" element={<Analytics />} />
-
-                {/* System */}
+                {/* System - All admin roles can access their profile */}
                 <Route path="profile" element={<AdminProfile />} />
                 <Route path="profile/edit" element={<AdminProfileEdit />} />
                 <Route path="change-password" element={<AdminChangePassword />} />
-                <Route path="licenses" element={<ContentManagement />} />
-                <Route path="devices" element={<ContentManagement />} />
-                <Route path="system-settings" element={<ContentManagement />} />
-                <Route path="approvals" element={<UserManagement />} />
-                
-                {/* Demo Pages */}
-                <Route path="demo/proxy-shopping" element={<ProxyShoppingDemo />} />
+                <Route path="licenses" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><ContentManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="devices" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><ContentManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="system-settings" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><ContentManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="approvals" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'Admin']}><UserManagement /></ProtectedAdminRoleRoute>} />
             </Route>
         </Routes>
     );

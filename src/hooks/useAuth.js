@@ -163,7 +163,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     const redirectToDashboard = () => {
-        if (user?.role === 'Admin') {
+        // Admin roles should go to /admin
+        const adminRoles = ['Admin', 'MS', 'MMBH', 'LGR'];
+        if (user?.role && adminRoles.includes(user.role)) {
             navigate('/admin');
         } else if (user?.role === 'Seller') {
             navigate('/seller/dashboard'); // Updated to match routes.js

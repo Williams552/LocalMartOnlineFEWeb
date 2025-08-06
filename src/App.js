@@ -29,8 +29,9 @@ const AdminRedirectWrapper = ({ children }) => {
   const { user } = useAuth();
   const location = useLocation();
 
-  // If user is Admin and trying to access non-admin pages, redirect to admin
-  if (user?.role === 'Admin' && !location.pathname.startsWith('/admin')) {
+  // If user has admin role and trying to access non-admin pages, redirect to admin
+  const adminRoles = ['Admin', 'MS', 'MMBH', 'LGR'];
+  if (user?.role && adminRoles.includes(user.role) && !location.pathname.startsWith('/admin')) {
     return <Navigate to="/admin" replace />;
   }
 
