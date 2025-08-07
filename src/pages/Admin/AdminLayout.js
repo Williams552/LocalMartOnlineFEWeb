@@ -88,6 +88,7 @@ const AdminLayout = () => {
             categories: {
                 key: 'categories', icon: <AppstoreOutlined />, label: 'Quản lý danh mục', children: [
                     { key: '/admin/categories', label: 'Danh mục' },
+                    { key: '/admin/category-registrations', label: 'Đăng ký danh mục' },
                 ]
             },
             orders: {
