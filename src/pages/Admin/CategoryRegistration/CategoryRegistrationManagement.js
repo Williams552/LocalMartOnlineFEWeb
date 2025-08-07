@@ -469,14 +469,6 @@ const CategoryRegistrationManagement = () => {
             )
         },
         {
-            title: 'Người đăng ký',
-            dataIndex: 'sellerId',
-            key: 'sellerId',
-            render: (sellerId) => (
-                <Text code>{sellerId}</Text>
-            )
-        },
-        {
             title: 'Trạng thái',
             dataIndex: 'status',
             key: 'status',
@@ -636,9 +628,6 @@ const CategoryRegistrationManagement = () => {
                         <Row gutter={[16, 16]}>
                             <Col span={24}>
                                 <Descriptions bordered column={2}>
-                                    <Descriptions.Item label="ID">
-                                        {selectedRegistration.id}
-                                    </Descriptions.Item>
                                     <Descriptions.Item label="Trạng thái">
                                         <Tag color={selectedRegistration.statusColor}>
                                             {selectedRegistration.statusDisplay}
@@ -646,9 +635,6 @@ const CategoryRegistrationManagement = () => {
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Tên danh mục">
                                         {selectedRegistration.categoryName}
-                                    </Descriptions.Item>
-                                    <Descriptions.Item label="Người đăng ký">
-                                        {selectedRegistration.sellerId}
                                     </Descriptions.Item>
                                     <Descriptions.Item label="Ngày tạo">
                                         {selectedRegistration.createdAtDisplay}
