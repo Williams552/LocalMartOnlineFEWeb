@@ -48,6 +48,7 @@ import OrderManagement from "../pages/Admin/OrderManagement";
 import ProxyShoppingManagement from "../pages/Admin/ProxyShoppingManagement";
 import ContentManagement from "../pages/Admin/ContentManagement";
 import { FAQManagement } from "../pages/Admin/FAQ";
+import { PlatformPolicyManagement } from "../pages/Admin/PlatformPolicy";
 import Analytics from "../pages/Admin/Analytics";
 import SupportManagement from "../pages/Admin/SupportManagement";
 import ReportManagement from "../pages/Admin/Reports/ReportManagement";
@@ -318,7 +319,7 @@ const AppRoutes = () => {
 
                 {/* Content Management - LGR + Admin */}
                 <Route path="faqs" element={<ProtectedAdminRoleRoute allowedRoles={['LGR', 'Admin']}><FAQManagement /></ProtectedAdminRoleRoute>} />
-                <Route path="policies" element={<ProtectedAdminRoleRoute allowedRoles={['LGR', 'Admin']}><ContentManagement /></ProtectedAdminRoleRoute>} />
+                <Route path="platform-policies" element={<ProtectedAdminRoleRoute allowedRoles={['LGR', 'Admin']}><PlatformPolicyManagement /></ProtectedAdminRoleRoute>} />
                 <Route path="notifications" element={<ProtectedAdminRoleRoute allowedRoles={['LGR', 'Admin']}><ContentManagement /></ProtectedAdminRoleRoute>} />
 
                 {/* Support - MS + Admin */}

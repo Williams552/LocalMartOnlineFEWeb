@@ -99,6 +99,7 @@ const AdminLayout = () => {
             content: {
                 key: 'content', icon: <FileTextOutlined />, label: 'Quản lý nội dung', children: [
                     { key: '/admin/faqs', label: 'FAQ' },
+                    { key: '/admin/platform-policies', label: 'Chính sách nền tảng' },
                 ]
             },
             support: {
