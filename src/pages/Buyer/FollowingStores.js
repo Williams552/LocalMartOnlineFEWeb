@@ -250,23 +250,6 @@ const StoreCard = ({ store, onUnfollow }) => {
                         <span className="line-clamp-1">{store.address}</span>
                     </div>
                 )}
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
-                    <div className="text-center">
-                        <div className="font-bold text-supply-primary">
-                            {store.productCount || 0}
-                        </div>
-                        <div className="text-gray-500 text-xs">Sản phẩm</div>
-                    </div>
-                    <div className="text-center">
-                        <div className="font-bold text-supply-primary">
-                            {store.followerCount || 0}
-                        </div>
-                        <div className="text-gray-500 text-xs">Theo dõi</div>
-                    </div>
-                </div>
-
                 {/* Action Button */}
                 <Link
                     to={`/store/${store.id}`}
