@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
-import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox, FiPackage } from "react-icons/fi";
+import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox, FiPackage, FiShoppingBag } from "react-icons/fi";
 import { FaUserCircle, FaStore, FaHandshake, FaHeadset, FaExclamationTriangle } from "react-icons/fa";
 import axios from "axios";
 import { useCart } from "../../contexts/CartContext";
@@ -603,7 +603,7 @@ const Header = () => {
                                         }
                                     }}
                                 >
-                                    <FaHandshake size={24} className="group-hover:text-purple-600" />
+                                    <FiShoppingBag size={24} className="group-hover:text-purple-600" />
                                     <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded shadow hidden group-hover:block">Đi chợ giùm</span>
                                 </button>
                                 {/* Proxy Shopper Modal */}
@@ -906,7 +906,7 @@ const Header = () => {
                                                     <span>Thương lượng của tôi</span>
                                                 </Link>
                                                 <Link to="/buyer/proxy-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                    <FaHandshake size={16} />
+                                                    <FiShoppingBag size={16} />
                                                     <span>Yêu cầu đi chợ giùm</span>
                                                 </Link>
                                                 <Link to="/support-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
@@ -980,21 +980,6 @@ const Header = () => {
                                                         <Link to="/proxy-shopper/profile" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm">
                                                             <FaUserCircle size={16} />
                                                             <span>Hồ sơ Proxy Shopper</span>
-                                                        </Link>
-                                                    </>
-                                                )}
-
-                                                {/* Registration Links for buyers */}
-                                                {user?.role === "Buyer" && (
-                                                    <>
-                                                        <div className="border-t my-2"></div>
-                                                        <Link to="/register-seller" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                            <FaStore size={16} />
-                                                            <span>Đăng ký bán hàng</span>
-                                                        </Link>
-                                                        <Link to="/proxy-shopper/register" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
-                                                            <FiMapPin size={16} />
-                                                            <span>Đăng ký đi chợ dùm</span>
                                                         </Link>
                                                     </>
                                                 )}

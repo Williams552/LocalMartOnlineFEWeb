@@ -58,7 +58,7 @@ const BuyerLayout = ({ children }) => {
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Main Header */}
             <Header />
 
@@ -87,7 +87,7 @@ const BuyerLayout = ({ children }) => {
             </div>
 
             {/* Main Content */}
-            <main className="min-h-screen">
+            <main className="flex-1 w-full">
                 {children}
             </main>
 

@@ -133,7 +133,7 @@ const CartPage = () => {
             )];
 
             console.log('🏪 CartPage: Fetching store statuses for stores:', storeIds);
-            
+
             const statusPromises = storeIds.map(async (storeId) => {
                 try {
                     const result = await storeService.getStoreById(storeId);
@@ -237,12 +237,12 @@ const CartPage = () => {
 
             console.log('📝 CartPage: Updating quantity:', { cartItemId, newQuantity });
             console.log('🔍 Debug - Current item being updated:', item);
-            console.log('🔍 Debug - All cart items:', cartItems.map(i => ({ 
-                id: i.id, 
-                productId: i.productId, 
-                quantity: i.quantity, 
+            console.log('🔍 Debug - All cart items:', cartItems.map(i => ({
+                id: i.id,
+                productId: i.productId,
+                quantity: i.quantity,
                 isBargainProduct: i.isBargainProduct,
-                bargainId: i.bargainId 
+                bargainId: i.bargainId
             })));
             setUpdating(prev => ({ ...prev, [cartItemId]: true }));
 
@@ -254,10 +254,10 @@ const CartPage = () => {
                         if (item.id === cartItemId) {
                             // Sử dụng bargainPrice nếu có, nếu không thì dùng giá gốc
                             const priceToUse = item.bargainPrice || item.product.price;
-                            return { 
-                                ...item, 
-                                quantity: newQuantity, 
-                                subTotal: newQuantity * priceToUse 
+                            return {
+                                ...item,
+                                quantity: newQuantity,
+                                subTotal: newQuantity * priceToUse
                             };
                         }
                         return item;
@@ -280,7 +280,7 @@ const CartPage = () => {
         // Sử dụng bargainPrice nếu có, nếu không thì dùng giá gốc
         const actualPrice = item.bargainPrice || item.product?.price || 0;
         const calculatedSubTotal = item.quantity * actualPrice;
-        
+
         return {
             id: item.id,
             productId: item.productId,
@@ -421,7 +421,7 @@ const CartPage = () => {
     const totalAmount = cartItems.reduce((sum, item) => {
         // Chỉ tính nếu item được chọn
         if (!selectedItems.has(item.id)) return sum;
-        
+
         // Sử dụng bargainPrice nếu có, nếu không thì dùng giá gốc
         const actualPrice = item.bargainPrice || item.product?.price || 0;
         const quantity = item.quantity || 0;
@@ -476,7 +476,7 @@ const CartPage = () => {
 
         // Kiểm tra có sản phẩm nào hết hàng hoặc cửa hàng đóng không trong các sản phẩm được chọn
         const selectedItems_array = formattedCartItems.filter(item => selectedItems.has(item.id));
-        const outOfStockItems = selectedItems_array.filter(item => 
+        const outOfStockItems = selectedItems_array.filter(item =>
             !item.isAvailable || (item.stockQuantity > 0 && item.quantity > item.stockQuantity)
         );
 
@@ -509,9 +509,9 @@ const CartPage = () => {
             }
 
             // Chuẩn bị dữ liệu đặt hàng - chỉ lấy những sản phẩm được chọn và available
-            const selectedCartItems = cartItems.filter(item => 
+            const selectedCartItems = cartItems.filter(item =>
                 selectedItems.has(item.id) &&
-                item.product?.isAvailable !== false && 
+                item.product?.isAvailable !== false &&
                 !(item.product?.stockQuantity > 0 && item.quantity > item.product.stockQuantity)
             );
 
@@ -543,7 +543,7 @@ const CartPage = () => {
             console.log('🛒 Placing order with data:', orderData);
             console.log('📊 Order summary:', {
                 totalItems: selectedCartItems.length,
-                stores: [...new Set(selectedCartItems.map(item => 
+                stores: [...new Set(selectedCartItems.map(item =>
                     item.product?.storeName || item.storeName || item.product?.sellerName || 'Unknown'
                 ))],
                 totalAmount: selectedCartItems.reduce((sum, item) => {
@@ -572,7 +572,7 @@ const CartPage = () => {
                         }
                     });
                 }
-                
+
                 // Hiển thị thông báo chi tiết về đơn hàng đã tạo
                 const orderInfo = result.data;
                 toastService.success(
@@ -581,11 +581,11 @@ const CartPage = () => {
                     `Các đơn hàng sẽ được xử lý trong thời gian sớm nhất.`,
                     { autoClose: 5000 }
                 );
-                
+
                 // Xóa chỉ những sản phẩm đã được đặt hàng khỏi giỏ hàng
                 try {
                     const orderedItemIds = selectedCartItems.map(item => item.id);
-                    
+
                     // Gọi API để xóa từng sản phẩm đã đặt hàng
                     for (const itemId of orderedItemIds) {
                         try {
@@ -630,7 +630,7 @@ const CartPage = () => {
     const getOrderPreview = () => {
         // Chỉ lấy những items được chọn
         const selectedCartItems = formattedCartItems.filter(item => selectedItems.has(item.id));
-        
+
         const groupedByStore = selectedCartItems.reduce((acc, item) => {
             const storeKey = item.storeName || item.seller || 'Unknown Store';
             if (!acc[storeKey]) {
@@ -643,7 +643,7 @@ const CartPage = () => {
             }
             acc[storeKey].items.push(item);
             acc[storeKey].totalAmount += item.subTotal; // Đã tính toán đúng trong formattedCartItems
-            acc[storeKey].itemCount += item.quantity;   
+            acc[storeKey].itemCount += item.quantity;
             return acc;
         }, {});
 
@@ -890,16 +890,14 @@ const CartPage = () => {
                                 </h3>
 
                                 {/* Delivery Method */}
-                                <div className={`mb-6 p-4 rounded-lg border-2 transition-colors ${
-                                    !deliveryMethod && selectedItems.size > 0 
-                                        ? 'border-orange-300 bg-orange-50' 
+                                <div className={`mb-6 p-4 rounded-lg border-2 transition-colors ${!deliveryMethod && selectedItems.size > 0
+                                        ? 'border-orange-300 bg-orange-50'
                                         : 'border-gray-200 bg-white'
-                                }`}>
-                                    <h4 className={`font-medium mb-3 ${
-                                        !deliveryMethod && selectedItems.size > 0 
-                                            ? 'text-orange-700' 
-                                            : 'text-gray-700'
                                     }`}>
+                                    <h4 className={`font-medium mb-3 ${!deliveryMethod && selectedItems.size > 0
+                                            ? 'text-orange-700'
+                                            : 'text-gray-700'
+                                        }`}>
                                         Phương thức nhận hàng
                                         {!deliveryMethod && selectedItems.size > 0 && (
                                             <span className="text-orange-600 ml-1">*</span>
@@ -917,18 +915,6 @@ const CartPage = () => {
                                             />
                                             <FaStore className="text-supply-primary" />
                                             <span className="text-sm">Tự đến lấy tại chợ</span>
-                                        </label>
-                                        <label className="flex items-center space-x-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="delivery"
-                                                value="proxy"
-                                                checked={deliveryMethod === "proxy"}
-                                                onChange={(e) => setDeliveryMethod(e.target.value)}
-                                                className="text-supply-primary"
-                                            />
-                                            <FaUser className="text-supply-primary" />
-                                            <span className="text-sm">Nhờ người đi chợ dùm</span>
                                         </label>
                                     </div>
                                 </div>
@@ -999,8 +985,8 @@ const CartPage = () => {
                                 <button className="w-full bg-supply-primary text-white py-3 rounded-lg font-semibold hover:bg-green-600 transition flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-supply-primary"
                                     onClick={handlePlaceOrder}
                                     disabled={
-                                        formattedCartItems.length === 0 || 
-                                        placingOrder || 
+                                        formattedCartItems.length === 0 ||
+                                        placingOrder ||
                                         selectedItems.size === 0 ||
                                         !deliveryMethod || // Phải chọn phương thức nhận hàng
                                         formattedCartItems.filter(item => item.isAvailable && selectedItems.has(item.id)).length === 0
