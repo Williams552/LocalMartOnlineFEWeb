@@ -8,25 +8,9 @@ import logo from "../../assets/image/logo.jpg";
 import cartService from "../../services/cartService";
 import orderService from "../../services/orderService";
 import storeService from "../../services/storeService";
+import userService from "../../services/userService";
 import { getCurrentUser, isAuthenticated } from "../../services/authService";
 import { trackInteraction } from "../../services/interactionTracker";
-
-const sellerInfoMap = {
-    "Cô Lan": {
-        phone: "0909123456",
-        address: "Gian A12, Chợ Tân An, Ninh Kiều, Cần Thơ",
-        market: "Chợ Tân An",
-        avatar: "👩‍🌾",
-        rating: 4.8
-    },
-    "Anh Minh": {
-        phone: "0912345678",
-        address: "Gian B05, Chợ An Hòa, Ninh Kiều, Cần Thơ",
-        market: "Chợ An Hòa",
-        avatar: "👨‍🌾",
-        rating: 4.9
-    },
-};
 
 const proxyShoppers = [
     {
@@ -64,6 +48,7 @@ const CartPage = () => {
     const [orderNotes, setOrderNotes] = useState('');
     const [placingOrder, setPlacingOrder] = useState(false);
     const [storeStatuses, setStoreStatuses] = useState({}); // Track store statuses
+    const [sellerInfoMap, setSellerInfoMap] = useState({}); // Dynamic seller information
 
     // Check authentication on component mount
     useEffect(() => {
@@ -113,8 +98,11 @@ const CartPage = () => {
             const cartItemsWithDetails = cartResult.data;
             setCartItems(cartItemsWithDetails);
 
-            // Fetch store statuses for all stores in cart
-            await fetchStoreStatuses(cartItemsWithDetails);
+            // Fetch store statuses and seller info for all stores in cart
+            await Promise.all([
+                fetchStoreStatuses(cartItemsWithDetails),
+                fetchSellerInfo(cartItemsWithDetails)
+            ]);
 
         } catch (error) {
             console.error('❌ CartPage: Error fetching cart data:', error);
@@ -158,6 +146,102 @@ const CartPage = () => {
         } catch (error) {
             console.error('❌ CartPage: Error fetching store statuses:', error);
         }
+    };
+
+    // Fetch seller information for cart items
+    const fetchSellerInfo = async (cartItems) => {
+        try {
+            // Get unique store IDs and seller names
+            const storeSellerMap = new Map();
+            cartItems.forEach(item => {
+                if (item.product?.storeId && item.product?.sellerName) {
+                    storeSellerMap.set(item.product.sellerName, item.product.storeId);
+                }
+            });
+
+            console.log('👤 CartPage: Fetching seller info for sellers:', Array.from(storeSellerMap.keys()));
+
+            const sellerPromises = Array.from(storeSellerMap.entries()).map(async ([sellerName, storeId]) => {
+                try {
+                    // Get store information
+                    const storeResult = await storeService.getStoreById(storeId);
+                    if (!storeResult.success) {
+                        return { sellerName, info: null };
+                    }
+
+                    const store = storeResult.data;
+                    let userInfo = null;
+
+                    // Try to get user information if sellerId is available
+                    if (store.sellerId) {
+                        try {
+                            const userResult = await userService.getUserById(store.sellerId);
+                            if (userResult && userResult.success) {
+                                userInfo = userResult.data;
+                            }
+                        } catch (userError) {
+                            console.warn(`⚠️ Could not fetch user info for seller ID ${store.sellerId}:`, userError);
+                        }
+                    }
+
+                    // Combine store and user information
+                    const sellerInfo = {
+                        phone_number: store.contactNumber || userInfo?.phoneNumber || null,
+                        address: store.address || userInfo?.address || null,
+                        market: store.marketName || 'Unknown Market',
+                        avatar: userInfo?.avatar || getDefaultAvatar(sellerName),
+                        rating: store.rating || 0,
+                        storeName: store.name,
+                        fullName: userInfo?.fullName || sellerName,
+                        email: userInfo?.email || null
+                    };
+
+                    return { sellerName, info: sellerInfo };
+                } catch (error) {
+                    console.error(`❌ Error fetching seller info for ${sellerName}:`, error);
+                    return {
+                        sellerName,
+                        info: {
+                            phone_number: null,
+                            address: null,
+                            market: 'Unknown Market',
+                            avatar: getDefaultAvatar(sellerName),
+                            rating: 0,
+                            storeName: 'Unknown Store',
+                            fullName: sellerName,
+                            email: null
+                        }
+                    };
+                }
+            });
+
+            const sellerInfoResults = await Promise.all(sellerPromises);
+            const infoMap = {};
+            sellerInfoResults.forEach(({ sellerName, info }) => {
+                if (info) {
+                    infoMap[sellerName] = info;
+                }
+            });
+
+            console.log('👤 CartPage: Seller info map:', infoMap);
+            setSellerInfoMap(infoMap);
+        } catch (error) {
+            console.error('❌ CartPage: Error fetching seller information:', error);
+        }
+    };
+
+    // Helper function to get default avatar based on seller name
+    const getDefaultAvatar = (sellerName) => {
+        if (!sellerName) return "👤";
+
+        // Simple logic to assign avatars based on name patterns
+        const name = sellerName.toLowerCase();
+        if (name.includes('cô') || name.includes('chị')) return "👩‍🌾";
+        if (name.includes('anh') || name.includes('ông')) return "👨‍🌾";
+
+        // Random assignment based on first character
+        const firstChar = name.charCodeAt(0);
+        return firstChar % 2 === 0 ? "👩‍🌾" : "👨‍🌾";
     };
 
     const handleRemove = async (cartItemId, productName = '') => {
@@ -1060,8 +1144,15 @@ const CartPage = () => {
                             ✕
                         </button>
                         <div className="text-center mb-6">
-                            <span className="text-4xl mb-3 block">{sellerInfoMap[selectedSeller]?.avatar}</span>
+                            <span className="text-4xl mb-3 block">
+                                {sellerInfoMap[selectedSeller]?.avatar || "👤"}
+                            </span>
                             <h3 className="text-xl font-bold text-gray-800">Thông tin người bán</h3>
+                            {sellerInfoMap[selectedSeller]?.storeName && (
+                                <p className="text-sm text-gray-600 mt-1">
+                                    {sellerInfoMap[selectedSeller].storeName}
+                                </p>
+                            )}
                         </div>
 
                         <div className="space-y-4">
@@ -1069,42 +1160,72 @@ const CartPage = () => {
                                 <FaUser className="text-supply-primary w-5 h-5" />
                                 <div>
                                     <p className="text-sm text-gray-500">Họ tên</p>
-                                    <p className="font-medium">{selectedSeller}</p>
+                                    <p className="font-medium">
+                                        {sellerInfoMap[selectedSeller]?.fullName || selectedSeller}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-3">
                                 <FaPhone className="text-supply-primary w-5 h-5" />
                                 <div>
                                     <p className="text-sm text-gray-500">Số điện thoại</p>
-                                    <p className="font-medium">{sellerInfoMap[selectedSeller]?.phone}</p>
+                                    <p className="font-medium">
+                                        {sellerInfoMap[selectedSeller]?.phone_number || "Chưa có thông tin liên hệ"}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-start space-x-3">
                                 <FaMapMarkerAlt className="text-supply-primary w-5 h-5 mt-1" />
                                 <div>
                                     <p className="text-sm text-gray-500">Địa chỉ gian hàng</p>
-                                    <p className="font-medium">{sellerInfoMap[selectedSeller]?.address}</p>
+                                    <p className="font-medium">
+                                        {sellerInfoMap[selectedSeller]?.address || "Chưa có thông tin địa chỉ"}
+                                    </p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="mt-8 flex space-x-3">
-                            <a
-                                href={`tel:${sellerInfoMap[selectedSeller]?.phone}`}
-                                className="flex-1 bg-blue-500 text-white py-3 rounded-lg text-center hover:bg-blue-600 transition flex items-center justify-center space-x-2"
-                            >
-                                <FaPhone className="w-4 h-4" />
-                                <span>Gọi điện</span>
-                            </a>
-                            <a
-                                href={`https://zalo.me/${sellerInfoMap[selectedSeller]?.phone.replace(/\D/g, "")}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 bg-supply-primary text-white py-3 rounded-lg text-center hover:bg-green-600 transition"
-                            >
-                                Chat Zalo
-                            </a>
+                            {!sellerInfoMap[selectedSeller] ? (
+                                // Loading state when seller info is not yet fetched
+                                <div className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-lg text-center flex items-center justify-center space-x-2">
+                                    <FiLoader className="w-4 h-4 animate-spin" />
+                                    <span>Đang tải thông tin...</span>
+                                </div>
+                            ) : sellerInfoMap[selectedSeller]?.phone_number ? (
+                                <>
+                                    <a
+                                        href={`tel:${sellerInfoMap[selectedSeller]?.phone_number}`}
+                                        className="flex-1 bg-blue-500 text-white py-3 rounded-lg text-center hover:bg-blue-600 transition flex items-center justify-center space-x-2"
+                                    >
+                                        <FaPhone className="w-4 h-4" />
+                                        <span>Gọi điện</span>
+                                    </a>
+                                    <a
+                                        href={`https://zalo.me/${sellerInfoMap[selectedSeller]?.phone_number.replace(/\D/g, "")}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 bg-supply-primary text-white py-3 rounded-lg text-center hover:bg-green-600 transition"
+                                    >
+                                        Chat Zalo
+                                    </a>
+                                </>
+                            ) : (
+                                <div className="flex-1 bg-gray-300 text-gray-600 py-3 rounded-lg text-center cursor-not-allowed">
+                                    <span>Chưa có thông tin liên hệ</span>
+                                </div>
+                            )}
                         </div>
+
+                        {/* Thông báo khi không có thông tin liên hệ */}
+                        {sellerInfoMap[selectedSeller] && !sellerInfoMap[selectedSeller]?.phone_number && (
+                            <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                                <p className="text-yellow-800 text-sm flex items-center">
+                                    <span className="mr-2">ℹ️</span>
+                                    Thông tin liên hệ của người bán này chưa được cập nhật. Vui lòng liên hệ qua hệ thống khác hoặc đến trực tiếp gian hàng.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
