@@ -82,7 +82,7 @@ class ProductService {
             if (params.categoryId) queryParams.append('categoryId', params.categoryId);
             if (params.storeId) queryParams.append('storeId', params.storeId);
             if (params.marketId) queryParams.append('marketId', params.marketId);
-            
+
             // Handle status parameter - accept both string and numeric values
             if (params.status !== null && params.status !== undefined) {
                 queryParams.append('status', params.status);
@@ -103,7 +103,7 @@ class ProductService {
             // Return ALL items for Admin (no filtering)
             if (response.data && response.data.success && response.data.data) {
                 const items = response.data.data.items || [];
-                
+
                 return {
                     items: items,
                     totalCount: response.data.data.totalCount || 0,
@@ -151,7 +151,7 @@ class ProductService {
             if (params.categoryId) queryParams.append('categoryId', params.categoryId);
             if (params.storeId) queryParams.append('storeId', params.storeId);
             if (params.marketId) queryParams.append('marketId', params.marketId);
-            
+
             // Add status filter - default to Active for public display
             if (params.status) {
                 queryParams.append('status', params.status);
@@ -171,7 +171,7 @@ class ProductService {
                 const items = response.data.data.items || [];
                 // Additional client-side filtering for extra safety
                 const filteredItems = this.filterPublicProducts(items);
-                
+
                 return {
                     items: filteredItems,
                     totalCount: response.data.data.totalCount || filteredItems.length,
@@ -199,21 +199,21 @@ class ProductService {
 
             if (response.data && response.data.success && response.data.data) {
                 const product = this.formatProductForFrontend(response.data.data);
-                
+
                 // Check if product should be visible to public
                 // Block access to Inactive and Suspended products for public users
                 const isInactive = (typeof product.status === 'string' && product.status === 'Inactive') ||
-                                 (typeof product.status === 'number' && product.status === 2);
+                    (typeof product.status === 'number' && product.status === 2);
                 const isSuspended = (typeof product.status === 'string' && product.status === 'Suspended') ||
-                                  (typeof product.status === 'number' && product.status === 3);
-                
+                    (typeof product.status === 'number' && product.status === 3);
+
                 if (isInactive || isSuspended) {
                     return {
                         success: false,
                         message: 'Sản phẩm không khả dụng'
                     };
                 }
-                
+
                 return {
                     success: true,
                     data: product
@@ -282,7 +282,7 @@ class ProductService {
                 const items = (response.data.data.items || []).map(item => this.formatProductForFrontend(item));
                 // Filter out Inactive products for public store display
                 const filteredItems = this.filterPublicProducts(items);
-                
+
                 return {
                     items: filteredItems,
                     totalCount: filteredItems.length, // Update count after filtering
@@ -397,6 +397,8 @@ class ProductService {
             storeId: product.storeId || "",
             categoryId: product.categoryId || "",
             unitId: product.unitId || "",
+            unitName: product.unitName || "kg", // Map unitName from backend
+            unit: product.unitName || product.unit || "kg", // For compatibility with existing components
             createdAt: product.createdAt,
             updatedAt: product.updatedAt,
             // Enhanced fields from joined data (prefer real data from backend)
@@ -558,7 +560,7 @@ class ProductService {
             if (searchParams.radius) queryParams.append('radius', searchParams.radius);
             if (searchParams.page) queryParams.append('page', searchParams.page);
             if (searchParams.pageSize) queryParams.append('pageSize', searchParams.pageSize);
-            
+
             // Always filter for Active products
             queryParams.append('status', searchParams.status || 'Active');
 
@@ -674,11 +676,11 @@ class ProductService {
 
                 let transformedProducts = response.data.data.items?.map(product => this.transformProduct(product)) || [];
 
-                console.log('📋 Raw seller products before filtering:', transformedProducts.map(p => ({ 
-                    id: p.id, 
-                    name: p.name, 
+                console.log('📋 Raw seller products before filtering:', transformedProducts.map(p => ({
+                    id: p.id,
+                    name: p.name,
                     status: p.status,
-                    statusType: typeof p.status 
+                    statusType: typeof p.status
                 })));
 
                 // Filter out only Inactive products for seller interface
@@ -691,10 +693,10 @@ class ProductService {
                     return shouldKeep;
                 });
 
-                console.log('✅ Seller products after filtering (excluding Inactive):', transformedProducts.map(p => ({ 
-                    id: p.id, 
-                    name: p.name, 
-                    status: p.status 
+                console.log('✅ Seller products after filtering (excluding Inactive):', transformedProducts.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    status: p.status
                 })));
 
                 console.log('📈 Status breakdown:', {
@@ -932,12 +934,12 @@ class ProductService {
     async updateProductStatus(productId, status) {
         try {
             console.log('🔄 ProductService: Updating product status...', { productId, status });
-            
+
             // Use the new dedicated status endpoint from backend
             const response = await apiClient.patch(API_ENDPOINTS.PRODUCT.UPDATE_STATUS(productId), {
                 status: status
             });
-            
+
             if (response.data?.success !== false) {
                 console.log('✅ ProductService: Product status updated successfully');
                 return {

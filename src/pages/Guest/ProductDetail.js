@@ -89,12 +89,12 @@ const ProductDetail = () => {
     // Check if product is available for purchase (only Active status and store is Open)
     const isAvailableForPurchase = () => {
         if (!product) return false;
-        
+
         // First check if store is open
         if (store && store.status !== 'Open') {
             return false;
         }
-        
+
         // Then check product status
         // Check numeric status (0 = Active)
         if (typeof product.status === 'number') {
@@ -145,22 +145,27 @@ const ProductDetail = () => {
 
                 const productData = productResponse.data;
                 console.log('Product data loaded:', productData);
-                
+
+                // Ensure product has unit field for compatibility with components
+                if (productData.unitName && !productData.unit) {
+                    productData.unit = productData.unitName;
+                }
+
                 // Check if product is Inactive (status = 2) or Suspended (status = 3)
                 const isInactive = (typeof productData.status === 'number' && productData.status === 2) ||
-                                 (typeof productData.status === 'string' && productData.status === 'Inactive');
-                
+                    (typeof productData.status === 'string' && productData.status === 'Inactive');
+
                 const isSuspended = (typeof productData.status === 'number' && productData.status === 3) ||
-                                  (typeof productData.status === 'string' && productData.status === 'Suspended');
-                
+                    (typeof productData.status === 'string' && productData.status === 'Suspended');
+
                 if (isInactive) {
                     console.log('Product is Inactive, showing special message');
                 }
-                
+
                 if (isSuspended) {
                     console.log('Product is Suspended, showing special message');
                 }
-                
+
                 setProduct(productData);
 
                 // Set initial quantity to product's minimum quantity
@@ -443,7 +448,7 @@ const ProductDetail = () => {
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
                         <div className="flex items-center justify-between">
                             <span className="text-3xl font-bold text-red-600">{formatPrice(product.price)}đ</span>
-                            <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">/kg</span>
+                            <span className="bg-red-500 text-white px-2 py-1 rounded text-sm">/{product.unitName || 'kg'}</span>
                         </div>
                         <p className="text-red-600 text-sm mt-1">🔥 Giá tốt hôm nay</p>
                     </div>
