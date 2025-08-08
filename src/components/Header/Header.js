@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../../assets/image/logo.jpg";
-import { FiBell, FiMessageSquare, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox, FiPackage, FiShoppingBag } from "react-icons/fi";
+import { FiBell, FiShoppingCart, FiMapPin, FiUser, FiHeart, FiBox, FiPackage, FiShoppingBag } from "react-icons/fi";
 import { FaUserCircle, FaStore, FaHandshake, FaHeadset, FaExclamationTriangle } from "react-icons/fa";
 import axios from "axios";
 import { useCart } from "../../contexts/CartContext";
@@ -10,7 +10,6 @@ import { useFollowStore } from "../../contexts/FollowStoreContext";
 import { useAuth } from "../../hooks/useAuth";
 import authService from "../../services/authService";
 import notificationService from "../../services/notificationService";
-import chatService from "../../services/chatService";
 import "../../styles/logout-modal.css";
 
 const Header = () => {
@@ -29,7 +28,6 @@ const Header = () => {
     const [deliveryAddress, setDeliveryAddress] = useState("");
 
     const [showNotifications, setShowNotifications] = useState(false);
-    const [showMessages, setShowMessages] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
     const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -38,11 +36,6 @@ const Header = () => {
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [notificationsLoading, setNotificationsLoading] = useState(false);
-
-    // Message states
-    const [messages, setMessages] = useState([]);
-    const [messagesLoading, setMessagesLoading] = useState(false);
-    const [messageCount, setMessageCount] = useState(0);
 
     // Use contexts with fallback values
     const { user, isAuthenticated, logout } = useAuth();
@@ -118,7 +111,6 @@ const Header = () => {
     };
 
     const notificationRef = useRef();
-    const messageRef = useRef();
     const profileRef = useRef();
 
     // Handle notification click
@@ -252,50 +244,15 @@ const Header = () => {
         }
     };
 
-    // Fetch messages from API
-    const fetchMessages = async () => {
-        if (!isAuthenticated || !user?.id) return;
-
-        try {
-            setMessagesLoading(true);
-            console.log('💬 Fetching messages from API for user:', user.id);
-
-            const response = await chatService.getChatHistory(user.id);
-            console.log('💬 Messages response:', response);
-
-            if (response && response.data) {
-                const messageData = Array.isArray(response.data) ? response.data : response.data.items || [];
-                console.log('💬 Setting messages state with:', messageData);
-                setMessages(messageData);
-                setMessageCount(messageData.length);
-
-                console.log('💬 Loaded messages:', messageData.length);
-            } else {
-                console.warn('💬 No message data received');
-                setMessages([]);
-                setMessageCount(0);
-            }
-        } catch (error) {
-            console.error('💬 Error fetching messages:', error);
-            // Fallback to empty messages
-            setMessages([]);
-            setMessageCount(0);
-        } finally {
-            setMessagesLoading(false);
-        }
-    };
-
-    // Load notifications and messages when authenticated
+    // Load notifications when authenticated
     useEffect(() => {
         if (isAuthenticated && user?.id) {
             fetchNotifications();
-            fetchMessages();
             fetchUnreadCount(); // Fetch accurate unread count
 
             // Set up auto-refresh every 30 seconds
             const interval = setInterval(() => {
                 fetchNotifications();
-                fetchMessages();
                 fetchUnreadCount();
             }, 30000);
 
@@ -303,8 +260,6 @@ const Header = () => {
         } else {
             setNotifications([]);
             setUnreadCount(0);
-            setMessages([]);
-            setMessageCount(0);
         }
     }, [isAuthenticated, user?.id]);
 
@@ -312,8 +267,6 @@ const Header = () => {
         const handleClickOutside = (e) => {
             if (notificationRef.current && !notificationRef.current.contains(e.target))
                 setShowNotifications(false);
-            if (messageRef.current && !messageRef.current.contains(e.target))
-                setShowMessages(false);
             if (profileRef.current && !profileRef.current.contains(e.target))
                 setShowProfileMenu(false);
         };
@@ -480,77 +433,6 @@ const Header = () => {
                                                     onClick={() => setShowNotifications(false)}
                                                 >
                                                     Xem tất cả thông báo
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Messages */}
-                                <div className="relative" ref={messageRef}>
-                                    <button
-                                        onClick={() => {
-                                            setShowMessages((prev) => !prev);
-                                            if (!showMessages) {
-                                                fetchMessages(); // Refresh messages when opening
-                                            }
-                                        }}
-                                        className="relative text-gray-600 hover:text-supply-primary transition"
-                                    >
-                                        <FiMessageSquare size={24} />
-                                        {messageCount > 0 && (
-                                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                                {messageCount > 99 ? '99+' : messageCount}
-                                            </span>
-                                        )}
-                                    </button>
-                                    {showMessages && (
-                                        <div className="absolute right-0 mt-2 w-80 bg-white border rounded-lg shadow-lg z-50">
-                                            <div className="p-4 border-b bg-gray-50 rounded-t-lg flex items-center justify-between">
-                                                <h3 className="font-semibold text-gray-800">Tin nhắn</h3>
-                                                {messagesLoading && (
-                                                    <div className="w-4 h-4 border-2 border-supply-primary border-t-transparent rounded-full animate-spin"></div>
-                                                )}
-                                            </div>
-                                            <div className="max-h-80 overflow-y-auto">
-                                                {messagesLoading ? (
-                                                    <div className="p-8 text-center">
-                                                        <div className="w-8 h-8 border-2 border-supply-primary border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                                                        <p className="text-sm text-gray-500">Đang tải tin nhắn...</p>
-                                                    </div>
-                                                ) : messages.length > 0 ? (
-                                                    messages.map((message) => (
-                                                        <div key={message.id} className="p-4 border-b hover:bg-gray-50 cursor-pointer">
-                                                            <div className="flex items-start space-x-3">
-                                                                <span className="text-2xl">💬</span>
-                                                                <div className="flex-1">
-                                                                    <p className="font-medium text-sm text-gray-800">
-                                                                        {message.senderName || message.fromUser || 'Người dùng'}
-                                                                    </p>
-                                                                    <p className="text-sm text-gray-600 mt-1">
-                                                                        {message.content || message.lastMessage || message.text || 'Tin nhắn'}
-                                                                    </p>
-                                                                    <p className="text-xs text-gray-500 mt-1">
-                                                                        {message.createdAt ? formatNotificationTime(message.createdAt) : 'Vừa xong'}
-                                                                    </p>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    ))
-                                                ) : (
-                                                    <div className="p-8 text-center">
-                                                        <div className="text-4xl mb-2">💬</div>
-                                                        <p className="text-sm text-gray-500">Chưa có tin nhắn nào</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div className="p-3 text-center border-t">
-                                                <Link
-                                                    to="/messages"
-                                                    className="text-supply-primary text-sm hover:underline"
-                                                    onClick={() => setShowMessages(false)}
-                                                >
-                                                    Xem tất cả tin nhắn
                                                 </Link>
                                             </div>
                                         </div>

@@ -186,18 +186,6 @@ const BargainHistory = () => {
                         >
                             Làm mới
                         </button>
-
-                        {/* Test Button */}
-                        <button
-                            onClick={() => {
-                                console.log('Current bargains:', bargains);
-                                console.log('Filtered bargains:', filteredBargains);
-                                console.log('Current user:', currentUser);
-                            }}
-                            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                        >
-                            Debug
-                        </button>
                     </div>
                 </div>
 
