@@ -868,13 +868,6 @@ const CartPage = () => {
                                                 <FaPhone className="w-4 h-4" />
                                                 <span>Liên hệ</span>
                                             </button>
-                                            <button
-                                                onClick={() => setShowProxyListFor(seller)}
-                                                className="flex-1 bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition flex items-center justify-center space-x-2"
-                                            >
-                                                <FaUser className="w-4 h-4" />
-                                                <span>Đi chợ dùm</span>
-                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -891,12 +884,12 @@ const CartPage = () => {
 
                                 {/* Delivery Method */}
                                 <div className={`mb-6 p-4 rounded-lg border-2 transition-colors ${!deliveryMethod && selectedItems.size > 0
-                                        ? 'border-orange-300 bg-orange-50'
-                                        : 'border-gray-200 bg-white'
+                                    ? 'border-orange-300 bg-orange-50'
+                                    : 'border-gray-200 bg-white'
                                     }`}>
                                     <h4 className={`font-medium mb-3 ${!deliveryMethod && selectedItems.size > 0
-                                            ? 'text-orange-700'
-                                            : 'text-gray-700'
+                                        ? 'text-orange-700'
+                                        : 'text-gray-700'
                                         }`}>
                                         Phương thức nhận hàng
                                         {!deliveryMethod && selectedItems.size > 0 && (
