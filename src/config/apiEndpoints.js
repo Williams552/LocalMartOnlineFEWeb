@@ -353,14 +353,6 @@ export const API_ENDPOINTS = {
         CHECK: (productId) => `${API_URL}/api/favorite/check/${productId}`,
     },
 
-    FAST_BARGAIN: {
-        GET_ALL_ADMIN: `${API_URL}/api/FastBargain/admin`,
-        GET_BY_BUYER: (userId) => `${API_URL}/api/FastBargain/user/${userId}`,
-        GET_BY_SELLER: (sellerId) => `${API_URL}/api/FastBargain/seller/${sellerId}`,
-        GET_BY_ID: (id) => `${API_URL}/api/FastBargain/${id}`,
-    },
-
-
     // Seller Dashboard & Management Endpoints
     SELLER: {
         // Dashboard endpoints
@@ -443,17 +435,9 @@ export const API_ENDPOINTS = {
         DELETE: (reviewId) => `${API_URL}/api/Review/${reviewId}`,
     },
 
-    // Market Fee Endpoints
-    MARKET_FEE: {
-        GET_ALL: `${API_URL}/api/MarketFee`,
-        GET_BY_ID: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
-        CREATE: `${API_URL}/api/MarketFee`,
-        UPDATE: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
-        DELETE: (feeId) => `${API_URL}/api/MarketFee/${feeId}`,
-        GET_BY_MARKET: (marketId) => `${API_URL}/api/MarketFee/market/${marketId}`,
-        PAY: `${API_URL}/api/MarketFee/pay`,
-        STATISTICS: `${API_URL}/api/MarketFee/statistics`,
-        STATISTICS_BY_MARKET: (marketId) => `${API_URL}/api/MarketFee/statistics/market/${marketId}`,
+    // Recommendation Endpoints
+    RECOMMENDATION: {
+        GET_FOR_USER: (count = 5) => `${API_URL}/api/recommendation/me?count=${count}`,
     },
 
     // Market Fee Type Endpoints

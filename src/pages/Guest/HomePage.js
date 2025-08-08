@@ -3,6 +3,7 @@ import Carousel from "../../components/Carousel/Carousel";
 import ProductCard from "../../components/ProductCard/ProductCard";
 import CategorySidebar from "../../components/Sidebar/CategorySidebar";
 import NearbyMarketsModal from "../../components/NearbyMarkets/NearbyMarketsModal";
+import RecommendationSection from "../../components/Recommendation/RecommendationSection";
 import productService from "../../services/productService";
 import categoryService from "../../services/categoryService";
 import marketService from "../../services/marketService";
@@ -341,6 +342,10 @@ const HomePage = () => {
                         </div>
                     </div>
                 </section>
+
+                {/* Recommendation Section - Only for logged in users */}
+                <RecommendationSection />
+
                 {/* Filter & Category Section */}
                 <section className="mb-8">
                     <div className="bg-white rounded-xl shadow-sm border p-6">

@@ -11,6 +11,7 @@ import OrderReviewModal from "../../components/Order/OrderReviewModal";
 import OrderCompletionNotification from "../../components/Order/OrderCompletionNotification";
 import { toast } from "react-toastify";
 import logo from "../../assets/image/logo.jpg";
+import { trackInteraction } from "../../services/interactionTracker";
 
 const BuyerOrders = () => {
     const [searchTerm, setSearchTerm] = useState("");
@@ -235,6 +236,24 @@ const BuyerOrders = () => {
                     // Tìm order vừa hoàn thành
                     const completedOrder = orders.find(order => order.id === orderId);
                     if (completedOrder) {
+                        // Track purchase completion cho mỗi sản phẩm trong đơn hàng
+                        const user = JSON.parse(localStorage.getItem('user') || '{}');
+                        const userId = user.id || user._id || '';
+                        
+                        if (userId && completedOrder.items) {
+                            completedOrder.items.forEach(item => {
+                                if (item.productId) {
+                                    trackInteraction({
+                                        userId: userId,
+                                        productId: item.productId,
+                                        type: 'purchase',
+                                        value: 4
+                                    });
+                                    console.log('✅ Tracked purchase completion for product:', item.productId);
+                                }
+                            });
+                        }
+                        
                         // Hiện notification thành công trước
                         setCompletedOrderInfo(completedOrder);
                         setShowCompletionNotification(true);

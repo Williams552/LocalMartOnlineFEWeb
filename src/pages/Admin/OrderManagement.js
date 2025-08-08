@@ -50,6 +50,7 @@ import {
 } from '@ant-design/icons';
 import orderService from '../../services/orderService';
 import OrderStats from '../../components/OrderStats';
+import { trackInteraction } from '../../services/interactionTracker';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -214,6 +215,22 @@ const OrderManagement = ({ defaultStatus = null }) => {
         try {
             const response = await orderService.completeOrder(orderId);
             if (response.success) {
+                // Tìm order vừa được hoàn thành để track purchase
+                const completedOrder = orders.find(order => order.id === orderId);
+                if (completedOrder && completedOrder.items && completedOrder.buyerId) {
+                    completedOrder.items.forEach(item => {
+                        if (item.productId) {
+                            trackInteraction({
+                                userId: completedOrder.buyerId,
+                                productId: item.productId,
+                                type: 'purchase',
+                                value: 4
+                            });
+                            console.log('✅ Admin tracked purchase completion for product:', item.productId);
+                        }
+                    });
+                }
+                
                 message.success('Đơn hàng đã được hoàn thành');
                 loadOrders(); // Statistics sẽ tự update qua useEffect
                 if (selectedOrder?.id === orderId) {

@@ -133,14 +133,22 @@ const ProductCard = ({
         <>
             <div className="product-card border border-gray-200 rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 bg-white overflow-hidden group relative">
                 <div className="relative">
-                    <Link to={`/product/${id}`}>
+                    <Link 
+                        to={`/product/${id}`}
+                        data-track-type="view_product" 
+                        data-product-id={id}
+                    >
                         <img src={getDisplayImage()} alt={name} className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300" />
                     </Link>
                     <div className={`absolute top-3 right-3 text-white text-xs px-2 py-1 rounded-full font-medium ${getStatusColor()}`}>
                         {finalStatus}
                     </div>
                     {/* Favorite Button */}
-                    <div className="absolute top-3 left-3">
+                    <div 
+                        className="absolute top-3 left-3"
+                        data-track-type="like" 
+                        data-product-id={id}
+                    >
                         <FavoriteButton
                             productId={id}
                             size="sm"
@@ -149,7 +157,11 @@ const ProductCard = ({
                     </div>
                 </div>
                 <div className="p-4">
-                    <Link to={`/product/${id}`}>
+                    <Link 
+                        to={`/product/${id}`}
+                        data-track-type="view_product" 
+                        data-product-id={id}
+                    >
                         <h2 className="text-lg font-semibold text-gray-800 mb-2 line-clamp-2 group-hover:text-supply-primary transition-colors">
                             {name}
                         </h2>
@@ -193,27 +205,34 @@ const ProductCard = ({
                     <div className="mt-3 space-y-2">
                         {/* Add to Cart Button - Only show if product is available */}
                         {isAvailableForPurchase() && (
-                            <AddToCartButton
-                                product={{
-                                    id,
-                                    name,
-                                    price,
-                                    image: getDisplayImage(),
-                                    unit: unitName,
-                                    minimumQuantity: minimumQuantity
-                                }}
-                                quantity={minimumQuantity}
-                                className="text-sm font-medium w-full"
-                                size="small"
-                                showQuantityControls={false}
-                                onClick={(e) => e.stopPropagation()}
-                            />
+                            <div 
+                                data-track-type="add_to_cart" 
+                                data-product-id={id}
+                            >
+                                <AddToCartButton
+                                    product={{
+                                        id,
+                                        name,
+                                        price,
+                                        image: getDisplayImage(),
+                                        unit: unitName,
+                                        minimumQuantity: minimumQuantity
+                                    }}
+                                    quantity={minimumQuantity}
+                                    className="text-sm font-medium w-full"
+                                    size="small"
+                                    showQuantityControls={false}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                            </div>
                         )}
 
                         {/* Bargain Button - Only show if authenticated and product is available */}
                         {isAuthenticated && isAvailableForPurchase() && (
                             <button
                                 onClick={handleBargainClick}
+                                data-track-type="bargain_attempt" 
+                                data-product-id={id}
                                 className="w-full bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-2"
                             >
                                 <FaHandshake size={14} />

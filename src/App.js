@@ -1,3 +1,4 @@
+import { setupAutoTracking } from './services/interactionTracker';
 import React, { useEffect } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
@@ -39,7 +40,7 @@ const AdminRedirectWrapper = ({ children }) => {
 };
 
 const App = () => {
-  // Setup auth service on app init
+  // Setup auth service & auto tracking on app init
   useEffect(() => {
     console.log('🚀 App: Application initialized');
     console.log('🔐 App: Current auth state:', {
@@ -47,6 +48,7 @@ const App = () => {
       user: authService.getCurrentUser(),
       userId: authService.getCurrentUserId()
     });
+    setupAutoTracking();
   }, []);
 
   return (

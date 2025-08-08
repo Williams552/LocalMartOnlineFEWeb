@@ -9,6 +9,7 @@ import cartService from "../../services/cartService";
 import orderService from "../../services/orderService";
 import storeService from "../../services/storeService";
 import { getCurrentUser, isAuthenticated } from "../../services/authService";
+import { trackInteraction } from "../../services/interactionTracker";
 
 const sellerInfoMap = {
     "Cô Lan": {
@@ -556,6 +557,22 @@ const CartPage = () => {
             const result = await orderService.placeOrdersFromCart(orderData);
 
             if (result.success) {
+                // Track order placement cho mỗi sản phẩm đã đặt hàng
+                const user = getCurrentUser();
+                if (user?.id) {
+                    selectedCartItems.forEach(item => {
+                        if (item.productId) {
+                            trackInteraction({
+                                userId: user.id,
+                                productId: item.productId,
+                                type: 'order_placed',
+                                value: 3
+                            });
+                            console.log('📦 Tracked order placement for product:', item.productId);
+                        }
+                    });
+                }
+                
                 // Hiển thị thông báo chi tiết về đơn hàng đã tạo
                 const orderInfo = result.data;
                 toastService.success(
