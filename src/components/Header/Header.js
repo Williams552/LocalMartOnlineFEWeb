@@ -19,15 +19,15 @@ const Header = () => {
     const [units, setUnits] = useState([]);
     const [proxyLoading, setProxyLoading] = useState(false);
     const [proxyError, setProxyError] = useState("");
-    
+
     // Market selection states
     const [selectedStoreId, setSelectedStoreId] = useState(""); // Keep variable name for consistency
     const [stores, setStores] = useState([]); // Keep variable name but will store markets
     const [storesLoading, setStoresLoading] = useState(false);
-    
+
     // Delivery address state
     const [deliveryAddress, setDeliveryAddress] = useState("");
-    
+
     const [showNotifications, setShowNotifications] = useState(false);
     const [showMessages, setShowMessages] = useState(false);
     const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -568,7 +568,7 @@ const Header = () => {
                                         setProxyItems([{ name: "", quantity: 1, unit: "" }]);
                                         setSelectedStoreId("");
                                         setDeliveryAddress("");
-                                        
+
                                         // Fetch units
                                         if (units.length === 0) {
                                             try {
@@ -576,7 +576,7 @@ const Header = () => {
                                                 if (res.data && res.data.success) setUnits(res.data.data);
                                             } catch (e) { setUnits([]); }
                                         }
-                                        
+
                                         // Fetch markets
                                         if (stores.length === 0) {
                                             try {
@@ -594,7 +594,7 @@ const Header = () => {
                                                     console.warn('Invalid markets data format:', res.data);
                                                     setStores([]);
                                                 }
-                                            } catch (e) { 
+                                            } catch (e) {
                                                 console.error('Error fetching markets:', e);
                                                 setStores([]);
                                             } finally {
@@ -620,7 +620,7 @@ const Header = () => {
                                                 tabIndex={0}
                                             >&times;</button>
                                             <h2 className="text-2xl font-bold mb-4 text-center text-supply-primary tracking-tight">Yêu cầu đi chợ giùm</h2>
-                                            
+
                                             {/* Store Selection Notice */}
                                             <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
                                                 <div className="flex items-start">
@@ -638,7 +638,7 @@ const Header = () => {
                                                     </div>
                                                 </div>
                                             </div>
-                                            
+
                                             {/* Store Selection */}
                                             <div className="mb-6">
                                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -667,7 +667,7 @@ const Header = () => {
                                                     </p>
                                                 )}
                                             </div>
-                                            
+
                                             {/* Delivery Address Input */}
                                             <div className="mb-6">
                                                 <label className="block text-sm font-medium text-gray-700 mb-2" htmlFor="deliveryAddress">
@@ -684,30 +684,30 @@ const Header = () => {
                                                     required
                                                 />
                                             </div>
-                                            
+
                                             <form
                                                 onSubmit={async (e) => {
                                                     e.preventDefault();
                                                     setProxyError("");
-                                                    
+
                                                     // Validate market selection
                                                     if (!selectedStoreId) {
                                                         setProxyError("Vui lòng chọn chợ trước khi gửi yêu cầu.");
                                                         return;
                                                     }
-                                                    
+
                                                     // Validate delivery address
                                                     if (!deliveryAddress.trim()) {
                                                         setProxyError("Vui lòng nhập địa chỉ giao hàng.");
                                                         return;
                                                     }
-                                                    
+
                                                     // Validate items
                                                     if (proxyItems.some(item => !item.name || !item.quantity || !item.unit)) {
                                                         setProxyError("Vui lòng nhập đầy đủ thông tin cho tất cả các mặt hàng.");
                                                         return;
                                                     }
-                                                    
+
                                                     setProxyLoading(true);
                                                     try {
                                                         const res = await axios.post(
@@ -724,10 +724,10 @@ const Header = () => {
                                                             setProxyItems([{ name: "", quantity: 1, unit: "" }]);
                                                             setSelectedStoreId("");
                                                             setDeliveryAddress("");
-                                                            
+
                                                             // Close modal
                                                             setShowProxyModal(false);
-                                                            
+
                                                             // Navigate to proxy requests page
                                                             navigate("/buyer/proxy-requests");
                                                         } else {
@@ -1064,6 +1064,10 @@ const Header = () => {
                         <Link to="/contact" className="hover:text-supply-primary transition flex items-center space-x-1">
                             <span>📞</span>
                             <span>Liên hệ</span>
+                        </Link>
+                        <Link to="/policy" className="hover:text-supply-primary transition flex items-center space-x-1">
+                            <span>📋</span>
+                            <span>Chính sách</span>
                         </Link>
                         <Link to="/faq" className="hover:text-supply-primary transition flex items-center space-x-1">
                             <span>❓</span>

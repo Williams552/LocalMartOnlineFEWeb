@@ -1,0 +1,186 @@
+// src/pages/Guest/PolicyPage.scss
+.policy-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
+    .policy-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+
+        h1 {
+            color: white !important;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        p {
+            color: rgba(255, 255, 255, 0.9) !important;
+        }
+
+        .ant-input-search {
+            .ant-input {
+                border-radius: 25px;
+                border: none;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            }
+
+            .ant-btn {
+                border-radius: 0 25px 25px 0;
+                border: none;
+                background: #52c41a;
+
+                &:hover {
+                    background: #389e0d;
+                }
+            }
+        }
+    }
+
+    .policy-tabs {
+        .ant-tabs-nav {
+            margin-bottom: 2rem;
+
+            .ant-tabs-tab {
+                padding: 12px 20px;
+                font-weight: 500;
+                border-radius: 8px 8px 0 0;
+                transition: all 0.3s ease;
+
+                &:hover {
+                    color: #52c41a;
+                    transform: translateY(-2px);
+                }
+
+                &.ant-tabs-tab-active {
+                    background: linear-gradient(135deg, #52c41a, #389e0d);
+                    color: white !important;
+                    border: none;
+
+                    &::before {
+                        display: none;
+                    }
+                }
+            }
+
+            .ant-tabs-ink-bar {
+                display: none;
+            }
+        }
+    }
+
+    .policy-card {
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .ant-card-body {
+            padding: 20px;
+        }
+
+        .ant-card-actions {
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+
+            .ant-btn {
+                border-radius: 6px;
+                font-weight: 500;
+
+                &.ant-btn-primary {
+                    background: linear-gradient(135deg, #52c41a, #389e0d);
+                    border: none;
+
+                    &:hover {
+                        background: linear-gradient(135deg, #389e0d, #237804);
+                        transform: translateY(-1px);
+                    }
+                }
+            }
+        }
+
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.5;
+            max-height: 3em;
+        }
+
+        .ant-tag {
+            border-radius: 12px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+    }
+
+    .ant-empty {
+        .ant-empty-description {
+            color: #666;
+            font-size: 16px;
+        }
+    }
+
+    .ant-spin {
+        .ant-spin-dot {
+            i {
+                background-color: #52c41a;
+            }
+        }
+    }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+    .policy-page {
+        .policy-header {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        .policy-tabs {
+            .ant-tabs-nav {
+                .ant-tabs-tab {
+                    padding: 8px 12px;
+                    font-size: 14px;
+                }
+            }
+        }
+
+        .policy-card {
+            margin-bottom: 1rem;
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .policy-page {
+        .policy-header {
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                font-size: 14px;
+            }
+        }
+
+        .container {
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+    }
+}

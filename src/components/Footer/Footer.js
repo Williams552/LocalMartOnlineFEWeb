@@ -44,11 +44,8 @@ const Footer = () => {
                         <h4 className="text-lg font-semibold mb-4 border-b border-white/20 pb-2">Dành cho khách hàng</h4>
                         <ul className="space-y-2 text-sm">
                             <li><a href="/" className="hover:text-yellow-300 transition">🏠 Trang chủ</a></li>
-                            <li><a href="/products" className="hover:text-yellow-300 transition">🥕 Sản phẩm</a></li>
-                            <li><a href="/markets" className="hover:text-yellow-300 transition">🏪 Các chợ</a></li>
-                            <li><a href="/sellers" className="hover:text-yellow-300 transition">👨‍🌾 Người bán</a></li>
                             <li><a href="/cart" className="hover:text-yellow-300 transition">🛒 Giỏ hàng</a></li>
-                            <li><a href="/buyer/profile" className="hover:text-yellow-300 transition">👤 Tài khoản</a></li>
+                            <li><a href="/profile" className="hover:text-yellow-300 transition">👤 Tài khoản</a></li>
                         </ul>
                     </div>
 
@@ -60,8 +57,6 @@ const Footer = () => {
                             <li><a href="/contact" className="hover:text-yellow-300 transition">📞 Liên hệ</a></li>
                             <li><a href="/faq" className="hover:text-yellow-300 transition">❓ FAQ</a></li>
                             <li><a href="/policy" className="hover:text-yellow-300 transition">📋 Chính sách</a></li>
-                            <li><a href="/terms" className="hover:text-yellow-300 transition">📜 Điều khoản</a></li>
-                            <li><a href="/register-seller" className="hover:text-yellow-300 transition">🏪 Đăng ký bán hàng</a></li>
                         </ul>
                     </div>
 
@@ -70,30 +65,9 @@ const Footer = () => {
                         <h4 className="text-lg font-semibold mb-4 border-b border-white/20 pb-2">Cam kết chất lượng</h4>
                         <div className="space-y-3 mb-6">
                             <div className="flex items-center space-x-3 text-sm">
-                                <FiTruck className="text-yellow-300 text-lg" />
-                                <span>Giao hàng nhanh 30 phút</span>
-                            </div>
-                            <div className="flex items-center space-x-3 text-sm">
                                 <FiShield className="text-yellow-300 text-lg" />
                                 <span>Nông sản tươi sạch 100%</span>
                             </div>
-                            <div className="flex items-center space-x-3 text-sm">
-                                <FiClock className="text-yellow-300 text-lg" />
-                                <span>Hỗ trợ 24/7</span>
-                            </div>
-                        </div>
-
-                        <h5 className="font-semibold mb-3">Theo dõi chúng tôi</h5>
-                        <div className="flex items-center space-x-3">
-                            <a href="#" className="w-10 h-10 bg-[#1877f2] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                                <FaFacebookF />
-                            </a>
-                            <a href="#" className="w-10 h-10 bg-[#ff0000] rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                                <FaYoutube />
-                            </a>
-                            <a href="#" className="w-10 h-10 bg-black rounded-full flex items-center justify-center hover:scale-110 transition-transform">
-                                <FaTiktok />
-                            </a>
                         </div>
                     </div>
                 </div>
@@ -104,11 +78,6 @@ const Footer = () => {
                 <div className="container mx-auto px-4 py-4">
                     <div className="flex flex-col md:flex-row justify-between items-center text-sm">
                         <p>© 2025 LocalMart - Chợ Online Việt Nam. Bản quyền thuộc về SEP490_22.</p>
-                        <div className="flex items-center space-x-4 mt-2 md:mt-0">
-                            <span>🌾 Kết nối nông sản Việt</span>
-                            <span>•</span>
-                            <span>🏆 Chất lượng hàng đầu</span>
-                        </div>
                     </div>
                 </div>
             </div>

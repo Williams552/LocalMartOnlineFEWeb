@@ -23,6 +23,8 @@ import StorePage from "../pages/Guest/StorePage";
 import AboutPage from "../pages/Guest/AboutPage";
 import ContactPage from "../pages/Guest/ContactPage";
 import FAQPage from "../pages/Guest/FAQPage";
+import PolicyPage from "../pages/Guest/PolicyPage";
+import PolicyDetailPage from "../pages/Guest/PolicyDetailPage";
 import App from "../App";
 import SellerApp from "../SellerApp"; // New seller app without header/footer
 // Admin pages
@@ -144,6 +146,8 @@ const AppRoutes = () => {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/faq" element={<FAQPage />} />
+                <Route path="/policy" element={<PolicyPage />} />
+                <Route path="/policy/:id" element={<PolicyDetailPage />} />
             </Route>
 
             {/* Seller Routes - Separate layout without Header/Footer */}
