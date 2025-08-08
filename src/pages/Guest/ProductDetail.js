@@ -697,7 +697,7 @@ const ProductDetail = () => {
                         )}
 
                         {/* Action Buttons */}
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid gap-3">
                             {store ? (
                                 <Link
                                     to={`/store/${store.id}`}
@@ -712,25 +712,11 @@ const ProductDetail = () => {
                                     <span>Vào gian hàng</span>
                                 </div>
                             )}
-                            {seller ? (
-                                <Link
-                                    to={`/seller/${seller.id}`}
-                                    className="flex items-center justify-center space-x-2 border-2 border-supply-primary text-supply-primary py-3 px-4 rounded-lg hover:bg-supply-primary hover:text-white transition-all font-medium"
-                                >
-                                    <FaUsers />
-                                    <span>Xem người bán</span>
-                                </Link>
-                            ) : (
-                                <div className="flex items-center justify-center space-x-2 border-2 border-gray-300 text-gray-600 py-3 px-4 rounded-lg font-medium">
-                                    <FaUsers />
-                                    <span>Xem người bán</span>
-                                </div>
-                            )}
                         </div>
 
                         {/* Store Features */}
                         {store && (
-                            <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+                            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                                 <div className="text-center">
                                     <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                                         <FaLeaf className="text-green-600" />
@@ -742,12 +728,6 @@ const ProductDetail = () => {
                                         <FaShieldAlt className="text-blue-600" />
                                     </div>
                                     <span className="text-xs text-gray-600">Đảm bảo chất lượng</span>
-                                </div>
-                                <div className="text-center">
-                                    <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                                        <FaClock className="text-orange-600" />
-                                    </div>
-                                    <span className="text-xs text-gray-600">Giao hàng nhanh</span>
                                 </div>
                             </div>
                         )}
