@@ -19,13 +19,40 @@ const HomeCarousel = () => {
                 emulateTouch
             >
                 <div>
-                    <img src={carousel1} alt="Slide 1" className="h-[350px] object-cover w-full" />
+                    <img
+                        src={carousel1}
+                        alt="Slide 1"
+                        className="h-[350px] w-full object-cover object-center"
+                        loading="eager"
+                        style={{
+                            imageRendering: 'high-quality',
+                            imageResolution: 'from-image'
+                        }}
+                    />
                 </div>
                 <div>
-                    <img src={carousel2} alt="Slide 2" className="h-[350px] object-cover w-full" />
+                    <img
+                        src={carousel2}
+                        alt="Slide 2"
+                        className="h-[350px] w-full object-cover object-center"
+                        loading="eager"
+                        style={{
+                            imageRendering: 'high-quality',
+                            imageResolution: 'from-image'
+                        }}
+                    />
                 </div>
                 <div>
-                    <img src={carousel3} alt="Slide 3" className="h-[350px] object-cover w-full" />
+                    <img
+                        src={carousel3}
+                        alt="Slide 3"
+                        className="h-[350px] w-full object-cover object-center"
+                        loading="eager"
+                        style={{
+                            imageRendering: 'high-quality',
+                            imageResolution: 'from-image'
+                        }}
+                    />
                 </div>
             </Carousel>
         </div>
