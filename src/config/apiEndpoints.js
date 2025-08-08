@@ -405,6 +405,15 @@ export const API_ENDPOINTS = {
         DELETE: (id) => `${API_URL}/api/faq/${id}`,
     },
 
+    // Platform Policy Endpoints
+    PLATFORM_POLICY: {
+        GET_ALL: `${API_URL}/api/platformpolicy`,
+        GET_BY_ID: (policyId) => `${API_URL}/api/platformpolicy/${policyId}`,
+        CREATE: `${API_URL}/api/platformpolicy`,
+        UPDATE: (policyId) => `${API_URL}/api/platformpolicy/${policyId}`,
+        TOGGLE_STATUS: (policyId) => `${API_URL}/api/platformpolicy/${policyId}/toggle`,
+    },
+
     // Fast Bargain Endpoints
     FAST_BARGAIN: {
         START: `${API_URL}/api/fastbargain/start`,

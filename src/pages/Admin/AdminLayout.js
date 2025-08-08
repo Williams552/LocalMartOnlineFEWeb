@@ -88,6 +88,7 @@ const AdminLayout = () => {
             categories: {
                 key: 'categories', icon: <AppstoreOutlined />, label: 'Quản lý danh mục', children: [
                     { key: '/admin/categories', label: 'Danh mục' },
+                    { key: '/admin/category-registrations', label: 'Đăng ký danh mục' },
                 ]
             },
             orders: {
@@ -99,6 +100,7 @@ const AdminLayout = () => {
             content: {
                 key: 'content', icon: <FileTextOutlined />, label: 'Quản lý nội dung', children: [
                     { key: '/admin/faqs', label: 'FAQ' },
+                    { key: '/admin/platform-policies', label: 'Chính sách nền tảng' },
                 ]
             },
             support: {
