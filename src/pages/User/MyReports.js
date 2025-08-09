@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-    FaFileAlt, FaEye, FaPlus, FaSpinner, FaExclamationTriangle, 
-    FaCheck, FaTimes, FaSearch, FaStore, FaBox, FaUser
+import {
+    FaFileAlt, FaEye, FaPlus, FaSpinner, FaExclamationTriangle,
+    FaCheck, FaTimes, FaSearch, FaStore, FaBox, FaUser, FaImage
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import reportService from '../../services/reportService';
@@ -24,7 +24,7 @@ const MyReports = () => {
         try {
             setLoading(true);
             const result = await reportService.getMyReports(filters);
-            
+
             if (result.success) {
                 // API trả về { reports: [...] }
                 const reportsData = result.data?.reports || result.data?.items || result.data || [];
@@ -79,7 +79,7 @@ const MyReports = () => {
     };
 
     const getStatusIcon = (status) => {
-        switch(status) {
+        switch (status) {
             case 'Pending':
                 return <FaExclamationTriangle className="text-yellow-500" size={16} />;
             case 'Resolved':
@@ -132,7 +132,7 @@ const MyReports = () => {
                             />
                         </div>
                     </div>
-                    
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Trạng thái
@@ -150,7 +150,7 @@ const MyReports = () => {
                             ))}
                         </select>
                     </div>
-                    
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Loại đối tượng
@@ -199,7 +199,7 @@ const MyReports = () => {
                                             {getTargetTypeIcon(report.targetType)}
                                             {getStatusIcon(report.status)}
                                         </div>
-                                        
+
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center space-x-2 mb-2">
                                                 <h3 className="text-sm font-medium text-gray-900 truncate">
@@ -207,25 +207,45 @@ const MyReports = () => {
                                                 </h3>
                                                 {getStatusBadge(report.status)}
                                             </div>
-                                            
+
+                                            {/* Hiển thị tên đối tượng được báo cáo */}
+                                            {report.targetName && (
+                                                <p className="text-sm font-medium text-blue-600 mb-1">
+                                                    🎯 {report.targetName}
+                                                    {report.targetPrice && (
+                                                        <span className="text-green-600 ml-2">
+                                                            ({report.targetPrice.toLocaleString('vi-VN')}đ)
+                                                        </span>
+                                                    )}
+                                                    {report.targetUnit && (
+                                                        <span className="text-gray-500 ml-1">/{report.targetUnit}</span>
+                                                    )}
+                                                </p>
+                                            )}
+
                                             <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                                                {report.description}
+                                                {report.description || report.title}
                                             </p>
-                                            
+
                                             <div className="flex items-center space-x-4 text-xs text-gray-500">
                                                 <span>ID: #{report.id.slice(-8)}</span>
                                                 <span>•</span>
                                                 <span>{new Date(report.createdAt).toLocaleDateString('vi-VN')}</span>
-                                                {report.targetId && (
+                                                {report.targetName ? (
                                                     <>
                                                         <span>•</span>
-                                                        <span>Đối tượng: {report.targetId}</span>
+                                                        <span>Đối tượng: {report.targetName}</span>
+                                                    </>
+                                                ) : report.targetId && (
+                                                    <>
+                                                        <span>•</span>
+                                                        <span>Đối tượng ID: {report.targetId.slice(-8)}</span>
                                                     </>
                                                 )}
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <button
                                         onClick={() => setSelectedReport(report)}
                                         className="ml-4 text-blue-600 hover:text-blue-900"
@@ -274,28 +294,109 @@ const MyReports = () => {
                                     </p>
                                 </div>
                             </div>
-                            
-                            {selectedReport.targetId && (
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">ID đối tượng</label>
-                                    <p className="text-sm text-gray-900">{selectedReport.targetId}</p>
-                                </div>
-                            )}
-                            
+
+                            {/* Thông tin đối tượng được báo cáo */}
+                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                <h4 className="text-sm font-medium text-blue-800 mb-2">Thông tin đối tượng được báo cáo</h4>
+                                {selectedReport.targetName ? (
+                                    <div className="space-y-2">
+                                        <div>
+                                            <label className="block text-xs font-medium text-blue-700">Tên đối tượng</label>
+                                            <p className="text-sm text-blue-900 font-medium">{selectedReport.targetName}</p>
+                                        </div>
+
+                                        {selectedReport.targetPrice && (
+                                            <div>
+                                                <label className="block text-xs font-medium text-blue-700">Giá</label>
+                                                <p className="text-sm text-green-600 font-medium">
+                                                    {selectedReport.targetPrice.toLocaleString('vi-VN')}đ
+                                                    {selectedReport.targetUnit && <span className="text-gray-500">/{selectedReport.targetUnit}</span>}
+                                                </p>
+                                            </div>
+                                        )}
+
+                                        {selectedReport.targetImages && selectedReport.targetImages.length > 0 && (
+                                            <div>
+                                                <label className="block text-xs font-medium text-blue-700 mb-2">Hình ảnh sản phẩm</label>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {selectedReport.targetImages.slice(0, 3).map((image, index) => (
+                                                        <img
+                                                            key={index}
+                                                            src={image}
+                                                            alt={`Sản phẩm ${index + 1}`}
+                                                            className="w-16 h-16 object-cover rounded border"
+                                                            onError={(e) => {
+                                                                e.target.style.display = 'none';
+                                                            }}
+                                                        />
+                                                    ))}
+                                                    {selectedReport.targetImages.length > 3 && (
+                                                        <div className="w-16 h-16 bg-gray-100 rounded border flex items-center justify-center">
+                                                            <span className="text-xs text-gray-500">+{selectedReport.targetImages.length - 3}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <label className="block text-xs font-medium text-blue-700">ID đối tượng</label>
+                                            <p className="text-xs text-gray-500 font-mono">{selectedReport.targetId}</p>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <label className="block text-xs font-medium text-blue-700">ID đối tượng</label>
+                                        <p className="text-sm text-gray-900">{selectedReport.targetId}</p>
+                                        <p className="text-xs text-red-500 mt-1">Không thể tải thông tin chi tiết đối tượng</p>
+                                    </div>
+                                )}
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Lý do báo cáo</label>
                                 <p className="text-sm text-gray-900">{selectedReport.reason}</p>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700">Mô tả chi tiết</label>
-                                <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedReport.description}</p>
+                                <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedReport.description || selectedReport.title}</p>
                             </div>
-                            
-                            {selectedReport.evidence && (
+
+                            {selectedReport.evidenceImage && (
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700">Bằng chứng</label>
-                                    <p className="text-sm text-gray-900 whitespace-pre-wrap">{selectedReport.evidence}</p>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Bằng chứng</label>
+                                    <img
+                                        src={selectedReport.evidenceImage}
+                                        alt="Bằng chứng"
+                                        className="max-w-full h-auto max-h-64 rounded border"
+                                        onError={(e) => {
+                                            e.target.style.display = 'none';
+                                            e.target.nextSibling.style.display = 'block';
+                                        }}
+                                    />
+                                    <p className="text-sm text-red-500 hidden">Không thể tải hình ảnh bằng chứng</p>
+                                </div>
+                            )}
+
+                            {/* Thông tin người báo cáo */}
+                            {(selectedReport.reporterName || selectedReport.reporterPhone) && (
+                                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                                    <h4 className="text-sm font-medium text-gray-800 mb-2">Thông tin người báo cáo</h4>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        {selectedReport.reporterName && (
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600">Tên</label>
+                                                <p className="text-sm text-gray-900">{selectedReport.reporterName}</p>
+                                            </div>
+                                        )}
+                                        {selectedReport.reporterPhone && (
+                                            <div>
+                                                <label className="block text-xs font-medium text-gray-600">Số điện thoại</label>
+                                                <p className="text-sm text-gray-900">{selectedReport.reporterPhone}</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
 
@@ -310,6 +411,14 @@ const MyReports = () => {
                                     <p className="text-sm text-green-700 mt-1">
                                         Cảm ơn bạn đã báo cáo. Chúng tôi đã xử lý vấn đề này.
                                     </p>
+                                    {selectedReport.adminResponse && (
+                                        <div className="mt-2">
+                                            <label className="block text-xs font-medium text-green-700">Phản hồi từ quản trị viên</label>
+                                            <p className="text-sm text-green-800 bg-green-100 p-2 rounded mt-1">
+                                                {selectedReport.adminResponse}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -324,6 +433,14 @@ const MyReports = () => {
                                     <p className="text-sm text-red-700 mt-1">
                                         Sau khi xem xét, chúng tôi xác định báo cáo này không vi phạm quy định.
                                     </p>
+                                    {selectedReport.adminResponse && (
+                                        <div className="mt-2">
+                                            <label className="block text-xs font-medium text-red-700">Lý do từ quản trị viên</label>
+                                            <p className="text-sm text-red-800 bg-red-100 p-2 rounded mt-1">
+                                                {selectedReport.adminResponse}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
