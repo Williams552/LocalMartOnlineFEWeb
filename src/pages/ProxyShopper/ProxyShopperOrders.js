@@ -33,14 +33,14 @@ const ProxyShopperOrders = () => {
             if (!res.ok) throw new Error("Không thể lấy danh sách đơn hàng đã nhận");
             const data = await res.json();
             console.log('Fetched orders data with market info and proofImages:', data); // Debug log để xem market info và proofImages
-            
+
             // Debug: Log structure of first order to see available fields including market and proofImages
             if (data && data.length > 0) {
                 console.log('First order structure:', Object.keys(data[0]));
                 console.log('First order full data with market and proofImages:', data[0]);
                 console.log('ProofImages field:', data[0].proofImages); // Debug proofImages
             }
-            
+
             setOrders(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error('Error fetching orders:', error);
@@ -78,9 +78,9 @@ const ProxyShopperOrders = () => {
                     "Content-Type": "application/json"
                 },
             });
-            
+
             if (!res.ok) throw new Error("Không thể bắt đầu mua hàng");
-            
+
             alert('Đã bắt đầu quá trình mua hàng!');
             await fetchOrders(); // Refresh data
         } catch (error) {
@@ -99,9 +99,9 @@ const ProxyShopperOrders = () => {
                     "Content-Type": "application/json"
                 },
             });
-            
+
             if (!res.ok) throw new Error("Không thể hoàn thành đơn hàng");
-            
+
             alert('Đã hoàn thành đơn hàng!');
             await fetchOrders(); // Refresh data
         } catch (error) {
@@ -123,9 +123,9 @@ const ProxyShopperOrders = () => {
                     reason: cancelReason
                 })
             });
-            
+
             if (!res.ok) throw new Error("Không thể hủy đơn hàng");
-            
+
             alert('Đã hủy đơn hàng!');
             setShowCancelModal(false);
             setCancelReason('');
@@ -158,13 +158,13 @@ const ProxyShopperOrders = () => {
     const getStatusBadge = (orderStatus, currentPhase) => {
         // Sử dụng currentPhase từ API hoặc orderStatus làm fallback
         const displayText = currentPhase || orderStatus;
-        
+
         const statusConfig = {
             // Request statuses
             'Pending': { color: 'bg-yellow-100 text-yellow-800', text: 'Chờ xử lý', icon: '⏳' },
             'Accepted': { color: 'bg-blue-100 text-blue-800', text: 'Đã nhận', icon: '📋' },
             'Locked': { color: 'bg-blue-100 text-blue-800', text: 'Đã nhận, đang soạn đề xuất', icon: '🔒' },
-            
+
             // Order statuses với currentPhase từ API
             'Draft': { color: 'bg-blue-100 text-blue-800', text: 'Đang soạn đề xuất', icon: '📝' },
             'Proposed': { color: 'bg-purple-100 text-purple-800', text: 'Chờ buyer duyệt', icon: '📋' },
@@ -172,7 +172,7 @@ const ProxyShopperOrders = () => {
             'InProgress': { color: 'bg-indigo-100 text-indigo-800', text: 'Đang mua hàng', icon: '🛒' },
             'Completed': { color: 'bg-green-100 text-green-800', text: 'Hoàn thành', icon: '✅' },
             'Cancelled': { color: 'bg-red-100 text-red-800', text: 'Đã hủy', icon: '❌' },
-            
+
             // Các currentPhase từ API
             'Đang soạn đơn': { color: 'bg-blue-100 text-blue-800', text: 'Đang soạn đơn', icon: '📝' },
             'Chờ buyer duyệt': { color: 'bg-purple-100 text-purple-800', text: 'Chờ buyer duyệt', icon: '📋' },
@@ -196,13 +196,15 @@ const ProxyShopperOrders = () => {
 
     const getFilterTabs = () => {
         const getOrderStatus = (order) => order.orderStatus || order.requestStatus;
-        
+
         return [
             { key: 'all', label: 'Tất cả', count: orders.length },
-            { key: 'active', label: 'Đang thực hiện', count: orders.filter(o => {
-                const status = getOrderStatus(o);
-                return ['Accepted', 'Locked', 'Draft', 'Proposed', 'Paid', 'InProgress'].includes(status);
-            }).length },
+            {
+                key: 'active', label: 'Đang thực hiện', count: orders.filter(o => {
+                    const status = getOrderStatus(o);
+                    return ['Accepted', 'Locked', 'Draft', 'Proposed', 'Paid', 'InProgress'].includes(status);
+                }).length
+            },
             { key: 'draft', label: 'Soạn đề xuất', count: orders.filter(o => o.canEditProposal).length },
             { key: 'proposed', label: 'Chờ duyệt', count: orders.filter(o => getOrderStatus(o) === 'Proposed').length },
             { key: 'shopping', label: 'Đang mua hàng', count: orders.filter(o => o.canStartShopping || o.canUploadProof).length },
@@ -213,9 +215,9 @@ const ProxyShopperOrders = () => {
 
     const filteredOrders = (() => {
         const getOrderStatus = (order) => order.orderStatus || order.requestStatus;
-        
+
         if (filter === 'all') return orders;
-        
+
         switch (filter) {
             case 'active':
                 return orders.filter(order => {
@@ -277,15 +279,15 @@ const ProxyShopperOrders = () => {
                                 key={tab.key}
                                 onClick={() => setFilter(tab.key)}
                                 className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${filter === tab.key
-                                        ? 'border-supply-primary text-supply-primary'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    ? 'border-supply-primary text-supply-primary'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                                     }`}
                             >
                                 {tab.label}
                                 {tab.count > 0 && (
                                     <span className={`ml-2 py-0.5 px-2 rounded-full text-xs ${filter === tab.key
-                                            ? 'bg-supply-primary text-white'
-                                            : 'bg-gray-100 text-gray-900'
+                                        ? 'bg-supply-primary text-white'
+                                        : 'bg-gray-100 text-gray-900'
                                         }`}>
                                         {tab.count}
                                     </span>
@@ -307,7 +309,7 @@ const ProxyShopperOrders = () => {
                             canUploadProof: order.canUploadProof,
                             canCancel: order.canCancel
                         });
-                        
+
                         return (
                             <div key={order.requestId} className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow">
                                 <div className="p-6">
@@ -445,7 +447,10 @@ const ProxyShopperOrders = () => {
                                                     <div>
                                                         <span className="text-gray-600">Tổng tiền sản phẩm:</span>
                                                         <span className="font-semibold ml-2">
-                                                            {formatCurrency(order.totalAmount)}
+                                                            {order.orderItems?.length > 0
+                                                                ? formatCurrency(order.orderItems.reduce((sum, item) => sum + ((item.price || 0) * (item.minimumQuantity || item.quantity || 0)), 0))
+                                                                : formatCurrency(0)
+                                                            }
                                                         </span>
                                                     </div>
                                                     <div>
@@ -472,10 +477,10 @@ const ProxyShopperOrders = () => {
                                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                                                     {/* Handle both string (single image) and array (multiple images) */}
                                                     {(() => {
-                                                        const images = Array.isArray(order.proofImages) 
-                                                            ? order.proofImages 
+                                                        const images = Array.isArray(order.proofImages)
+                                                            ? order.proofImages
                                                             : [order.proofImages];
-                                                        
+
                                                         return images.map((imageUrl, index) => (
                                                             <div key={index} className="relative">
                                                                 <img
@@ -514,7 +519,7 @@ const ProxyShopperOrders = () => {
                                         <div className="flex items-center space-x-4">
                                             <span className="text-sm text-gray-600">Tổng tiền:</span>
                                             <span className="text-lg font-bold text-supply-primary">
-                                                {formatCurrency((order.totalAmount || 0) + (order.proxyFee || 0))}
+                                                {formatCurrency(order.totalAmount || 0)}
                                             </span>
                                             {order.proxyFee && (
                                                 <span className="text-sm text-gray-600">
@@ -522,7 +527,7 @@ const ProxyShopperOrders = () => {
                                                 </span>
                                             )}
                                         </div>
-                                        
+
                                         {/* Action Buttons based on Permissions from API */}
                                         <div className="flex items-center space-x-3">
 
@@ -576,10 +581,10 @@ const ProxyShopperOrders = () => {
                                                     </div>
                                                     <div className="flex -space-x-1">
                                                         {(() => {
-                                                            const images = Array.isArray(order.proofImages) 
-                                                                ? order.proofImages 
+                                                            const images = Array.isArray(order.proofImages)
+                                                                ? order.proofImages
                                                                 : [order.proofImages];
-                                                            
+
                                                             return images.slice(0, 3).map((imageUrl, index) => (
                                                                 <img
                                                                     key={index}
@@ -592,10 +597,10 @@ const ProxyShopperOrders = () => {
                                                             ));
                                                         })()}
                                                         {(() => {
-                                                            const images = Array.isArray(order.proofImages) 
-                                                                ? order.proofImages 
+                                                            const images = Array.isArray(order.proofImages)
+                                                                ? order.proofImages
                                                                 : [order.proofImages];
-                                                            
+
                                                             return images.length > 3 && (
                                                                 <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-200 flex items-center justify-center text-xs text-gray-600">
                                                                     +{images.length - 3}
@@ -670,7 +675,7 @@ const ProxyShopperOrders = () => {
                         <div className="border-b px-6 py-4">
                             <h3 className="text-lg font-bold text-red-800">Hủy đơn hàng</h3>
                         </div>
-                        
+
                         <div className="p-6">
                             <div className="mb-4">
                                 <p className="text-gray-700 mb-3">

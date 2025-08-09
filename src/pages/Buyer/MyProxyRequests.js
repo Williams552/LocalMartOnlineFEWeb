@@ -302,12 +302,15 @@ const MyProxyRequests = () => {
                                         )}
 
                                         {/* Tổng kết chi phí */}
-                                        {(request.totalAmount || request.proxyFee) && (
+                                        {(request.orderItems?.length > 0 || request.totalAmount || request.proxyFee) && (
                                             <div className="text-green-700">
                                                 <div className="flex justify-between items-center mb-1">
                                                     <span>Tổng tiền sản phẩm:</span>
                                                     <span className="font-semibold">
-                                                        {(request.totalAmount || 0).toLocaleString()} đ
+                                                        {request.orderItems?.length > 0
+                                                            ? (request.orderItems.reduce((sum, item) => sum + ((item.price || 0) * (item.minimumQuantity || 0)), 0)).toLocaleString()
+                                                            : (request.totalAmount || 0).toLocaleString()
+                                                        } đ
                                                     </span>
                                                 </div>
                                                 {request.proxyFee && (
@@ -319,7 +322,7 @@ const MyProxyRequests = () => {
                                                 <div className="flex justify-between items-center font-bold text-lg pt-2 border-t border-green-200">
                                                     <span>Tổng cộng:</span>
                                                     <span>
-                                                        {((request.totalAmount || 0) + (request.proxyFee || 0)).toLocaleString()} đ
+                                                        {(request.totalAmount || 0).toLocaleString()} đ
                                                     </span>
                                                 </div>
                                             </div>
@@ -443,8 +446,8 @@ const MyProxyRequests = () => {
                                                                     <div className="flex justify-between items-start mb-1">
                                                                         <h6 className="font-semibold text-gray-800">{item.name}</h6>
                                                                         <span className={`px-2 py-1 rounded text-xs ${item.isAvailable
-                                                                                ? 'bg-green-100 text-green-800'
-                                                                                : 'bg-red-100 text-red-800'
+                                                                            ? 'bg-green-100 text-green-800'
+                                                                            : 'bg-red-100 text-red-800'
                                                                             }`}>
                                                                             {item.isAvailable ? 'Còn hàng' : 'Hết hàng'}
                                                                         </span>
@@ -501,7 +504,10 @@ const MyProxyRequests = () => {
                                             <div className="flex justify-between items-center mb-1">
                                                 <span>Tổng tiền sản phẩm:</span>
                                                 <span className="font-semibold">
-                                                    {(request.proposal.totalAmount || request.proposal.totalProductPrice || 0).toLocaleString()} đ
+                                                    {request.proposal.proposedItems?.length > 0
+                                                        ? (request.proposal.proposedItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0)).toLocaleString()
+                                                        : (request.proposal.totalProductPrice || 0).toLocaleString()
+                                                    } đ
                                                 </span>
                                             </div>
                                             <div className="flex justify-between items-center mb-1">
@@ -511,7 +517,7 @@ const MyProxyRequests = () => {
                                             <div className="flex justify-between items-center font-bold text-lg pt-2 border-t border-green-200">
                                                 <span>Tổng cộng:</span>
                                                 <span>
-                                                    {((request.proposal.totalAmount || request.proposal.totalProductPrice || 0) + (request.proposal.proxyFee || 0)).toLocaleString()} đ
+                                                    {(request.proposal.totalAmount || ((request.proposal.totalProductPrice || 0) + (request.proposal.proxyFee || 0))).toLocaleString()} đ
                                                 </span>
                                             </div>
                                             {request.proposal.note && (
@@ -533,18 +539,7 @@ const MyProxyRequests = () => {
                                 )}
 
                                 {/* Nút thao tác */}
-                                <div className="flex gap-3 justify-end mt-4">
-                                    {/* Hiển thị chi tiết order nếu có */}
-                                    {hasOrder && (
-                                        <button
-                                            onClick={() => viewProposal(request)}
-                                            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-1"
-                                        >
-                                            <FiEye className="text-sm" />
-                                            Xem chi tiết đơn hàng
-                                        </button>
-                                    )}
-
+                                <div className="flex gap-3 justify-end mt-3">
                                     {/* Nút cho currentPhase = "Chờ duyệt" */}
                                     {currentPhase === 'Chờ duyệt' && (
                                         <>
@@ -681,8 +676,8 @@ const MyProxyRequests = () => {
                                                         <div className="flex justify-between items-start mb-2">
                                                             <h5 className="font-bold text-lg text-gray-800">{item.name}</h5>
                                                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${item.isAvailable
-                                                                    ? 'bg-green-100 text-green-800'
-                                                                    : 'bg-red-100 text-red-800'
+                                                                ? 'bg-green-100 text-green-800'
+                                                                : 'bg-red-100 text-red-800'
                                                                 }`}>
                                                                 {item.isAvailable ? 'Còn hàng' : 'Hết hàng'}
                                                             </span>
@@ -807,7 +802,10 @@ const MyProxyRequests = () => {
                                     <div className="flex justify-between">
                                         <span>Tổng tiền sản phẩm:</span>
                                         <span className="font-semibold">
-                                            {(selectedRequest.proposal?.totalAmount || selectedRequest.proposal?.totalProductPrice || 0).toLocaleString()} đ
+                                            {selectedRequest.proposal?.proposedItems?.length > 0
+                                                ? (selectedRequest.proposal.proposedItems.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 0)), 0)).toLocaleString()
+                                                : (selectedRequest.proposal?.totalProductPrice || 0).toLocaleString()
+                                            } đ
                                         </span>
                                     </div>
                                     <div className="flex justify-between">
@@ -818,7 +816,7 @@ const MyProxyRequests = () => {
                                     <div className="flex justify-between text-lg font-bold">
                                         <span>Tổng cộng:</span>
                                         <span className="text-green-700">
-                                            {((selectedRequest.proposal?.totalAmount || selectedRequest.proposal?.totalProductPrice || 0) + (selectedRequest.proposal?.proxyFee || 0)).toLocaleString()} đ
+                                            {(selectedRequest.proposal?.totalAmount || ((selectedRequest.proposal?.totalProductPrice || 0) + (selectedRequest.proposal?.proxyFee || 0))).toLocaleString()} đ
                                         </span>
                                     </div>
 
