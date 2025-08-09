@@ -93,7 +93,7 @@ const ProxyShopperDashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white rounded-lg shadow-sm border p-6">
                     <div className="flex items-center justify-between">
                         <div>
@@ -126,21 +126,6 @@ const ProxyShopperDashboard = () => {
                         </div>
                         <div className="p-3 bg-green-100 rounded-lg">
                             <FiDollarSign className="text-supply-primary" size={24} />
-                        </div>
-                    </div>
-                </div>
-
-                <div className="bg-white rounded-lg shadow-sm border p-6">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <p className="text-sm font-medium text-gray-600">Đánh giá TB</p>
-                            <div className="flex items-center space-x-2">
-                                <p className="text-2xl font-bold text-yellow-500">{stats?.averageRating ?? 0}</p>
-                                <FaStar className="text-yellow-500" size={16} />
-                            </div>
-                        </div>
-                        <div className="p-3 bg-yellow-100 rounded-lg">
-                            <FiTrendingUp className="text-yellow-600" size={24} />
                         </div>
                     </div>
                 </div>
@@ -206,7 +191,7 @@ const ProxyShopperDashboard = () => {
             </div>
 
             {/* Quick Actions */}
-            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Link
                     to="/proxy-shopper/available-orders"
                     className="bg-supply-primary hover:bg-green-600 text-white p-6 rounded-lg transition-colors text-center"
