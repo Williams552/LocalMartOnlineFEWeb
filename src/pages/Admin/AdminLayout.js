@@ -94,7 +94,7 @@ const AdminLayout = () => {
             orders: {
                 key: 'orders', icon: <ShoppingCartOutlined />, label: 'Quản lý đơn hàng', children: [
                     { key: '/admin/orders', label: 'Tất cả đơn hàng' },
-                    { key: '/admin/proxy-shopping', label: 'Đơn hàng đi chợ giùm' },
+                    { key: '/admin/proxy-shopping', label: 'Đơn hàng mua hộ' },
                 ]
             },
             content: {

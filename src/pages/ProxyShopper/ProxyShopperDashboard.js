@@ -85,8 +85,8 @@ const ProxyShopperDashboard = () => {
                     <div className="flex items-center">
                         <FiPackage className="text-blue-500 mr-2" size={16} />
                         <p className="text-sm text-blue-700">
-                            <strong>Hệ thống mới:</strong> Bạn chỉ nhận đơn hàng từ những chợ mà bạn đã đăng ký. 
-                            Khách hàng sẽ chọn chợ cụ thể khi tạo yêu cầu đi chợ giùm.
+                            <strong>Hệ thống mới:</strong> Bạn chỉ nhận đơn hàng từ những chợ mà bạn đã đăng ký.
+                            Khách hàng sẽ chọn chợ cụ thể khi tạo yêu cầu mua hộ.
                         </p>
                     </div>
                 </div>
@@ -223,15 +223,6 @@ const ProxyShopperDashboard = () => {
                     <FiClock className="text-3xl mb-3 mx-auto" />
                     <h3 className="font-bold text-lg mb-2">Đơn hàng của tôi</h3>
                     <p className="text-sm opacity-90">Quản lý các đơn đã nhận</p>
-                </Link>
-
-                <Link
-                    to="/proxy-shopper/profile"
-                    className="bg-purple-500 hover:bg-purple-600 text-white p-6 rounded-lg transition-colors text-center"
-                >
-                    <FaUser className="text-3xl mb-3 mx-auto" />
-                    <h3 className="font-bold text-lg mb-2">Hồ sơ của tôi</h3>
-                    <p className="text-sm opacity-90">Cập nhật thông tin cá nhân</p>
                 </Link>
             </div>
         </div>

@@ -103,9 +103,9 @@ const RegisterProxyShopper = () => {
                 transportMethod: formData.transportMethod,
                 paymentMethod: formData.paymentMethod
             });
-            
+
             console.log('📝 Form data before submit:', formData);
-            
+
             await proxyShopperRegistrationService.registerProxyShopper(formData);
             setSuccess(true);
             setTimeout(() => {
@@ -123,17 +123,17 @@ const RegisterProxyShopper = () => {
         return (
             <div className="min-h-screen bg-gray-50 px-4 py-10 max-w-2xl mx-auto">
                 <h1 className="text-3xl font-bold text-supply-primary text-center mb-8">
-                    Đăng ký làm người đi chợ dùm
+                    Đăng ký làm người mua hộ
                 </h1>
                 <div className="bg-white p-6 rounded shadow">
                     <div className="text-center">
                         <div className="text-6xl mb-4">📝</div>
                         <h2 className="text-xl font-semibold mb-4">Đã có đăng ký</h2>
                         <p className="text-gray-600 mb-4">
-                            Bạn đã đăng ký làm người đi chợ dùm. Trạng thái:
+                            Bạn đã đăng ký làm người mua hộ. Trạng thái:
                             <span className={`ml-2 px-2 py-1 rounded text-sm ${existingRegistration.status === 'Approved' ? 'bg-green-100 text-green-800' :
-                                    existingRegistration.status === 'Rejected' ? 'bg-red-100 text-red-800' :
-                                        'bg-yellow-100 text-yellow-800'
+                                existingRegistration.status === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                    'bg-yellow-100 text-yellow-800'
                                 }`}>
                                 {existingRegistration.status === 'Approved' ? 'Đã duyệt' :
                                     existingRegistration.status === 'Rejected' ? 'Bị từ chối' :
@@ -162,7 +162,7 @@ const RegisterProxyShopper = () => {
         return (
             <div className="min-h-screen bg-gray-50 px-4 py-10 max-w-2xl mx-auto">
                 <h1 className="text-3xl font-bold text-supply-primary text-center mb-8">
-                    Đăng ký làm người đi chợ dùm
+                    Đăng ký làm người mua hộ
                 </h1>
                 <div className="bg-white p-6 rounded shadow">
                     <div className="text-center">
@@ -183,7 +183,7 @@ const RegisterProxyShopper = () => {
     return (
         <div className="min-h-screen bg-gray-50 px-4 py-10 max-w-2xl mx-auto">
             <h1 className="text-3xl font-bold text-supply-primary text-center mb-8">
-                Đăng ký làm người đi chợ dùm
+                Đăng ký làm người mua hộ
             </h1>
 
             {error && (

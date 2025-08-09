@@ -810,10 +810,6 @@ const CartPage = () => {
                                                 <span className="text-3xl">{sellerInfo?.avatar}</span>
                                                 <div>
                                                     <h2 className="text-lg font-semibold text-gray-800">{seller}</h2>
-                                                    <p className="text-sm text-gray-500 flex items-center">
-                                                        <FaMapMarkerAlt className="w-3 h-3 mr-1" />
-                                                        {sellerInfo?.market}
-                                                    </p>
                                                     <p className="text-sm text-supply-primary font-medium">
                                                         {sellerItemCount} sản phẩm • {sellerTotal.toLocaleString()}đ
                                                     </p>
@@ -1032,7 +1028,7 @@ const CartPage = () => {
                                     )}
                                     {deliveryMethod === "proxy" && (
                                         <div className="flex justify-between">
-                                            <span className="text-gray-600">Phí dịch vụ đi chợ</span>
+                                            <span className="text-gray-600">Phí dịch vụ mua hộ</span>
                                             <span className="font-medium text-blue-600">
                                                 {additionalFee.toLocaleString()}đ
                                             </span>
@@ -1231,7 +1227,7 @@ const CartPage = () => {
             )}
 
 
-            {/* Modal người đi chợ giùm */}
+            {/* Modal người mua hộ */}
             {showProxyListFor && (
                 <div
                     className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50"
@@ -1249,7 +1245,7 @@ const CartPage = () => {
                         </button>
                         <div className="text-center mb-6">
                             <FaUser className="w-12 h-12 text-blue-500 mx-auto mb-3" />
-                            <h3 className="text-xl font-bold text-gray-800">Người đi chợ dùm</h3>
+                            <h3 className="text-xl font-bold text-gray-800">Người mua hộ</h3>
                             <p className="text-gray-600 text-sm">Chọn người hỗ trợ mua hàng gần bạn</p>
                         </div>
 
@@ -1306,7 +1302,7 @@ const CartPage = () => {
                         <div className="mt-6 p-4 bg-blue-50 rounded-lg">
                             <h5 className="font-medium text-blue-800 mb-2">💡 Lưu ý khi sử dụng dịch vụ</h5>
                             <ul className="text-xs text-blue-700 space-y-1">
-                                <li>• Liên hệ trực tiếp với người đi chợ để thỏa thuận</li>
+                                <li>• Liên hệ trực tiếp với người mua hộ để thỏa thuận</li>
                                 <li>• Thanh toán trực tiếp khi nhận hàng</li>
                                 <li>• Kiểm tra chất lượng hàng hóa trước khi thanh toán</li>
                             </ul>

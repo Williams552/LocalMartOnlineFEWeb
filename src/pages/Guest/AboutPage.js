@@ -26,7 +26,7 @@ const AboutPage = () => {
         },
         {
             icon: <TruckOutlined className="text-3xl text-supply-primary" />,
-            title: "Dịch vụ đi chợ hộ",
+            title: "Dịch vụ mua hộ",
             description: "Nhanh chóng, minh bạch với đội ngũ Proxy Shopper chuyên nghiệp"
         },
         {

@@ -116,7 +116,7 @@ const AvailableOrders = () => {
                             <p className="font-medium mb-1">Cơ chế hoạt động:</p>
                             <ul className="list-disc list-inside space-y-1">
                                 <li>Bạn chỉ thấy đơn hàng từ những chợ mà bạn đã đăng ký làm proxy shopper</li>
-                                <li>Khách hàng phải chọn chợ cụ thể khi tạo yêu cầu đi chợ giùm</li>
+                                <li>Khách hàng phải chọn chợ cụ thể khi tạo yêu cầu mua hộ</li>
                                 <li>Hệ thống tự động lọc và hiển thị đúng đơn hàng phù hợp với bạn</li>
                             </ul>
                         </div>
@@ -296,7 +296,7 @@ const AvailableOrders = () => {
                             <div className="text-sm bg-gray-50 rounded-lg p-3 mt-4">
                                 <p className="font-medium text-gray-700 mb-2">Có thể do:</p>
                                 <ul className="text-left list-disc list-inside space-y-1">
-                                    <li>Chưa có khách hàng tạo yêu cầu đi chợ từ các chợ bạn đã đăng ký</li>
+                                    <li>Chưa có khách hàng tạo yêu cầu mua hộ từ các chợ bạn đã đăng ký</li>
                                     <li>Tất cả đơn hàng hiện tại đã được proxy shopper khác nhận</li>
                                     <li>Bạn cần đăng ký làm proxy shopper tại nhiều chợ hơn</li>
                                 </ul>

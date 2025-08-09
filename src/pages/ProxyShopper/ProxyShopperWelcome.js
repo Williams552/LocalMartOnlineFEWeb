@@ -22,26 +22,12 @@ const ProxyShopperWelcome = () => {
                     <p className="text-gray-600 mt-1">Làm theo các bước đơn giản để bắt đầu nhận đơn hàng</p>
                 </div>
                 <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        <div className="text-center">
-                            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <FiUser className="text-purple-600" size={24} />
-                            </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">1. Hoàn thiện hồ sơ</h3>
-                            <p className="text-sm text-gray-600 mb-3">Cập nhật thông tin cá nhân và khu vực hoạt động</p>
-                            <Link
-                                to="/proxy-shopper/profile"
-                                className="text-purple-600 hover:text-purple-700 text-sm font-medium"
-                            >
-                                Cập nhật hồ sơ →
-                            </Link>
-                        </div>
-
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="text-center">
                             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <FiPackage className="text-blue-600" size={24} />
                             </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">2. Tìm đơn hàng</h3>
+                            <h3 className="font-semibold text-gray-900 mb-2">1. Tìm đơn hàng</h3>
                             <p className="text-sm text-gray-600 mb-3">Xem các đơn hàng có sẵn trong khu vực của bạn</p>
                             <Link
                                 to="/proxy-shopper/available-orders"
@@ -55,7 +41,7 @@ const ProxyShopperWelcome = () => {
                             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <FaHandshake className="text-green-600" size={24} />
                             </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">3. Nhận đơn hàng</h3>
+                            <h3 className="font-semibold text-gray-900 mb-2">2. Nhận đơn hàng</h3>
                             <p className="text-sm text-gray-600 mb-3">Chọn và nhận đơn hàng phù hợp với bạn</p>
                             <span className="text-green-600 text-sm font-medium">Sẵn sàng nhận đơn</span>
                         </div>
@@ -64,7 +50,7 @@ const ProxyShopperWelcome = () => {
                             <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                 <FiClock className="text-yellow-600" size={24} />
                             </div>
-                            <h3 className="font-semibold text-gray-900 mb-2">4. Hoàn thành</h3>
+                            <h3 className="font-semibold text-gray-900 mb-2">3. Hoàn thành</h3>
                             <p className="text-sm text-gray-600 mb-3">Mua hàng và giao cho khách hàng</p>
                             <Link
                                 to="/proxy-shopper/orders"

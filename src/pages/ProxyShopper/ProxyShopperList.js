@@ -26,7 +26,7 @@ const ProxyShopperList = () => {
     return (
         <div className="min-h-screen bg-gray-50 px-4 py-10 max-w-4xl mx-auto">
             <h1 className="text-3xl font-bold text-supply-primary text-center mb-8">
-                Danh sách người đi chợ dùm
+                Danh sách người mua hộ
             </h1>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

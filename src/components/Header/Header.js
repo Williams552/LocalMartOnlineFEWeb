@@ -443,7 +443,7 @@ const Header = () => {
                                 <button
                                     type="button"
                                     className="relative text-gray-600 hover:text-purple-600 transition group focus:outline-none"
-                                    title="Đi chợ giùm"
+                                    title="Mua hộ"
                                     onClick={async () => {
                                         setShowProxyModal(true);
                                         setProxyError("");
@@ -486,7 +486,7 @@ const Header = () => {
                                     }}
                                 >
                                     <FiShoppingBag size={24} className="group-hover:text-purple-600" />
-                                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded shadow hidden group-hover:block">Đi chợ giùm</span>
+                                    <span className="absolute -bottom-6 left-1/2 -translate-x-1/2 text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded shadow hidden group-hover:block">Mua hộ</span>
                                 </button>
                                 {/* Proxy Shopper Modal */}
                                 {showProxyModal && (
@@ -501,14 +501,14 @@ const Header = () => {
                                                 aria-label="Đóng modal"
                                                 tabIndex={0}
                                             >&times;</button>
-                                            <h2 className="text-2xl font-bold mb-4 text-center text-supply-primary tracking-tight">Yêu cầu đi chợ giùm</h2>
+                                            <h2 className="text-2xl font-bold mb-4 text-center text-supply-primary tracking-tight">Yêu cầu mua hộ</h2>
 
                                             {/* Store Selection Notice */}
                                             <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
                                                 <div className="flex items-start">
                                                     <FiMapPin className="text-blue-500 mr-3 mt-0.5" size={18} />
                                                     <div className="text-blue-700">
-                                                        <h4 className="font-medium mb-2">🆕 Cơ chế đi chợ giùm mới</h4>
+                                                        <h4 className="font-medium mb-2">🆕 Cơ chế mua hộ mới</h4>
                                                         <div className="text-sm space-y-1">
                                                             <p>• <strong>Bước 1:</strong> Bạn phải chọn chợ cụ thể trước khi tạo yêu cầu</p>
                                                             <p>• <strong>Bước 2:</strong> Hệ thống sẽ gửi đến các proxy shopper đã đăng ký tại chợ đó</p>
@@ -789,7 +789,7 @@ const Header = () => {
                                                 </Link>
                                                 <Link to="/buyer/proxy-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FiShoppingBag size={16} />
-                                                    <span>Yêu cầu đi chợ giùm</span>
+                                                    <span>Yêu cầu mua hộ</span>
                                                 </Link>
                                                 <Link to="/support-requests" className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-50 text-sm">
                                                     <FaHeadset size={16} />
@@ -858,10 +858,6 @@ const Header = () => {
                                                         <Link to="/proxy-shopper/orders" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm">
                                                             <FiShoppingCart size={16} />
                                                             <span>Đơn hàng của tôi</span>
-                                                        </Link>
-                                                        <Link to="/proxy-shopper/profile" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm">
-                                                            <FaUserCircle size={16} />
-                                                            <span>Hồ sơ Proxy Shopper</span>
                                                         </Link>
                                                     </>
                                                 )}

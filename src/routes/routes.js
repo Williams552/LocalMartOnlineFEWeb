@@ -62,7 +62,6 @@ import RegisterProxyShopper from "../pages/ProxyShopper/RegisterProxyShopper";
 import ProxyShopperDashboard from "../pages/ProxyShopper/ProxyShopperDashboard";
 import ProxyShopperOrders from "../pages/ProxyShopper/ProxyShopperOrders";
 import AvailableOrders from "../pages/ProxyShopper/AvailableOrders";
-import ProxyShopperProfile from "../pages/ProxyShopper/ProxyShopperProfile";
 import ProxyShopperWelcome from "../pages/ProxyShopper/ProxyShopperWelcome";
 import BuyerOrders from "../pages/Buyer/BuyerOrders";
 import MyProxyRequests from "../pages/Buyer/MyProxyRequests";
@@ -124,7 +123,6 @@ const AppRoutes = () => {
                 <Route path="/proxy-shopper/orders" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperOrders /></ProtectedRoute>} />
                 <Route path="/proxy-shopper/orders/:id/create" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><CreateOrder /></ProtectedRoute>} />
                 <Route path="/proxy-shopper/available-orders" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><AvailableOrders /></ProtectedRoute>} />
-                <Route path="/proxy-shopper/profile" element={<ProtectedRoute allowedRoles={['Proxy Shopper']}><ProxyShopperProfile /></ProtectedRoute>} />
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
                 <Route path="/buyer/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
                 <Route path="/buyer/favorites" element={<ProtectedRoute><FavoritesPage /></ProtectedRoute>} />

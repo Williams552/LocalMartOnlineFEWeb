@@ -34,9 +34,9 @@ const StoreSelectionNotice = ({ variant = 'info', className = '' }) => {
             <div className="flex items-start">
                 <IconComponent className={`${config.iconColor} mr-3 mt-0.5`} size={18} />
                 <div className={`${config.textColor}`}>
-                    <h4 className="font-medium mb-2">Cơ chế đi chợ giùm mới</h4>
+                    <h4 className="font-medium mb-2">Cơ chế mua hộ mới</h4>
                     <div className="text-sm space-y-1">
-                        <p>• <strong>Bước 1:</strong> Bạn cần chọn chợ cụ thể khi tạo yêu cầu đi chợ giùm</p>
+                        <p>• <strong>Bước 1:</strong> Bạn cần chọn chợ cụ thể khi tạo yêu cầu mua hộ</p>
                         <p>• <strong>Bước 2:</strong> Hệ thống sẽ gửi yêu cầu đến các proxy shopper đã đăng ký tại chợ đó</p>
                         <p>• <strong>Bước 3:</strong> Chỉ những proxy shopper trong chợ được chọn mới có thể nhận đơn hàng của bạn</p>
                         <p className="mt-2 font-medium">

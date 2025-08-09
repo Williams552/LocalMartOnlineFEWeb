@@ -178,7 +178,7 @@ class ProfileService {
             'Admin': 'Quản trị viên',
             'Seller': 'Người bán',
             'Buyer': 'Khách hàng',
-            'Proxy Shopper': 'Người đi chợ'
+            'Proxy Shopper': 'Người mua hộ'
         };
         return roleMap[role] || role;
     }

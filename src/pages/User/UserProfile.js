@@ -356,7 +356,7 @@ const UserProfile = () => {
                                 <div>
                                     <h3 className="flex items-center space-x-2 mb-3">
                                         <FiTruck className="text-gray-500" />
-                                        <span className="font-medium text-gray-700">Thông tin người đi chợ</span>
+                                        <span className="font-medium text-gray-700">Thông tin người mua hộ</span>
                                     </h3>
                                     <div className="space-y-2 text-sm">
                                         <div className="flex justify-between">

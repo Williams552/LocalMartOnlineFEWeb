@@ -48,7 +48,7 @@ const MyProxyRequests = () => {
             'Đã hủy': { text: 'Đã hủy', color: 'bg-red-100 text-red-800', icon: '❌' },
             'Yêu cầu đã bị hủy': { text: 'Đã hủy', color: 'bg-red-100 text-red-800', icon: '❌' },
             'Đã hết hạn': { text: 'Đã hết hạn', color: 'bg-gray-100 text-gray-800', icon: '⏰' },
-            
+
             // Fallback cho old statuses
             'Open': { text: 'Đang chờ người nhận', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
             'Locked': { text: 'Đã có proxy nhận, đang soạn đề xuất', color: 'bg-blue-100 text-blue-800', icon: '🔒' },
@@ -166,7 +166,7 @@ const MyProxyRequests = () => {
             <div className="flex items-center justify-between mb-6">
                 <h1 className="text-2xl font-bold text-supply-primary flex items-center">
                     <FiShoppingCart className="mr-2" />
-                    Yêu cầu đi chợ giùm của tôi
+                    Yêu cầu mua hộ của tôi
                 </h1>
                 <button
                     onClick={fetchMyRequests}
@@ -181,7 +181,7 @@ const MyProxyRequests = () => {
             {requests.length === 0 ? (
                 <div className="text-center py-12">
                     <FiPackage className="mx-auto text-6xl text-gray-300 mb-4" />
-                    <p className="text-xl text-gray-500">Bạn chưa có yêu cầu đi chợ giùm nào</p>
+                    <p className="text-xl text-gray-500">Bạn chưa có yêu cầu mua hộ nào</p>
                 </div>
             ) : (
                 <div className="grid gap-6">
@@ -192,7 +192,7 @@ const MyProxyRequests = () => {
                         const orderStatus = request.orderStatus; // Order status từ API: Draft, Proposed, Paid, InProgress, Completed
                         const currentPhase = request.currentPhase; // Current phase từ API
                         const hasOrder = request.hasOrder; // Có order hay không
-                                                
+
                         return (
                             <div key={request.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
                                 <div className="flex justify-between items-start mb-4">
@@ -222,7 +222,7 @@ const MyProxyRequests = () => {
                                     <div className="bg-blue-50 rounded-lg p-4 mb-4">
                                         <h4 className="font-medium text-blue-800 mb-2 flex items-center">
                                             <FiUser className="mr-1" />
-                                            Người đi chợ giùm
+                                            Người mua hộ
                                         </h4>
                                         <div className="text-blue-700">
                                             <div>Tên: {request.partnerName}</div>
@@ -264,7 +264,7 @@ const MyProxyRequests = () => {
                                             <FiShoppingCart className="mr-1" />
                                             Thông tin đơn hàng (#{request.orderId.slice(-8)})
                                         </h4>
-                                        
+
                                         {/* Chi tiết sản phẩm trong order */}
                                         {request.orderItems && request.orderItems.length > 0 && (
                                             <div className="mb-4">
@@ -383,7 +383,7 @@ const MyProxyRequests = () => {
                                             <FiX className="mr-1" />
                                             Yêu cầu đã bị hủy
                                         </h4>
-                                        
+
                                         {request.notes ? (
                                             <div className="text-red-700">
                                                 <span className="font-medium">Lý do hủy:</span>
@@ -399,7 +399,7 @@ const MyProxyRequests = () => {
                                                 </p>
                                             </div>
                                         )}
-                                        
+
                                         {(request.orderUpdatedAt || request.updatedAt) && (
                                             <div className="mt-3 pt-3 border-t border-red-200">
                                                 <span className="font-medium text-red-800">Thời gian hủy:</span>
@@ -414,8 +414,8 @@ const MyProxyRequests = () => {
                                 {/* Thông tin đề xuất với sản phẩm chi tiết */}
                                 {request.proposal && (
                                     <div className="bg-green-50 rounded-lg p-4 mb-4">
-                                        <h4 className="font-medium text-green-800 mb-3">Đề xuất từ Người đi chợ giùm</h4>
-                                        
+                                        <h4 className="font-medium text-green-800 mb-3">Đề xuất từ Người mua hộ</h4>
+
                                         {/* Hiển thị sản phẩm đề xuất chi tiết */}
                                         {request.proposal.proposedItems && request.proposal.proposedItems.length > 0 && (
                                             <div className="mb-4">
@@ -427,8 +427,8 @@ const MyProxyRequests = () => {
                                                                 {/* Hình ảnh sản phẩm */}
                                                                 {item.imageUrls && item.imageUrls.length > 0 && (
                                                                     <div className="flex-shrink-0">
-                                                                        <img 
-                                                                            src={item.imageUrls[0]} 
+                                                                        <img
+                                                                            src={item.imageUrls[0]}
                                                                             alt={item.name}
                                                                             className="w-16 h-16 object-cover rounded-lg border"
                                                                             onError={(e) => {
@@ -437,20 +437,19 @@ const MyProxyRequests = () => {
                                                                         />
                                                                     </div>
                                                                 )}
-                                                                
+
                                                                 {/* Thông tin sản phẩm */}
                                                                 <div className="flex-1">
                                                                     <div className="flex justify-between items-start mb-1">
                                                                         <h6 className="font-semibold text-gray-800">{item.name}</h6>
-                                                                        <span className={`px-2 py-1 rounded text-xs ${
-                                                                            item.isAvailable 
-                                                                                ? 'bg-green-100 text-green-800' 
+                                                                        <span className={`px-2 py-1 rounded text-xs ${item.isAvailable
+                                                                                ? 'bg-green-100 text-green-800'
                                                                                 : 'bg-red-100 text-red-800'
-                                                                        }`}>
+                                                                            }`}>
                                                                             {item.isAvailable ? 'Còn hàng' : 'Hết hàng'}
                                                                         </span>
                                                                     </div>
-                                                                    
+
                                                                     <div className="text-sm text-gray-600 space-y-1">
                                                                         <div className="flex justify-between">
                                                                             <span>Số lượng:</span>
@@ -545,7 +544,7 @@ const MyProxyRequests = () => {
                                             Xem chi tiết đơn hàng
                                         </button>
                                     )}
-                                    
+
                                     {/* Nút cho currentPhase = "Chờ duyệt" */}
                                     {currentPhase === 'Chờ duyệt' && (
                                         <>
@@ -567,7 +566,7 @@ const MyProxyRequests = () => {
                                             </button>
                                         </>
                                     )}
-                                    
+
                                     {/* Nút cho currentPhase = "Đã thanh toán" hoặc "Đang mua hàng" */}
                                     {(currentPhase === 'Đã thanh toán' || currentPhase === 'Đang mua hàng') && (
                                         <button
@@ -579,7 +578,7 @@ const MyProxyRequests = () => {
                                             {actionLoading ? 'Đang xử lý...' : 'Xác nhận nhận hàng'}
                                         </button>
                                     )}
-                                    
+
                                     {/* Nút cho currentPhase = "Chưa có Proxy nhận" */}
                                     {currentPhase === 'Chưa có Proxy nhận' && (
                                         <button
@@ -633,13 +632,13 @@ const MyProxyRequests = () => {
                                 &times;
                             </button>
                         </div>
-                        
+
                         <div className="p-6">
                             {/* Thông tin proxy shopper */}
                             <div className="mb-6">
                                 <h4 className="font-semibold mb-3 flex items-center text-blue-800">
                                     <FiUser className="mr-2" />
-                                    Người đi chợ giùm
+                                    Người mua hộ
                                 </h4>
                                 <div className="bg-blue-50 rounded-lg p-4">
                                     <div>Tên: {selectedRequest.proxyShopperName}</div>
@@ -666,8 +665,8 @@ const MyProxyRequests = () => {
                                                     {/* Hình ảnh sản phẩm */}
                                                     {item.imageUrls && item.imageUrls.length > 0 && (
                                                         <div className="flex-shrink-0">
-                                                            <img 
-                                                                src={item.imageUrls[0]} 
+                                                            <img
+                                                                src={item.imageUrls[0]}
                                                                 alt={item.name}
                                                                 className="w-20 h-20 object-cover rounded-lg border"
                                                                 onError={(e) => {
@@ -676,20 +675,19 @@ const MyProxyRequests = () => {
                                                             />
                                                         </div>
                                                     )}
-                                                    
+
                                                     {/* Thông tin sản phẩm */}
                                                     <div className="flex-1">
                                                         <div className="flex justify-between items-start mb-2">
                                                             <h5 className="font-bold text-lg text-gray-800">{item.name}</h5>
-                                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                                                                item.isAvailable 
-                                                                    ? 'bg-green-100 text-green-800' 
+                                                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${item.isAvailable
+                                                                    ? 'bg-green-100 text-green-800'
                                                                     : 'bg-red-100 text-red-800'
-                                                            }`}>
+                                                                }`}>
                                                                 {item.isAvailable ? 'Còn hàng' : 'Hết hàng'}
                                                             </span>
                                                         </div>
-                                                        
+
                                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                                                             <div className="space-y-2">
                                                                 <div className="flex justify-between">
@@ -709,7 +707,7 @@ const MyProxyRequests = () => {
                                                                     </span>
                                                                 </div>
                                                             </div>
-                                                            
+
                                                             <div className="space-y-2">
                                                                 {item.storeName && (
                                                                     <div className="flex justify-between">
@@ -733,16 +731,16 @@ const MyProxyRequests = () => {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        
+
                                                         {/* Nhiều hình ảnh */}
                                                         {item.imageUrls && item.imageUrls.length > 1 && (
                                                             <div className="mt-3">
                                                                 <span className="text-sm text-gray-600 mb-2 block">Hình ảnh khác:</span>
                                                                 <div className="flex space-x-2 overflow-x-auto">
                                                                     {item.imageUrls.slice(1, 4).map((url, imgIdx) => (
-                                                                        <img 
+                                                                        <img
                                                                             key={imgIdx}
-                                                                            src={url} 
+                                                                            src={url}
                                                                             alt={`${item.name} ${imgIdx + 2}`}
                                                                             className="w-12 h-12 object-cover rounded border flex-shrink-0"
                                                                             onError={(e) => {
@@ -823,7 +821,7 @@ const MyProxyRequests = () => {
                                             {((selectedRequest.proposal?.totalAmount || selectedRequest.proposal?.totalProductPrice || 0) + (selectedRequest.proposal?.proxyFee || 0)).toLocaleString()} đ
                                         </span>
                                     </div>
-                                    
+
                                     {/* Thời gian đề xuất */}
                                     {selectedRequest.proposal?.createdAt && (
                                         <div className="pt-2 border-t border-green-200">
@@ -841,7 +839,7 @@ const MyProxyRequests = () => {
                             {/* Ghi chú */}
                             {selectedRequest.proposal?.note && (
                                 <div className="mb-6">
-                                    <h4 className="font-semibold mb-2">Ghi chú từ Người đi chợ giùm:</h4>
+                                    <h4 className="font-semibold mb-2">Ghi chú từ Người mua hộ:</h4>
                                     <div className="bg-gray-50 rounded-lg p-4">
                                         <p className="text-gray-700">{selectedRequest.proposal.note}</p>
                                     </div>
@@ -856,7 +854,7 @@ const MyProxyRequests = () => {
                                 >
                                     Đóng
                                 </button>
-                                
+
                                 {(selectedRequest.order?.status === 'Proposed' || selectedRequest.proposal?.orderStatus === 'Proposed') && (
                                     <>
                                         <button
@@ -905,7 +903,7 @@ const MyProxyRequests = () => {
                         <div className="border-b px-6 py-4">
                             <h3 className="text-lg font-bold text-red-800">Hủy yêu cầu #{selectedRequestForAction.id}</h3>
                         </div>
-                        
+
                         <div className="p-6">
                             <div className="mb-4">
                                 <p className="text-gray-700 mb-3">
@@ -963,7 +961,7 @@ const MyProxyRequests = () => {
                         <div className="border-b px-6 py-4">
                             <h3 className="text-lg font-bold text-orange-800">Từ chối đề xuất #{selectedRequestForAction.id}</h3>
                         </div>
-                        
+
                         <div className="p-6">
                             <div className="mb-4">
                                 <p className="text-gray-700 mb-3">
