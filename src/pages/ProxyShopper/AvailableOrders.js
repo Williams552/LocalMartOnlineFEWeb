@@ -251,18 +251,7 @@ const AvailableOrders = () => {
 
                                 {/* Action Buttons */}
                                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                                    <div className="flex items-center space-x-4">
-                                        <span className="text-sm text-gray-600">
-                                            ⚡ Phí dịch vụ dự kiến: <span className="font-medium">{formatCurrency(order.estimatedFee || order.totalAmount * 0.1)}</span>
-                                        </span>
-                                    </div>
                                     <div className="flex items-center space-x-3">
-                                        <Link
-                                            to={`/proxy-shopper/orders/${order.id}/detail`}
-                                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium"
-                                        >
-                                            Xem chi tiết
-                                        </Link>
                                         <button
                                             onClick={() => handleAcceptOrder(order.id)}
                                             disabled={acceptingOrder === order.id}
