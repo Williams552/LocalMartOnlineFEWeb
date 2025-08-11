@@ -45,12 +45,12 @@ const CreateOrder = () => {
         // Gọi API tìm kiếm sản phẩm cho proxy shopper với thông tin market
         const token = localStorage.getItem("token");
         let searchUrl = `http://localhost:5183/api/ProxyShopper/products/advanced-search?query=${encodeURIComponent(search)}`;
-        
+
         // Nếu có marketId trong request, thêm vào query để lọc sản phẩm theo chợ
         if (request?.marketId) {
             searchUrl += `&marketId=${request.marketId}`;
         }
-        
+
         const res = await fetch(searchUrl, {
             headers: {
                 "Authorization": token ? `Bearer ${token}` : undefined,
@@ -93,13 +93,13 @@ const CreateOrder = () => {
             // Bao gồm marketId nếu có trong request
             ...(request?.marketId && { marketId: request.marketId })
         };
-        
+
         console.log('Sending proposal with body:', body); // Debug log
-        
+
         // Sử dụng proxyOrderId từ request data thay vì id từ params
         const proposalId = request.proxyOrderId || id;
         console.log('Using proposalId:', proposalId); // Debug log
-        
+
         try {
             const res = await fetch(`http://localhost:5183/api/ProxyShopper/orders/${proposalId}/proposal`, {
                 method: "POST",
@@ -128,7 +128,7 @@ const CreateOrder = () => {
 
     if (loading) return <div className="p-8 text-center">Đang tải...</div>;
     if (!request) return <div className="p-8 text-center text-red-600">Không tìm thấy yêu cầu đơn hàng.</div>;
-    
+
     // Validation: Đảm bảo request có thông tin Market và proxyOrderId
     if (!request.marketId) {
         return (
@@ -139,7 +139,7 @@ const CreateOrder = () => {
                         Yêu cầu này không có thông tin chợ cụ thể. Đây có thể là dữ liệu cũ hoặc có lỗi xảy ra.
                         Vui lòng liên hệ hỗ trợ hoặc quay lại danh sách đơn hàng.
                     </p>
-                    <button 
+                    <button
                         onClick={() => window.history.back()}
                         className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
                     >
@@ -159,7 +159,7 @@ const CreateOrder = () => {
                         Yêu cầu này không có ProxyOrderId. Không thể tạo đề xuất.
                         Vui lòng liên hệ hỗ trợ hoặc quay lại danh sách đơn hàng.
                     </p>
-                    <button 
+                    <button
                         onClick={() => window.history.back()}
                         className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
                     >
@@ -175,7 +175,7 @@ const CreateOrder = () => {
             {/* Thông tin request khách hàng */}
             <div className="bg-white rounded-lg shadow p-6 mb-8">
                 <h2 className="text-xl font-bold mb-2 text-supply-primary flex items-center"><FiUser className="mr-2" /> Yêu cầu của khách hàng</h2>
-                
+
                 {/* Thông tin chợ */}
                 {request.marketName && (
                     <div className="bg-blue-50 rounded-lg p-3 mb-4">
@@ -290,11 +290,10 @@ const CreateOrder = () => {
                                     />
                                     <button
                                         type="button"
-                                        className={`px-3 py-1 rounded ${
-                                            product.inStock 
-                                                ? "bg-green-500 text-white hover:bg-green-600" 
+                                        className={`px-3 py-1 rounded ${product.inStock
+                                                ? "bg-green-500 text-white hover:bg-green-600"
                                                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                        }`}
+                                            }`}
                                         onClick={() => handleSelect(product, selected.find(p => p.id === product.id)?.quantity || 1)}
                                         disabled={!product.inStock}
                                     >
@@ -380,49 +379,49 @@ const CreateOrder = () => {
                 )}
             </div>
             {showProposalModal && (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
-            <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl" onClick={() => setShowProposalModal(false)}>&times;</button>
-            <h2 className="text-xl font-bold mb-4">Gửi đề xuất đơn hàng</h2>
-            <div className="mb-3">
-                <label className="block font-medium mb-1">Phí proxy (VNĐ)</label>
-                <input
-                    type="number"
-                    min={0}
-                    step={1000}
-                    className="w-full border rounded px-3 py-2"
-                    value={proxyFee}
-                    onChange={e => setProxyFee(e.target.value)}
-                    placeholder="Nhập phí proxy..."
-                />
-            </div>
-            <div className="mb-3">
-                <label className="block font-medium mb-1">Ghi chú</label>
-                <textarea
-                    className="w-full border rounded px-3 py-2"
-                    value={note}
-                    onChange={e => setNote(e.target.value)}
-                    placeholder="Ghi chú cho khách hàng (nếu có)..."
-                    rows={3}
-                />
-            </div>
-            <div className="flex justify-end gap-2 mt-4">
-                <button
-                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
-                    onClick={() => setShowProposalModal(false)}
-                    disabled={sending}
-                >Hủy</button>
-                <button
-                    className="px-4 py-2 bg-supply-primary text-white rounded font-semibold hover:bg-supply-primary/90 disabled:opacity-60"
-                    onClick={handleSendProposal}
-                    disabled={sending || proxyFee < 0}
-                >{sending ? "Đang gửi..." : "Gửi đề xuất"}</button>
-            </div>
-            {sendError && <div className="text-red-600 mt-2">{sendError}</div>}
-            {sendSuccess && <div className="text-green-600 mt-2">{sendSuccess}</div>}
-        </div>
-    </div>
-)}
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-30 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+                        <button className="absolute top-2 right-2 text-gray-400 hover:text-gray-700 text-2xl" onClick={() => setShowProposalModal(false)}>&times;</button>
+                        <h2 className="text-xl font-bold mb-4">Gửi đề xuất đơn hàng</h2>
+                        <div className="mb-3">
+                            <label className="block font-medium mb-1">Phí proxy (VNĐ)</label>
+                            <input
+                                type="number"
+                                min={0}
+                                step={1000}
+                                className="w-full border rounded px-3 py-2"
+                                value={proxyFee}
+                                onChange={e => setProxyFee(e.target.value)}
+                                placeholder="Nhập phí proxy..."
+                            />
+                        </div>
+                        <div className="mb-3">
+                            <label className="block font-medium mb-1">Ghi chú</label>
+                            <textarea
+                                className="w-full border rounded px-3 py-2"
+                                value={note}
+                                onChange={e => setNote(e.target.value)}
+                                placeholder="Ghi chú cho khách hàng (nếu có)..."
+                                rows={3}
+                            />
+                        </div>
+                        <div className="flex justify-end gap-2 mt-4">
+                            <button
+                                className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                                onClick={() => setShowProposalModal(false)}
+                                disabled={sending}
+                            >Hủy</button>
+                            <button
+                                className="px-4 py-2 bg-supply-primary text-white rounded font-semibold hover:bg-supply-primary/90 disabled:opacity-60"
+                                onClick={handleSendProposal}
+                                disabled={sending || proxyFee < 0}
+                            >{sending ? "Đang gửi..." : "Gửi đề xuất"}</button>
+                        </div>
+                        {sendError && <div className="text-red-600 mt-2">{sendError}</div>}
+                        {sendSuccess && <div className="text-green-600 mt-2">{sendSuccess}</div>}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
