@@ -123,8 +123,14 @@ const MyProxyRequests = () => {
         setActionError("");
         setActionSuccess("");
         try {
-            // Sử dụng orderId từ proposal hoặc requestId
-            const orderId = selectedRequestForAction.proposal?.orderId || selectedRequestForAction.id;
+            // Sử dụng orderId thật từ response API mới
+            const orderId = selectedRequestForAction.orderId || selectedRequestForAction.proposal?.orderId;
+            
+            if (!orderId) {
+                throw new Error("Không tìm thấy orderId để từ chối đề xuất");
+            }
+            
+            console.log("Rejecting proposal with orderId:", orderId);
             await proxyRequestService.rejectProposal(orderId, rejectReason);
             setActionSuccess("Đã từ chối đề xuất! Proxy shopper sẽ lên đơn lại.");
             await fetchMyRequests(); // Refresh data
@@ -192,6 +198,9 @@ const MyProxyRequests = () => {
                         const orderStatus = request.orderStatus; // Order status từ API: Draft, Proposed, Paid, InProgress, Completed
                         const currentPhase = request.currentPhase; // Current phase từ API
                         const hasOrder = request.hasOrder; // Có order hay không
+                        const orderId = request.orderId; // Order ID từ API
+                        
+                        console.log(`Request ${request.id}: orderId=${orderId}, orderStatus=${orderStatus}, currentPhase=${currentPhase}`);
 
                         return (
                             <div key={request.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
@@ -552,7 +561,7 @@ const MyProxyRequests = () => {
                                                 Từ chối & Yêu cầu lên lại
                                             </button>
                                             <button
-                                                onClick={() => handleApproveProposal(request.orderId || request.id)}
+                                                onClick={() => handleApproveProposal(request.orderId || request.OrderId)}
                                                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 flex items-center gap-1"
                                                 disabled={actionLoading}
                                             >
@@ -565,7 +574,7 @@ const MyProxyRequests = () => {
                                     {/* Nút cho currentPhase = "Đã thanh toán" hoặc "Đang mua hàng" */}
                                     {(currentPhase === 'Đã thanh toán' || currentPhase === 'Đang mua hàng') && (
                                         <button
-                                            onClick={() => handleConfirmDelivery(request.orderId || request.id)}
+                                            onClick={() => handleConfirmDelivery(request.orderId || request.OrderId)}
                                             className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 flex items-center gap-1"
                                             disabled={actionLoading}
                                         >
