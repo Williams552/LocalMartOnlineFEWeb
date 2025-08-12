@@ -533,7 +533,6 @@ const SupportManagement = () => {
                     <div>
                         {/* Request Header */}
                         <div style={{ marginBottom: '24px' }}>
-                            <h3>ID: {selectedRequest.id}</h3>
                             <Space>
                                 <Tag color={getColorByValue(selectedRequest.status, 'status')}>
                                     {getLabelByValue(selectedRequest.status, 'status')}

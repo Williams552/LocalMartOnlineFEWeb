@@ -69,20 +69,20 @@ const ReportManagement = () => {
         try {
             setLoading(true);
             console.log('🔍 Fetching reports with filters:', { page, pageSize, ...filters });
-            
+
             const result = await reportService.getReports({
                 page,
                 pageSize,
                 ...filters
             });
-            
+
             console.log('📋 Service result:', result);
-            
+
             if (result.success) {
                 // Handle different response formats
                 const responseData = result.data;
                 console.log('📋 Response data:', responseData);
-                
+
                 // Check for direct reports array in response data
                 if (responseData && responseData.reports && Array.isArray(responseData.reports)) {
                     console.log('✅ Found reports in responseData.reports:', responseData.reports.length);
@@ -102,7 +102,7 @@ const ReportManagement = () => {
                         pageSize,
                         total: responseData.TotalCount || responseData.Reports.length,
                     });
-                } 
+                }
                 // Check if responseData is directly an array
                 else if (Array.isArray(responseData)) {
                     console.log('✅ Found reports as direct array:', responseData.length);
@@ -112,7 +112,7 @@ const ReportManagement = () => {
                         pageSize,
                         total: responseData.length,
                     });
-                } 
+                }
                 // Check if result itself has reports array (direct API response)
                 else if (result.reports && Array.isArray(result.reports)) {
                     console.log('✅ Found reports in result.reports:', result.reports.length);
@@ -216,11 +216,11 @@ const ReportManagement = () => {
     const handleStatusUpdate = async (reportId, status) => {
         try {
             setUpdating(true);
-            const result = await reportService.updateReportStatus(reportId, { 
+            const result = await reportService.updateReportStatus(reportId, {
                 status,
                 adminResponse: adminResponse.trim() || null
             });
-            
+
             if (result.success) {
                 message.success(result.message || 'Cập nhật trạng thái thành công');
                 fetchReports();
@@ -271,19 +271,16 @@ const ReportManagement = () => {
 
     const columns = [
         {
-            title: 'ID & Loại',
-            key: 'idAndType',
-            width: 150,
+            title: 'Loại',
+            key: 'type',
+            width: 120,
             render: (_, record) => (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {getTargetTypeIcon(record.TargetType || record.targetType)}
                     <div>
                         <div style={{ fontWeight: 'bold' }}>
-                            #{(record.Id || record.id)?.toString().slice(-8) || 'N/A'}
-                        </div>
-                        <Text type="secondary" style={{ fontSize: 12 }}>
                             {reportService.getTargetTypeLabel(record.TargetType || record.targetType)}
-                        </Text>
+                        </div>
                     </div>
                 </div>
             ),
@@ -311,9 +308,6 @@ const ReportManagement = () => {
                     <div style={{ fontWeight: 'bold' }}>
                         {record.ReporterName || record.reporterName || 'N/A'}
                     </div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                        {record.ReporterId || record.reporterId}
-                    </Text>
                 </div>
             ),
         },

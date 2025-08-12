@@ -1,5 +1,6 @@
 import React from 'react';
 import { FaUser, FaStore, FaBox, FaFileAlt, FaClock, FaIdCard } from 'react-icons/fa';
+import reportService from '../../services/reportService';
 
 const ReportDetails = ({ report }) => {
     if (!report) return null;
@@ -35,10 +36,6 @@ const ReportDetails = ({ report }) => {
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="text-sm font-medium text-gray-600">ID báo cáo:</label>
-                        <p className="font-mono text-sm">{report.Id || report.id}</p>
-                    </div>
-                    <div>
                         <label className="text-sm font-medium text-gray-600">Tiêu đề:</label>
                         <p>{report.Title || report.title || 'N/A'}</p>
                     </div>
@@ -48,11 +45,10 @@ const ReportDetails = ({ report }) => {
                     </div>
                     <div>
                         <label className="text-sm font-medium text-gray-600">Trạng thái:</label>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            (report.Status || report.status) === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${(report.Status || report.status) === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
                             (report.Status || report.status) === 'Resolved' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'
-                        }`}>
+                                'bg-red-100 text-red-800'
+                            }`}>
                             {report.Status || report.status}
                         </span>
                     </div>
@@ -81,10 +77,6 @@ const ReportDetails = ({ report }) => {
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                     <div>
-                        <label className="text-sm font-medium text-gray-600">ID:</label>
-                        <p className="font-mono text-sm">{report.ReporterId || report.reporterId}</p>
-                    </div>
-                    <div>
                         <label className="text-sm font-medium text-gray-600">Tên:</label>
                         <p>{report.ReporterName || report.reporterName || 'N/A'}</p>
                     </div>
@@ -104,17 +96,13 @@ const ReportDetails = ({ report }) => {
                 <div className="grid grid-cols-2 gap-4">
                     <div>
                         <label className="text-sm font-medium text-gray-600">Loại:</label>
-                        <p>{report.TargetType || report.targetType}</p>
-                    </div>
-                    <div>
-                        <label className="text-sm font-medium text-gray-600">ID:</label>
-                        <p className="font-mono text-sm">{report.TargetId || report.targetId}</p>
+                        <p>{reportService.getTargetTypeLabel(report.TargetType || report.targetType)}</p>
                     </div>
                     <div>
                         <label className="text-sm font-medium text-gray-600">Tên:</label>
                         <p>{report.TargetName || report.targetName}</p>
                     </div>
-                    
+
                     {/* Product specific fields */}
                     {(report.TargetType || report.targetType) === 'Product' && (
                         <>
@@ -140,9 +128,9 @@ const ReportDetails = ({ report }) => {
                         <label className="text-sm font-medium text-gray-600 block mb-2">Hình ảnh:</label>
                         <div className="flex flex-wrap gap-2">
                             {(report.TargetImages || report.targetImages).map((image, index) => (
-                                <img 
+                                <img
                                     key={index}
-                                    src={image} 
+                                    src={image}
                                     alt={`Product ${index + 1}`}
                                     className="w-20 h-20 object-cover rounded-lg border"
                                     onError={(e) => {
@@ -161,7 +149,7 @@ const ReportDetails = ({ report }) => {
                     <h3 className="text-lg font-semibold mb-4">Bằng chứng</h3>
                     <div>
                         <label className="text-sm font-medium text-gray-600 block mb-2">Hình ảnh bằng chứng:</label>
-                        <img 
+                        <img
                             src={report.EvidenceImage || report.evidenceImage}
                             alt="Evidence"
                             className="max-w-md h-auto rounded-lg border"

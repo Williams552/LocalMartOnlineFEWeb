@@ -34,9 +34,6 @@ const PolicyDetailModal = ({ visible, onCancel, policy }) => {
                     size="small"
                     style={{ marginBottom: 24 }}
                 >
-                    <Descriptions.Item label="ID" span={1}>
-                        {policy.id || 'N/A'}
-                    </Descriptions.Item>
                     <Descriptions.Item label="Trạng thái" span={1}>
                         <Tag color={policy.isActive ? 'success' : 'error'}>
                             {policy.isActive ? 'Hoạt động' : 'Không hoạt động'}
@@ -59,8 +56,8 @@ const PolicyDetailModal = ({ visible, onCancel, policy }) => {
 
                 {/* Content */}
                 <Title level={5}>Nội dung chi tiết</Title>
-                <div 
-                    style={{ 
+                <div
+                    style={{
                         border: '1px solid #d9d9d9',
                         borderRadius: '6px',
                         padding: '16px',
