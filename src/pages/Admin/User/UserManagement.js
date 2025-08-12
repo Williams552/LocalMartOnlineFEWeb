@@ -109,14 +109,6 @@ const UserManagement = () => {
         loadTotalStatistics();
     }, []);
 
-    // Filter users based on status (client-side since API doesn't support status filter)
-    const filteredUsers = users.filter(user => {
-        if (filterStatus === 'all') return true;
-        if (filterStatus === 'active') return user.status === 'Active' || user.isActive === true;
-        if (filterStatus === 'blocked') return user.status === 'Blocked' || user.isActive === false;
-        return true;
-    });
-
     const loadStatistics = async () => {
         try {
             const response = await userService.getUserStatistics();
@@ -128,14 +120,15 @@ const UserManagement = () => {
         }
     };
 
-    const loadUsers = async ({ pageNumber = 1, pageSize = 10, search = '', role = 'all' } = {}) => {
+    const loadUsers = async ({ pageNumber = 1, pageSize = 10, search = '', role = 'all', status = 'all' } = {}) => {
         setLoading(true);
         try {
-            console.log('📥 Gọi API với:', { pageNumber, pageSize, search, role });
+            console.log('📥 Gọi API với:', { pageNumber, pageSize, search, role, status });
 
             const params = { pageNumber, pageSize };
             if (search) params.search = search;
             if (role !== 'all') params.role = role;
+            if (status !== 'all') params.status = status;
 
             const response = await userService.getAllUsers(params);
 
@@ -167,7 +160,8 @@ const UserManagement = () => {
             pageNumber: 1,
             pageSize: paginationConfig.pageSize,
             search: value,
-            role: filterRole
+            role: filterRole,
+            status: filterStatus
         });
     };
 
@@ -178,19 +172,20 @@ const UserManagement = () => {
             pageNumber: 1,
             pageSize: paginationConfig.pageSize,
             search: searchText,
-            role: value
+            role: value,
+            status: filterStatus
         });
     };
 
-    // Handle status filter (client-side since API doesn't support status filter)
+    // Handle status filter (now server-side)
     const handleStatusFilter = (value) => {
         setFilterStatus(value);
-        // Reload users and then filter client-side
         loadUsers({
             pageNumber: 1,
             pageSize: paginationConfig.pageSize,
             search: searchText,
-            role: filterRole
+            role: filterRole,
+            status: value
         });
     };
 
@@ -200,7 +195,8 @@ const UserManagement = () => {
             pageNumber: pagination.current,
             pageSize: pagination.pageSize,
             search: searchText,
-            role: filterRole
+            role: filterRole,
+            status: filterStatus
         });
     };
 
@@ -208,7 +204,13 @@ const UserManagement = () => {
         try {
             await userService.deleteUser(id);
             message.success('Xóa người dùng thành công');
-            loadUsers();
+            loadUsers({
+                pageNumber: paginationConfig.current,
+                pageSize: paginationConfig.pageSize,
+                search: searchText,
+                role: filterRole,
+                status: filterStatus
+            });
             loadStatistics();
         } catch (error) {
             message.error('Không thể xóa người dùng');
@@ -219,7 +221,13 @@ const UserManagement = () => {
         try {
             await userService.toggleUserAccount(id);
             message.success('Cập nhật trạng thái thành công');
-            loadUsers();
+            loadUsers({
+                pageNumber: paginationConfig.current,
+                pageSize: paginationConfig.pageSize,
+                search: searchText,
+                role: filterRole,
+                status: filterStatus
+            });
             loadStatistics();
         } catch (error) {
             message.error('Không thể cập nhật trạng thái');
@@ -254,7 +262,13 @@ const UserManagement = () => {
             await userService.updateUser(selectedUser.id, values);
             message.success('Cập nhật người dùng thành công');
             setEditModalVisible(false);
-            loadUsers();
+            loadUsers({
+                pageNumber: paginationConfig.current,
+                pageSize: paginationConfig.pageSize,
+                search: searchText,
+                role: filterRole,
+                status: filterStatus
+            });
             loadStatistics();
         } catch (error) {
             message.error('Cập nhật người dùng thất bại');
@@ -266,7 +280,13 @@ const UserManagement = () => {
             await userService.createUser(values);
             message.success('Tạo người dùng thành công');
             setCreateModalVisible(false);
-            loadUsers();
+            loadUsers({
+                pageNumber: 1, // Quay về trang đầu khi tạo user mới
+                pageSize: paginationConfig.pageSize,
+                search: searchText,
+                role: filterRole,
+                status: filterStatus
+            });
             loadStatistics();
         } catch (error) {
             message.error('Tạo người dùng thất bại');
@@ -477,7 +497,16 @@ const UserManagement = () => {
                     <Space>
                         <Button
                             icon={<ReloadOutlined />}
-                            onClick={() => { loadUsers(); loadStatistics(); }}
+                            onClick={() => {
+                                loadUsers({
+                                    pageNumber: paginationConfig.current,
+                                    pageSize: paginationConfig.pageSize,
+                                    search: searchText,
+                                    role: filterRole,
+                                    status: filterStatus
+                                });
+                                loadStatistics();
+                            }}
                         >
                             Làm mới
                         </Button>
@@ -492,7 +521,7 @@ const UserManagement = () => {
                 </Space>
 
                 <Table
-                    dataSource={filteredUsers} // Sử dụng users thay vì filteredUsers để pagination hoạt động đúng
+                    dataSource={users} // Sử dụng users vì đã có server-side filtering
                     columns={columns}
                     rowKey="id"
                     loading={loading}
@@ -511,7 +540,8 @@ const UserManagement = () => {
                                 pageNumber: page,
                                 pageSize,
                                 search: searchText,
-                                role: filterRole
+                                role: filterRole,
+                                status: filterStatus
                             });
                         }
                     }}

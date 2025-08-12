@@ -59,6 +59,7 @@ const { RangePicker } = DatePicker;
 
 const OrderManagement = ({ defaultStatus = null }) => {
     const [orders, setOrders] = useState([]);
+    const [allOrders, setAllOrders] = useState([]); // Store all orders for search
     const [loading, setLoading] = useState(false);
     const [statistics, setStatistics] = useState({
         totalOrders: 0,
@@ -92,25 +93,21 @@ const OrderManagement = ({ defaultStatus = null }) => {
     }, []);
 
     useEffect(() => {
-        if (orders.length > 0) {
-            const stats = calculateStatisticsFromOrders(orders);
-            console.log('📊 [OrderManagement] Recalculated stats from orders:', stats);
+        if (allOrders.length > 0) {
+            const stats = calculateStatisticsFromOrders(allOrders);
+            console.log('📊 [OrderManagement] Recalculated stats from all orders:', stats);
             setStatistics(stats);
         }
-    }, [orders]); // Chạy khi orders thay đổi
+    }, [allOrders]); // Chạy khi allOrders thay đổi, không phụ thuộc vào orders đã filter
 
     useEffect(() => {
-        // Reload when filters change
+        // Reload when filters change - now uses frontend filtering
         const timer = setTimeout(() => {
-            if (filters.search || filters.status || filters.dateRange) {
-                handleFilter();
-            } else {
-                loadOrders();
-            }
-        }, 500);
+            handleFilter();
+        }, 300); // Reduced delay for better UX
 
         return () => clearTimeout(timer);
-    }, [filters]);
+    }, [filters.search, filters.status, filters.dateRange]);
 
     const loadOrders = async () => {
         setLoading(true);
@@ -120,8 +117,9 @@ const OrderManagement = ({ defaultStatus = null }) => {
 
             if (response.success) {
                 const data = response.data;
-                const allOrders = data.items || data || [];
-                setOrders(allOrders);
+                const allOrdersData = data.items || data || [];
+                setAllOrders(allOrdersData); // Store all orders
+                setOrders(allOrdersData); // Initially show all orders
             } else {
                 message.error(response.message || 'Lỗi khi tải danh sách đơn hàng');
             }
@@ -140,7 +138,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
 
     const calculateStatisticsFromOrders = (ordersList) => {
         const paidOrders = ordersList.filter(o => ['Paid', 'Completed'].includes(o.status));
-        
+
         // Tính doanh thu theo thời gian
         const today = new Date();
         const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -178,37 +176,41 @@ const OrderManagement = ({ defaultStatus = null }) => {
     };
 
     const handleFilter = async () => {
-        if (!filters.search && !filters.status && !filters.dateRange) {
-            loadOrders();
-            return;
+        // Frontend search instead of API call
+        let filteredOrders = [...allOrders];
+
+        // Search by text
+        if (filters.search) {
+            const searchLower = filters.search.toLowerCase();
+            filteredOrders = filteredOrders.filter(order =>
+                order.id?.toLowerCase().includes(searchLower) ||
+                order.buyerName?.toLowerCase().includes(searchLower) ||
+                order.buyerPhone?.includes(filters.search) ||
+                order.sellerName?.toLowerCase().includes(searchLower) ||
+                order.storeName?.toLowerCase().includes(searchLower) ||
+                (order.items || []).some(item =>
+                    item.productName?.toLowerCase().includes(searchLower)
+                )
+            );
         }
 
-        setLoading(true);
-        try {
-            const filterData = {
-                page: 1,
-                pageSize: 10000, // Lấy tất cả kết quả filter
-                status: filters.status || undefined,
-                search: filters.search || undefined,
-                fromDate: filters.dateRange?.[0]?.format('YYYY-MM-DD') || undefined,
-                toDate: filters.dateRange?.[1]?.format('YYYY-MM-DD') || undefined
-            };
-
-            const response = await orderService.filterAllOrders(filterData);
-
-            if (response.success) {
-                const data = response.data;
-                const filteredOrders = data.items || data || [];
-                setOrders(filteredOrders);
-            } else {
-                message.error(response.message || 'Lỗi khi lọc đơn hàng');
-            }
-        } catch (error) {
-            console.error('Error filtering orders:', error);
-            message.error('Không thể lọc đơn hàng');
-        } finally {
-            setLoading(false);
+        // Filter by status
+        if (filters.status) {
+            filteredOrders = filteredOrders.filter(order => order.status === filters.status);
         }
+
+        // Filter by date range
+        if (filters.dateRange && filters.dateRange[0] && filters.dateRange[1]) {
+            const startDate = filters.dateRange[0].startOf('day').toDate();
+            const endDate = filters.dateRange[1].endOf('day').toDate();
+
+            filteredOrders = filteredOrders.filter(order => {
+                const orderDate = new Date(order.createdAt);
+                return orderDate >= startDate && orderDate <= endDate;
+            });
+        }
+
+        setOrders(filteredOrders);
     };
 
     const handleCompleteOrder = async (orderId) => {
@@ -230,7 +232,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
                         }
                     });
                 }
-                
+
                 message.success('Đơn hàng đã được hoàn thành');
                 loadOrders(); // Statistics sẽ tự update qua useEffect
                 if (selectedOrder?.id === orderId) {
@@ -512,10 +514,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
                     <Avatar icon={<ShopOutlined />} size="small" />
                     <div>
                         <div style={{ fontSize: '12px', fontWeight: 'bold' }}>
-                            {record.storeName ? `Cửa hàng: ${record.storeName}` : ''}
-                        </div>
-                        <div style={{ fontSize: '12px', color: '#666' }}>
-                            ID: {record.sellerId?.slice(-8) || 'N/A'}
+                            {record.storeName ? `Cửa hàng: ${record.storeName}` : record.sellerName || 'Không xác định'}
                         </div>
                     </div>
                 </Space>
@@ -687,7 +686,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
                             icon={<FilterOutlined />}
                             onClick={() => {
                                 setFilters({ search: '', status: '', dateRange: null });
-                                loadOrders();
+                                setOrders(allOrders); // Show all orders when clearing filters
                             }}
                             style={{ width: '100%' }}
                         >
@@ -720,7 +719,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
             </Card>
 
             {/* Table */}
-            <Card 
+            <Card
                 title={
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <span>Danh sách tất cả đơn hàng</span>
@@ -803,9 +802,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                                         <div>{selectedOrder.sellerName || 'Không xác định'}</div>
                                         <div style={{ fontSize: '12px', color: '#666' }}>
                                             {selectedOrder.storeName || ''}
-                                        </div>
-                                        <div style={{ fontSize: '12px', color: '#666' }}>
-                                            ID: {selectedOrder.sellerId}
                                         </div>
                                     </div>
                                 </Space>
@@ -980,24 +976,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                                     )}
                                 </Space>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Email">
-                                <Space>
-                                    {selectedOrder.buyerEmail || 'Chưa có email'}
-                                    {selectedOrder.buyerEmail && (
-                                        <Button
-                                            type="link"
-                                            size="small"
-                                            icon={<MailOutlined />}
-                                            onClick={() => window.open(`mailto:${selectedOrder.buyerEmail}`)}
-                                        >
-                                            Gửi mail
-                                        </Button>
-                                    )}
-                                </Space>
-                            </Descriptions.Item>
-                            <Descriptions.Item label="Địa chỉ giao hàng">
-                                {selectedOrder.deliveryAddress || 'Chưa có thông tin'}
-                            </Descriptions.Item>
                         </Descriptions>
 
                         <div style={{ marginTop: 16 }}>
@@ -1011,15 +989,6 @@ const OrderManagement = ({ defaultStatus = null }) => {
                                     }
                                 }}>
                                     Gọi điện
-                                </Button>
-                                <Button icon={<MailOutlined />} onClick={() => {
-                                    if (selectedOrder.buyerEmail) {
-                                        window.open(`mailto:${selectedOrder.buyerEmail}?subject=Về đơn hàng ${selectedOrder.id?.slice(-8)}`);
-                                    } else {
-                                        message.warning('Khách hàng chưa cung cấp email');
-                                    }
-                                }}>
-                                    Gửi email
                                 </Button>
                                 <Button onClick={() => {
                                     navigator.clipboard.writeText(selectedOrder.buyerPhone || '');

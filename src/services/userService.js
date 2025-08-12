@@ -31,6 +31,9 @@ class UserService {
             if (params.role && params.role !== 'all') {
                 queryParams.role = params.role;
             }
+            if (params.status && params.status !== 'all') {
+                queryParams.status = params.status;
+            }
             if (params.sortField) {
                 queryParams.sortField = params.sortField;
             }
