@@ -69,8 +69,8 @@ const SellerDashboard = () => {
 
         } catch (error) {
             console.error('❌ Error loading dashboard:', error);
-            setError('Không thể tải dữ liệu dashboard');
-            toast.error('Không thể tải dữ liệu dashboard');
+            setError('Không thể tải dữ liệu quản lý');
+            toast.error('Không thể tải dữ liệu quản lý');
 
             // Use fallback data
             setStats(sellerDashboardService.getMockStats());

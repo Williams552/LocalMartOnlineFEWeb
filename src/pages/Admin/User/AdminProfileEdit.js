@@ -53,15 +53,15 @@ const AdminProfileEdit = () => {
                             'Authorization': `Bearer ${authService.getToken()}`
                         }
                     });
-                    
+
                     if (response.ok) {
                         const result = await response.json();
                         if (result.success && result.data) {
                             const userData = result.data;
                             console.log('AdminProfileEdit - API response:', userData);
-                            
+
                             setProfileData(userData);
-                            
+
                             // Set form values with API data
                             form.setFieldsValue({
                                 username: userData.username || '',
@@ -78,7 +78,7 @@ const AdminProfileEdit = () => {
                     console.error('API call failed in Edit, using fallback:', apiError);
                 }
             }
-            
+
             // Fallback to user object
             form.setFieldsValue({
                 username: user?.username || '',
@@ -134,7 +134,7 @@ const AdminProfileEdit = () => {
                 const result = await response.json();
                 if (result.success) {
                     setSuccess("Cập nhật thông tin thành công!");
-                    
+
                     // Reload user data from API to ensure we have the latest info
                     try {
                         const getResponse = await fetch(`${API_URL}/api/user/${userId}`, {
@@ -144,7 +144,7 @@ const AdminProfileEdit = () => {
                                 'Authorization': `Bearer ${authService.getToken()}`
                             }
                         });
-                        
+
                         if (getResponse.ok) {
                             const getResult = await getResponse.json();
                             if (getResult.success && getResult.data) {
@@ -156,7 +156,7 @@ const AdminProfileEdit = () => {
                     } catch (refreshError) {
                         console.error('Error refreshing user data:', refreshError);
                     }
-                    
+
                     setTimeout(() => {
                         navigate('/admin/profile');
                     }, 1500);
@@ -270,7 +270,7 @@ const AdminProfileEdit = () => {
                                     >
                                         <Input
                                             prefix={<MailOutlined />}
-                                            placeholder="Email"
+                                            placeholder="Nhập địa chỉ email"
                                         />
                                     </Form.Item>
                                 </Col>
@@ -340,7 +340,7 @@ const AdminProfileEdit = () => {
 
                             {/* Action Buttons */}
                             <div className="flex justify-end space-x-4 pt-4">
-                                <Button 
+                                <Button
                                     onClick={() => navigate('/admin/profile')}
                                     size="large"
                                 >
@@ -376,7 +376,7 @@ const AdminProfileEdit = () => {
                                 showIcon
                                 size="small"
                             />
-                            
+
                             <div className="space-y-2 text-gray-600">
                                 <div>• Email sẽ được sử dụng để khôi phục tài khoản</div>
                                 <div>• Số điện thoại dùng cho xác thực 2 lớp</div>

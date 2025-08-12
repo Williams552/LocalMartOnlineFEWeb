@@ -82,7 +82,7 @@ const QuickActionsPage = () => {
                                     className="flex items-center space-x-2 bg-supply-primary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
                                 >
                                     <FaTachometerAlt />
-                                    <span>Dashboard</span>
+                                    <span>Quản lý</span>
                                 </Link>
                             </div>
                         </div>

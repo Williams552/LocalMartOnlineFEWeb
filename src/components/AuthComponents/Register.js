@@ -200,7 +200,7 @@ const Register = () => {
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">Địa chỉ email</label>
                                     <input
                                         type="email"
                                         name="email"

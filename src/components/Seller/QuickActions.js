@@ -192,7 +192,7 @@ const QuickActions = ({ showNotification = true }) => {
                         className="flex items-center space-x-2 text-supply-primary hover:text-green-700 transition"
                     >
                         <FaTachometerAlt />
-                        <span className="text-sm">Dashboard</span>
+                        <span className="text-sm">Quản lý</span>
                     </Link>
                 </div>
 

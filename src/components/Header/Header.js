@@ -511,8 +511,8 @@ const Header = () => {
                                                         <h4 className="font-medium mb-2">🆕 Cơ chế mua hộ mới</h4>
                                                         <div className="text-sm space-y-1">
                                                             <p>• <strong>Bước 1:</strong> Bạn phải chọn chợ cụ thể trước khi tạo yêu cầu</p>
-                                                            <p>• <strong>Bước 2:</strong> Hệ thống sẽ gửi đến các proxy shopper đã đăng ký tại chợ đó</p>
-                                                            <p>• <strong>Bước 3:</strong> Proxy hiểu rõ về chợ sẽ mua đúng sản phẩm bạn yêu cầu</p>
+                                                            <p>• <strong>Bước 2:</strong> Hệ thống sẽ gửi đến các người mua hộ đã đăng ký tại chợ đó</p>
+                                                            <p>• <strong>Bước 3:</strong> Người mua hộ hiểu rõ về chợ sẽ mua đúng sản phẩm bạn yêu cầu</p>
                                                             <p className="mt-2 font-medium text-blue-800">
                                                                 ✨ Điều này đảm bảo chất lượng dịch vụ tốt hơn!
                                                             </p>
@@ -545,7 +545,7 @@ const Header = () => {
                                                 </select>
                                                 {!selectedStoreId && (
                                                     <p className="text-xs text-red-600 mt-1">
-                                                        ⚠️ Bắt buộc phải chọn chợ để gửi yêu cầu đến proxy shopper phù hợp
+                                                        ⚠️ Bắt buộc phải chọn chợ để gửi yêu cầu đến người mua hộ phù hợp
                                                     </p>
                                                 )}
                                             </div>
@@ -753,7 +753,7 @@ const Header = () => {
                                                 <p className="text-sm text-gray-600">
                                                     {user?.role === 'Seller' ? 'Người bán' :
                                                         user?.role === 'Admin' ? 'Quản trị viên' :
-                                                            user?.role === 'Proxy Shopper' ? 'Proxy Shopper' : 'Khách hàng'}
+                                                            user?.role === 'Proxy Shopper' ? 'Người mua hộ' : 'Khách hàng'}
                                                 </p>
                                                 <p className="text-xs text-gray-500">{user?.email}</p>
                                             </div>
@@ -809,7 +809,7 @@ const Header = () => {
                                                         </div>
                                                         <Link to="/seller/dashboard" className="flex items-center space-x-3 px-4 py-2 hover:bg-green-50 text-sm text-supply-primary">
                                                             <FaStore size={16} />
-                                                            <span>Dashboard</span>
+                                                            <span>Quản lý</span>
                                                         </Link>
                                                         <Link to="/seller/products" className="flex items-center space-x-3 px-4 py-2 hover:bg-green-50 text-sm">
                                                             <FiBox size={16} />
@@ -835,7 +835,7 @@ const Header = () => {
                                                         </div>
                                                         <Link to="/admin" className="flex items-center space-x-3 px-4 py-2 hover:bg-blue-50 text-sm text-blue-600">
                                                             <FaStore size={16} />
-                                                            <span>Admin Dashboard</span>
+                                                            <span>Quản lý Admin</span>
                                                         </Link>
                                                     </>
                                                 )}
@@ -845,11 +845,11 @@ const Header = () => {
                                                     <>
                                                         <div className="border-t my-2"></div>
                                                         <div className="px-4 py-2 text-xs text-gray-500 font-semibold uppercase">
-                                                            Proxy Shopper
+                                                            Người mua hộ
                                                         </div>
                                                         <Link to="/proxy-shopper/dashboard" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm text-purple-600">
                                                             <FiBox size={16} />
-                                                            <span>Dashboard</span>
+                                                            <span>Quản lý</span>
                                                         </Link>
                                                         <Link to="/proxy-shopper/available-orders" className="flex items-center space-x-3 px-4 py-2 hover:bg-purple-50 text-sm">
                                                             <FiPackage size={16} />
@@ -934,7 +934,7 @@ const Header = () => {
                         </Link>
                         <Link to="/faq" className="hover:text-supply-primary transition flex items-center space-x-1">
                             <span>❓</span>
-                            <span>FAQ</span>
+                            <span>Câu hỏi thường gặp</span>
                         </Link>
                     </nav>
                 </div>
