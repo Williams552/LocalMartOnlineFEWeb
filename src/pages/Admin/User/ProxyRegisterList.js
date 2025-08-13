@@ -180,7 +180,7 @@ const ProxyRegisterList = () => {
     { title: 'Email', dataIndex: 'email', key: 'email' },
     { title: 'Số điện thoại', dataIndex: 'phoneNumber', key: 'phoneNumber' },
     { title: 'Chợ đăng ký', dataIndex: 'marketName', key: 'marketName' },
-    { title: 'Khu vực hoạt động', dataIndex: 'operatingArea', key: 'operatingArea' },
+    // { title: 'Khu vực hoạt động', dataIndex: 'operatingArea', key: 'operatingArea' },
     {
       title: 'Phương tiện',
       dataIndex: 'transportMethod',
@@ -225,7 +225,7 @@ const ProxyRegisterList = () => {
 
   return (
     <div>
-      <h2>Danh sách đăng ký proxy shopper</h2>
+      <h2>Danh sách đăng ký người đi chợ</h2>
       <Table rowKey="id" columns={columns} dataSource={data} loading={loading} />
       {/* Modal duyệt */}
       <Modal
