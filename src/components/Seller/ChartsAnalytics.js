@@ -1,7 +1,7 @@
 // Charts & Visual Analytics Component
 import React, { useState, useEffect } from 'react';
 import {
-    FaChartLine, FaChartBar, FaCalendarAlt, FaArrowUp, FaArrowDown,
+    FaChartLine, FaCalendarAlt, FaArrowUp, FaArrowDown,
     FaEye, FaShoppingCart, FaStar, FaBoxes, FaTrophy, FaPercentage
 } from 'react-icons/fa';
 import analyticsService from '../../services/analyticsService';
@@ -11,9 +11,7 @@ const ChartsAnalytics = () => {
     const [revenue, setRevenue] = useState(null);
     const [orders, setOrders] = useState(null);
     const [products, setProducts] = useState([]);
-    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [activeChart, setActiveChart] = useState('revenue');
 
     const periods = [
         { value: '7d', label: '7 ngày qua', days: 7 },
@@ -28,10 +26,9 @@ const ChartsAnalytics = () => {
     const fetchAnalytics = async () => {
         setLoading(true);
         try {
-            const [revenueRes, ordersRes, categoriesRes, productsRes] = await Promise.all([
+            const [revenueRes, ordersRes, productsRes] = await Promise.all([
                 analyticsService.getRevenueAnalytics(selectedPeriod),
                 analyticsService.getOrderAnalytics(selectedPeriod),
-                analyticsService.getCategoryAnalytics(selectedPeriod),
                 analyticsService.getProductPerformance(selectedPeriod)
             ]);
             setRevenue(revenueRes.summary || revenueRes);
@@ -39,7 +36,6 @@ const ChartsAnalytics = () => {
             console.log('orders full response:', ordersRes);
             console.log('orders final data:', ordersRes.summary || ordersRes);
             setProducts(productsRes?.data ?? []);
-            setCategories(categoriesRes?.data ?? []);
         } catch (error) {
             console.error('Error fetching analytics:', error);
         } finally {
@@ -166,51 +162,6 @@ const ChartsAnalytics = () => {
         );
     };
 
-    const SimpleBarChart = ({ data, height = 200 }) => {
-        if (!data || data.length === 0) return null;
-
-        const maxValue = Math.max(...data.map(item => item.revenue));
-
-        return (
-            <div className="space-y-3">
-                {data.slice(0, 6).map((item, index) => {
-                    const percentage = (item.revenue / maxValue) * 100;
-                    return (
-                        <div key={index} className="flex items-center space-x-3">
-                            <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }}></div>
-                            <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-center mb-1">
-                                    <span className="text-sm font-medium text-gray-700 truncate">
-                                        {item.icon} {item.name}
-                                    </span>
-                                    <span className="text-sm text-gray-500">
-                                        {formatCurrency(item.revenue)}
-                                    </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2">
-                                    <div
-                                        className="h-2 rounded-full transition-all duration-300"
-                                        style={{
-                                            width: `${percentage}%`,
-                                            backgroundColor: item.color
-                                        }}
-                                    ></div>
-                                </div>
-                                <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                    <span>{formatNumber(item.orders)} đơn</span>
-                                    <span className={`flex items-center ${item.growthRate >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                        {item.growthRate >= 0 ? <FaArrowUp className="mr-1" /> : <FaArrowDown className="mr-1" />}
-                                        {formatPercentage(item.growthRate)}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        );
-    };
-
     return (
         <div className="space-y-6">
             {/* Period Selector */}
@@ -317,83 +268,6 @@ const ChartsAnalytics = () => {
                 </div>
             </div>
 
-            {/* Charts Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Revenue & Orders Chart */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-gray-800">Xu hướng doanh thu & đơn hàng</h3>
-                        <div className="flex bg-gray-100 rounded-lg p-1">
-                            <button
-                                onClick={() => setActiveChart('revenue')}
-                                className={`px-3 py-1 text-xs font-medium rounded transition ${activeChart === 'revenue'
-                                    ? 'bg-green-500 text-white'
-                                    : 'text-gray-600 hover:text-gray-800'
-                                    }`}
-                            >
-                                Doanh thu
-                            </button>
-                            <button
-                                onClick={() => setActiveChart('orders')}
-                                className={`px-3 py-1 text-xs font-medium rounded transition ${activeChart === 'orders'
-                                    ? 'bg-blue-500 text-white'
-                                    : 'text-gray-600 hover:text-gray-800'
-                                    }`}
-                            >
-                                Đơn hàng
-                            </button>
-                        </div>
-                    </div>
-
-                    {activeChart === 'revenue' ? (
-                        <SimpleLineChart
-                            data={revenue?.data || []}
-                            dataKey="revenue"
-                            color="#10B981"
-                            height={250}
-                        />
-                    ) : (
-                        <SimpleLineChart
-                            data={orders?.data || []}
-                            dataKey="totalOrders"
-                            color="#3B82F6"
-                            height={250}
-                        />
-                    )}
-
-                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
-                        <div className="text-center p-3 bg-gray-50 rounded">
-                            <p className="text-gray-600">Cao nhất</p>
-                            <p className="font-bold text-gray-900">
-                                {activeChart === 'revenue'
-                                    ? formatCurrency(Math.max(...(revenue?.data || []).map(d => d.revenue || 0)))
-                                    : formatNumber(Math.max(...(orders?.data || []).map(d => d.totalOrders || 0))) + ' đơn'
-                                }
-                            </p>
-                        </div>
-                        <div className="text-center p-3 bg-gray-50 rounded">
-                            <p className="text-gray-600">Trung bình</p>
-                            <p className="font-bold text-gray-900">
-                                {activeChart === 'revenue'
-                                    ? formatCurrency((revenue?.data || []).reduce((sum, d) => sum + (d.revenue || 0), 0) / Math.max((revenue?.data || []).length, 1))
-                                    : formatNumber(Math.floor((orders?.data || []).reduce((sum, d) => sum + (d.totalOrders || 0), 0) / Math.max((orders?.data || []).length, 1))) + ' đơn'
-                                }
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Category Performance */}
-                <div className="bg-white rounded-lg shadow-sm p-6">
-                    <div className="flex items-center justify-between mb-6">
-                        <h3 className="text-lg font-bold text-gray-800">Hiệu suất theo danh mục</h3>
-                        <FaChartBar className="text-gray-400" />
-                    </div>
-
-                    <SimpleBarChart data={categories} height={300} />
-                </div>
-            </div>
-
             {/* Product Performance */}
             <div className="bg-white rounded-lg shadow-sm p-6">
                 <div className="flex items-center justify-between mb-6">
@@ -452,10 +326,10 @@ const ChartsAnalytics = () => {
                         </p>
                     </div>
                     <div className="bg-white rounded-lg p-4">
-                        <h4 className="font-semibold text-gray-700 mb-2">🏆 Danh mục nổi bật</h4>
+                        <h4 className="font-semibold text-gray-700 mb-2">🏆 Sản phẩm nổi bật</h4>
                         <p className="text-sm text-gray-600">
-                            {(categories?.[0]?.name || 'Không có dữ liệu')} đang dẫn đầu với {formatCurrency(categories?.[0]?.revenue || 0)} doanh thu.
-                            Nên tập trung phát triển danh mục này.
+                            {(products?.[0]?.ProductName || products?.[0]?.name || 'Không có dữ liệu')} đang dẫn đầu với {formatCurrency(products?.[0]?.Revenue || products?.[0]?.revenue || 0)} doanh thu.
+                            Nên tập trung quảng bá sản phẩm này.
                         </p>
                     </div>
                     <div className="bg-white rounded-lg p-4">
