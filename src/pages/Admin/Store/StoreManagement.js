@@ -98,7 +98,7 @@ const StoreManagement = () => {
         try {
             console.log('📊 Loading store ratings for stores:', storesData.length);
             const uniqueStoreIds = [...new Set(storesData.map(store => store.id))];
-            
+
             const ratingPromises = uniqueStoreIds.map(async (storeId) => {
                 if (storeRatings[storeId]) {
                     return { storeId, rating: storeRatings[storeId] };
@@ -113,16 +113,16 @@ const StoreManagement = () => {
                     return { storeId, rating: ratingData };
                 } catch (error) {
                     console.error(`Error loading rating for store ${storeId}:`, error);
-                    return { 
-                        storeId, 
-                        rating: { averageRating: 0, reviewCount: 0 } 
+                    return {
+                        storeId,
+                        rating: { averageRating: 0, reviewCount: 0 }
                     };
                 }
             });
 
             const ratingResults = await Promise.all(ratingPromises);
             const newStoreRatings = { ...storeRatings };
-            
+
             ratingResults.forEach(({ storeId, rating }) => {
                 if (rating) {
                     newStoreRatings[storeId] = rating;
@@ -146,9 +146,9 @@ const StoreManagement = () => {
                 }
                 try {
                     const response = await userService.getUserById(sellerId);
-                    return { 
-                        sellerId, 
-                        seller: response.success ? response.data : null 
+                    return {
+                        sellerId,
+                        seller: response.success ? response.data : null
                     };
                 } catch (error) {
                     console.error(`Error loading seller ${sellerId}:`, error);
@@ -158,7 +158,7 @@ const StoreManagement = () => {
 
             const sellerResults = await Promise.all(sellerPromises);
             const newSellers = { ...sellers };
-            
+
             sellerResults.forEach(({ sellerId, seller }) => {
                 if (seller) {
                     newSellers[sellerId] = seller;
@@ -175,15 +175,15 @@ const StoreManagement = () => {
     const loadStatistics = async () => {
         try {
             console.log('📊 StoreManagement - Loading statistics...');
-            
+
             // Get all stores without pagination for statistics
-            const allStoresResponse = await storeService.getAllStores({ 
-                page: 1, 
+            const allStoresResponse = await storeService.getAllStores({
+                page: 1,
                 pageSize: 1000 // Get a large number to get all
             });
-            
+
             let allStoresData = [];
-            
+
             if (allStoresResponse && allStoresResponse.items) {
                 allStoresData = allStoresResponse.items;
             } else if (allStoresResponse && allStoresResponse.success && allStoresResponse.data) {
@@ -195,9 +195,9 @@ const StoreManagement = () => {
             } else if (Array.isArray(allStoresResponse)) {
                 allStoresData = allStoresResponse;
             }
-            
+
             console.log('📊 StoreManagement - All stores for statistics:', allStoresData);
-            
+
             // Calculate statistics from all stores
             const stats = {
                 totalStores: allStoresData.length,
@@ -205,7 +205,7 @@ const StoreManagement = () => {
                 closedStores: allStoresData.filter(s => s.status === 'Closed').length,
                 suspendedStores: allStoresData.filter(s => s.status === 'Suspended').length
             };
-            
+
             console.log('📊 StoreManagement - Calculated statistics:', stats);
             setStatistics(stats);
         } catch (error) {
@@ -255,7 +255,7 @@ const StoreManagement = () => {
                 ...prev,
                 total
             }));
-            
+
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
@@ -319,7 +319,7 @@ const StoreManagement = () => {
                 current: 1,
                 total
             }));
-            
+
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
@@ -406,7 +406,7 @@ const StoreManagement = () => {
                 total
             }));
             setFilters(prev => ({ ...prev, search: value }));
-            
+
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
@@ -464,7 +464,7 @@ const StoreManagement = () => {
                 total,
                 current: 1
             }));
-            
+
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
@@ -485,7 +485,7 @@ const StoreManagement = () => {
 
     const handleSuspendStore = async (storeId) => {
         let suspendReason = '';
-        
+
         Modal.confirm({
             title: 'Tạm ngưng cửa hàng',
             content: (
@@ -553,41 +553,41 @@ const StoreManagement = () => {
             console.log('📝 Updating store market location:', selectedStore.id, 'to market:', values.marketId);
             console.log('📝 Current marketId:', selectedStore.marketId);
             console.log('📝 New marketId:', values.marketId);
-            
+
             // Kiểm tra nếu marketId không thay đổi
             if (selectedStore.marketId === values.marketId) {
                 message.warning('Vị trí chợ chưa thay đổi');
                 return;
             }
-            
+
             // Kiểm tra dữ liệu bắt buộc
             if (!selectedStore.id) {
                 message.error('Không tìm thấy ID cửa hàng');
                 return;
             }
-            
+
             if (!values.marketId) {
                 message.error('Vui lòng chọn chợ');
                 return;
             }
-            
+
             // CHỈ GỬI MARKETID - đúng theo yêu cầu API
             const updateData = {
                 marketId: values.marketId
             };
-            
+
             console.log('📝 Sending update data (only marketId):', updateData);
-            
+
             // Gọi API với chỉ marketId
             const response = await storeService.updateStore(selectedStore.id, updateData);
             console.log('📝 Update response:', response);
-            
+
             if (response && response.success) {
                 message.success(response.message || 'Cập nhật vị trí chợ thành công');
                 setModalVisible(false);
                 setEditMode(false);
                 form.resetFields();
-                
+
                 // Reload data to see changes
                 await loadStores();
                 await loadStatistics();
@@ -598,7 +598,7 @@ const StoreManagement = () => {
             }
         } catch (error) {
             console.error('❌ Error in handleUpdateStore:', error);
-            
+
             // Handle validation errors vs API errors
             if (error.errorFields) {
                 message.error('Vui lòng kiểm tra lại thông tin trong form');
@@ -673,7 +673,7 @@ const StoreManagement = () => {
                 current: 1,
                 total
             }));
-            
+
             // Load seller information for the stores
             if (storesData.length > 0) {
                 await loadSellersInfo(storesData);
@@ -1059,9 +1059,6 @@ const StoreManagement = () => {
                             </div>
 
                             <Descriptions bordered column={1}>
-                                <Descriptions.Item label="ID cửa hàng">
-                                    {selectedStore.id}
-                                </Descriptions.Item>
                                 <Descriptions.Item label="Người bán">
                                     {getSellerName(selectedStore.sellerId)}
                                 </Descriptions.Item>
@@ -1100,8 +1097,8 @@ const StoreManagement = () => {
                                 <h4 style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: '16px' }}>
                                     Đánh giá của khách hàng
                                 </h4>
-                                <div style={{ 
-                                    maxHeight: '400px', 
+                                <div style={{
+                                    maxHeight: '400px',
                                     overflowY: 'auto',
                                     border: '1px solid #f0f0f0',
                                     borderRadius: '6px',

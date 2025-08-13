@@ -57,9 +57,9 @@ const UserReportsPage = () => {
 
             if (result.success) {
                 // API trả về { reports: [...] }
-                const reportsData = Array.isArray(result.data?.reports) ? result.data.reports : 
-                                  Array.isArray(result.data?.items) ? result.data.items :
-                                  Array.isArray(result.data) ? result.data : [];
+                const reportsData = Array.isArray(result.data?.reports) ? result.data.reports :
+                    Array.isArray(result.data?.items) ? result.data.items :
+                        Array.isArray(result.data) ? result.data : [];
                 console.log('✅ Reports loaded:', reportsData.length, 'reports');
                 setReports(reportsData);
             } else {
@@ -121,6 +121,18 @@ const UserReportsPage = () => {
                 {config.label}
             </span>
         );
+    };
+
+    const getTargetTypeLabel = (targetType) => {
+        const typeLabels = {
+            'Buyer': 'Người mua',
+            'Seller': 'Người bán',
+            'Product': 'Sản phẩm',
+            'Store': 'Cửa hàng',
+            'Market': 'Chợ',
+            'User': 'Người dùng'
+        };
+        return typeLabels[targetType] || targetType;
     };
 
     const formatDate = (dateString) => {
@@ -281,13 +293,13 @@ const UserReportsPage = () => {
                                                             {report.targetName || 'Không xác định'}
                                                         </div>
                                                         <div className="text-sm text-gray-500">
-                                                            {report.targetType} - ID: {report.targetId || 'N/A'}
+                                                            {getTargetTypeLabel(report.targetType)}
                                                         </div>
                                                         {report.targetPrice && (
                                                             <div className="text-sm text-green-600">
-                                                                {new Intl.NumberFormat('vi-VN', { 
-                                                                    style: 'currency', 
-                                                                    currency: 'VND' 
+                                                                {new Intl.NumberFormat('vi-VN', {
+                                                                    style: 'currency',
+                                                                    currency: 'VND'
                                                                 }).format(report.targetPrice)}
                                                             </div>
                                                         )}
@@ -297,7 +309,7 @@ const UserReportsPage = () => {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="space-y-1">
                                                     <div className="text-xs font-medium text-gray-600">
-                                                        {report.targetType}
+                                                        {getTargetTypeLabel(report.targetType)}
                                                     </div>
                                                     {getReasonBadge(report.reason)}
                                                 </div>
@@ -369,13 +381,12 @@ const UserReportsPage = () => {
                                             Đối tượng báo cáo
                                         </h4>
                                         <div className="space-y-2">
-                                            <p><strong>Loại:</strong> {selectedReport.targetType}</p>
+                                            <p><strong>Loại:</strong> {getTargetTypeLabel(selectedReport.targetType)}</p>
                                             <p><strong>Tên:</strong> {selectedReport.targetName || 'Không xác định'}</p>
-                                            <p><strong>ID:</strong> {selectedReport.targetId || 'N/A'}</p>
                                             {selectedReport.targetPrice && (
-                                                <p><strong>Giá:</strong> {new Intl.NumberFormat('vi-VN', { 
-                                                    style: 'currency', 
-                                                    currency: 'VND' 
+                                                <p><strong>Giá:</strong> {new Intl.NumberFormat('vi-VN', {
+                                                    style: 'currency',
+                                                    currency: 'VND'
                                                 }).format(selectedReport.targetPrice)}</p>
                                             )}
                                             {selectedReport.targetUnit && (
