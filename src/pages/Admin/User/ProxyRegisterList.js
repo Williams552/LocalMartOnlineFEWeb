@@ -179,6 +179,7 @@ const ProxyRegisterList = () => {
     { title: 'Người đăng ký', dataIndex: 'name', key: 'name' },
     { title: 'Email', dataIndex: 'email', key: 'email' },
     { title: 'Số điện thoại', dataIndex: 'phoneNumber', key: 'phoneNumber' },
+    { title: 'Chợ đăng ký', dataIndex: 'marketName', key: 'marketName' },
     { title: 'Khu vực hoạt động', dataIndex: 'operatingArea', key: 'operatingArea' },
     {
       title: 'Phương tiện',
