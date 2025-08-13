@@ -162,7 +162,7 @@ const StoreProfile = () => {
                         </div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-4">Không thể tải thông tin</h3>
                         <p className="text-gray-600 mb-6">{error}</p>
-                        
+
                         <button
                             onClick={() => window.location.href = '/register-seller'}
                             className="bg-supply-primary text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors flex items-center mx-auto"
@@ -427,26 +427,6 @@ const StoreProfile = () => {
                                     <div className="bg-gray-50 rounded-lg p-6 space-y-4">
                                         <div className="grid grid-cols-1 gap-4">
                                             <div className="flex justify-between items-center">
-                                                <span className="text-sm font-medium text-gray-600 flex items-center">
-                                                    <FaIdCard className="mr-2" />
-                                                    ID gian hàng:
-                                                </span>
-                                                <span className="text-sm text-gray-900 font-mono bg-white px-2 py-1 rounded">
-                                                    {store.id}
-                                                </span>
-                                            </div>
-
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-sm font-medium text-gray-600 flex items-center">
-                                                    <FaUser className="mr-2" />
-                                                    ID người bán:
-                                                </span>
-                                                <span className="text-sm text-gray-900 font-mono bg-white px-2 py-1 rounded">
-                                                    {store.sellerId}
-                                                </span>
-                                            </div>
-
-                                            <div className="flex justify-between items-center">
                                                 <span className="text-sm font-medium text-gray-600">
                                                     Trạng thái:
                                                 </span>
@@ -501,7 +481,7 @@ const StoreProfile = () => {
                             </h2>
                             <p className="text-gray-600 mt-1">Xem và phản hồi đánh giá về cửa hàng của bạn</p>
                         </div>
-                        
+
                         <div className="p-6">
                             <ReviewListWithResponse
                                 targetType="Store"

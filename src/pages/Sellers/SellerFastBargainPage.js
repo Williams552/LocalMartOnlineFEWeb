@@ -193,7 +193,7 @@ const SellerFastBargainPage = () => {
     const handleCounterOffer = (bargainId) => {
         // Tìm thông tin bargain hiện tại
         const currentBargain = bargains.find(b => (b.id || b.bargainId) === bargainId);
-        
+
         setReplyBargainId(bargainId);
         setReplyBargainInfo(currentBargain);
         setCounterOffer('');
@@ -231,14 +231,14 @@ const SellerFastBargainPage = () => {
                 action: 'Counter',
                 counterPrice: price
             };
-            
+
             // Chỉ thêm note nếu có nội dung
             if (replyMessage && replyMessage.trim() !== '') {
                 actionData.note = replyMessage.trim();
             }
-            
+
             console.log('Sending counter offer with data:', actionData);
-            
+
             const result = await sellerFastBargainService.takeAction(actionData);
 
             if (result.success) {
@@ -384,15 +384,15 @@ const SellerFastBargainPage = () => {
     // Helper function để kiểm tra seller có thể phản hồi hay không
     const canSellerRespond = (bargain) => {
         if (bargain.status !== 'Pending') return false;
-        
+
         // Nếu không có proposals, nghĩa là đây là yêu cầu ban đầu từ buyer
         if (!bargain.proposals || bargain.proposals.length === 0) {
             return true;
         }
-        
+
         // Lấy proposal cuối cùng
         const lastProposal = bargain.proposals[bargain.proposals.length - 1];
-        
+
         // Seller chỉ có thể phản hồi nếu proposal cuối cùng là từ buyer
         return lastProposal.userId === bargain.buyerId;
     };
@@ -402,11 +402,11 @@ const SellerFastBargainPage = () => {
         console.log('🔍 Debug getLatestPrice for bargain:', bargain.id || bargain.bargainId);
         console.log('📋 Proposals:', bargain.proposals);
         console.log('💰 RequestedPrice:', bargain.requestedPrice);
-        
+
         // Nếu có proposals, lấy giá từ proposal cuối cùng (mới nhất)
         if (bargain.proposals && bargain.proposals.length > 0) {
             // Sắp xếp proposals theo thời gian để đảm bảo thứ tự đúng
-            const sortedProposals = [...bargain.proposals].sort((a, b) => 
+            const sortedProposals = [...bargain.proposals].sort((a, b) =>
                 new Date(a.proposedAt) - new Date(b.proposedAt)
             );
             const latestProposal = sortedProposals[sortedProposals.length - 1];
@@ -415,7 +415,7 @@ const SellerFastBargainPage = () => {
             console.log('💵 Latest proposed price:', latestProposal.proposedPrice);
             return latestProposal.proposedPrice;
         }
-        
+
         // Nếu không có proposals, lấy giá yêu cầu ban đầu
         console.log('📌 Using requestedPrice:', bargain.requestedPrice);
         return bargain.requestedPrice || 0;
@@ -621,10 +621,6 @@ const SellerFastBargainPage = () => {
                                                         </div>
                                                         <div>
                                                             <div className="font-medium text-gray-900">{bargain.buyerName}</div>
-                                                            <div className="text-sm text-gray-500 flex items-center">
-                                                                <FaPhone className="mr-1" size={10} />
-                                                                {bargain.buyerPhone}
-                                                            </div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -645,7 +641,7 @@ const SellerFastBargainPage = () => {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center">
-                                                            {bargain.quantity}
+                                                        {bargain.quantity}
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -772,31 +768,27 @@ const SellerFastBargainPage = () => {
                                             selectedBargain.proposals.map((proposal, index) => {
                                                 const isBuyer = proposal.userId === selectedBargain.buyerId;
                                                 const isSeller = proposal.userId === selectedBargain.sellerId;
-                                                
+
                                                 return (
-                                                    <div key={index} className={`rounded-lg p-4 ${
-                                                        isBuyer ? 'bg-blue-100' : isSeller ? 'bg-green-100' : 'bg-gray-100'
-                                                    }`}>
+                                                    <div key={index} className={`rounded-lg p-4 ${isBuyer ? 'bg-blue-100' : isSeller ? 'bg-green-100' : 'bg-gray-100'
+                                                        }`}>
                                                         <div className="flex items-center justify-between mb-2">
                                                             <div className="flex items-center">
-                                                                <FaUser className={`mr-2 ${
-                                                                    isBuyer ? 'text-blue-600' : isSeller ? 'text-green-600' : 'text-gray-600'
-                                                                }`} />
+                                                                <FaUser className={`mr-2 ${isBuyer ? 'text-blue-600' : isSeller ? 'text-green-600' : 'text-gray-600'
+                                                                    }`} />
                                                                 <strong className={
                                                                     isBuyer ? 'text-blue-900' : isSeller ? 'text-green-900' : 'text-gray-900'
                                                                 }>
-                                                                    {isBuyer ? selectedBargain.buyerName : 
-                                                                     isSeller ? selectedBargain.sellerName : 'Không xác định'}
+                                                                    {isBuyer ? selectedBargain.buyerName :
+                                                                        isSeller ? selectedBargain.sellerName : 'Không xác định'}
                                                                 </strong>
-                                                                <span className={`text-sm ml-2 ${
-                                                                    isBuyer ? 'text-blue-600' : isSeller ? 'text-green-600' : 'text-gray-600'
-                                                                }`}>
+                                                                <span className={`text-sm ml-2 ${isBuyer ? 'text-blue-600' : isSeller ? 'text-green-600' : 'text-gray-600'
+                                                                    }`}>
                                                                     {getTimeAgo(proposal.proposedAt)}
                                                                 </span>
                                                             </div>
-                                                            <span className={`font-bold text-lg ${
-                                                                isBuyer ? 'text-blue-800' : isSeller ? 'text-green-800' : 'text-gray-800'
-                                                            }`}>
+                                                            <span className={`font-bold text-lg ${isBuyer ? 'text-blue-800' : isSeller ? 'text-green-800' : 'text-gray-800'
+                                                                }`}>
                                                                 {formatCurrency(proposal.proposedPrice)}
                                                             </span>
                                                         </div>
@@ -888,13 +880,13 @@ const SellerFastBargainPage = () => {
                                     </h4>
                                     <div className="space-y-2 text-sm">
                                         <p><strong>Sản phẩm:</strong> {replyBargainInfo.productName}</p>
-                                        <p><strong>Số lượng yêu cầu:</strong> 
+                                        <p><strong>Số lượng yêu cầu:</strong>
                                             <span className="text-lg font-bold text-blue-600 ml-2">
                                                 {replyBargainInfo.quantity} {replyBargainInfo.unit || replyBargainInfo.productUnitName}
                                             </span>
                                         </p>
                                         <p><strong>Giá gốc:</strong> {formatCurrency(replyBargainInfo.originalPrice)}/{replyBargainInfo.unit || replyBargainInfo.productUnitName}</p>
-                                        <p><strong>Giá hiện tại:</strong> 
+                                        <p><strong>Giá hiện tại:</strong>
                                             <span className="text-orange-600 font-semibold ml-1">
                                                 {formatCurrency(getLatestPrice(replyBargainInfo))}
                                             </span>
