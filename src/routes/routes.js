@@ -86,6 +86,7 @@ import QuickActionsPage from "../pages/Sellers/QuickActionsPage";
 import ChartsAnalyticsPage from "../pages/Sellers/ChartsAnalyticsPage";
 import NotificationsPage from "../pages/Sellers/NotificationsPage";
 import SellerLicenses from "../pages/Sellers/SellerLicenses";
+import SellerLicensesTemp from "../pages/Sellers/SellerLicensesTemp";
 import SellerPayments from "../pages/Seller/SellerPayments";
 import UserReportsPage from "../pages/Seller/UserReportsPage";
 import MarketFees from "../pages/Seller/MarketFees";
@@ -254,7 +255,7 @@ const AppRoutes = () => {
                 <Route path="/seller/licenses" element={
                     <ProtectedRoute allowedRoles={['Seller']}>
                         <ProtectedSellerRoute>
-                            <SellerLicenses />
+                            <SellerLicensesTemp />
                         </ProtectedSellerRoute>
                     </ProtectedRoute>
                 } />
