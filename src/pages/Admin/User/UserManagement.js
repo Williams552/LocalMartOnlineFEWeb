@@ -39,9 +39,12 @@ const { Option } = Select;
 const getRoleColor = (role) => {
     switch (role) {
         case 'Admin': return 'geekblue';
+        case 'MS': return 'blue';
+        case 'MMBH': return 'green';
+        case 'LGR': return 'orange';
         case 'Seller': return 'volcano';
-        case 'Buyer': return 'green';
-        case 'Proxy Shopper': return 'orange';
+        case 'Buyer': return 'cyan';
+        case 'Proxy Shopper': return 'purple';
         default: return 'gray';
     }
 };
@@ -64,8 +67,12 @@ const UserManagement = () => {
     const [statistics, setStatistics] = useState({
         totalUsers: 0,
         totalAdmins: 0,
+        totalMS: 0,
+        totalMMBH: 0,
+        totalLGR: 0,
         totalBuyers: 0,
         totalSellers: 0,
+        totalProxyShoppers: 0,
         activeUsers: 0,
         blockedUsers: 0
     });
@@ -88,8 +95,12 @@ const UserManagement = () => {
                 const totalStats = {
                     totalUsers: allUsersResponse.pagination?.total || allUsers.length,
                     totalAdmins: allUsers.filter(u => u.role === 'Admin').length,
+                    totalMS: allUsers.filter(u => u.role === 'MS').length,
+                    totalMMBH: allUsers.filter(u => u.role === 'MMBH').length,
+                    totalLGR: allUsers.filter(u => u.role === 'LGR').length,
                     totalBuyers: allUsers.filter(u => u.role === 'Buyer').length,
                     totalSellers: allUsers.filter(u => u.role === 'Seller').length,
+                    totalProxyShoppers: allUsers.filter(u => u.role === 'Proxy Shopper').length,
                     activeUsers: allUsers.filter(u => u.status === 'Active' || u.isActive === true).length,
                     blockedUsers: allUsers.filter(u => u.status === 'Blocked' || u.isActive === false).length
                 };
@@ -433,9 +444,48 @@ const UserManagement = () => {
                 <Col xs={24} sm={12} lg={6}>
                     <Card>
                         <Statistic
+                            title="Admin"
+                            value={statistics.totalAdmins}
+                            valueStyle={{ color: '#722ed1' }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                    <Card>
+                        <Statistic
+                            title="MS (Nhân viên TT)"
+                            value={statistics.totalMS}
+                            valueStyle={{ color: '#1890ff' }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                    <Card>
+                        <Statistic
+                            title="MMBH (Trưởng Ban)"
+                            value={statistics.totalMMBH}
+                            valueStyle={{ color: '#52c41a' }}
+                        />
+                    </Card>
+                </Col>
+            </Row>
+            
+            <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+                <Col xs={24} sm={12} lg={6}>
+                    <Card>
+                        <Statistic
+                            title="LGR (Đại diện CP)"
+                            value={statistics.totalLGR}
+                            valueStyle={{ color: '#fa8c16' }}
+                        />
+                    </Card>
+                </Col>
+                <Col xs={24} sm={12} lg={6}>
+                    <Card>
+                        <Statistic
                             title="Người bán"
                             value={statistics.totalSellers}
-                            valueStyle={{ color: '#52c41a' }}
+                            valueStyle={{ color: '#f5222d' }}
                         />
                     </Card>
                 </Col>
@@ -444,7 +494,7 @@ const UserManagement = () => {
                         <Statistic
                             title="Người mua"
                             value={statistics.totalBuyers}
-                            valueStyle={{ color: '#722ed1' }}
+                            valueStyle={{ color: '#13c2c2' }}
                         />
                     </Card>
                 </Col>
@@ -476,10 +526,13 @@ const UserManagement = () => {
                         <Select
                             value={filterRole}
                             onChange={handleRoleFilter}
-                            style={{ width: 150 }}
+                            style={{ width: 200 }}
                         >
                             <Option value="all">Tất cả vai trò</Option>
                             <Option value="Admin">Admin</Option>
+                            <Option value="MS">MS - Nhân viên TT</Option>
+                            <Option value="MMBH">MMBH - Trưởng Ban</Option>
+                            <Option value="LGR">LGR - Đại diện CP</Option>
                             <Option value="Seller">Người bán</Option>
                             <Option value="Buyer">Người mua</Option>
                             <Option value="Proxy Shopper">Mua hộ</Option>
@@ -630,9 +683,12 @@ const UserManagement = () => {
                             >
                                 <Select placeholder="Chọn vai trò">
                                     <Option value="Admin">Admin</Option>
-                                    <Option value="Seller">Người bán</Option>
-                                    <Option value="Buyer">Người mua</Option>
-                                    <Option value="Proxy Shopper">Mua hộ</Option>
+                                    <Option value="MS">Nhân Viên</Option>
+                                    <Option value="MMBH">Quản Lý Thị Trường</Option>
+                                    <Option value="LGR">Đại Diện Chính Quyền</Option>
+                                    <Option value="Seller">Người Bán</Option>
+                                    <Option value="Buyer">Người Mua</Option>
+                                    <Option value="Proxy Shopper">Mua Hộ</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
@@ -749,10 +805,13 @@ const UserManagement = () => {
                                 rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
                             >
                                 <Select>
-                                    <Option value="Admin">Admin</Option>
-                                    <Option value="Seller">Người bán</Option>
-                                    <Option value="Buyer">Người mua</Option>
-                                    <Option value="Proxy Shopper">Mua hộ</Option>
+                                    <Option value="Admin">Admin - Quản trị viên hệ thống</Option>
+                                    <Option value="MS">MS - Market Staff (Nhân viên Thị trường)</Option>
+                                    <Option value="MMBH">MMBH - Market Management Board Head (Trưởng Ban Quản lý Thị trường)</Option>
+                                    <Option value="LGR">LGR - Local Government Representative (Đại diện Chính quyền địa phương)</Option>
+                                    <Option value="Seller">Seller - Người bán</Option>
+                                    <Option value="Buyer">Buyer - Người mua</Option>
+                                    <Option value="Proxy Shopper">Proxy Shopper - Mua hộ</Option>
                                 </Select>
                             </Form.Item>
                         </Col>
