@@ -124,26 +124,54 @@ const AdminLayout = () => {
 
         // Role-based menu filtering
         switch (userRole) {
-            case 'MMBH':
-                // MMBH: quản lý chợ + danh mục + báo cáo thống kê
+            case 'LGR':
+                // LGR (Local Government Representative): quản lý thị trường + quy tắc thị trường + chính sách nền tảng + phân tích dữ liệu
                 return [
                     allMenuItems.dashboard,
                     allMenuItems.markets,
-                    allMenuItems.categories,
-                    allMenuItems.analytics
+                    allMenuItems.content,
+                    {
+                        ...allMenuItems.analytics,
+                        children: [
+                            { key: '/admin/analytics/users', label: 'Thống kê người dùng' },
+                            { key: '/admin/analytics/revenue', label: 'Doanh thu thị trường' }
+                        ]
+                    }
                 ];
 
-            case 'LGR':
-                // LGR: quản lý nội dung + báo cáo thống kê
+            case 'MMBH':
+                // MMBH (Market Management Board Head): quản lý người dùng + phí thị trường + cửa hàng + phân tích dữ liệu
                 return [
                     allMenuItems.dashboard,
-                    allMenuItems.content,
-                    allMenuItems.analytics
+                    allMenuItems.users,
+                    {
+                        key: 'market-fees', icon: <DollarOutlined />, label: 'Quản lý phí thị trường', children: [
+                            { key: '/admin/market-fees', label: 'Phí thị trường' },
+                            { key: '/admin/market-fee-types', label: 'Loại phí' },
+                        ]
+                    },
+                    allMenuItems.stores,
+                    {
+                        ...allMenuItems.analytics,
+                        children: [
+                            { key: '/admin/analytics/users', label: 'Thống kê người dùng' },
+                            { key: '/admin/analytics/revenue', label: 'Doanh thu' }
+                        ]
+                    }
                 ];
 
             case 'MS':
+                // MS (Market Staff): quản lý danh mục sản phẩm + đơn vị sản phẩm + báo cáo vi phạm + hỗ trợ người dùng
+                return [
+                    allMenuItems.dashboard,
+                    allMenuItems.categories,
+                    allMenuItems.productUnits,
+                    allMenuItems.support
+                ];
+
+            case 'Admin':
             default:
-                // MS + Admin: tất cả menu (còn lại)
+                // Admin: có thể truy cập tất cả chức năng
                 return [
                     allMenuItems.dashboard,
                     allMenuItems.users,
@@ -296,9 +324,9 @@ const AdminLayout = () => {
                                         {user?.fullName || user?.username}
                                     </div>
                                     <div style={{ fontSize: 12, color: '#888' }}>
-                                        {user?.role === 'MMBH' ? 'Quản lý Chợ & Danh mục' :
-                                            user?.role === 'LGR' ? 'Quản lý Nội dung' :
-                                                user?.role === 'MS' ? 'Quản lý Hệ thống' : 'Quản trị viên'}
+                                        {user?.role === 'MMBH' ? 'Quản lý Chợ' :
+                                            user?.role === 'LGR' ? 'Đại diện chính quyền' :
+                                                user?.role === 'MS' ? 'Nhân viên' : 'Nhân viên'}
                                     </div>
                                 </div>
                             </Space>

@@ -1,8 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { Result, Button } from 'antd';
-import { ExclamationCircleOutlined } from '@ant-design/icons';
+import AccessDenied from './AccessDenied';
 
 const ProtectedAdminRoleRoute = ({ children, allowedRoles = [], requireAuth = true }) => {
     const { isAuthenticated, user, loading } = useAuth();
@@ -31,18 +30,19 @@ const ProtectedAdminRoleRoute = ({ children, allowedRoles = [], requireAuth = tr
 
     // If specific roles are required, check if user has the required role
     if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-        // Show access denied page instead of redirecting
+        // Show access denied page with role-specific message
+        const roleNames = {
+            'MS': 'Market Staff - Nhân viên Thị trường',
+            'MMBH': 'Market Management Board Head - Trưởng Ban Quản lý Thị trường', 
+            'LGR': 'Local Government Representative - Đại diện Chính quyền địa phương',
+            'Admin': 'Administrator - Quản trị viên hệ thống'
+        };
+        
         return (
             <div style={{ padding: '50px 24px', background: '#fff', minHeight: 'calc(100vh - 112px)' }}>
-                <Result
-                    icon={<ExclamationCircleOutlined style={{ color: '#faad14' }} />}
+                <AccessDenied 
                     title="Không có quyền truy cập"
-                    subTitle={`Bạn không có quyền truy cập vào trang này. Vai trò hiện tại: ${user.role}`}
-                    extra={
-                        <Button type="primary" onClick={() => window.history.back()}>
-                            Quay lại
-                        </Button>
-                    }
+                    subtitle={`Trang này yêu cầu quyền: ${allowedRoles.map(role => roleNames[role] || role).join(', ')}. Vai trò hiện tại của bạn: ${roleNames[user.role] || user.role}`}
                 />
             </div>
         );

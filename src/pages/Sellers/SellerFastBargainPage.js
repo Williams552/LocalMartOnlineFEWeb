@@ -352,7 +352,7 @@ const SellerFastBargainPage = () => {
 
                 {status === 'Pending' && !canRespond && (
                     <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
-                        Chờ phản hồi từ buyer
+                        Chờ phản hồi từ khách hàng
                     </div>
                 )}
             </div>
@@ -678,8 +678,8 @@ const SellerFastBargainPage = () => {
                 {/* Bargain Detail Modal */}
                 {showBargainDetail && selectedBargain && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-                            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6">
+                        <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] overflow-hidden flex flex-col">
+                            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 flex-shrink-0">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center">
                                         <div className="bg-white/20 p-3 rounded-lg mr-4">
@@ -699,7 +699,7 @@ const SellerFastBargainPage = () => {
                                 </div>
                             </div>
 
-                            <div className="p-6 space-y-6">
+                            <div className="p-6 space-y-6 overflow-y-auto flex-1">
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                                     {/* Buyer Info */}
                                     <div className="bg-blue-50 rounded-xl p-6">
@@ -728,33 +728,59 @@ const SellerFastBargainPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Bargain Details */}
-                                <div className="bg-orange-50 rounded-xl p-6">
+                                {/* Price Comparison */}
+                                <div className="bg-gradient-to-r from-orange-50 to-red-50 rounded-xl p-6">
                                     <h4 className="font-bold text-orange-900 mb-4 flex items-center">
                                         <FaMoneyBillWave className="mr-2" />
-                                        Chi tiết thương lượng
+                                        So sánh giá
                                     </h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div className="space-y-3">
-                                            <p><strong>Giá hiện tại:</strong>
-                                                <span className="text-xl font-bold text-orange-600 ml-2">
-                                                    {formatCurrency(getLatestPrice(selectedBargain))} / {selectedBargain.productUnitName}
-                                                </span>
-                                            </p>
-                                            <p><strong>Tổng tiền:</strong>
-                                                <span className="text-lg font-bold text-green-600 ml-2">
-                                                    {formatCurrency(getLatestPrice(selectedBargain) * selectedBargain.quantity)}
-                                                </span>
-                                            </p>
-                                            <p><strong>Tiết kiệm:</strong>
-                                                <span className="text-lg font-bold text-red-600 ml-2">
-                                                    -{formatCurrency((selectedBargain.originalPrice - getLatestPrice(selectedBargain)) * selectedBargain.quantity)}
-                                                </span>
-                                            </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+                                            <div className="text-sm text-gray-600 mb-1">Giá niêm yết gốc</div>
+                                            <div className="text-lg font-bold text-gray-800">
+                                                {formatCurrency(selectedBargain.originalPrice)}
+                                                <span className="text-sm text-gray-500">/{selectedBargain.productUnitName}</span>
+                                            </div>
+                                            <div className="text-sm text-gray-600 mt-1">
+                                                Tổng: {formatCurrency(selectedBargain.originalPrice * selectedBargain.quantity)}
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p><strong>Trạng thái:</strong></p>
-                                            <div className="mt-1">{getStatusBadge(selectedBargain.status)}</div>
+
+                                        <div className="bg-white rounded-lg p-4 border-2 border-orange-300">
+                                            <div className="text-sm text-orange-700 mb-1">Giá thương lượng hiện tại</div>
+                                            <div className="text-lg font-bold text-orange-600">
+                                                {formatCurrency(getLatestPrice(selectedBargain))}
+                                                <span className="text-sm text-orange-500">/{selectedBargain.productUnitName}</span>
+                                            </div>
+                                            <div className="text-sm text-orange-600 mt-1">
+                                                Tổng: {formatCurrency(getLatestPrice(selectedBargain) * selectedBargain.quantity)}
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-lg p-4 border-2 border-red-200">
+                                            <div className="text-sm text-red-700 mb-1">Giảm giá cho khách</div>
+                                            <div className="text-lg font-bold text-red-600">
+                                                -{formatCurrency(selectedBargain.originalPrice - getLatestPrice(selectedBargain))}
+                                                <span className="text-sm text-red-500">/{selectedBargain.productUnitName}</span>
+                                            </div>
+                                            <div className="text-sm text-red-600 mt-1">
+                                                Tổng giảm: -{formatCurrency((selectedBargain.originalPrice - getLatestPrice(selectedBargain)) * selectedBargain.quantity)}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <div className="text-sm text-gray-600">Trạng thái thương lượng</div>
+                                                <div className="mt-1">{getStatusBadge(selectedBargain.status)}</div>
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-sm text-gray-600">Tỷ lệ giảm giá</div>
+                                                <div className="text-lg font-bold text-red-600">
+                                                    {(((selectedBargain.originalPrice - getLatestPrice(selectedBargain)) / selectedBargain.originalPrice) * 100).toFixed(1)}%
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>                                {/* Messages */}
@@ -815,41 +841,111 @@ const SellerFastBargainPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Actions */}
+                                {/* Quick Action Buttons */}
                                 {canSellerRespond(selectedBargain) && (
-                                    <div className="flex gap-4 pt-4 border-t">
-                                        <button
-                                            onClick={() => handleAcceptBargain(selectedBargain.id || selectedBargain.bargainId, getLatestPrice(selectedBargain))}
-                                            className="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 transition flex items-center justify-center"
-                                        >
-                                            <FaCheck className="mr-2" />
-                                            Chấp nhận giá hiện tại
-                                        </button>
-                                        <button
-                                            onClick={() => handleCounterOffer(selectedBargain.id || selectedBargain.bargainId)}
-                                            className="flex-1 bg-orange-600 text-white py-3 px-6 rounded-lg hover:bg-orange-700 transition flex items-center justify-center"
-                                        >
-                                            <FaHandshake className="mr-2" />
-                                            Phản hồi giá khác
-                                        </button>
-                                        <button
-                                            onClick={() => handleRejectBargain(selectedBargain.id || selectedBargain.bargainId, 'Không thể chấp nhận giá này')}
-                                            className="flex-1 bg-red-600 text-white py-3 px-6 rounded-lg hover:bg-red-700 transition flex items-center justify-center"
-                                        >
-                                            <FaTimes className="mr-2" />
-                                            Từ chối
-                                        </button>
+                                    <div className="bg-gray-50 rounded-xl p-6">
+                                        <h4 className="font-bold text-gray-900 mb-4 flex items-center">
+                                            <FaHandshake className="mr-2 text-orange-500" />
+                                            Thao tác nhanh
+                                        </h4>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <button
+                                                onClick={() => handleAcceptBargain(selectedBargain.id || selectedBargain.bargainId, getLatestPrice(selectedBargain))}
+                                                className="bg-green-500 hover:bg-green-600 text-white py-4 px-6 rounded-xl transition flex flex-col items-center justify-center space-y-2 group"
+                                            >
+                                                <div className="bg-white/20 p-3 rounded-lg group-hover:bg-white/30 transition">
+                                                    <FaCheck className="text-white" size={20} />
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="font-bold">Chấp nhận</div>
+                                                    <div className="text-sm opacity-90">
+                                                        {formatCurrency(getLatestPrice(selectedBargain))}
+                                                    </div>
+                                                </div>
+                                            </button>
+
+                                            <button
+                                                onClick={() => handleCounterOffer(selectedBargain.id || selectedBargain.bargainId)}
+                                                className="bg-orange-500 hover:bg-orange-600 text-white py-4 px-6 rounded-xl transition flex flex-col items-center justify-center space-y-2 group"
+                                            >
+                                                <div className="bg-white/20 p-3 rounded-lg group-hover:bg-white/30 transition">
+                                                    <FaHandshake className="text-white" size={20} />
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="font-bold">Đề xuất giá khác</div>
+                                                    <div className="text-sm opacity-90">Thương lượng thêm</div>
+                                                </div>
+                                            </button>
+
+                                            <button
+                                                onClick={() => handleRejectBargain(selectedBargain.id || selectedBargain.bargainId, 'Không thể chấp nhận mức giá này')}
+                                                className="bg-red-500 hover:bg-red-600 text-white py-4 px-6 rounded-xl transition flex flex-col items-center justify-center space-y-2 group"
+                                            >
+                                                <div className="bg-white/20 p-3 rounded-lg group-hover:bg-white/30 transition">
+                                                    <FaTimes className="text-white" size={20} />
+                                                </div>
+                                                <div className="text-center">
+                                                    <div className="font-bold">Từ chối</div>
+                                                    <div className="text-sm opacity-90">Không đồng ý</div>
+                                                </div>
+                                            </button>
+                                        </div>
+
+                                        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                            <div className="flex items-start space-x-3">
+                                                <div className="bg-blue-100 p-2 rounded-lg">
+                                                    <FaComment className="text-blue-600" size={16} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="font-medium text-blue-900">Lời khuyên</div>
+                                                    <div className="text-sm text-blue-700 mt-1">
+                                                        • <strong>Chấp nhận:</strong> Đồng ý với giá hiện tại và hoàn tất thương lượng<br />
+                                                        • <strong>Đề xuất giá khác:</strong> Tiếp tục thương lượng với mức giá mới<br />
+                                                        • <strong>Từ chối:</strong> Kết thúc thương lượng, không bán với giá này
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 )}
 
                                 {selectedBargain.status === 'Pending' && !canSellerRespond(selectedBargain) && (
-                                    <div className="pt-4 border-t">
-                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-                                            <div className="text-blue-800 font-medium">
-                                                Đang chờ phản hồi từ khách hàng
+                                    <div className="bg-blue-50 rounded-xl p-6">
+                                        <div className="flex items-center justify-center space-x-4">
+                                            <div className="bg-blue-100 p-3 rounded-full">
+                                                <FaClock className="text-blue-600" size={24} />
                                             </div>
-                                            <div className="text-blue-600 text-sm mt-1">
-                                                Bạn đã gửi phản hồi giá. Vui lòng chờ khách hàng phản hồi lại.
+                                            <div className="text-center">
+                                                <div className="font-bold text-blue-900 text-lg">
+                                                    Đang chờ phản hồi từ khách hàng
+                                                </div>
+                                                <div className="text-blue-700 mt-1">
+                                                    Bạn đã gửi đề xuất giá. Vui lòng chờ khách hàng phản hồi lại.
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {(selectedBargain.status === 'Accepted' || selectedBargain.status === 'Rejected') && (
+                                    <div className={`rounded-xl p-6 ${selectedBargain.status === 'Accepted' ? 'bg-green-50' : 'bg-red-50'}`}>
+                                        <div className="flex items-center justify-center space-x-4">
+                                            <div className={`p-3 rounded-full ${selectedBargain.status === 'Accepted' ? 'bg-green-100' : 'bg-red-100'}`}>
+                                                {selectedBargain.status === 'Accepted' ?
+                                                    <FaCheck className="text-green-600" size={24} /> :
+                                                    <FaTimes className="text-red-600" size={24} />
+                                                }
+                                            </div>
+                                            <div className="text-center">
+                                                <div className={`font-bold text-lg ${selectedBargain.status === 'Accepted' ? 'text-green-900' : 'text-red-900'}`}>
+                                                    {selectedBargain.status === 'Accepted' ? 'Thương lượng thành công!' : 'Thương lượng đã kết thúc'}
+                                                </div>
+                                                <div className={`mt-1 ${selectedBargain.status === 'Accepted' ? 'text-green-700' : 'text-red-700'}`}>
+                                                    {selectedBargain.status === 'Accepted' ?
+                                                        'Đơn hàng đã được xác nhận với giá thương lượng.' :
+                                                        'Thương lượng đã bị từ chối.'
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -862,73 +958,175 @@ const SellerFastBargainPage = () => {
                 {/* Counter Offer Modal */}
                 {showReplyModal && replyBargainInfo && (
                     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white rounded-xl shadow-xl max-w-lg w-full">
-                            <div className="p-6 border-b">
-                                <h3 className="text-lg font-bold text-gray-900 flex items-center">
-                                    <FaHandshake className="mr-2 text-orange-500" />
-                                    Phản hồi thương lượng
-                                </h3>
-                                <p className="text-sm text-gray-600 mt-1">#{replyBargainId}</p>
+                        <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[95vh] overflow-hidden flex flex-col">
+                            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 flex-shrink-0">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center">
+                                        <div className="bg-white/20 p-3 rounded-lg mr-4">
+                                            <FaHandshake className="text-white" size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 className="text-xl font-bold">Đề xuất giá mới</h3>
+                                            <p className="text-orange-100">#{replyBargainId}</p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => {
+                                            setShowReplyModal(false);
+                                            setReplyBargainId(null);
+                                            setReplyBargainInfo(null);
+                                            setCounterOffer('');
+                                            setReplyMessage('');
+                                        }}
+                                        className="text-white hover:bg-white/20 p-2 rounded-lg transition"
+                                    >
+                                        <FaTimes className="w-6 h-6" />
+                                    </button>
+                                </div>
                             </div>
 
-                            <div className="p-6 space-y-4">
-                                {/* Thông tin đơn hàng */}
-                                <div className="bg-blue-50 rounded-lg p-4">
-                                    <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
-                                        <FaShoppingCart className="mr-2" />
-                                        Thông tin đơn hàng
+                            <div className="p-6 space-y-6 overflow-y-auto flex-1">
+                                {/* So sánh giá */}
+                                <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-xl p-6">
+                                    <h4 className="font-semibold text-gray-900 mb-4 flex items-center">
+                                        <FaShoppingCart className="mr-2 text-blue-600" />
+                                        So sánh giá hiện tại
                                     </h4>
-                                    <div className="space-y-2 text-sm">
-                                        <p><strong>Sản phẩm:</strong> {replyBargainInfo.productName}</p>
-                                        <p><strong>Số lượng yêu cầu:</strong>
-                                            <span className="text-lg font-bold text-blue-600 ml-2">
-                                                {replyBargainInfo.quantity} {replyBargainInfo.unit || replyBargainInfo.productUnitName}
-                                            </span>
-                                        </p>
-                                        <p><strong>Giá gốc:</strong> {formatCurrency(replyBargainInfo.originalPrice)}/{replyBargainInfo.unit || replyBargainInfo.productUnitName}</p>
-                                        <p><strong>Giá hiện tại:</strong>
-                                            <span className="text-orange-600 font-semibold ml-1">
-                                                {formatCurrency(getLatestPrice(replyBargainInfo))}
-                                            </span>
-                                        </p>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div className="bg-white rounded-lg p-4 border-2 border-gray-200">
+                                            <div className="text-center">
+                                                <div className="text-sm text-gray-600 mb-1">Giá niêm yết</div>
+                                                <div className="text-lg font-bold text-gray-800">
+                                                    {formatCurrency(replyBargainInfo.originalPrice)}
+                                                </div>
+                                                <div className="text-xs text-gray-500 mt-1">
+                                                    /{replyBargainInfo.unit || replyBargainInfo.productUnitName}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-lg p-4 border-2 border-orange-300">
+                                            <div className="text-center">
+                                                <div className="text-sm text-orange-700 mb-1">Giá khách đề xuất</div>
+                                                <div className="text-lg font-bold text-orange-600">
+                                                    {formatCurrency(getLatestPrice(replyBargainInfo))}
+                                                </div>
+                                                <div className="text-xs text-orange-500 mt-1">
+                                                    /{replyBargainInfo.unit || replyBargainInfo.productUnitName}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-lg p-4 border-2 border-green-300">
+                                            <div className="text-center">
+                                                <div className="text-sm text-green-700 mb-1">Giá bạn sẽ đề xuất</div>
+                                                <div className="text-lg font-bold text-green-600">
+                                                    {counterOffer ? formatCurrency(parseFloat(counterOffer)) : '---'}
+                                                </div>
+                                                <div className="text-xs text-green-500 mt-1">
+                                                    /{replyBargainInfo.unit || replyBargainInfo.productUnitName}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Thông tin đơn hàng */}
+                                    <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                                        <div className="grid grid-cols-2 gap-4 text-sm">
+                                            <div>
+                                                <span className="text-gray-600">Sản phẩm:</span>
+                                                <span className="font-semibold ml-2">{replyBargainInfo.productName}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-600">Số lượng:</span>
+                                                <span className="font-semibold ml-2">
+                                                    {replyBargainInfo.quantity} {replyBargainInfo.unit || replyBargainInfo.productUnitName}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {counterOffer && (
+                                            <div className="mt-3 pt-3 border-t border-gray-200">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-600">Tổng tiền đề xuất:</span>
+                                                    <span className="text-xl font-bold text-green-600">
+                                                        {formatCurrency(parseFloat(counterOffer || 0) * replyBargainInfo.quantity)}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center text-sm mt-1">
+                                                    <span className="text-gray-600">So với giá gốc:</span>
+                                                    <span className="font-semibold text-red-600">
+                                                        -{formatCurrency((replyBargainInfo.originalPrice - parseFloat(counterOffer || 0)) * replyBargainInfo.quantity)}
+                                                        ({(((replyBargainInfo.originalPrice - parseFloat(counterOffer || 0)) / replyBargainInfo.originalPrice) * 100).toFixed(1)}%)
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Giá phản hồi (VNĐ/{replyBargainInfo.unit || replyBargainInfo.productUnitName}) <span className="text-red-500">*</span>
-                                    </label>
-                                    <input
-                                        type="number"
-                                        value={counterOffer}
-                                        onChange={(e) => setCounterOffer(e.target.value)}
-                                        placeholder="Nhập giá bạn muốn bán..."
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-                                    />
-                                    {counterOffer && (
-                                        <p className="text-sm text-gray-600 mt-1">
-                                            Tổng tiền: <span className="font-bold text-green-600">
-                                                {formatCurrency(parseFloat(counterOffer || 0) * replyBargainInfo.quantity)}
-                                            </span>
-                                        </p>
-                                    )}
-                                </div>
+                                {/* Form nhập giá */}
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                                            💰 Giá bạn muốn bán (VNĐ/{replyBargainInfo.unit || replyBargainInfo.productUnitName})
+                                            <span className="text-red-500 ml-1">*</span>
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type="number"
+                                                value={counterOffer}
+                                                onChange={(e) => setCounterOffer(e.target.value)}
+                                                placeholder="Nhập giá bạn muốn bán..."
+                                                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                                                min="0"
+                                                step="1000"
+                                            />
+                                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                                                VNĐ
+                                            </div>
+                                        </div>
 
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Ghi chú cho đề xuất này <span className="text-red-500">*</span>
-                                    </label>
-                                    <textarea
-                                        value={replyMessage}
-                                        onChange={(e) => setReplyMessage(e.target.value)}
-                                        placeholder="Nhập ghi chú cho đề xuất của bạn..."
-                                        rows="3"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                                    />
+                                        {/* Quick price suggestions */}
+                                        <div className="mt-3 flex flex-wrap gap-2">
+                                            <div className="text-sm text-gray-600 mr-2">Gợi ý:</div>
+                                            {[
+                                                Math.floor((replyBargainInfo.originalPrice + getLatestPrice(replyBargainInfo)) / 2),
+                                                Math.floor(replyBargainInfo.originalPrice * 0.9),
+                                                Math.floor(replyBargainInfo.originalPrice * 0.85),
+                                                Math.floor(replyBargainInfo.originalPrice * 0.8)
+                                            ].map((price, index) => (
+                                                <button
+                                                    key={index}
+                                                    type="button"
+                                                    onClick={() => setCounterOffer(price.toString())}
+                                                    className="px-3 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition"
+                                                >
+                                                    {formatCurrency(price)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            💬 Lời nhắn cho khách hàng <span className="text-red-500">*</span>
+                                        </label>
+                                        <textarea
+                                            value={replyMessage}
+                                            onChange={(e) => setReplyMessage(e.target.value)}
+                                            placeholder="Ví dụ: Đây là mức giá tốt nhất tôi có thể đưa ra cho sản phẩm này..."
+                                            rows="4"
+                                            className="w-full px-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none transition"
+                                        />
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            Hãy giải thích lý do cho mức giá này để thuyết phục khách hàng
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex gap-3 px-6 py-4 border-t">
+                            <div className="flex gap-3 px-6 py-4 border-t bg-gray-50 flex-shrink-0">
                                 <button
                                     onClick={() => {
                                         setShowReplyModal(false);
@@ -937,21 +1135,27 @@ const SellerFastBargainPage = () => {
                                         setCounterOffer('');
                                         setReplyMessage('');
                                     }}
-                                    className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition"
+                                    className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-3 px-4 rounded-lg transition flex items-center justify-center"
                                 >
-                                    Hủy
+                                    <FaTimes className="mr-2" />
+                                    Hủy bỏ
                                 </button>
                                 <button
                                     onClick={submitCounterOffer}
-                                    disabled={updatingStatus[replyBargainId] || !counterOffer}
-                                    className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition disabled:opacity-50 flex items-center justify-center"
+                                    disabled={updatingStatus[replyBargainId] || !counterOffer || !replyMessage.trim()}
+                                    className="flex-2 bg-orange-600 hover:bg-orange-700 text-white py-3 px-6 rounded-lg transition disabled:opacity-50 flex items-center justify-center"
                                 >
                                     {updatingStatus[replyBargainId] ? (
-                                        <FaSpinner className="animate-spin mr-2" />
+                                        <>
+                                            <FaSpinner className="animate-spin mr-2" />
+                                            Đang gửi...
+                                        </>
                                     ) : (
-                                        <FaHandshake className="mr-2" />
+                                        <>
+                                            <FaHandshake className="mr-2" />
+                                            Gửi đề xuất giá
+                                        </>
                                     )}
-                                    Gửi phản hồi
                                 </button>
                             </div>
                         </div>

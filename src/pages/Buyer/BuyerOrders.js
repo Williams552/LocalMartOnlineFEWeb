@@ -162,9 +162,10 @@ const BuyerOrders = () => {
 
     const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN');
     const formatCurrency = (amount) => {
-        if (typeof amount !== 'number' || isNaN(amount)) return '0đ';
+        if (!amount || amount === 0 || isNaN(amount)) return '0đ';
         return amount.toLocaleString('vi-VN') + 'đ';
     };
+
     // Helper function to extract seller information from order
     const getSellerInfo = (order) => {
         const sellerName = order.sellerName ||
@@ -518,14 +519,14 @@ const BuyerOrders = () => {
                                                                         {item.productName || item.name || `Sản phẩm ${item.productId}`}
                                                                     </h5>
                                                                     <p className="text-xs text-gray-500 mt-1">
-                                                                        Số lượng: {item.quantity} {item.productUnitName || item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
+                                                                        Số lượng: {item.quantity} {item.productUnitName || item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price || 0)}
                                                                     </p>
                                                                 </div>
 
                                                                 {/* Total Price */}
                                                                 <div className="text-right">
                                                                     <span className="font-semibold text-gray-800">
-                                                                        {formatCurrency(item.total || (item.quantity * item.priceAtPurchase))}
+                                                                        {formatCurrency(item.total || ((item.quantity || 0) * (item.priceAtPurchase || item.price || 0)))}
                                                                     </span>
                                                                 </div>
                                                             </div>
@@ -578,7 +579,7 @@ const BuyerOrders = () => {
                                                         <div className="flex justify-between items-center">
                                                             <span className="font-semibold text-gray-700">Tổng thanh toán</span>
                                                             <span className="text-xl font-bold text-supply-primary">
-                                                                {formatCurrency(order.totalAmount)}
+                                                                {formatCurrency(order.totalAmount || 0)}
                                                             </span>
                                                         </div>
                                                     </div>
@@ -829,14 +830,14 @@ const BuyerOrders = () => {
                                                         {item.productName || item.name || `Sản phẩm ${item.productId}`}
                                                     </p>
                                                     <p className="text-sm text-gray-600 mt-1">
-                                                        {item.quantity} {item.productUnitName || item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
+                                                        {item.quantity} {item.productUnitName || item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price || 0)}
                                                     </p>
                                                 </div>
 
                                                 {/* Price */}
                                                 <div className="text-right">
                                                     <p className="font-medium text-gray-800">
-                                                        {formatCurrency(item.total || (item.quantity * item.priceAtPurchase))}
+                                                        {formatCurrency(item.total || ((item.quantity || 0) * (item.priceAtPurchase || item.price || 0)))}
                                                     </p>
                                                 </div>
                                             </div>
@@ -848,7 +849,7 @@ const BuyerOrders = () => {
                                 <div className="mt-4 pt-4 border-t">
                                     <div className="flex justify-between text-lg font-bold">
                                         <span>Tổng cộng:</span>
-                                        <span className="text-supply-primary">{formatCurrency(selectedOrder.totalAmount)}</span>
+                                        <span className="text-supply-primary">{formatCurrency(selectedOrder.totalAmount || 0)}</span>
                                     </div>
                                 </div>
                             </div>
