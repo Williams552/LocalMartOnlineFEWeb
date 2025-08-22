@@ -1,0 +1,12 @@
+.market-analytics-row {
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.market-analytics-row:hover {
+    background-color: #e6f7ff;
+}
+
+.clickable-row {
+    user-select: none;
+}

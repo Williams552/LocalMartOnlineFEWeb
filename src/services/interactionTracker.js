@@ -1,4 +1,3 @@
-// src/services/interactionTracker.js
 import apiService from './apiService';
 
 /**
@@ -6,18 +5,16 @@ import apiService from './apiService';
  * @param {Object} params
  * @param {string} params.userId
  * @param {string} params.productId
- * @param {string} params.type - vclick/add_cart/purchase/search/...
- * @param {number|string} params.value - Giá trị thao tác
+ * @param {string} params.type - vclick/add_cart/purchase/
  */
-export function trackInteraction({ userId, productId, type, value }) {
-    console.log('🎯 Tracking interaction:', { userId, productId, type, value });
+export function trackInteraction({ userId, productId, type }) {
+    console.log('🎯 Tracking interaction:', { userId, productId, type});
     
     apiService.post('/api/user-interactions', {
         InteractionId: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36),
         UserId: userId,
         ProductId: productId,
         Type: type,
-        Value: value
     }).then(response => {
         console.log('✅ Track success:', response);
     }).catch(err => {
@@ -52,16 +49,8 @@ export function setupAutoTracking() {
             const userId = user.id || user._id || '';
             
             console.log('👤 User from localStorage:', user);
-            
-            let value = 1;
-            if (trackType === 'add_to_cart') value = 3;
-            if (trackType === 'order_placed') value = 3;
-            if (trackType === 'purchase') value = 4;
-            if (trackType === 'like') value = 2;
-            if (trackType === 'view_product') value = 1;
-            if (trackType === 'bargain_attempt') value = 2;
-            
-            trackInteraction({ userId, productId, type: trackType, value });
+        
+            trackInteraction({ userId, productId, type: trackType });
         }
     });
 }

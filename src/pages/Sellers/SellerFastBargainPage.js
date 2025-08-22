@@ -202,7 +202,7 @@ const SellerFastBargainPage = () => {
     };
 
     const submitCounterOffer = async () => {
-        if (!counterOffer || !replyMessage.trim()) {
+        if (!counterOffer) {
             toast.error('Vui lòng nhập đầy đủ thông tin');
             return;
         }

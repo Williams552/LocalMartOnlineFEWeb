@@ -1,3 +1,5 @@
+import StoreAnalytics from "../pages/Admin/Analytics/StoreAnalytics";
+import MarketAnalytics from "../pages/Admin/Analytics/MarketAnalytics";
 import ProxyRegisterList from "../pages/Admin/User/ProxyRegisterList";
 import ChangePassword from "../pages/User/ChangePassword";
 import AdminChangePassword from "../pages/Admin/User/AdminChangePassword";
@@ -42,7 +44,7 @@ import MarketFeeTypeManagement from "../pages/Admin/Market/MarketFeeTypeManageme
 import MarketRuleManagement from "../pages/Admin/Market/MarketRuleManagement";
 import StoreManagement from "../pages/Admin/Store/StoreManagement";
 import StoreDashboard from "../pages/Admin/Store/StoreDashboard";
-import StoreAnalytics from "../pages/Admin/Store/StoreAnalytics";
+import StoreList from "../pages/Admin/Store/StoreList";
 import StorePaymentManagement from "../pages/Admin/Store/StorePaymentManagement";
 import ProductUnitManagement from "../pages/Admin/ProductUnit/ProductUnitManagement";
 import { ProductManagement, PendingProducts, FastBargainProducts } from "../pages/Admin/Product";
@@ -74,6 +76,7 @@ import FastBargainPage from "../pages/FastBargain/FastBargainPage";
 import BargainDetail from "../pages/FastBargain/BargainDetail";
 import SellerRegisterList from "../pages/Admin/User/SellerRegisterList";
 import SupportRequestPage from "../pages/Support/SupportRequestPage";
+import OrderAnalytics from '../pages/Admin/Analytics/OrderAnalytics';
 
 // Seller pages
 import SellerProducts from "../pages/Sellers/SellerProducts";
@@ -92,6 +95,8 @@ import UserReportsPage from "../pages/Seller/UserReportsPage";
 import MarketFees from "../pages/Seller/MarketFees";
 import MarketRules from "../pages/Seller/MarketRules";
 import CreateOrder from "../pages/ProxyShopper/CreateOrder";
+import ReportAnalytics from "../pages/Admin/Analytics/ReportAnalytics";
+import ProductAnalytics from "../pages/Admin/Analytics/ProductAnalytics";
 
 const AppRoutes = () => {
     return (
@@ -333,8 +338,13 @@ const AppRoutes = () => {
                 {/* Analytics - All admin roles can access */}
                 <Route path="analytics/users" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><UserAnalytics /></ProtectedAdminRoleRoute>} />
                 <Route path="analytics/revenue" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><RevenueAnalytics /></ProtectedAdminRoleRoute>} />
+                <Route path="analytics/market" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><MarketAnalytics /></ProtectedAdminRoleRoute>} />
+                <Route path="analytics/store" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><StoreAnalytics /></ProtectedAdminRoleRoute>} />
                 <Route path="analytics/products" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><Analytics /></ProtectedAdminRoleRoute>} />
                 <Route path="analytics/orders" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><Analytics /></ProtectedAdminRoleRoute>} />
+                <Route path="analytics/report" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><ReportAnalytics /></ProtectedAdminRoleRoute>} />
+                <Route path="analytics/product" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><ProductAnalytics /></ProtectedAdminRoleRoute>} />
+                <Route path="analytics/order" element={<ProtectedAdminRoleRoute allowedRoles={['MS', 'MMBH', 'LGR', 'Admin']}><OrderAnalytics /></ProtectedAdminRoleRoute>} />
 
                 {/* System - All admin roles can access their profile */}
                 <Route path="profile" element={<AdminProfile />} />

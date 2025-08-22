@@ -572,7 +572,7 @@ const MyProxyRequests = () => {
                                     )}
 
                                     {/* Nút cho currentPhase = "Đã thanh toán" hoặc "Đang mua hàng" */}
-                                    {(currentPhase === 'Đã thanh toán' || currentPhase === 'Đang mua hàng') && (
+                                    {(currentPhase === 'Đang mua hàng') && (
                                         <button
                                             onClick={() => handleConfirmDelivery(request.orderId || request.OrderId)}
                                             className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 flex items-center gap-1"
