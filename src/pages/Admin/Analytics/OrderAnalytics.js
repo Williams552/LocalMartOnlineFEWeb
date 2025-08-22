@@ -113,11 +113,16 @@ const OrderAnalytics = () => {
     const revenueData = getRevenueChartData();
     const statusData = getStatusDistributionData();
 
-    const detailsSource = (orderStats && orderStats.ordersByStatus && Array.isArray(orderStats.ordersByStatus))
-        ? orderStats.ordersByStatus.map((item, index) => ({ ...item, key: index }))
-        : (orderStats && (orderStats.orderDetails || [])).map((item, index) => ({ ...item, key: index }));
+    // prepare safe details source array
+    const detailsBaseArray = Array.isArray(orderStats?.ordersByStatus)
+        ? orderStats.ordersByStatus
+        : Array.isArray(orderStats?.orderDetails)
+            ? orderStats.orderDetails
+            : [];
 
-    const detailsColumns = (orderStats && orderStats.ordersByStatus && Array.isArray(orderStats.ordersByStatus))
+    const detailsSource = detailsBaseArray.map((item, index) => ({ ...item, key: index }));
+
+    const detailsColumns = Array.isArray(orderStats?.ordersByStatus)
         ? [
             { title: 'Trạng thái', dataIndex: 'status', key: 'status' },
             { title: 'Số lượng', dataIndex: 'count', key: 'count' },
