@@ -68,7 +68,7 @@ const AdminChangePassword = () => {
             <div className="mb-6">
                 <Title level={2} className="flex items-center gap-2 mb-2">
                     <SafetyCertificateOutlined className="text-blue-600" />
-                    Đổi mật khẩu quản trị viên
+                    Đổi mật khẩu
                 </Title>
             </div>
 

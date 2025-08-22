@@ -237,10 +237,10 @@ const AdminProfile = () => {
                                 </Title>
                                 <Space wrap>
                                     <Tag color="blue" icon={<UserOutlined />}>
-                                        {profileData?.role}
+                                        {profileData?.role === 'Admin' ? 'Quản trị viên' : profileData?.role === 'MS' ? 'Nhân viên' : profileData?.role === 'MMBH' ? 'Quản lý Chợ' : profileData?.role === 'LGR' ? 'Đại diện Chính quyền' : '???'}
                                     </Tag>
                                     <Tag color={getStatusColor(profileData?.status)}>
-                                        {profileData?.status === 'Active' ? 'Hoạt động' : 'Ngưng hoạt động'}
+                                        {profileData?.status === 'Active' ? 'Hoạt động' : 'Không Hoạt động'}
                                     </Tag>
                                 </Space>
                                 <Paragraph className="mt-3 mb-0" type="secondary">
@@ -269,10 +269,10 @@ const AdminProfile = () => {
                                 </Space>
                             </Descriptions.Item>
                             <Descriptions.Item label="Phòng ban" span={1}>
-                                {profileData?.department}
+                                {profileData?.role === 'Admin' ? 'Công Nghệ Thông Tin' : profileData?.role === 'MS' ? 'Quản Lý Kinh Doanh' : profileData?.role === 'MMBH' ? 'Quản Lý Kinh Doanh' : profileData?.role === 'LGR' ? 'Ban Quản lý' : '???'}
                             </Descriptions.Item>
                             <Descriptions.Item label="Cấp độ" span={1}>
-                                <Tag color="gold">{profileData?.level}</Tag>
+                                <Tag color="gold">{profileData?.role === 'Admin' ? 'Quản trị viên' : profileData?.role === 'MS' ? 'Nhân viên' : profileData?.role === 'MMBH' ? 'Quản lý Chợ' : profileData?.role === 'LGR' ? 'Đại diện Chính quyền' : '???'}</Tag>
                             </Descriptions.Item>
                             <Descriptions.Item label="Ngày tạo tài khoản" span={1}>
                                 <Space>
@@ -290,7 +290,7 @@ const AdminProfile = () => {
                     </Card>
 
                     {/* Permissions */}
-                    <Card
+                    {/* <Card
                         title={
                             <Space>
                                 <SafetyCertificateOutlined />
@@ -315,7 +315,7 @@ const AdminProfile = () => {
                                 </div>
                             ))}
                         </div>
-                    </Card>
+                    </Card> */}
                 </Col>
 
                 {/* Statistics & Quick Actions */}

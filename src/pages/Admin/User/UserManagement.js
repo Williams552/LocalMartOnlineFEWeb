@@ -693,7 +693,7 @@ const UserManagement = () => {
                             </Form.Item>
                         </Col>
                     </Row>
-                    <Row gutter={16}>
+                    {/* <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item
                                 name="userToken"
@@ -714,7 +714,7 @@ const UserManagement = () => {
                                 </Select>
                             </Form.Item>
                         </Col>
-                    </Row>
+                    </Row> */}
                     <Row gutter={16}>
                         <Col span={12}>
                             <Form.Item

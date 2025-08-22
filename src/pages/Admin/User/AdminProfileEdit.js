@@ -67,9 +67,7 @@ const AdminProfileEdit = () => {
                                 username: userData.username || '',
                                 fullName: userData.fullName || '',
                                 email: userData.email || '',
-                                phone: userData.phoneNumber || '',
-                                department: 'Công nghệ thông tin',
-                                position: 'Quản trị viên hệ thống'
+                                phone: userData.phoneNumber || ''
                             });
                             return;
                         }
@@ -290,7 +288,7 @@ const AdminProfileEdit = () => {
                                 </Col>
                             </Row>
 
-                            <Row gutter={16}>
+                            {/* <Row gutter={16}>
                                 <Col span={12}>
                                     <Form.Item
                                         label="Phòng ban"
@@ -313,7 +311,7 @@ const AdminProfileEdit = () => {
                                         />
                                     </Form.Item>
                                 </Col>
-                            </Row>
+                            </Row> */}
 
                             {/* Error and Success Messages */}
                             {error && (
@@ -380,7 +378,6 @@ const AdminProfileEdit = () => {
                             <div className="space-y-2 text-gray-600">
                                 <div>• Email sẽ được sử dụng để khôi phục tài khoản</div>
                                 <div>• Số điện thoại dùng cho xác thực 2 lớp</div>
-                                <div>• Mọi thay đổi sẽ được ghi log hệ thống</div>
                             </div>
                         </div>
                     </Card>
