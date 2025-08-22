@@ -112,7 +112,12 @@ const AdminLayout = () => {
             analytics: {
                 key: 'analytics', icon: <BarChartOutlined />, label: 'Báo cáo & Thống kê', children: [
                     { key: '/admin/analytics/users', label: 'Thống kê người dùng' },
-                    { key: '/admin/analytics/revenue', label: 'Doanh thu' }
+                    { key: '/admin/analytics/market', label: 'Thống kê chợ' },
+                    { key: '/admin/analytics/store', label: 'Thống kê cửa hàng' },
+                    { key: '/admin/analytics/report', label: 'Thống kê báo cáo' },
+                    { key: '/admin/analytics/product', label: 'Thống kê sản phẩm' },
+                    { key: '/admin/analytics/order', label: 'Thống kê đơn hàng' },
+                    { key: '/admin/analytics/revenue', label: 'Doanh thu' },
                 ]
             }
         };

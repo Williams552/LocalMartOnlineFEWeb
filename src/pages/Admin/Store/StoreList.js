@@ -1,4 +1,4 @@
-// src/pages/Admin/Store/StoreAnalytics.js
+// src/pages/Admin/Store/StoreList.js
 import React, { useState, useEffect } from 'react';
 import {
     Card,
@@ -29,7 +29,7 @@ const { Title } = Typography;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
-const StoreAnalytics = () => {
+const StoreList = () => {
     const [loading, setLoading] = useState(false);
     const [stores, setStores] = useState([]);
     const [markets, setMarkets] = useState([]);
@@ -377,4 +377,4 @@ const StoreAnalytics = () => {
     );
 };
 
-export default StoreAnalytics;
+export default StoreList;

@@ -202,7 +202,7 @@ const SellerFastBargainPage = () => {
     };
 
     const submitCounterOffer = async () => {
-        if (!counterOffer || !replyMessage.trim()) {
+        if (!counterOffer) {
             toast.error('Vui lòng nhập đầy đủ thông tin');
             return;
         }
@@ -943,7 +943,7 @@ const SellerFastBargainPage = () => {
                                 </button>
                                 <button
                                     onClick={submitCounterOffer}
-                                    disabled={updatingStatus[replyBargainId] || !counterOffer || !replyMessage.trim()}
+                                    disabled={updatingStatus[replyBargainId] || !counterOffer}
                                     className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition disabled:opacity-50 flex items-center justify-center"
                                 >
                                     {updatingStatus[replyBargainId] ? (

@@ -161,8 +161,10 @@ const BuyerOrders = () => {
     };
 
     const formatDate = (dateString) => new Date(dateString).toLocaleString('vi-VN');
-    const formatCurrency = (amount) => amount.toLocaleString('vi-VN') + 'đ';
-
+    const formatCurrency = (amount) => {
+        if (typeof amount !== 'number' || isNaN(amount)) return '0đ';
+        return amount.toLocaleString('vi-VN') + 'đ';
+    };
     // Helper function to extract seller information from order
     const getSellerInfo = (order) => {
         const sellerName = order.sellerName ||
@@ -239,7 +241,7 @@ const BuyerOrders = () => {
                         // Track purchase completion cho mỗi sản phẩm trong đơn hàng
                         const user = JSON.parse(localStorage.getItem('user') || '{}');
                         const userId = user.id || user._id || '';
-                        
+
                         if (userId && completedOrder.items) {
                             completedOrder.items.forEach(item => {
                                 if (item.productId) {
@@ -253,7 +255,7 @@ const BuyerOrders = () => {
                                 }
                             });
                         }
-                        
+
                         // Hiện notification thành công trước
                         setCompletedOrderInfo(completedOrder);
                         setShowCompletionNotification(true);
@@ -509,7 +511,7 @@ const BuyerOrders = () => {
                                                                         e.target.src = logo;
                                                                     }}
                                                                 />
-                                                                
+
                                                                 {/* Product Info */}
                                                                 <div className="flex-1">
                                                                     <h5 className="font-medium text-gray-800 text-sm">
@@ -519,7 +521,7 @@ const BuyerOrders = () => {
                                                                         Số lượng: {item.quantity} {item.productUnitName || item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
                                                                     </p>
                                                                 </div>
-                                                                
+
                                                                 {/* Total Price */}
                                                                 <div className="text-right">
                                                                     <span className="font-semibold text-gray-800">
@@ -820,7 +822,7 @@ const BuyerOrders = () => {
                                                         e.target.src = logo;
                                                     }}
                                                 />
-                                                
+
                                                 {/* Product Details */}
                                                 <div className="flex-1">
                                                     <p className="font-medium text-gray-800">
@@ -830,7 +832,7 @@ const BuyerOrders = () => {
                                                         {item.quantity} {item.productUnitName || item.unit || ""} × {formatCurrency(item.priceAtPurchase || item.price)}
                                                     </p>
                                                 </div>
-                                                
+
                                                 {/* Price */}
                                                 <div className="text-right">
                                                     <p className="font-medium text-gray-800">
@@ -855,24 +857,24 @@ const BuyerOrders = () => {
                                 <h3 className="font-bold text-gray-800 mb-3">Thông tin giao hàng</h3>
                                 <div className="bg-gray-50 rounded-lg p-4">
                                     <div className="grid md:grid-cols-2 gap-4">
-                                                    <div className="flex items-center space-x-2">
-                                                        <FaUser className="text-blue-500" />
-                                                        <div>
-                                                            <p className="text-sm text-gray-600">Họ tên</p>
-                                                            <p className="font-medium text-gray-800">
-                                                                {selectedOrder.buyerName || 'Chưa có thông tin'}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    {selectedOrder.buyerPhone && (
-                                                        <div className="flex items-center space-x-2">
-                                                            <FaUser className="text-blue-500" />
-                                                            <div>
-                                                                <p className="text-sm text-gray-600">Số điện thoại</p>
-                                                                <p className="font-medium text-gray-800">{selectedOrder.buyerPhone}</p>
-                                                            </div>
-                                                        </div>
-                                                    )}
+                                        <div className="flex items-center space-x-2">
+                                            <FaUser className="text-blue-500" />
+                                            <div>
+                                                <p className="text-sm text-gray-600">Họ tên</p>
+                                                <p className="font-medium text-gray-800">
+                                                    {selectedOrder.buyerName || 'Chưa có thông tin'}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        {selectedOrder.buyerPhone && (
+                                            <div className="flex items-center space-x-2">
+                                                <FaUser className="text-blue-500" />
+                                                <div>
+                                                    <p className="text-sm text-gray-600">Số điện thoại</p>
+                                                    <p className="font-medium text-gray-800">{selectedOrder.buyerPhone}</p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {selectedOrder.expectedDeliveryTime && (
