@@ -61,6 +61,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
     const [orders, setOrders] = useState([]);
     const [allOrders, setAllOrders] = useState([]); // Store all orders for search
     const [loading, setLoading] = useState(false);
+    const [statisticsLoading, setStatisticsLoading] = useState(false); // Separate loading for statistics
     const [statistics, setStatistics] = useState({
         totalOrders: 0,
         pendingOrders: 0,
@@ -88,38 +89,53 @@ const OrderManagement = ({ defaultStatus = null }) => {
         { value: 'Cancelled', label: 'Đã hủy', color: 'red' }
     ];
 
+    // Load orders and calculate statistics only once
     useEffect(() => {
-        loadOrders();
-    }, []);
+        loadOrdersAndStatistics();
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
-        if (allOrders.length > 0) {
-            const stats = calculateStatisticsFromOrders(allOrders);
-            console.log('📊 [OrderManagement] Recalculated stats from all orders:', stats);
-            setStatistics(stats);
-        }
-    }, [allOrders]); // Chạy khi allOrders thay đổi, không phụ thuộc vào orders đã filter
-
-    useEffect(() => {
-        // Reload when filters change - now uses frontend filtering
+        // Apply frontend filtering when filters change
         const timer = setTimeout(() => {
             handleFilter();
-        }, 300); // Reduced delay for better UX
+        }, 500);
 
         return () => clearTimeout(timer);
-    }, [filters.search, filters.status, filters.dateRange]);
+    }, [filters.search, filters.status, filters.dateRange]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const loadOrders = async () => {
+    // Load orders and calculate statistics in one go
+    const loadOrdersAndStatistics = async () => {
         setLoading(true);
+        setStatisticsLoading(true);
         try {
-            // Lấy tất cả đơn hàng không phân trang (page size lớn)
+            console.log('🔄 [OrderManagement] Loading orders and calculating statistics...');
+            console.log('🌐 [OrderManagement] Making API call: getAllOrders(1, 10000)');
+            
+            // Only make one API call to get all orders
             const response = await orderService.getAllOrders(1, 10000);
 
             if (response.success) {
                 const data = response.data;
                 const allOrdersData = data.items || data || [];
-                setAllOrders(allOrdersData); // Store all orders
+                
+                console.log('📦 [OrderManagement] Loaded orders:', allOrdersData.length, 'orders');
+                console.log('✅ [OrderManagement] API call completed - No additional statistics API call needed');
+                
+                // Store all orders for filtering
+                setAllOrders(allOrdersData);
                 setOrders(allOrdersData); // Initially show all orders
+                
+                // Calculate statistics from the loaded data
+                const stats = calculateStatisticsFromOrders(allOrdersData);
+                console.log('📊 [OrderManagement] Calculated statistics from frontend:', stats);
+                setStatistics(stats);
+                
+                // Apply initial filter if defaultStatus is set
+                if (defaultStatus) {
+                    const filteredOrders = allOrdersData.filter(order => order.status === defaultStatus);
+                    setOrders(filteredOrders);
+                }
+                
             } else {
                 message.error(response.message || 'Lỗi khi tải danh sách đơn hàng');
             }
@@ -130,9 +146,10 @@ const OrderManagement = ({ defaultStatus = null }) => {
                 message: error.message,
                 stack: error.stack
             });
-            message.success('Tải dữ liệu thành công');
+            message.error('Lỗi khi tải dữ liệu đơn hàng');
         } finally {
             setLoading(false);
+            setStatisticsLoading(false);
         }
     };
 
@@ -234,7 +251,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
                 }
 
                 message.success('Đơn hàng đã được hoàn thành');
-                loadOrders(); // Statistics sẽ tự update qua useEffect
+                loadOrdersAndStatistics(); // Reload orders and recalculate statistics
                 if (selectedOrder?.id === orderId) {
                     setSelectedOrder({ ...selectedOrder, status: 'Completed' });
                 }
@@ -252,7 +269,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
             const response = await orderService.cancelOrder(orderId);
             if (response.success) {
                 message.success('Đơn hàng đã được hủy');
-                loadOrders();
+                loadOrdersAndStatistics();
                 if (selectedOrder?.id === orderId) {
                     setSelectedOrder({ ...selectedOrder, status: 'Cancelled' });
                 }
@@ -271,7 +288,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
             if (response.success) {
                 message.success('Cập nhật trạng thái thành công');
                 setStatusModalVisible(false);
-                loadOrders();
+                loadOrdersAndStatistics();
                 setSelectedOrder({ ...selectedOrder, status: values.status });
             } else {
                 message.error(response.message || 'Không thể cập nhật trạng thái');
@@ -593,6 +610,18 @@ const OrderManagement = ({ defaultStatus = null }) => {
         },
     ];
 
+    // Loading screen giống với giao diện proxy shopping
+    if (loading && allOrders.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <span className="text-gray-600 text-lg">Đang tải dữ liệu đơn hàng...</span>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div>
             {/* Header */}
@@ -628,19 +657,29 @@ const OrderManagement = ({ defaultStatus = null }) => {
                         Xuất Excel
                     </Button>
                     <Button
-                        icon={<ReloadOutlined />}
+                        icon={<ReloadOutlined className={loading ? 'animate-spin' : ''} />}
                         onClick={() => {
-                            loadOrders();
+                            loadOrdersAndStatistics();
                         }}
+                        loading={loading}
+                        disabled={loading}
                     >
-                        Làm mới
+                        {loading ? 'Đang tải...' : 'Làm mới'}
                     </Button>
                 </Space>
             </div>
 
             {/* Statistics */}
-            <div style={{ marginBottom: '24px' }}>
-                <OrderStats statistics={statistics} loading={loading} />
+            <div style={{ marginBottom: '24px', position: 'relative' }}>
+                {loading && allOrders.length > 0 && (
+                    <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-lg">
+                        <div className="flex items-center space-x-2">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            <span className="text-gray-600">Đang cập nhật thống kê...</span>
+                        </div>
+                    </div>
+                )}
+                <OrderStats statistics={statistics} loading={statisticsLoading} />
             </div>
 
             {/* Filters */}
@@ -705,14 +744,18 @@ const OrderManagement = ({ defaultStatus = null }) => {
                     </Col>
                     <Col span={3}>
                         <Button
-                            icon={<SyncOutlined />}
+                            icon={<SyncOutlined className={loading ? 'animate-spin' : ''} />}
                             onClick={() => {
-                                loadOrders();
-                                message.success('Đã làm mới dữ liệu');
+                                loadOrdersAndStatistics();
+                                if (!loading) {
+                                    message.success('Đã làm mới dữ liệu');
+                                }
                             }}
+                            loading={loading}
+                            disabled={loading}
                             style={{ width: '100%' }}
                         >
-                            Đồng bộ
+                            {loading ? 'Đang đồng bộ...' : 'Đồng bộ'}
                         </Button>
                     </Col>
                 </Row>

@@ -784,7 +784,7 @@ class OrderService {
 
     // Admin Methods
     // Lấy tất cả đơn hàng (Admin)
-    async getAllOrders(page = 1, pageSize = 20, filters = {}) {
+    async getAllOrders(page = 1, pageSize = 1000, filters = {}) {
         try {
             console.log('🔍 Fetching all orders (Admin):', { page, pageSize, filters });
 
