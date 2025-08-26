@@ -117,7 +117,6 @@ const AdminLayout = () => {
                     { key: '/admin/analytics/report', label: 'Thống kê báo cáo' },
                     { key: '/admin/analytics/product', label: 'Thống kê sản phẩm' },
                     { key: '/admin/analytics/order', label: 'Thống kê đơn hàng' },
-                    { key: '/admin/analytics/revenue', label: 'Doanh thu' },
                 ]
             }
         };
