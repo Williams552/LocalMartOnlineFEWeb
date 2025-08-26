@@ -87,7 +87,10 @@ class CategoryService {
     async getActiveCategories() {
         try {
             console.log('🏷️ Fetching active categories...');
-            const result = await this.getAllCategories({ isActive: true });
+            const result = await this.getAllCategories({ 
+                isActive: true, 
+                pageSize: 1000 // Lấy tất cả danh mục thay vì chỉ 20 danh mục đầu
+            });
             const activeCategories = result.items.filter(category => category.isActive);
             console.log('🏷️ Active categories found:', activeCategories);
             return activeCategories;
