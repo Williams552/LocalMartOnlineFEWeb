@@ -1,5 +1,5 @@
 // src/pages/Admin/OrderManagement.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
     Table,
     Card,
@@ -69,6 +69,11 @@ const OrderManagement = ({ defaultStatus = null }) => {
         cancelledOrders: 0,
         todayRevenue: 0
     });
+    // Paging state (server returns pagination metadata)
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(20);
+    const [totalCount, setTotalCount] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
     const [filters, setFilters] = useState({
         search: '',
         status: defaultStatus || '',
@@ -89,9 +94,9 @@ const OrderManagement = ({ defaultStatus = null }) => {
         { value: 'Cancelled', label: 'Đã hủy', color: 'red' }
     ];
 
-    // Load orders and calculate statistics only once
+    // Load orders and calculate statistics only once (first page)
     useEffect(() => {
-        loadOrdersAndStatistics();
+        loadOrdersAndStatistics(1, pageSize);
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
@@ -103,55 +108,75 @@ const OrderManagement = ({ defaultStatus = null }) => {
         return () => clearTimeout(timer);
     }, [filters.search, filters.status, filters.dateRange]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // Load orders and calculate statistics in one go
-    const loadOrdersAndStatistics = async () => {
+    // Load orders and calculate statistics for a specific page and calculate statistics from returned items
+    const loadOrdersAndStatistics = useCallback(async (pageParam = 1, sizeParam = pageSize) => {
+        console.debug('[OrderManagement] loadOrdersAndStatistics called', { pageParam, sizeParam });
         setLoading(true);
         setStatisticsLoading(true);
         try {
-            console.log('🔄 [OrderManagement] Loading orders and calculating statistics...');
-            console.log('🌐 [OrderManagement] Making API call: getAllOrders(1, 10000)');
-            
-            // Only make one API call to get all orders
-            const response = await orderService.getAllOrders(1, 10000);
+            const response = await orderService.getAllOrders(pageParam, sizeParam);
+
+            console.debug('[OrderManagement] getAllOrders response', response);
 
             if (response.success) {
-                const data = response.data;
-                const allOrdersData = data.items || data || [];
-                
-                console.log('📦 [OrderManagement] Loaded orders:', allOrdersData.length, 'orders');
-                console.log('✅ [OrderManagement] API call completed - No additional statistics API call needed');
-                
-                // Store all orders for filtering
-                setAllOrders(allOrdersData);
-                setOrders(allOrdersData); // Initially show all orders
-                
-                // Calculate statistics from the loaded data
-                const stats = calculateStatisticsFromOrders(allOrdersData);
-                console.log('📊 [OrderManagement] Calculated statistics from frontend:', stats);
+                const data = response.data || {};
+
+                // Orders may be returned as an array (data === [...]) or an object with a .items array.
+                let items = [];
+                let pageFromResp = pageParam;
+                let pageSizeFromResp = sizeParam;
+                let totalFromResp = undefined;
+
+                if (Array.isArray(data)) {
+                    items = data;
+                } else if (Array.isArray(data.items)) {
+                    items = data.items;
+                    pageFromResp = data.page ?? pageParam;
+                    pageSizeFromResp = data.pageSize ?? sizeParam;
+                    totalFromResp = data.totalCount ?? data.total ?? (Array.isArray(data.items) ? data.items.length : undefined);
+                } else if (Array.isArray(data.data)) {
+                    // Some responses may nest under data.data
+                    items = data.data;
+                }
+
+                // Store current page items (frontend filtering/search operates on current dataset)
+                setAllOrders(items);
+                setOrders(items);
+
+                // Pagination metadata
+                setPage(pageFromResp);
+                setPageSize(pageSizeFromResp);
+                setTotalCount(totalFromResp ?? items.length);
+                setTotalPages(data.totalPages || Math.max(1, Math.ceil((totalFromResp ?? items.length) / (pageSizeFromResp || sizeParam))));
+
+                // Calculate statistics from returned items (server may provide separate stats in future)
+                const stats = calculateStatisticsFromOrders(items);
                 setStatistics(stats);
-                
+
                 // Apply initial filter if defaultStatus is set
                 if (defaultStatus) {
-                    const filteredOrders = allOrdersData.filter(order => order.status === defaultStatus);
+                    const filteredOrders = items.filter(order => order.status === defaultStatus);
                     setOrders(filteredOrders);
                 }
-                
             } else {
                 message.error(response.message || 'Lỗi khi tải danh sách đơn hàng');
             }
         } catch (error) {
             console.error('❌ [OrderManagement] Error loading orders:', error);
-            console.error('❌ [OrderManagement] Error details:', {
-                name: error.name,
-                message: error.message,
-                stack: error.stack
-            });
             message.error('Lỗi khi tải dữ liệu đơn hàng');
         } finally {
             setLoading(false);
             setStatisticsLoading(false);
         }
-    };
+    }, [pageSize, defaultStatus]);
+
+    // Pagination handler (calls stable loadOrdersAndStatistics)
+    const handleTablePageChange = useCallback((newPage, newPageSize) => {
+    console.debug('[OrderManagement] handleTablePageChange called', { newPage, newPageSize });
+        setPage(newPage);
+        setPageSize(newPageSize);
+        loadOrdersAndStatistics(newPage, newPageSize);
+    }, [loadOrdersAndStatistics]);
 
     const calculateStatisticsFromOrders = (ordersList) => {
         const paidOrders = ordersList.filter(o => ['Paid', 'Completed'].includes(o.status));
@@ -378,7 +403,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
         message.success('Xuất Excel thành công');
     };
 
-    const handlePrintOrder = (order) => {
+    const handlePrintOrder = useCallback((order) => {
         const printWindow = window.open('', '_blank');
         const printContent = `
             <html>
@@ -438,29 +463,56 @@ const OrderManagement = ({ defaultStatus = null }) => {
         printWindow.document.write(printContent);
         printWindow.document.close();
         printWindow.print();
-    };
+    }, []);
 
-    const getStatusColor = (status, type = 'order') => {
-        const statusObj = orderStatuses.find(s => s.value === status);
-        return statusObj?.color || 'default';
-    };
+    // View order handler: open drawer with order details (try to fetch fresh data when available)
+    const handleViewOrder = useCallback(async (order) => {
+        try {
+            setLoading(true);
+            let detailedOrder = order;
 
-    const getStatusLabel = (status, type = 'order') => {
-        const statusObj = orderStatuses.find(s => s.value === status);
-        return statusObj?.label || status;
-    };
+            // If service provides a detail endpoint, try to fetch latest data
+            if (orderService && typeof orderService.getOrderById === 'function') {
+                const resp = await orderService.getOrderById(order.id);
+                if (resp && resp.success && resp.data) {
+                    detailedOrder = resp.data;
+                }
+            }
 
-    const handleViewOrder = (order) => {
-        setSelectedOrder(order);
-        setDrawerVisible(true);
-    };
+            setSelectedOrder(detailedOrder);
+            setDrawerVisible(true);
 
-    const getOrderStatusStep = (status) => {
-        const statusOrder = ['Pending', 'Confirmed', 'Paid', 'Completed'];
-        return statusOrder.indexOf(status);
-    };
+            // track admin viewing order (non-blocking)
+            try {
+                trackInteraction && trackInteraction({ userId: detailedOrder?.buyerId, type: 'view_order', orderId: detailedOrder?.id });
+            } catch (tErr) {
+                console.debug('trackInteraction failed:', tErr);
+            }
+        } catch (error) {
+            console.error('Error fetching order details:', error);
+            // Fallback: show the passed order object
+            setSelectedOrder(order);
+            setDrawerVisible(true);
+        } finally {
+            setLoading(false);
+        }
+    }, [trackInteraction]);
 
-    const columns = [
+    // Helper: map trạng thái -> label, color, step
+const _statusMap = {
+    Pending:    { label: 'Chờ xác nhận', color: 'orange', step: 0 },
+    Confirmed:  { label: 'Đã xác nhận hàng', color: 'blue',   step: 1 },
+    Paid:       { label: 'Đã nhận tiền', color: 'purple', step: 2 },
+    Completed:  { label: 'Hoàn thành',    color: 'green',  step: 3 },
+    Cancelled:  { label: 'Đã hủy',        color: 'red',    step: 0 },
+};
+
+const getStatusLabel = (status) => _statusMap[status]?.label || (status || 'Không xác định');
+const getStatusColor = (status) => _statusMap[status]?.color || 'default';
+const getOrderStatusStep = (status) => (_statusMap[status]?.step ?? 0);
+
+// Memoize columns to avoid re-creation on each render
+    const columns = useMemo(() => [
         {
             title: 'Mã đơn hàng',
             dataIndex: 'id',
@@ -608,7 +660,7 @@ const OrderManagement = ({ defaultStatus = null }) => {
                 </Space>
             ),
         },
-    ];
+    ], [handleViewOrder, handlePrintOrder, orderStatuses]);
 
     // Loading screen giống với giao diện proxy shopping
     if (loading && allOrders.length === 0) {
@@ -785,7 +837,21 @@ const OrderManagement = ({ defaultStatus = null }) => {
                             name: record.id,
                         }),
                     }}
-                    pagination={false}  // Tắt phân trang để hiển thị tất cả đơn hàng
+                    pagination={{
+                        current: page,
+                        pageSize: pageSize,
+                        total: totalCount,
+                        showSizeChanger: true,
+                        pageSizeOptions: ['10','20','50','100'],
+                        onChange: handleTablePageChange,
+                    }}
+                    onChange={(pagination) => {
+                        // Ensure any pagination change is forwarded
+                        const newPage = pagination?.current ?? page;
+                        const newSize = pagination?.pageSize ?? pageSize;
+                        console.debug('[OrderManagement] Table onChange forwarded', { newPage, newSize });
+                        handleTablePageChange(newPage, newSize);
+                    }}
                     scroll={{ x: 1400 }}
                     size="small"
                 />

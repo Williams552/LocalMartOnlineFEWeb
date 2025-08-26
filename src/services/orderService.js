@@ -62,15 +62,30 @@ class OrderService {
             const responseData = response.data || response;
             const ordersData = responseData.data || responseData.items || responseData;
 
-            // Enrich data for display
-            let enrichedData = ordersData;
+            let enrichedData;
             if (Array.isArray(ordersData)) {
-                enrichedData = await this.enrichOrderData(ordersData);
+                const enrichedItems = await this.enrichOrderData(ordersData);
+                const totalCount = responseData.totalCount ?? responseData.total ?? responseData.totalItems;
+                const pageFromResp = responseData.page ?? responseData.currentPage ?? 1;
+                const pageSizeFromResp = responseData.pageSize ?? 20;
+                const totalPages = responseData.totalPages ?? (totalCount ? Math.max(1, Math.ceil(totalCount / pageSizeFromResp)) : undefined);
+
+                enrichedData = {
+                    items: enrichedItems,
+                    totalCount,
+                    page: pageFromResp,
+                    pageSize: pageSizeFromResp,
+                    totalPages,
+                    hasPrevious: responseData.hasPrevious,
+                    hasNext: responseData.hasNext
+                };
             } else if (ordersData.items) {
                 enrichedData = {
                     ...ordersData,
                     items: await this.enrichOrderData(ordersData.items)
                 };
+            } else {
+                enrichedData = ordersData;
             }
 
             return {
@@ -784,7 +799,7 @@ class OrderService {
 
     // Admin Methods
     // Lấy tất cả đơn hàng (Admin)
-    async getAllOrders(page = 1, pageSize = 1000, filters = {}) {
+    async getAllOrders(page = 1, pageSize = 20, filters = {}) {
         try {
             console.log('🔍 Fetching all orders (Admin):', { page, pageSize, filters });
 
@@ -801,14 +816,35 @@ class OrderService {
             const ordersData = responseData.data || responseData.items || responseData;
 
             // Enrich data for display
-            let enrichedData = ordersData;
+            let enrichedData;
+
+            // If API returned a plain array but response object also contains pagination metadata
             if (Array.isArray(ordersData)) {
-                enrichedData = await this.enrichOrderData(ordersData);
+                const enrichedItems = await this.enrichOrderData(ordersData);
+
+                // Try to extract pagination fields from responseData if present
+                const totalCount = responseData.totalCount ?? responseData.total ?? responseData.totalItems;
+                const pageFromResp = responseData.page ?? responseData.currentPage ?? page;
+                const pageSizeFromResp = responseData.pageSize ?? pageSize;
+                const totalPages = responseData.totalPages ?? (totalCount ? Math.max(1, Math.ceil(totalCount / pageSizeFromResp)) : undefined);
+
+                enrichedData = {
+                    items: enrichedItems,
+                    totalCount,
+                    page: pageFromResp,
+                    pageSize: pageSizeFromResp,
+                    totalPages,
+                    hasPrevious: responseData.hasPrevious,
+                    hasNext: responseData.hasNext
+                };
             } else if (ordersData.items) {
                 enrichedData = {
                     ...ordersData,
                     items: await this.enrichOrderData(ordersData.items)
                 };
+            } else {
+                // Fallback: try to enrich if it's an object with data array inside
+                enrichedData = ordersData;
             }
 
             return {
