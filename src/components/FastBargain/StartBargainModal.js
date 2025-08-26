@@ -42,7 +42,7 @@ const StartBargainModal = ({ isOpen, onClose, product, onSuccess }) => {
             const result = await fastBargainService.startBargain({
                 productId: product.id,
                 buyerId: currentUser.id,
-                quantity: parseInt(quantity),
+                quantity: parseFloat(quantity),
                 initialOfferPrice: parseFloat(offerPrice)
             });
 
@@ -134,7 +134,7 @@ const StartBargainModal = ({ isOpen, onClose, product, onSuccess }) => {
                                 type="number"
                                 min="1"
                                 value={quantity}
-                                onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                                onChange={(e) => setQuantity(parseFloat(e.target.value) || 1)}
                                 className={`w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500 ${errors.quantity ? 'border-red-500' : 'border-gray-300'
                                     }`}
                                 disabled={loading}

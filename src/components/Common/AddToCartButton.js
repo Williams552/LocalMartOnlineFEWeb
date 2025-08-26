@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { FaShoppingCart, FaPlus, FaMinus } from 'react-icons/fa';
+import { FaShoppingCart } from 'react-icons/fa';
 import { FiLoader } from 'react-icons/fi';
-import { toast } from 'react-toastify';
 import toastService from '../../services/toastService';
 import { useAuth } from '../../hooks/useAuth';
 import { useCart } from '../../contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
+import QuantityInput from './QuantityInput';
 
 const AddToCartButton = ({
     product,
@@ -71,24 +71,9 @@ const AddToCartButton = ({
         }
     };
 
-    const handleQuantityDecrease = () => {
-        const minQuantity = product?.minimumQuantity || 0.5;
-        if (onQuantityChange && quantity > minQuantity) {
-            const newQuantity = Math.round((quantity - minQuantity) * 100) / 100; // Fix floating point precision
-            onQuantityChange(newQuantity);
-        }
-    };
-
-    const handleQuantityIncrease = () => {
+    const handleQuantityChange = (newQuantity) => {
         if (onQuantityChange) {
-            const maxQuantity = product?.stock || 999;
-            const minQuantity = product?.minimumQuantity || 0.5;
-            if (quantity < maxQuantity) {
-                const newQuantity = Math.round((quantity + minQuantity) * 100) / 100; // Fix floating point precision
-                onQuantityChange(newQuantity);
-            } else {
-                toastService.warning(`Chỉ còn ${maxQuantity} ${product?.unit || 'kg'} trong kho`);
-            }
+            onQuantityChange(newQuantity);
         }
     };
 
@@ -124,25 +109,15 @@ const AddToCartButton = ({
                     <span className={`font-medium text-gray-700 ${currentSize.text}`}>
                         Số lượng:
                     </span>
-                    <div className="flex items-center space-x-2">
-                        <button
-                            onClick={handleQuantityDecrease}
-                            disabled={quantity <= (product?.minimumQuantity || 0.5)}
-                            className={`${currentSize.quantityButton} rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition`}
-                        >
-                            <FaMinus className={currentSize.icon} />
-                        </button>
-                        <span className={`w-16 text-center font-medium ${currentSize.text}`}>
-                            {quantity.toFixed(2).replace(/\.?0+$/, '')} {product?.unit || 'kg'}
-                        </span>
-                        <button
-                            onClick={handleQuantityIncrease}
-                            disabled={quantity >= (product?.stock || 999)}
-                            className={`${currentSize.quantityButton} rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition`}
-                        >
-                            <FaPlus className={currentSize.icon} />
-                        </button>
-                    </div>
+                    <QuantityInput
+                        quantity={quantity}
+                        onQuantityChange={handleQuantityChange}
+                        minQuantity={product?.minimumQuantity || 0.5}
+                        maxQuantity={product?.stock || 999}
+                        unit={product?.unit || 'kg'}
+                        size={size}
+                        allowDirectInput={true}
+                    />
                 </div>
             )}
 

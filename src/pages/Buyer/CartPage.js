@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaShoppingCart, FaTrash, FaPlus, FaMinus, FaStore, FaMapMarkerAlt, FaPhone, FaUser, FaTruck, FaCheckSquare, FaSquare } from "react-icons/fa";
+import { FaShoppingCart, FaTrash, FaStore, FaMapMarkerAlt, FaPhone, FaUser } from "react-icons/fa";
 import { FiShoppingBag, FiClock, FiCheck, FiLoader } from "react-icons/fi";
-import { toast } from "react-toastify";
 import toastService from "../../services/toastService";
 import logo from "../../assets/image/logo.jpg";
 import cartService from "../../services/cartService";
@@ -11,6 +10,7 @@ import storeService from "../../services/storeService";
 import userService from "../../services/userService";
 import { getCurrentUser, isAuthenticated } from "../../services/authService";
 import { trackInteraction } from "../../services/interactionTracker";
+import QuantityInput from "../../components/Common/QuantityInput";
 
 const proxyShoppers = [
     {
@@ -881,42 +881,19 @@ const CartPage = () => {
                                                         )}
                                                     </div>
                                                     <div className="flex items-center space-x-2">
-                                                        <button
-                                                            onClick={() => {
-                                                                const minQuantity = item.minimumQuantity || 0.5;
-                                                                const newQuantity = Math.round((item.quantity - minQuantity) * 100) / 100;
-                                                                updateQuantity(item.id, newQuantity);
-                                                            }}
-                                                            disabled={updating[item.id] || item.quantity <= item.minimumQuantity || item.isBargainProduct}
-                                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                            title={item.isBargainProduct ? "Không thể thay đổi số lượng sản phẩm thương lượng" : "Giảm số lượng"}
-                                                        >
-                                                            <FaMinus className="w-3 h-3" />
-                                                        </button>
-                                                        <div className="w-16 text-center">
-                                                            {updating[item.id] ? (
-                                                                <FiLoader className="animate-spin mx-auto" />
-                                                            ) : (
-                                                                <div>
-                                                                    <span className="font-medium">{item.quantity.toFixed(2).replace(/\.?0+$/, '')} {item.unit}</span>
-                                                                    {item.isBargainProduct && (
-                                                                        <div className="text-xs text-orange-600 font-medium">Thương lượng</div>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <button
-                                                            onClick={() => {
-                                                                const minQuantity = item.minimumQuantity || 0.5;
-                                                                const newQuantity = Math.round((item.quantity + minQuantity) * 100) / 100;
-                                                                updateQuantity(item.id, newQuantity);
-                                                            }}
-                                                            disabled={updating[item.id] || !item.isAvailable || (item.stockQuantity > 0 && item.quantity >= item.stockQuantity) || item.isBargainProduct}
-                                                            className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                            title={item.isBargainProduct ? "Không thể thay đổi số lượng sản phẩm thương lượng" : "Tăng số lượng"}
-                                                        >
-                                                            <FaPlus className="w-3 h-3" />
-                                                        </button>
+                                                        <QuantityInput
+                                                            quantity={item.quantity}
+                                                            onQuantityChange={(newQuantity) => updateQuantity(item.id, newQuantity)}
+                                                            minQuantity={item.minimumQuantity || 0.5}
+                                                            maxQuantity={item.stockQuantity || 999}
+                                                            unit={item.unit}
+                                                            disabled={updating[item.id] || !item.isAvailable || item.isBargainProduct}
+                                                            size="small"
+                                                            allowDirectInput={!item.isBargainProduct}
+                                                        />
+                                                        {item.isBargainProduct && (
+                                                            <div className="text-xs text-orange-600 font-medium">Thương lượng</div>
+                                                        )}
                                                     </div>
                                                     <div className="text-right w-24">
                                                         <p className="font-semibold text-gray-800">
