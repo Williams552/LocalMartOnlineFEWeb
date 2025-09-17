@@ -1,9 +1,13 @@
 import axios from 'axios';
 import { API_ENDPOINTS } from '../config/apiEndpoints';
 
+// Get base URL from environment or config
+const API_BASE_URL = process.env.REACT_APP_API_URL || "https://localmartonline-1.onrender.com";
+
 // Create axios instance
 const createApiClient = () => {
     const client = axios.create({
+        baseURL: API_BASE_URL,
         timeout: 10000,
         headers: {
             'Content-Type': 'application/json',
@@ -46,7 +50,7 @@ class ProductService {
     // Create new product
     async createProduct(payload) {
         try {
-            const response = await apiClient.post('http://localhost:5183/api/Product', payload);
+            const response = await apiClient.post(`${API_BASE_URL}/api/Product`, payload);
             if (response.data?.success) {
                 return {
                     success: true,
@@ -665,9 +669,9 @@ class ProductService {
         try {
             console.log('🛍️ ProductService: Getting seller products (my-store)...', { page, pageSize });
 
-            const response = await apiClient.get(`/api/store/my-store/products`, {
-                params: { page, pageSize }
-            });
+             const response = await apiClient.get(API_ENDPOINTS.PRODUCT.GET_MY_STORE, {
+            params: { page, pageSize }
+             });
 
             console.log('📊 Seller products API response:', response.data);
 

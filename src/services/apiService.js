@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Base API URL từ backend
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5183';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://localmartonline-1.onrender.com';
 
 console.log('API Base URL:', API_BASE_URL);
 console.log('Environment:', process.env.NODE_ENV);

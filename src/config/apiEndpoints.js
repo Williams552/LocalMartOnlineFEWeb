@@ -1,5 +1,5 @@
 // API Endpoints Configuration
-const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5183";
+const API_URL = process.env.REACT_APP_API_URL || "https://localmartonline-1.onrender.com";
 
 // API Endpoints cho LocalMart
 export const API_ENDPOINTS = {
@@ -118,6 +118,7 @@ export const API_ENDPOINTS = {
         FILTER: `${API_URL}/api/product/filter`,
 
         // Store specific endpoints
+        GET_MY_STORE: `${API_URL}/api/store/my-store/products`, // Thêm nếu chưa có
         BY_STORE: (storeId) => `${API_URL}/api/product/store/${storeId}`,
         SEARCH_IN_STORE: (storeId) => `${API_URL}/api/product/store/${storeId}/search`,
         FILTER_IN_STORE: (storeId) => `${API_URL}/api/product/store/${storeId}/filter`,
